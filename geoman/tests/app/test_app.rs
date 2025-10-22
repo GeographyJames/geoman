@@ -3,7 +3,7 @@ use std::net::TcpListener;
 use crate::app::services::HttpClient;
 
 pub struct TestApp {
-    pub address: String,
+    pub _address: String,
     pub api_client: HttpClient,
 }
 
@@ -16,7 +16,7 @@ impl TestApp {
         let address = format!("http://127.0.0.1:{}", port);
         let api_client = HttpClient::new(address.clone());
         Self {
-            address,
+            _address: address,
             api_client,
         }
     }
