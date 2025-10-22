@@ -1,9 +1,10 @@
 use std::net::TcpListener;
 
-use geoman::URLS;
+use crate::app::services::HttpClient;
 
 pub struct TestApp {
     pub address: String,
+    pub api_client: HttpClient,
 }
 
 impl TestApp {
@@ -12,20 +13,11 @@ impl TestApp {
         let port = listener.local_addr().unwrap().port();
         let server = geoman::run(listener).expect("failed to run server");
         let _ = tokio::spawn(server);
+        let address = format!("http://127.0.0.1:{}", port);
+        let api_client = HttpClient::new(address.clone());
         Self {
-            address: format!("http://127.0.0.1:{}", port),
+            address,
+            api_client,
         }
     }
-}
-
-#[actix_web::test]
-async fn health_check_works() {
-    let app = TestApp::spawn().await;
-    let client = reqwest::Client::new();
-    let response = client
-        .get(&format!("{}{}", &app.address, URLS.health_check))
-        .send()
-        .await
-        .expect("failed to execute request");
-    assert!(response.status().is_success())
 }
