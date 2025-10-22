@@ -1,1 +1,2 @@
 health_check: "/health-check"
+health_check_authenticated: "/health-check-authenticated"

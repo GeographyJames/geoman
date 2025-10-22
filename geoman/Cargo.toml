@@ -13,6 +13,7 @@ name = "geoman"
 
 [dependencies]
 actix-web = "4.11.0"
+actix-web-httpauth = "0.8.2"
 anyhow = { workspace = true }
 config = "0.15.18"
 derive = "1.0.0"
