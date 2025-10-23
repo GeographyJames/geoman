@@ -4,8 +4,9 @@ use secrecy::{ExposeSecret, SecretBox};
 use serde::{Deserialize, de::DeserializeOwned};
 use tokio::sync::OnceCell;
 
+use crate::constants::CLERK_USER_ID_KEY;
+
 static TEST_SESSION: OnceCell<ClerkSession> = OnceCell::const_new();
-const CLERK_USER_ID_ENV_KEY: &str = "CLERK_TEST_USER_ID";
 
 #[derive(Deserialize)]
 struct ClerkSession {
@@ -39,9 +40,8 @@ async fn handle_response<T: DeserializeOwned>(response: Response) -> Result<T, S
 
 async fn get_session(client: &reqwest::Client, secret: &SecretBox<String>) -> ClerkSession {
     dotenv().ok();
-    let user_id = std::env::var(CLERK_USER_ID_ENV_KEY).expect(&format!(
-        "no {CLERK_USER_ID_ENV_KEY} environment variable set"
-    ));
+    let user_id = std::env::var(CLERK_USER_ID_KEY)
+        .expect(&format!("no {CLERK_USER_ID_KEY} environment variable set"));
 
     let response = client
         .post("https://api.clerk.com/v1/sessions")

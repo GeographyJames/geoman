@@ -6,7 +6,7 @@ use secrecy::SecretBox;
 use serde::Deserialize;
 use strum::{self, Display, EnumString};
 
-const GEOMAN_ENV_KEY: &str = "GEOMAN_ENVIRONMENT";
+use crate::{constants::GEOMAN_ENVIRONMENT_KEY, helpers::get_configuration_directory};
 
 #[derive(Deserialize)]
 pub struct AppConfig {
@@ -39,12 +39,11 @@ pub enum Environment {
 pub fn get_config() -> Result<AppConfig, anyhow::Error> {
     dotenv().ok();
     let environment = Environment::from_str(
-        &std::env::var(GEOMAN_ENV_KEY)
-            .map_err(|e| anyhow::anyhow!("no {GEOMAN_ENV_KEY} set: {}", e))?,
+        &std::env::var(GEOMAN_ENVIRONMENT_KEY)
+            .map_err(|e| anyhow::anyhow!("no {GEOMAN_ENVIRONMENT_KEY} set: {}", e))?,
     )
-    .context(format!("failed to parse {GEOMAN_ENV_KEY}"))?;
-    let base_path = std::env::current_dir().context("Failed to determine current directory.")?;
-    let configuration_directory = base_path.join("configuration");
+    .context(format!("failed to parse {GEOMAN_ENVIRONMENT_KEY}"))?;
+    let configuration_directory = get_configuration_directory();
     let environment_filename = format!("{}.yaml", environment);
     let config_builder = config::Config::builder();
     let config = config_builder

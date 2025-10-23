@@ -1,6 +1,6 @@
 use std::net::TcpListener;
 
-use geoman::app::{get_config, startup::run};
+use geoman::app::{config::get_config, startup::run};
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {

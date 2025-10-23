@@ -1,6 +1,6 @@
 use std::net::TcpListener;
 
-use geoman::app::{get_config, startup};
+use geoman::app::{config::get_config, startup};
 
 use crate::app::{auth::clerk::ClerkAuthProvider, services::HttpClient};
 

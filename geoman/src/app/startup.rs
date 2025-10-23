@@ -7,7 +7,7 @@ use clerk_rs::{
 use secrecy::ExposeSecret;
 use std::net::TcpListener;
 
-use crate::{URLS, app::AppConfig};
+use crate::{URLS, app::config::AppConfig};
 
 pub fn run(listener: TcpListener, config: &AppConfig) -> anyhow::Result<Server> {
     let clerk_config = ClerkConfiguration::new(
