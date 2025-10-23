@@ -26,7 +26,7 @@ pub struct ApplicationSettings {
     pub port: u16,
 }
 
-#[derive(Deserialize, EnumString, Display)]
+#[derive(Deserialize, EnumString, Display, Clone)]
 #[strum(ascii_case_insensitive, serialize_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum Environment {

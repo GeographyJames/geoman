@@ -1,6 +1,9 @@
 use uuid::Uuid;
 
-use crate::app::{TestApp, helpers::assert_ok};
+use crate::{
+    app::{TestApp, helpers::assert_ok},
+    clerk_auth,
+};
 
 #[actix_web::test]
 async fn health_check_works() {
@@ -28,6 +31,11 @@ async fn requests_with_invalid_token_are_rejected() {
 #[actix_web::test]
 async fn requests_with_valid_token_are_accepted() {
     let app = TestApp::spawn().await;
-    let response = app.health_check_authenticated(Some("valid token")).await;
+    let token = clerk_auth::get_test_session(
+        &app.config.auth.clerk_secret_key,
+        "user_34TBak0wKXjYNSdz8EsCnCTrlVY",
+    )
+    .await;
+    let response = app.health_check_authenticated(Some(&token.jwt)).await;
     assert_ok(&response);
 }

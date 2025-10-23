@@ -9,7 +9,7 @@ use std::net::TcpListener;
 
 use crate::{URLS, app::AppConfig};
 
-pub fn run(listener: TcpListener, config: AppConfig) -> anyhow::Result<Server> {
+pub fn run(listener: TcpListener, config: &AppConfig) -> anyhow::Result<Server> {
     let clerk_config = ClerkConfiguration::new(
         None,
         None,

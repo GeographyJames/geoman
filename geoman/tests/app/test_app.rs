@@ -1,11 +1,12 @@
 use std::net::TcpListener;
 
-use geoman::app::{get_config, startup};
+use geoman::app::{AppConfig, get_config, startup};
 
 use crate::app::services::HttpClient;
 
 pub struct TestApp {
     pub api_client: HttpClient,
+    pub config: AppConfig,
 }
 
 impl TestApp {
@@ -19,8 +20,8 @@ impl TestApp {
             "http://{}:{}",
             config.app_settings.host, config.app_settings.port
         ));
-        let server = startup::run(listener, config).expect("failed to run server");
+        let server = startup::run(listener, &config).expect("failed to run server");
         let _ = tokio::spawn(server);
-        Self { api_client }
+        Self { api_client, config }
     }
 }

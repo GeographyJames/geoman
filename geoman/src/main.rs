@@ -14,6 +14,6 @@ async fn main() -> anyhow::Result<()> {
         "Starting GeoMan for {} environment on port {}",
         config.app_settings.environment, config.app_settings.port
     );
-    run(listener, config)?.await?;
+    run(listener, &config)?.await?;
     Ok(())
 }
