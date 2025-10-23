@@ -1,12 +1,13 @@
 use std::net::TcpListener;
 
-use geoman::app::{AppConfig, get_config, startup};
+use geoman::app::{get_config, startup};
 
-use crate::app::services::HttpClient;
+use crate::app::{auth::clerk::ClerkAuthProvider, services::HttpClient};
 
 pub struct TestApp {
     pub api_client: HttpClient,
-    pub config: AppConfig,
+
+    pub clerk: ClerkAuthProvider,
 }
 
 impl TestApp {
@@ -22,6 +23,15 @@ impl TestApp {
         ));
         let server = startup::run(listener, &config).expect("failed to run server");
         let _ = tokio::spawn(server);
-        Self { api_client, config }
+        let clerk = ClerkAuthProvider {
+            secret: config.auth.clerk_secret_key,
+            user_id: "user_34TBak0wKXjYNSdz8EsCnCTrlVY".to_string(),
+        };
+        Self { api_client, clerk }
+    }
+    pub async fn get_test_session_token(&self) -> String {
+        self.clerk
+            .get_test_session_token(&self.api_client.client)
+            .await
     }
 }
