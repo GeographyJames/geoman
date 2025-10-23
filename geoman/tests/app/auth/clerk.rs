@@ -1,8 +1,10 @@
+use dotenvy::dotenv;
 use secrecy::{ExposeSecret, SecretBox};
 use serde::Deserialize;
 use tokio::sync::OnceCell;
 
 static TEST_SESSION: OnceCell<ClerkSession> = OnceCell::const_new();
+const CLERK_USER_ID_ENV_KEY: &str = "CLERK_TEST_USER_ID";
 
 #[derive(Deserialize)]
 struct ClerkSession {
@@ -16,14 +18,13 @@ pub struct ClerkSessionToken {
 
 pub struct ClerkAuthProvider {
     pub secret: SecretBox<String>,
-    pub user_id: String,
 }
 
-async fn get_session(
-    client: &reqwest::Client,
-    secret: &SecretBox<String>,
-    user_id: &str,
-) -> ClerkSession {
+async fn get_session(client: &reqwest::Client, secret: &SecretBox<String>) -> ClerkSession {
+    dotenv().ok();
+    let user_id = std::env::var(CLERK_USER_ID_ENV_KEY).expect(&format!(
+        "no {CLERK_USER_ID_ENV_KEY} environment variable set"
+    ));
     let response = client
         .post("https://api.clerk.com/v1/sessions")
         .header("Content-Type", "application/json")
@@ -44,7 +45,7 @@ async fn get_session(
 impl ClerkAuthProvider {
     pub async fn get_test_session_token(&self, client: &reqwest::Client) -> String {
         let session = TEST_SESSION
-            .get_or_init(|| async { get_session(client, &self.secret, &self.user_id).await })
+            .get_or_init(|| async { get_session(client, &self.secret).await })
             .await;
         let response = client
             .post(format!(

@@ -6,8 +6,7 @@ use crate::app::{auth::clerk::ClerkAuthProvider, services::HttpClient};
 
 pub struct TestApp {
     pub api_client: HttpClient,
-
-    pub clerk: ClerkAuthProvider,
+    pub auth: ClerkAuthProvider,
 }
 
 impl TestApp {
@@ -23,14 +22,13 @@ impl TestApp {
         ));
         let server = startup::run(listener, &config).expect("failed to run server");
         let _ = tokio::spawn(server);
-        let clerk = ClerkAuthProvider {
+        let auth = ClerkAuthProvider {
             secret: config.auth.clerk_secret_key,
-            user_id: "user_34TBak0wKXjYNSdz8EsCnCTrlVY".to_string(),
         };
-        Self { api_client, clerk }
+        Self { api_client, auth }
     }
     pub async fn get_test_session_token(&self) -> String {
-        self.clerk
+        self.auth
             .get_test_session_token(&self.api_client.client)
             .await
     }
