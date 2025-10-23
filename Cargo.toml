@@ -10,4 +10,4 @@ authors = ["James Campbell"]
 
 [workspace.dependencies]
 anyhow = "1.0.100"
-serde = "1.0.228"
+serde = { version = "1.0.228", features = ["derive"] }

@@ -36,6 +36,10 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
 
       - name: Run tests
+        env:
+          GEOMAN_ENVIRONMENT: local
+          GEOMAN_AUTH__CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          CLERK_TEST_USER_ID: ${{secrets.CLERK_TEST_USER_ID}}
         run: cargo test
 
   # `fmt` container job
