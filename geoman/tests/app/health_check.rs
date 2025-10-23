@@ -1,27 +1,33 @@
-use geoman::URLS;
+use uuid::Uuid;
 
-use crate::app::TestApp;
+use crate::app::{TestApp, helpers::assert_ok};
 
 #[actix_web::test]
 async fn health_check_works() {
     let app = TestApp::spawn().await;
-    let response = app
-        .api_client
-        .get(&URLS.health_check)
-        .send()
-        .await
-        .expect("failed to execute request");
+    let response = app.health_check().await;
     assert!(response.status().is_success())
 }
 
 #[actix_web::test]
-async fn requests_missing_authentication_are_rejected() {
+async fn requests_missing_authentication_token_are_rejected() {
+    let app = TestApp::spawn().await;
+    let response = app.health_check_authenticated(None).await;
+    assert_eq!(401, response.status().as_u16())
+}
+
+#[actix_web::test]
+async fn requests_with_invalid_token_are_rejected() {
     let app = TestApp::spawn().await;
     let response = app
-        .api_client
-        .get(&URLS.health_check_authenticated)
-        .send()
-        .await
-        .expect("failed to execute request");
+        .health_check_authenticated(Some(&Uuid::new_v4().to_string()))
+        .await;
     assert_eq!(401, response.status().as_u16())
+}
+
+#[actix_web::test]
+async fn requests_with_valid_token_are_accepted() {
+    let app = TestApp::spawn().await;
+    let response = app.health_check_authenticated(Some("valid token")).await;
+    assert_ok(&response);
 }
