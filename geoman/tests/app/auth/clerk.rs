@@ -1,6 +1,7 @@
 use dotenvy::dotenv;
+use reqwest::Response;
 use secrecy::{ExposeSecret, SecretBox};
-use serde::Deserialize;
+use serde::{Deserialize, de::DeserializeOwned};
 use tokio::sync::OnceCell;
 
 static TEST_SESSION: OnceCell<ClerkSession> = OnceCell::const_new();
@@ -20,11 +21,28 @@ pub struct ClerkAuthProvider {
     pub secret: SecretBox<String>,
 }
 
+async fn handle_response<T: DeserializeOwned>(response: Response) -> Result<T, String> {
+    if response.status().is_success() {
+        let token: T = response
+            .json()
+            .await
+            .expect("failed to deserialise Clerk response");
+        return Ok(token);
+    }
+    let status = response.status().as_u16();
+    let error: serde_json::Value = response
+        .json()
+        .await
+        .unwrap_or(serde_json::json!("failed to deserialise Clerk error"));
+    Err(format!("Clerk responded with status: {status}, {error}",))
+}
+
 async fn get_session(client: &reqwest::Client, secret: &SecretBox<String>) -> ClerkSession {
     dotenv().ok();
     let user_id = std::env::var(CLERK_USER_ID_ENV_KEY).expect(&format!(
         "no {CLERK_USER_ID_ENV_KEY} environment variable set"
     ));
+
     let response = client
         .post("https://api.clerk.com/v1/sessions")
         .header("Content-Type", "application/json")
@@ -39,7 +57,9 @@ async fn get_session(client: &reqwest::Client, secret: &SecretBox<String>) -> Cl
         .await
         .expect("failed to execute request for Clerk session");
 
-    response.json().await.expect("failed to deserialise json")
+    handle_response(response)
+        .await
+        .expect("failed to create Clerk session")
 }
 
 impl ClerkAuthProvider {
@@ -63,8 +83,11 @@ impl ClerkAuthProvider {
             .send()
             .await
             .expect("failed to execute request for Clerk session token");
-        let session_token: ClerkSessionToken =
-            response.json().await.expect("failed to deserialise json");
+
+        let session_token: ClerkSessionToken = handle_response(response)
+            .await
+            .expect("failed to retrieve Clerk session token");
+
         session_token.jwt
     }
 }
