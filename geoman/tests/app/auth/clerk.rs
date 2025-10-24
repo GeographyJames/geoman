@@ -36,9 +36,6 @@ impl ClerkAuthProvider {
                 "Authorization",
                 format!("Bearer {}", self.secret.expose_secret()),
             )
-            .json(&serde_json::json!({
-                "expires_in_seconds": null
-            }))
             .send()
             .await
             .expect("failed to execute request for Clerk session token");

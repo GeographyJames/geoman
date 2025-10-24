@@ -6,7 +6,10 @@ use secrecy::SecretBox;
 use serde::Deserialize;
 use strum::{self, Display, EnumString};
 
-use crate::{constants::GEOMAN_ENVIRONMENT_KEY, helpers::get_configuration_directory};
+use crate::{
+    constants::{ENVIRONMENT_PREFIX, GEOMAN_ENVIRONMENT_KEY},
+    helpers::get_configuration_directory,
+};
 
 #[derive(Deserialize)]
 pub struct AppConfig {
@@ -50,7 +53,7 @@ pub fn get_config() -> Result<AppConfig, anyhow::Error> {
         .set_default("app_settings.environment", environment.to_string())
         .context("failed to add environment to config builder")?
         .add_source(
-            config::Environment::with_prefix("GEOMAN")
+            config::Environment::with_prefix(ENVIRONMENT_PREFIX)
                 .prefix_separator("_")
                 .separator("__"),
         )
