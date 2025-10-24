@@ -22,12 +22,12 @@ pub struct ClerkAuthProvider {
     pub secret: SecretBox<String>,
 }
 
-async fn handle_response<T: DeserializeOwned>(response: Response) -> Result<T, String> {
+async fn handle_json_response<T: DeserializeOwned>(response: Response) -> Result<T, String> {
     if response.status().is_success() {
         let token: T = response
             .json()
             .await
-            .expect("failed to deserialise Clerk response");
+            .expect("failed to deserialise successful Clerk response");
         return Ok(token);
     }
     let status = response.status().as_u16();
@@ -57,7 +57,7 @@ async fn get_session(client: &reqwest::Client, secret: &SecretBox<String>) -> Cl
         .await
         .expect("failed to execute request for Clerk session");
 
-    handle_response(response)
+    handle_json_response(response)
         .await
         .expect("failed to create Clerk session")
 }
@@ -84,7 +84,7 @@ impl ClerkAuthProvider {
             .await
             .expect("failed to execute request for Clerk session token");
 
-        let session_token: ClerkSessionToken = handle_response(response)
+        let session_token: ClerkSessionToken = handle_json_response(response)
             .await
             .expect("failed to retrieve Clerk session token");
 

@@ -1,12 +1,12 @@
 use uuid::Uuid;
 
-use crate::app::{TestApp, helpers::assert_ok};
+use crate::{app::TestApp, helpers::assert_ok};
 
 #[actix_web::test]
 async fn health_check_works() {
     let app = TestApp::spawn().await;
     let response = app.health_check().await;
-    assert!(response.status().is_success())
+    assert_ok(&response)
 }
 
 #[actix_web::test]
