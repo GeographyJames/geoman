@@ -1,10 +1,8 @@
-use dotenvy::dotenv;
-use reqwest::Response;
 use secrecy::{ExposeSecret, SecretBox};
-use serde::{Deserialize, de::DeserializeOwned};
+use serde::Deserialize;
 use tokio::sync::OnceCell;
 
-use crate::constants::CLERK_USER_ID_KEY;
+use crate::helpers::handle_json_response;
 
 static TEST_SESSION: OnceCell<ClerkSession> = OnceCell::const_new();
 
@@ -20,52 +18,13 @@ pub struct ClerkSessionToken {
 
 pub struct ClerkAuthProvider {
     pub secret: SecretBox<String>,
-}
-
-async fn handle_json_response<T: DeserializeOwned>(response: Response) -> Result<T, String> {
-    if response.status().is_success() {
-        let token: T = response
-            .json()
-            .await
-            .expect("failed to deserialise successful Clerk response");
-        return Ok(token);
-    }
-    let status = response.status().as_u16();
-    let error: serde_json::Value = response
-        .json()
-        .await
-        .unwrap_or(serde_json::json!("failed to deserialise Clerk error"));
-    Err(format!("Clerk responded with status: {status}, {error}",))
-}
-
-async fn get_session(client: &reqwest::Client, secret: &SecretBox<String>) -> ClerkSession {
-    dotenv().ok();
-    let user_id = std::env::var(CLERK_USER_ID_KEY)
-        .expect(&format!("no {CLERK_USER_ID_KEY} environment variable set"));
-
-    let response = client
-        .post("https://api.clerk.com/v1/sessions")
-        .header("Content-Type", "application/json")
-        .header(
-            "Authorization",
-            format!("Bearer {}", secret.expose_secret()),
-        )
-        .json(&serde_json::json!({
-            "user_id": user_id
-        }))
-        .send()
-        .await
-        .expect("failed to execute request for Clerk session");
-
-    handle_json_response(response)
-        .await
-        .expect("failed to create Clerk session")
+    pub test_user_id: String,
 }
 
 impl ClerkAuthProvider {
     pub async fn get_test_session_token(&self, client: &reqwest::Client) -> String {
         let session = TEST_SESSION
-            .get_or_init(|| async { get_session(client, &self.secret).await })
+            .get_or_init(|| async { self.get_session(client).await })
             .await;
         let response = client
             .post(format!(
@@ -89,5 +48,25 @@ impl ClerkAuthProvider {
             .expect("failed to retrieve Clerk session token");
 
         session_token.jwt
+    }
+
+    async fn get_session(&self, client: &reqwest::Client) -> ClerkSession {
+        let response = client
+            .post("https://api.clerk.com/v1/sessions")
+            .header("Content-Type", "application/json")
+            .header(
+                "Authorization",
+                format!("Bearer {}", self.secret.expose_secret()),
+            )
+            .json(&serde_json::json!({
+                "user_id": self.test_user_id
+            }))
+            .send()
+            .await
+            .expect("failed to execute request for Clerk session");
+
+        handle_json_response(response)
+            .await
+            .expect("failed to create Clerk session")
     }
 }
