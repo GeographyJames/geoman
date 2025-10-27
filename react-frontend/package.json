@@ -9,7 +9,8 @@
     "test": "vitest run",
     "format": "biome format",
     "lint": "biome lint",
-    "check": "biome check"
+    "check": "biome check",
+    "tests": "vitest"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.6",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
     "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.2.0",
     "@types/node": "^22.10.2",
     "@types/react": "^19.2.0",
