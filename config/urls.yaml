@@ -1,2 +1,6 @@
 health_check: "/health-check"
 health_check_authenticated: "/health-check-authenticated"
+
+api:
+  base: "/api"
+  projects: "/projects"

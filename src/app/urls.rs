@@ -10,6 +10,13 @@ pub static URLS: Lazy<Urls> = Lazy::new(|| initialise_urls().expect("failed to i
 pub struct Urls {
     pub health_check: String,
     pub health_check_authenticated: String,
+    pub api: Api,
+}
+
+#[derive(Deserialize)]
+pub struct Api {
+    pub base: String,
+    pub projects: String,
 }
 
 fn initialise_urls() -> Result<Urls, anyhow::Error> {

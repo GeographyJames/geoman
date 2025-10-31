@@ -23,19 +23,4 @@ impl HttpClient {
         self.client
             .get(format!("{}{}", self.base_url, endpoint.to_string()))
     }
-
-    pub fn _post(&self, endpoint: &str) -> RequestBuilder {
-        self.client.post(format!("{}{}", self.base_url, endpoint))
-    }
-
-    pub fn _delete(&self, endpoint: &str) -> RequestBuilder {
-        self.client.delete(format!("{}{}", self.base_url, endpoint))
-    }
-
-    pub fn _put(&self, endpoint: &str) -> RequestBuilder {
-        self.client.put(format!("{}{}", self.base_url, endpoint))
-    }
-    pub fn _patch(&self, endpoint: &str) -> RequestBuilder {
-        self.client.patch(format!("{}{}", self.base_url, endpoint))
-    }
 }

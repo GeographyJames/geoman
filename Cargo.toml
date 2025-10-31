@@ -11,6 +11,7 @@ path = "src/lib.rs"
 path = "src/main.rs"
 name = "geoman"
 
+
 [dependencies]
 actix-web = "4.11.0"
 uuid = { version = "1.18.1", features = ["v4"] }
@@ -24,6 +25,11 @@ secrecy = { version = "0.10.3", features = ["serde"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 dotenvy = "0.15.7"
+tracing = "0.1.41"
+tracing-bunyan-formatter = "0.3.10"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+tracing-log = "0.2.0"
+tracing-actix-web = "0.7.19"
 
 [dev-dependencies.reqwest]
 version = "0.12.24"

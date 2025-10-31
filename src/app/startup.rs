@@ -1,4 +1,4 @@
-use actix_web::{App, HttpResponse, HttpServer, dev::Server, web};
+use actix_web::{App, HttpServer, dev::Server, web};
 use anyhow::Context;
 use clerk_rs::{
     ClerkConfiguration,
@@ -7,8 +7,12 @@ use clerk_rs::{
 };
 use secrecy::ExposeSecret;
 use std::net::TcpListener;
+use tracing_actix_web::TracingLogger;
 
-use crate::app::{config::AppConfig, urls::URLS};
+use crate::app::{
+    config::AppConfig,
+    routes::{protected_routes, unprotected_routes},
+};
 
 pub fn run(listener: TcpListener, config: &AppConfig) -> anyhow::Result<Server> {
     let clerk_config = ClerkConfiguration::new(
@@ -18,17 +22,19 @@ pub fn run(listener: TcpListener, config: &AppConfig) -> anyhow::Result<Server> 
         None,
     );
     let clerk = Clerk::new(clerk_config);
+
     let server = HttpServer::new(move || {
         App::new()
-            .route(&URLS.health_check, web::get().to(HttpResponse::Ok))
+            .wrap(TracingLogger::default())
+            .configure(unprotected_routes)
             .service(
-                web::resource(&URLS.health_check_authenticated)
+                web::scope("")
                     .wrap(ClerkMiddleware::new(
                         MemoryCacheJwksProvider::new(clerk.clone()),
                         None,
                         true,
                     ))
-                    .route(web::get().to(HttpResponse::Ok)),
+                    .configure(protected_routes),
             )
     })
     .listen(listener)
