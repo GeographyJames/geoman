@@ -1,59 +1,50 @@
-use std::str::FromStr;
+//! Application configuration and initialisation
 
 use anyhow::Context;
 use dotenvy::dotenv;
 use secrecy::SecretBox;
 use serde::Deserialize;
-use strum::{self, Display, EnumString};
 
-use crate::{
-    constants::{ENVIRONMENT_PREFIX, GEOMAN_ENVIRONMENT_KEY},
-    helpers::get_configuration_directory,
+use crate::app::{
+    constants::ENVIRONMENT_VARIABLE_PREFIX,
+    enums::GeoManEnvironment,
+    helpers::{get_configuration_directory, get_environment},
 };
 
+/// Application configuration container
 #[derive(Deserialize)]
 pub struct AppConfig {
-    pub auth: ClerkAuth,
-    pub app_settings: ApplicationSettings,
+    pub auth: ClerkAuthSettings,
+    pub app_settings: AppSettings,
 }
 
+/// Clerk authentication settings
 #[derive(Deserialize)]
-pub struct ClerkAuth {
+pub struct ClerkAuthSettings {
     pub clerk_secret_key: SecretBox<String>,
 }
 
+/// Application settings
 #[derive(Deserialize)]
-pub struct ApplicationSettings {
-    pub environment: Environment,
+pub struct AppSettings {
+    pub environment: GeoManEnvironment,
     pub host: String,
     pub port: u16,
 }
 
-#[derive(Deserialize, EnumString, Display, Clone)]
-#[strum(ascii_case_insensitive, serialize_all = "lowercase")]
-#[serde(rename_all = "lowercase")]
-pub enum Environment {
-    Local,
-    Demo,
-    Staging,
-    Production,
-}
-
+/// Creates application configuration from YAML configuratiton files for specific runtime environment.
 pub fn get_config() -> Result<AppConfig, anyhow::Error> {
     dotenv().ok();
-    let environment = Environment::from_str(
-        &std::env::var(GEOMAN_ENVIRONMENT_KEY)
-            .map_err(|e| anyhow::anyhow!("no {GEOMAN_ENVIRONMENT_KEY} set: {}", e))?,
-    )
-    .context(format!("failed to parse {GEOMAN_ENVIRONMENT_KEY}"))?;
-    let configuration_directory = get_configuration_directory();
+    let environment = get_environment().context("failed to determine app environment")?;
+    let configuration_directory =
+        get_configuration_directory().context("failed to determint configuration directory")?;
     let environment_filename = format!("{}.yaml", environment);
     let config_builder = config::Config::builder();
     let config = config_builder
         .set_default("app_settings.environment", environment.to_string())
         .context("failed to add environment to config builder")?
         .add_source(
-            config::Environment::with_prefix(ENVIRONMENT_PREFIX)
+            config::Environment::with_prefix(ENVIRONMENT_VARIABLE_PREFIX)
                 .prefix_separator("_")
                 .separator("__"),
         )

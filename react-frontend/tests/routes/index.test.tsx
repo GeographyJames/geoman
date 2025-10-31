@@ -8,9 +8,17 @@ import { QueryClient } from "@tanstack/react-query";
 import { routeTree } from "@/routeTree.gen";
 import { describe, expect, test } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { ClerkProvider } from "@clerk/clerk-react";
+
+// Import Clerk Publishable Key
+const CLERK_TEST_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+if (!CLERK_TEST_KEY) {
+  throw new Error("Add your Clerk Publishable Key to the .env file");
+}
 
 describe("Routing", () => {
-  test('shows the welcome page when visiting "/"', async () => {
+  test('shows the Clerk login page when visiting "/" as an unauthenticated user', async () => {
     const queryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -28,7 +36,11 @@ describe("Routing", () => {
       },
     });
 
-    render(<RouterProvider router={router} />);
-    expect(await screen.findByText("Learn React")).toBeInTheDocument();
+    render(
+      <ClerkProvider publishableKey={CLERK_TEST_KEY}>
+        <RouterProvider router={router} />
+      </ClerkProvider>
+    );
+    expect(await screen.findByText("Sign in")).toBeInTheDocument();
   });
 });

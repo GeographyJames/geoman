@@ -1,4 +1,4 @@
-use geoman::URLS;
+use geoman::app::URLS;
 use reqwest::Response;
 
 use crate::app::TestApp;

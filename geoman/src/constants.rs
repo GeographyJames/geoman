@@ -1,2 +1,0 @@
-pub const ENVIRONMENT_PREFIX: &str = "GEOMAN";
-pub const GEOMAN_ENVIRONMENT_KEY: &str = "GEOMAN_ENVIRONMENT";

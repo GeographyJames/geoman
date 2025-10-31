@@ -1,4 +1,5 @@
 use actix_web::{App, HttpResponse, HttpServer, dev::Server, web};
+use anyhow::Context;
 use clerk_rs::{
     ClerkConfiguration,
     clerk::Clerk,
@@ -7,7 +8,7 @@ use clerk_rs::{
 use secrecy::ExposeSecret;
 use std::net::TcpListener;
 
-use crate::{URLS, app::config::AppConfig};
+use crate::app::{config::AppConfig, urls::URLS};
 
 pub fn run(listener: TcpListener, config: &AppConfig) -> anyhow::Result<Server> {
     let clerk_config = ClerkConfiguration::new(
@@ -16,21 +17,22 @@ pub fn run(listener: TcpListener, config: &AppConfig) -> anyhow::Result<Server> 
         Some(config.auth.clerk_secret_key.expose_secret().clone()),
         None,
     );
+    let clerk = Clerk::new(clerk_config);
     let server = HttpServer::new(move || {
-        let clerk = Clerk::new(clerk_config.clone());
         App::new()
             .route(&URLS.health_check, web::get().to(HttpResponse::Ok))
             .service(
                 web::resource(&URLS.health_check_authenticated)
                     .wrap(ClerkMiddleware::new(
-                        MemoryCacheJwksProvider::new(clerk),
+                        MemoryCacheJwksProvider::new(clerk.clone()),
                         None,
                         true,
                     ))
                     .route(web::get().to(HttpResponse::Ok)),
             )
     })
-    .listen(listener)?
+    .listen(listener)
+    .context("failed to bind to listener")?
     .run();
     Ok(server)
 }

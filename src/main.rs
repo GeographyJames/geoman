@@ -1,6 +1,6 @@
 use std::net::TcpListener;
 
-use geoman::app::{config::get_config, startup::run};
+use geoman::app::{get_config, run};
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
@@ -11,9 +11,11 @@ async fn main() -> anyhow::Result<()> {
     ))
     .expect("failed to bind to port");
     println!(
-        "Starting GeoMan for {} environment on port {}",
+        "Starting GeoMan for environment '{}' on port {}",
         config.app_settings.environment, config.app_settings.port
     );
-    run(listener, &config)?.await?;
+    run(listener, &config)
+        .expect("failed to run server")
+        .await?;
     Ok(())
 }

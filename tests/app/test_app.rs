@@ -1,7 +1,7 @@
 use std::net::TcpListener;
 
 use dotenvy::dotenv;
-use geoman::app::{config::get_config, startup};
+use geoman::app::{get_config, run};
 
 use crate::{
     app::{auth::clerk::ClerkAuthProvider, services::HttpClient},
@@ -27,7 +27,7 @@ impl TestApp {
             "http://{}:{}",
             config.app_settings.host, config.app_settings.port
         ));
-        let server = startup::run(listener, &config).expect("failed to run server");
+        let server = run(listener, &config).expect("failed to run server");
         let _ = tokio::spawn(server);
         let auth = ClerkAuthProvider {
             secret: config.auth.clerk_secret_key,
