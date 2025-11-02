@@ -1,6 +1,17 @@
 #!/bin/bash
 set -eo pipefail
 
+# Cleanup function to remove container on failure
+cleanup() {
+    if [[ -z "${SKIP_DOCKER}" ]] && docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+        echo >&2 "Error detected - cleaning up Docker container"
+        docker rm -f "${CONTAINER_NAME}"
+    fi
+}
+
+# Set trap to call cleanup on error
+trap cleanup ERR
+
 echo >&2 "Initialising GeoMan database"
 
 if ! [ -x "$(command -v sqlx)" ]; then
@@ -18,27 +29,54 @@ APP_DB_NAME="${APP_DB_NAME:=geoman_local}"
 
 CONTAINER_NAME="postgres"
 
-docker run \
-    --restart unless-stopped \
-    --env POSTGRES_USER=${SUPERUSER} \
-    --env POSTGRES_PASSWORD=${SUPERUSER_PWD} \
-    --health-cmd="pg_isready -U ${SUPERUSER} || exit 1" \
-    --health-interval=1s \
-    --health-timeout=5s \
-    --health-retries=5 \
-    --publish "${DB_PORT}":5432 \
-    --detach \
-    --name "${CONTAINER_NAME}" \
-    postgis/postgis:18-3.6 -N 1000
-    # ^ x-x.x = Postgres Version-PostGIS Version
+# Allow to skip Docker if a dockerized Postgres database is already running (required for GitHub workflow)
+if [[ -z "${SKIP_DOCKER}" ]]
+then
+    docker run \
+        --restart unless-stopped \
+        --env POSTGRES_USER=${SUPERUSER} \
+        --env POSTGRES_PASSWORD=${SUPERUSER_PWD} \
+        --health-cmd="pg_isready -U ${SUPERUSER} || exit 1" \
+        --health-interval=1s \
+        --health-timeout=5s \
+        --health-retries=5 \
+        --publish "${DB_PORT}":5432 \
+        --detach \
+        --name "${CONTAINER_NAME}" \
+        postgis/postgis:18-3.6 -N 500
+        # ^ x-x.x = Postgres Version-PostGIS Version
 
 
-until [ \
-    "$(docker inspect -f "{{.State.Health.Status}}" ${CONTAINER_NAME})" == \
-    "healthy" \
-]; do
-    >&2 echo "Postgers is still unavailable - sleeping"
-    sleep 1
-done
+    until [ \
+        "$(docker inspect -f "{{.State.Health.Status}}" ${CONTAINER_NAME})" == \
+        "healthy" \
+    ]; do
+        >&2 echo "Postgers is still unavailable - sleeping"
+        sleep 1
+    done
 
->&2 echo "Postgres is up and running on port ${DB_PORT}"
+    >&2 echo "Postgres is up and running on port ${DB_PORT}"
+
+    # These need to run before sqlx database create command and before you can connect with psql
+    # These commands are also included in github workflow
+
+    CREATE_USER="CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
+    docker exec -it "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -q -c "${CREATE_USER}"
+
+    GRANT_CREATEDB="ALTER USER ${APP_USER} CREATEDB;"
+    docker exec -it "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -q -c "${GRANT_CREATEDB}"
+fi
+
+DATABASE_URL=postgres://${APP_USER}:${APP_USER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME}
+export DATABASE_URL
+sqlx database create
+
+# Github workflow includes SKIP_DOCKER=true so run extra database commands here after database has been created.
+psql postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME} -q -c "CREATE EXTENSION postgis;"
+psql postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME} -q -c "CREATE EXTENSION btree_gist;"
+
+sqlx migrate run
+
+# Disable cleanup trap on successful completion
+trap - ERR
+echo >&2 "Database initialisation completed successfully!"

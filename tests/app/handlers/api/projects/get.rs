@@ -1,4 +1,6 @@
-use crate::app::{TestApp, helpers::assert_ok};
+use geoman::domain::Project;
+
+use crate::app::{TestApp, helpers::handle_json_response};
 
 #[actix_web::test]
 async fn get_projects_works() {
@@ -8,5 +10,8 @@ async fn get_projects_works() {
         .projects_service
         .get(&app.api_client, Some(&token))
         .await;
-    assert_ok(&response);
+    let projects: Vec<Project> = handle_json_response(response)
+        .await
+        .expect("failed to retrieve projects");
+    assert!(!projects.is_empty())
 }

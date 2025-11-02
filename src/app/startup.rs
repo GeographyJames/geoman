@@ -18,7 +18,13 @@ pub fn run(listener: TcpListener, config: &AppConfig) -> anyhow::Result<Server> 
     let clerk_config = ClerkConfiguration::new(
         None,
         None,
-        Some(config.auth.clerk_secret_key.expose_secret().clone()),
+        Some(
+            config
+                .auth_settings
+                .clerk_secret_key
+                .expose_secret()
+                .clone(),
+        ),
         None,
     );
     let clerk = Clerk::new(clerk_config);

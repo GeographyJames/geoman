@@ -1,3 +1,11 @@
 app_settings:
   host: 127.0.0.1
   port: 8000
+
+db_settings:
+  require_ssl: false
+  host: "localhost"
+  port: 5432
+  username: "app_local"
+  password: "secret"
+  database_name: "geoman_local"

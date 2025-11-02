@@ -48,7 +48,7 @@ impl TestApp {
         let server = run(listener, &config).expect("failed to run server");
         let _ = tokio::spawn(server);
         let auth = ClerkAuthProvider {
-            secret: config.auth.clerk_secret_key,
+            secret: config.auth_settings.clerk_secret_key,
             test_user_id,
         };
 

@@ -9,18 +9,22 @@ pub async fn handle_json_response<T: DeserializeOwned>(
     response: Response,
 ) -> Result<T, anyhow::Error> {
     if response.status().is_success() {
-        let token: T = response
+        let json: T = response
             .json()
             .await
             .expect("failed to deserialise successful response");
-        return Ok(token);
+        return Ok(json);
     }
+
     let status = response.status().as_u16();
-    let error: serde_json::Value = response.json().await.unwrap_or(serde_json::json!(
-        "failed to deserialise unsuccessful response"
-    ));
+
+    let error = response
+        .text()
+        .await
+        .unwrap_or("no repsonse body".to_string());
+
     Err(anyhow::anyhow!(
-        "response status: {status}\nError:\n{:#}",
+        "response status: {status}\nbody:\n{:#}",
         error,
     ))
 }

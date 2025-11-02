@@ -1,21 +1,23 @@
 //! Application configuration and initialisation
 
+use std::str::FromStr;
+
 use anyhow::Context;
 use dotenvy::dotenv;
 use secrecy::SecretBox;
 use serde::Deserialize;
 
 use crate::app::{
-    constants::ENVIRONMENT_VARIABLE_PREFIX,
-    enums::GeoManEnvironment,
-    helpers::{get_configuration_directory, get_environment},
+    constants::ENVIRONMENT_VARIABLE_PREFIX, enums::GeoManEnvironment,
+    helpers::get_configuration_directory,
 };
 
 /// Application configuration container
 #[derive(Deserialize)]
 pub struct AppConfig {
-    pub auth: ClerkAuthSettings,
+    pub auth_settings: ClerkAuthSettings,
     pub app_settings: AppSettings,
+    pub db_settings: DatabaseSettings,
 }
 
 /// Clerk authentication settings
@@ -30,6 +32,17 @@ pub struct AppSettings {
     pub environment: GeoManEnvironment,
     pub host: String,
     pub port: u16,
+}
+
+/// PostgreSQL database settings
+#[derive(Deserialize)]
+pub struct DatabaseSettings {
+    pub username: String,
+    pub password: SecretBox<String>,
+    pub port: u16,
+    pub host: String,
+    pub database_name: String,
+    pub require_ssl: bool,
 }
 
 /// Creates application configuration from YAML configuratiton files for specific runtime environment.
@@ -58,4 +71,16 @@ pub fn get_config() -> Result<AppConfig, anyhow::Error> {
         .try_deserialize::<AppConfig>()
         .context("failed to deserialise app config")?;
     Ok(app_config)
+}
+
+fn get_environment() -> anyhow::Result<GeoManEnvironment> {
+    let geoman_env_key = format!("{ENVIRONMENT_VARIABLE_PREFIX}_ENVIRONMENT");
+    GeoManEnvironment::from_str(
+        &std::env::var(&geoman_env_key).map_err(|e| {
+            anyhow::anyhow!("no '{geoman_env_key}' environment variable set: {}", e)
+        })?,
+    )
+    .context(format!(
+        "failed to parse {geoman_env_key} environment variable"
+    ))
 }
