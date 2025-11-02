@@ -7,12 +7,7 @@ pub struct HttpClient {
 
 impl HttpClient {
     pub fn new(base_url: String) -> Self {
-        let client = reqwest::Client::builder()
-            .redirect(reqwest::redirect::Policy::none())
-            .cookie_store(true)
-            .build()
-            .unwrap();
-
+        let client = reqwest::Client::new();
         Self { client, base_url }
     }
 

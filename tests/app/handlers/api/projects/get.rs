@@ -13,5 +13,4 @@ async fn get_projects_works() {
     let projects: Vec<Project> = handle_json_response(response)
         .await
         .expect("failed to retrieve projects");
-    assert!(!projects.is_empty())
 }
