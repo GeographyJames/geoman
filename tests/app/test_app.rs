@@ -8,6 +8,7 @@ use geoman::app::{
     URLS, get_config, run,
     telemetry::{get_subscriber, init_subscriber},
 };
+use secrecy::ExposeSecret;
 use std::{net::TcpListener, sync::LazyLock};
 
 static TRACING: LazyLock<()> = LazyLock::new(|| {
@@ -26,31 +27,38 @@ pub struct TestApp {
     pub api_client: HttpClient,
     pub auth: ClerkAuthProvider,
     pub health_check_service: HttpService,
-    pub health_check_authenticated_service: HttpService,
     pub projects_service: HttpService,
+    pub api_docs_service: HttpService,
 }
 
 impl TestApp {
     pub async fn spawn() -> Self {
         dotenv().ok();
         LazyLock::force(&TRACING);
-        let test_user_id = std::env::var(CLERK_USER_ID_KEY)
-            .expect(&format!("no {CLERK_USER_ID_KEY} environment variable set"));
         let mut config = get_config().expect("failed to intialise app config");
+        config.app_settings.environment = geoman::app::enums::GeoManEnvironment::Production;
         let listener = TcpListener::bind(format!("{}:0", config.app_settings.host))
             .expect("failed to bind to port");
         let port = listener.local_addr().unwrap().port();
         config.app_settings.port = port;
+        let test_user_id = std::env::var(CLERK_USER_ID_KEY)
+            .expect(&format!("no {CLERK_USER_ID_KEY} environment variable set"));
         let api_client = HttpClient::new(format!(
             "http://{}:{}",
             config.app_settings.host, config.app_settings.port
         ));
-        let server = run(listener, &config).expect("failed to run server");
-        let _ = tokio::spawn(server);
         let auth = ClerkAuthProvider {
-            secret: config.auth_settings.clerk_secret_key,
+            secret: secrecy::SecretBox::new(Box::new(
+                config
+                    .auth_settings
+                    .clerk_secret_key
+                    .expose_secret()
+                    .to_owned(),
+            )),
             test_user_id,
         };
+        let server = run(listener, config).expect("failed to run server");
+        let _ = tokio::spawn(server);
 
         Self {
             api_client,
@@ -58,11 +66,11 @@ impl TestApp {
             health_check_service: HttpService {
                 endpoint: URLS.health_check.clone(),
             },
-            health_check_authenticated_service: HttpService {
-                endpoint: URLS.health_check_authenticated.clone(),
-            },
             projects_service: HttpService {
                 endpoint: format!("{}{}", &URLS.api.base, &URLS.api.projects),
+            },
+            api_docs_service: HttpService {
+                endpoint: format!("{}{}", &URLS.docs.base, &URLS.docs.api),
             },
         }
     }

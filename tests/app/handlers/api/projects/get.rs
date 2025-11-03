@@ -14,3 +14,10 @@ async fn get_projects_works() {
         .await
         .expect("failed to retrieve projects");
 }
+
+#[actix_web::test]
+async fn get_projects_returns_401_for_unauthenticated() {
+    let app = TestApp::spawn().await;
+    let response = app.projects_service.get(&app.api_client, None).await;
+    assert_eq!(response.status().as_u16(), 401);
+}

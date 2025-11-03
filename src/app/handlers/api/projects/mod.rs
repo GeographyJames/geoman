@@ -1,2 +1,2 @@
-mod get;
-pub use get::get_projects;
+pub mod get;
+pub use get::*;

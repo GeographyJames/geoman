@@ -1,7 +1,17 @@
-use actix_web::HttpResponse;
+use actix_web::{HttpResponse, get};
+use serde::Serialize;
 
-use crate::domain::Project;
+#[derive(Serialize, utoipa::ToSchema)]
 
+pub struct Project {
+    id: u32,
+    name: String,
+}
+
+#[utoipa::path(
+    responses((status = OK, body = Vec<Project>)),
+)]
+#[get("")]
 #[tracing::instrument]
 pub async fn get_projects() -> HttpResponse {
     let projects: Vec<Project> = Vec::new();

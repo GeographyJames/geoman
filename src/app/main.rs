@@ -24,8 +24,6 @@ async fn main() -> anyhow::Result<()> {
         config.app_settings.environment,
         config.app_settings.port
     );
-    run(listener, &config)
-        .expect("failed to run server")
-        .await?;
+    run(listener, config).expect("failed to run server").await?;
     Ok(())
 }

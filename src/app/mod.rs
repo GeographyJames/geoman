@@ -2,7 +2,7 @@
 
 mod config;
 mod constants;
-mod enums;
+pub mod enums;
 mod helpers;
 mod startup;
 mod urls;

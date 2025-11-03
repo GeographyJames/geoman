@@ -1,22 +1,31 @@
-use actix_web::{
-    HttpResponse,
-    web::{self, ServiceConfig},
+use crate::app::{
+    URLS,
+    handlers::{api::projects::get_projects, docs::get_api_docs},
+};
+use clerk_rs::{
+    clerk::Clerk,
+    validators::{actix::ClerkMiddleware, jwks::MemoryCacheJwksProvider},
 };
 
-use crate::app::{URLS, handlers::api::projects::get_projects};
-
-pub fn unprotected_routes(cfg: &mut ServiceConfig) {
-    cfg.route(&URLS.health_check, web::get().to(HttpResponse::Ok));
+pub fn docs_routes(cfg: &mut actix_web::web::ServiceConfig, clerk: Clerk) {
+    let scp = actix_web::web::scope(&URLS.docs.base)
+        .route(&URLS.docs.api, actix_web::web::get().to(get_api_docs));
+    cfg.service(scp.wrap(ClerkMiddleware::new(
+        MemoryCacheJwksProvider::new(clerk),
+        None,
+        true,
+    )));
 }
 
-pub fn protected_routes(cfg: &mut ServiceConfig) {
-    cfg.route(
-        &URLS.health_check_authenticated,
-        web::get().to(HttpResponse::Ok),
-    )
-    .service(web::scope(&URLS.api.base).configure(api_routes));
+pub fn api_routes(cfg: &mut utoipa_actix_web::service_config::ServiceConfig, clerk: Clerk) {
+    let scp = utoipa_actix_web::scope::scope(URLS.api.base.as_str()).configure(project_routes);
+    cfg.service(scp.wrap(ClerkMiddleware::new(
+        MemoryCacheJwksProvider::new(clerk),
+        None,
+        true,
+    )));
 }
 
-pub fn api_routes(cfg: &mut ServiceConfig) {
-    cfg.route(&URLS.api.projects, web::get().to(get_projects));
+pub fn project_routes(cfg: &mut utoipa_actix_web::service_config::ServiceConfig) {
+    cfg.service(utoipa_actix_web::scope::scope(URLS.api.projects.as_str()).service(get_projects));
 }

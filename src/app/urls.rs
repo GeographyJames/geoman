@@ -11,12 +11,19 @@ pub struct Urls {
     pub health_check: String,
     pub health_check_authenticated: String,
     pub api: Api,
+    pub docs: Docs,
 }
 
 #[derive(Deserialize)]
 pub struct Api {
     pub base: String,
     pub projects: String,
+}
+
+#[derive(Deserialize)]
+pub struct Docs {
+    pub base: String,
+    pub api: String,
 }
 
 fn initialise_urls() -> Result<Urls, anyhow::Error> {
