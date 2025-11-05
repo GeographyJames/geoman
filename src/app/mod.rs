@@ -7,7 +7,7 @@ mod helpers;
 mod startup;
 mod urls;
 pub use config::get_config;
-pub use startup::run;
+pub use startup::Application;
 pub use urls::URLS;
 mod handlers;
 mod routes;

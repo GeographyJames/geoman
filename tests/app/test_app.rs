@@ -5,11 +5,11 @@ use crate::app::{
 };
 use dotenvy::dotenv;
 use geoman::app::{
-    URLS, get_config, run,
+    Application, URLS, get_config,
     telemetry::{get_subscriber, init_subscriber},
 };
 use secrecy::ExposeSecret;
-use std::{net::TcpListener, sync::LazyLock};
+use std::sync::LazyLock;
 
 static TRACING: LazyLock<()> = LazyLock::new(|| {
     let default_filter_level = "info".to_string();
@@ -37,16 +37,12 @@ impl TestApp {
         LazyLock::force(&TRACING);
         let mut config = get_config().expect("failed to intialise app config");
         config.app_settings.environment = geoman::app::enums::GeoManEnvironment::Production;
-        let listener = TcpListener::bind(format!("{}:0", config.app_settings.host))
-            .expect("failed to bind to port");
-        let port = listener.local_addr().unwrap().port();
-        config.app_settings.port = port;
+
+        // Set port to 0 so TCP Listner binds to random free port for tests
+        config.app_settings.port = 0;
+
         let test_user_id = std::env::var(CLERK_USER_ID_KEY)
             .expect(&format!("no {CLERK_USER_ID_KEY} environment variable set"));
-        let api_client = HttpClient::new(format!(
-            "http://{}:{}",
-            config.app_settings.host, config.app_settings.port
-        ));
         let auth = ClerkAuthProvider {
             secret: secrecy::SecretBox::new(Box::new(
                 config
@@ -57,8 +53,11 @@ impl TestApp {
             )),
             test_user_id,
         };
-        let server = run(listener, config).expect("failed to run server");
-        let _ = tokio::spawn(server);
+        let app = Application::build(config)
+            .await
+            .expect("failed to build application");
+        let api_client = HttpClient::new(format!("http://127.0.0.1:{}", app.port));
+        let _ = tokio::spawn(app.run_untill_stopped());
 
         Self {
             api_client,

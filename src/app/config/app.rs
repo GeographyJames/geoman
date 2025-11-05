@@ -1,16 +1,13 @@
-//! Application configuration and initialisation
-
-use std::str::FromStr;
-
-use anyhow::Context;
-use dotenvy::dotenv;
-use secrecy::SecretBox;
-use serde::Deserialize;
-
 use crate::app::{
-    constants::ENVIRONMENT_VARIABLE_PREFIX, enums::GeoManEnvironment,
+    config::{clerk::ClerkAuthSettings, db::DatabaseSettings},
+    constants::ENVIRONMENT_VARIABLE_PREFIX,
+    enums::GeoManEnvironment,
     helpers::get_configuration_directory,
 };
+use anyhow::Context;
+use dotenvy::dotenv;
+use serde::Deserialize;
+use std::str::FromStr;
 
 /// Application configuration container
 #[derive(Deserialize)]
@@ -20,33 +17,12 @@ pub struct AppConfig {
     pub db_settings: DatabaseSettings,
 }
 
-/// Clerk authentication settings
-#[derive(Deserialize)]
-pub struct ClerkAuthSettings {
-    pub clerk_secret_key: SecretBox<String>,
-}
-
 /// Application settings
 #[derive(Deserialize)]
 pub struct AppSettings {
     pub environment: GeoManEnvironment,
     pub host: String,
     pub port: u16,
-}
-
-impl AppSettings {
-    pub fn app_url(&self) {}
-}
-
-/// PostgreSQL database settings
-#[derive(Deserialize)]
-pub struct DatabaseSettings {
-    pub username: String,
-    pub password: SecretBox<String>,
-    pub port: u16,
-    pub host: String,
-    pub database_name: String,
-    pub require_ssl: bool,
 }
 
 /// Creates application configuration from YAML configuratiton files for specific runtime environment.
