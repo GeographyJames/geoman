@@ -1,6 +1,6 @@
 use actix_web::{HttpResponse, get, web};
 
-use crate::ogc::types::common::ConformanceDeclaration;
+use crate::{app::AppState, ogc::types::common::ConformanceDeclaration};
 
 /// API conformance definition
 ///
@@ -21,9 +21,8 @@ use crate::ogc::types::common::ConformanceDeclaration;
     )
 )]
 #[get("")]
-#[tracing::instrument]
-pub async fn get_conformance_declaration(
-    conformance: web::Data<ConformanceDeclaration>,
-) -> HttpResponse {
+#[tracing::instrument(skip(state))]
+pub async fn get_conformance_declaration(state: web::Data<AppState>) -> HttpResponse {
+    let conformance = &state.conformance_declaration;
     HttpResponse::Ok().json(conformance)
 }

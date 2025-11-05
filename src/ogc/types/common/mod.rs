@@ -7,3 +7,5 @@ pub mod link_relations;
 pub mod media_types;
 pub use conformance::ConformanceDeclaration;
 pub mod conformance_classes;
+mod links;
+pub use links::*;
