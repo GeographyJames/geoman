@@ -11,7 +11,7 @@ pub struct Urls {
     pub health_check: String,
     pub api: Api,
     pub docs: Docs,
-    pub ogc_api: OGCAPI,
+    pub ogc_api: Ogcapi,
 }
 
 #[derive(Deserialize)]
@@ -27,7 +27,7 @@ pub struct Docs {
 }
 
 #[derive(Deserialize)]
-pub struct OGCAPI {
+pub struct Ogcapi {
     pub base: String,
     pub conformance_declaration: String,
 }
@@ -35,10 +35,10 @@ pub struct OGCAPI {
 fn initialise_urls() -> Result<Urls, anyhow::Error> {
     let configuration_directory =
         get_configuration_directory().context("failed to determine configuration directory")?;
-    Ok(config::Config::builder()
+    config::Config::builder()
         .add_source(config::File::from(configuration_directory.join("urls")))
         .build()
         .context("failed to build URLs config")?
         .try_deserialize()
-        .context("failed to deserialise URLs")?)
+        .context("failed to deserialise URLs")
 }

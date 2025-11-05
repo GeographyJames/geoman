@@ -45,10 +45,10 @@ pub fn run(listener: TcpListener, config: AppConfig) -> anyhow::Result<Server> {
             .configure(|cfg| api_routes(cfg, clerk.clone()))
             .configure(ogc_routes)
             .split_for_parts();
-        let app = app
-            .app_data(web::Data::new(api_docs))
-            .configure(|cfg| docs_routes(cfg, clerk.clone()));
+        
         app
+            .app_data(web::Data::new(api_docs))
+            .configure(|cfg| docs_routes(cfg, clerk.clone()))
     })
     .listen(listener)
     .context("failed to bind to listener")?
