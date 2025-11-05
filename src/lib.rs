@@ -3,4 +3,5 @@
 pub mod app;
 pub mod domain;
 pub mod geo;
+pub mod ogc;
 pub mod repo;

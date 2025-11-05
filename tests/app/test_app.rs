@@ -1,7 +1,7 @@
 use crate::app::{
     auth::clerk::ClerkAuthProvider,
     constants::CLERK_USER_ID_KEY,
-    services::{HttpClient, HttpService},
+    services::{HttpClient, HttpService, OgcService},
 };
 use dotenvy::dotenv;
 use geoman::app::{
@@ -29,6 +29,7 @@ pub struct TestApp {
     pub health_check_service: HttpService,
     pub projects_service: HttpService,
     pub api_docs_service: HttpService,
+    pub ogc_service: OgcService,
 }
 
 impl TestApp {
@@ -72,6 +73,7 @@ impl TestApp {
             api_docs_service: HttpService {
                 endpoint: format!("{}{}", &URLS.docs.base, &URLS.docs.api),
             },
+            ogc_service: OgcService {},
         }
     }
     pub async fn get_test_session_token(&self) -> String {

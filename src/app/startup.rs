@@ -1,7 +1,10 @@
-use crate::app::{
-    URLS,
-    config::AppConfig,
-    routes::{api_routes, docs_routes},
+use crate::{
+    app::{
+        URLS,
+        config::AppConfig,
+        routes::{api_routes, docs_routes, ogc_routes},
+    },
+    ogc::types::common::{ConformanceDeclaration, conformance_classes},
 };
 use actix_web::{App, HttpResponse, HttpServer, dev::Server, web};
 use anyhow::Context;
@@ -26,12 +29,21 @@ pub fn run(listener: TcpListener, config: AppConfig) -> anyhow::Result<Server> {
     );
     let clerk = Clerk::new(clerk_config);
 
+    let mut conformance = ConformanceDeclaration::default();
+    conformance.extend(&[
+        conformance_classes::CORE,
+        conformance_classes::GEOJSON,
+        conformance_classes::OAS30,
+    ]);
+
     let server = HttpServer::new(move || {
         let (app, api_docs) = App::new()
+            .app_data(web::Data::new(conformance.clone()))
             .wrap(TracingLogger::default())
             .route(&URLS.health_check, web::get().to(HttpResponse::Ok))
             .into_utoipa_app()
             .configure(|cfg| api_routes(cfg, clerk.clone()))
+            .configure(ogc_routes)
             .split_for_parts();
         let app = app
             .app_data(web::Data::new(api_docs))

@@ -34,6 +34,10 @@ pub struct AppSettings {
     pub port: u16,
 }
 
+impl AppSettings {
+    pub fn app_url(&self) {}
+}
+
 /// PostgreSQL database settings
 #[derive(Deserialize)]
 pub struct DatabaseSettings {

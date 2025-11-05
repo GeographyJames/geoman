@@ -1,6 +1,6 @@
 use crate::app::{
     URLS,
-    handlers::{api::projects::get_projects, docs::get_api_docs},
+    handlers::{api::projects::get_projects, docs::get_api_docs, ogc_api},
 };
 use clerk_rs::{
     clerk::Clerk,
@@ -28,4 +28,15 @@ pub fn api_routes(cfg: &mut utoipa_actix_web::service_config::ServiceConfig, cle
 
 pub fn project_routes(cfg: &mut utoipa_actix_web::service_config::ServiceConfig) {
     cfg.service(utoipa_actix_web::scope::scope(URLS.api.projects.as_str()).service(get_projects));
+}
+
+pub fn ogc_routes(cfg: &mut utoipa_actix_web::service_config::ServiceConfig) {
+    cfg.service(
+        utoipa_actix_web::scope::scope(URLS.ogc_api.base.as_str())
+            .service(ogc_api::get_landing_page)
+            .service(
+                utoipa_actix_web::scope::scope(URLS.ogc_api.conformance_declaration.as_str())
+                    .service(ogc_api::get_conformance_declaration),
+            ),
+    );
 }
