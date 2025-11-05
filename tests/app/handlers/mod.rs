@@ -1,4 +1,3 @@
-mod api;
 mod docs;
 mod health_check;
-mod ogc;
+mod ogc_api;

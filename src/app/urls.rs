@@ -17,7 +17,6 @@ pub struct Urls {
 #[derive(Deserialize)]
 pub struct Api {
     pub base: String,
-    pub projects: String,
 }
 
 #[derive(Deserialize)]

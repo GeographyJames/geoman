@@ -27,7 +27,6 @@ pub struct TestApp {
     pub api_client: HttpClient,
     pub auth: ClerkAuthProvider,
     pub health_check_service: HttpService,
-    pub projects_service: HttpService,
     pub api_docs_service: HttpService,
     pub ogc_service: OgcService,
 }
@@ -66,9 +65,6 @@ impl TestApp {
             auth,
             health_check_service: HttpService {
                 endpoint: URLS.health_check.clone(),
-            },
-            projects_service: HttpService {
-                endpoint: format!("{}{}", &URLS.api.base, &URLS.api.projects),
             },
             api_docs_service: HttpService {
                 endpoint: format!("{}{}", &URLS.docs.base, &URLS.docs.api),

@@ -3,7 +3,6 @@ health_check_authenticated: "/health-check-authenticated"
 
 api:
   base: "/api"
-  projects: "/projects"
 
 docs:
   base: "/docs"
