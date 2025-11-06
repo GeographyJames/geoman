@@ -10,4 +10,5 @@ pub enum GeoManEnvironment {
     Demo,
     Staging,
     Production,
+    CiPipeline,
 }
