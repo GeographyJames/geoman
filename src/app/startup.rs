@@ -2,6 +2,7 @@ use crate::{
     app::{
         AppState, URLS,
         config::AppConfig,
+        enums::GeoManEnvironment,
         routes::{api_routes, docs_routes, ogc_routes},
     },
     repo::PostgresRepo,
@@ -14,6 +15,7 @@ use sqlx::PgPool;
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
 use utoipa_actix_web::AppExt;
+use utoipa_swagger_ui::SwaggerUi;
 
 pub struct Application {
     pub server: Server,
@@ -72,8 +74,17 @@ pub async fn run(
             .configure(ogc_routes)
             .split_for_parts();
 
-        app.app_data(web::Data::new(api_docs))
-            .configure(|cfg| docs_routes(cfg, clerk.clone()))
+        match config.app_settings.environment {
+            // Include Swagger UI in development
+            GeoManEnvironment::Development => app.service(
+                SwaggerUi::new("/swagger-ui/{_:.*}")
+                    .url(format!("{}{}", URLS.docs.base, URLS.docs.api), api_docs),
+            ),
+            // Serve api docs without Swagger UI
+            _ => app
+                .app_data(web::Data::new(api_docs))
+                .configure(|cfg| docs_routes(cfg, clerk.clone())),
+        }
     })
     .listen(listener)
     .context("failed to bind to listener")?

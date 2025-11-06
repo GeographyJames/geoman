@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::domain::enums::{Country, Status};
+use crate::domain::enums::Status;
 
 #[derive(Serialize, Deserialize)]
 pub struct Project {
@@ -11,6 +11,5 @@ pub struct Project {
 #[derive(Serialize, Deserialize)]
 pub struct ProjectProperties {
     name: String,
-    country: Country,
     status: Status,
 }

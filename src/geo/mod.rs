@@ -1,1 +1,1 @@
-//! Geospatial utilities and data processing.
+//! Geospatial utilities and data processing

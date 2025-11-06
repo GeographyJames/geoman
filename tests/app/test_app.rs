@@ -6,7 +6,9 @@ use crate::app::{
 };
 use dotenvy::dotenv;
 use geoman::app::{
-    Application, DatabaseSettings, URLS, get_config,
+    Application, DatabaseSettings, URLS,
+    enums::GeoManEnvironment,
+    get_config,
     telemetry::{get_subscriber, init_subscriber},
 };
 use secrecy::ExposeSecret;
@@ -42,7 +44,12 @@ impl TestApp {
         LazyLock::force(&TRACING);
         let db_name = Uuid::new_v4().to_string();
         let mut config = get_config().expect("failed to intialise app config");
-        config.app_settings.environment = geoman::app::enums::GeoManEnvironment::Production;
+        let testing_environment = GeoManEnvironment::Production;
+        tracing::info!(
+            "Spawning GeoMan test app for environment '{}'",
+            testing_environment
+        );
+        config.app_settings.environment = testing_environment.clone();
         config.db_settings.database_name = db_name.clone();
         // Set port to 0 so TCP Listner binds to random free port for tests
         config.app_settings.port = 0;

@@ -1,4 +1,4 @@
-//! The main Actix Web application.
+//! The main Actix Web application
 
 mod config;
 mod constants;
