@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::ogc::types::common::Link;
+use crate::ogc::types::common::Links;
 
 /// OGC API - Features Landing Page
 ///
@@ -14,5 +14,5 @@ pub struct LandingPage {
     /// Description of the API
     pub description: String,
     /// Links to related resources
-    pub links: Vec<Link>,
+    pub links: Links,
 }

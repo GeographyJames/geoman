@@ -40,7 +40,7 @@ impl Application {
 pub async fn run(
     listener: TcpListener,
     config: AppConfig,
-    _db_pool: PgPool,
+    db_pool: PgPool,
 ) -> anyhow::Result<Server> {
     let clerk_config = ClerkConfiguration::new(
         None,
@@ -55,11 +55,11 @@ pub async fn run(
         None,
     );
     let clerk = Clerk::new(clerk_config);
-    let app_state = AppState::new();
+    let app_state = web::Data::new(AppState::new(db_pool));
 
     let server = HttpServer::new(move || {
         let (app, api_docs) = App::new()
-            .app_data(web::Data::new(app_state.clone()))
+            .app_data(app_state.clone())
             .wrap(TracingLogger::default())
             .route(&URLS.health_check, web::get().to(HttpResponse::Ok))
             .into_utoipa_app()
