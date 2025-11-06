@@ -12,11 +12,12 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SQLX_VERSION: 0.8.6
-  SQLX_FEATURES: "rustls,postgres"
   APP_USER: app_local
   APP_USER_PWD: secret
   APP_DB_NAME: geoman_local
+  GEOMAN_ENVIRONMENT: local
+  GEOMAN_AUTH_SETTINGS__CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+  CLERK_TEST_USER_ID: ${{secrets.CLERK_TEST_USER_ID}}
 
 # A workflow run is made up of one or more jobs, which run in parallel by default
 # Each job runs in a runner environment specified by runs-on
@@ -56,13 +57,6 @@ jobs:
       - name: Install the Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
 
-      - name: Install sqlx-cli
-        run: cargo install sqlx-cli
-          --version=${{ env.SQLX_VERSION }}
-          --features ${{ env.SQLX_FEATURES }}
-          --no-default-features
-          --locked
-
       - name: Create app user in Postgres
         run: |
           sudo apt-get install postgresql-client
@@ -76,10 +70,6 @@ jobs:
           PGPASSWORD="password" psql -U "postgres" -h "localhost" -c "${GRANT_QUERY}"
 
       - name: Run tests
-        env:
-          GEOMAN_ENVIRONMENT: local
-          GEOMAN_AUTH_SETTINGS__CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-          CLERK_TEST_USER_ID: ${{secrets.CLERK_TEST_USER_ID}}
         run: cargo test
 
   # `fmt` container job
@@ -111,20 +101,37 @@ jobs:
   coverage:
     name: Code coverage
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:18-3.6
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v4
       - name: Install the Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: llvm-tools-preview
+
+      - name: Create app user in Postgres
+        run: |
+          sudo apt-get install postgresql-client
+
+          # Create the application user
+          CREATE_QUERY="CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
+          PGPASSWORD="password" psql -U "postgres" -h "localhost" -c "${CREATE_QUERY}"
+
+          # Grant create db privileges to the app user
+          GRANT_QUERY="ALTER USER ${APP_USER} CREATEDB;"
+          PGPASSWORD="password" psql -U "postgres" -h "localhost" -c "${GRANT_QUERY}"
+
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
       - name: Generate code coverage
-        env:
-          GEOMAN_ENVIRONMENT: local
-          GEOMAN_AUTH_SETTINGS__CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-          CLERK_TEST_USER_ID: ${{secrets.CLERK_TEST_USER_ID}}
-
         run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
       - name: Generate report
         run: cargo llvm-cov report --html --output-dir coverage
