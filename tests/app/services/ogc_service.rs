@@ -18,4 +18,12 @@ impl OgcService {
         ));
         req.send().await.expect(REQUEST_FAILED)
     }
+
+    pub async fn get_collections(&self, client: &HttpClient) -> Response {
+        let req = client.get(format!(
+            "{}{}",
+            &URLS.ogc_api.base, &URLS.ogc_api.collections
+        ));
+        req.send().await.expect(REQUEST_FAILED)
+    }
 }

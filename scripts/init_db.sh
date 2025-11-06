@@ -1,11 +1,17 @@
 #!/bin/bash
 set -eo pipefail
 
+remove_docker_container() {
+    echo >&2 "Removing '${CONTAINER_NAME}' docker container..."
+    docker rm -f "${CONTAINER_NAME}" | sed 's/^/  [docker]  /'
+    echo >&2 "Container removed successfully"
+}
+
 # Cleanup function to remove container on failure
 cleanup() {
     if [[ -z "${SKIP_DOCKER}" ]] && docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
         echo >&2 "Error detected - cleaning up Docker container"
-        docker rm -f "${CONTAINER_NAME}"
+        remove_docker_container
     fi
 }
 
@@ -32,6 +38,12 @@ CONTAINER_NAME="postgres"
 # Allow to skip Docker if a dockerized Postgres database is already running (required for GitHub workflow)
 if [[ -z "${SKIP_DOCKER}" ]]
 then
+    # Destroy existing docker container if one exists
+    if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+        echo >&2 "Found existing '${CONTAINER_NAME}' docker container"
+        remove_docker_container
+    fi
+    echo >&2 "Starting '${CONTAINER_NAME}' docker container..."
     docker run \
         --restart unless-stopped \
         --env POSTGRES_USER=${SUPERUSER} \
@@ -43,7 +55,7 @@ then
         --publish "${DB_PORT}":5432 \
         --detach \
         --name "${CONTAINER_NAME}" \
-        postgis/postgis:18-3.6 -N 500
+        postgis/postgis:18-3.6 -N 500 | sed 's/^/  [docker]  /' 
         # ^ x-x.x = Postgres Version-PostGIS Version
 
 

@@ -11,3 +11,4 @@ docs:
 ogc_api:
   base: "/ogcapi"
   conformance_declaration: "/conformance"
+  collections: "/collections"

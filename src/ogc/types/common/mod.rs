@@ -9,3 +9,7 @@ pub use conformance::ConformanceDeclaration;
 pub mod conformance_classes;
 mod links;
 pub use links::*;
+mod collections;
+pub use collections::Collections;
+mod collection;
+pub use collection::Collection;

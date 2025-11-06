@@ -7,7 +7,6 @@ use crate::{app::AppState, ogc::types::common::ConformanceDeclaration};
 /// A list of all conformance classes specified in a standard that
 /// the server conforms to.
 #[utoipa::path(
-    get, path = "/conformance", tag = "Capabilities", 
     responses(
         (
             status = 200,

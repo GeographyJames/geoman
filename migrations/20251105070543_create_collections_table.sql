@@ -1,7 +1,10 @@
 CREATE TABLE app.collections (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    name text NOT NULL UNIQUE,
+    title text NOT NULL UNIQUE,
     slug slug NOT NULL UNIQUE,
+    description TEXT,
+    geometry_type app.geometry_type NOT NULL,
+
     added_by integer NOT NULL REFERENCES app.users(id),
     added timestamptz NOT NULL DEFAULT now(),
     last_updated_by integer NOT NULL REFERENCES app.users(id),

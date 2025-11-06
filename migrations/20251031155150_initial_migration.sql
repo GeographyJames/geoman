@@ -1,6 +1,14 @@
 CREATE SCHEMA app;
 CREATE TYPE app.status AS ENUM ('active', 'archived', 'deleted');
 CREATE TYPE app.visibility AS ENUM ('private', 'team', 'public');
+CREATE TYPE app.geometry_type AS ENUM (
+    'POINT',
+    'LINESTRING',
+    'POLYGON',
+    'MULTIPOINT',
+    'MULTILINESTRING',
+    'MULTIPOLYGON'
+);
 
 CREATE OR REPLACE FUNCTION update_last_updated()
 RETURNS TRIGGER AS $$
