@@ -87,7 +87,8 @@ sqlx database create
 
 # Github workflow includes SKIP_DOCKER=true so run extra database commands here after database has been created.
 psql postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME} -q -c "CREATE EXTENSION postgis;"
-psql postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME} -q -c "CREATE EXTENSION btree_gist;"
+# BTree Gist required for preventing duplicate turbines in layout.
+# psql postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME} -q -c "CREATE EXTENSION btree_gist;" 
 
 sqlx migrate run
 

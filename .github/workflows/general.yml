@@ -38,7 +38,7 @@ jobs:
       - name: Run tests
         env:
           GEOMAN_ENVIRONMENT: local
-          GEOMAN_AUTH__CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          GEOMAN_AUTH_SETTINGS__CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           CLERK_TEST_USER_ID: ${{secrets.CLERK_TEST_USER_ID}}
         run: cargo test
 
@@ -82,7 +82,7 @@ jobs:
       - name: Generate code coverage
         env:
           GEOMAN_ENVIRONMENT: local
-          GEOMAN_AUTH__CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          GEOMAN_AUTH_SETTINGS__CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           CLERK_TEST_USER_ID: ${{secrets.CLERK_TEST_USER_ID}}
 
         run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
