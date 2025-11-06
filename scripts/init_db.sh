@@ -1,4 +1,6 @@
 #!/bin/bash
+
+
 set -eo pipefail
 
 remove_docker_container() {
@@ -88,6 +90,27 @@ psql postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME
 psql postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME} -q -c "CREATE EXTENSION btree_gist;"
 
 sqlx migrate run
+
+# Seed data
+SEED_DATA_DIRECTORY="seed_data/"
+
+run_sql_file() {
+    local sql_file=$1
+    >&2 echo "Executing ${sql_file}"
+    psql ${DATABASE_URL} -q -v ON_ERROR_STOP=1 -f ${SEED_DATA_DIRECTORY}"$sql_file" 2>&1 | sed 's/^/  [psql]  /' || {
+        >&2 echo "error executing $sql_file"
+        return 1
+    }
+}
+
+if [[ -z "${SKIP_SEED}" ]]
+then
+    >&2 echo "Seeding data..."
+    run_sql_file "teams.sql"
+    run_sql_file "users.sql"
+    run_sql_file "collections.sql"
+    >&2 echo "Data seeded successfully"
+fi
 
 # Disable cleanup trap on successful completion
 trap - ERR

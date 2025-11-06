@@ -2,8 +2,8 @@ CREATE TABLE app.projects (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name text NOT NULL UNIQUE,
     slug slug NOT NULL UNIQUE,
-    status app.status NOT NULL DEFAULT 'active',
-    visibility app.visibility NOT NULL DEFAULT 'public',
+    status app.status NOT NULL DEFAULT 'ACTIVE',
+    visibility app.visibility NOT NULL DEFAULT 'PUBLIC',
     owner integer NOT NULL REFERENCES app.users(id),
     
     added_by integer NOT NULL REFERENCES app.users(id),

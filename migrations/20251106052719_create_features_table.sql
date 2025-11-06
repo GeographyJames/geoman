@@ -4,7 +4,7 @@ CREATE TABLE app.features (
     collection_id integer NOT NULL REFERENCES app.collections(id),
     name text NOT NULL,
     is_primary boolean NOT NULL DEFAULT false,
-    status app.status NOT NULL DEFAULT 'active',
+    status app.status NOT NULL DEFAULT 'ACTIVE',
     properties JSONB NOT NULL DEFAULT '{}',
     geom geometry(GEOMETRY) NOT NULL CHECK (ST_IsValid(geom)),
     
@@ -13,7 +13,7 @@ CREATE TABLE app.features (
     last_updated_by integer NOT NULL REFERENCES app.users(id),
     last_updated timestamptz NOT NULL DEFAULT now(),
     
-    CHECK (NOT (is_primary AND status IN ('deleted', 'archived')))
+    CHECK (NOT (is_primary AND status IN ('DELETED', 'ARCHIVED')))
 );
 
 CREATE UNIQUE INDEX idx_one_primary_per_project_collection

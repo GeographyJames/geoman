@@ -1,6 +1,6 @@
 CREATE SCHEMA app;
-CREATE TYPE app.status AS ENUM ('active', 'archived', 'deleted');
-CREATE TYPE app.visibility AS ENUM ('private', 'team', 'public');
+CREATE TYPE app.status AS ENUM ('ACTIVE', 'ARCHIVED', 'DELETED');
+CREATE TYPE app.visibility AS ENUM ('PRIVATE', 'TEAM', 'PUBLIC');
 CREATE TYPE app.geometry_type AS ENUM (
     'POINT',
     'LINESTRING',

@@ -13,7 +13,9 @@ async fn get_collections_works() {
 
     assert_ok(&response);
 
-    let _collections: Collections = handle_json_response(response)
+    let collections: Collections = handle_json_response(response)
         .await
         .expect("failed to retrieve collections");
+
+    assert_eq!(collections.collections.len(), 0)
 }
