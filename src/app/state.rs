@@ -1,13 +1,15 @@
-use sqlx::PgPool;
 
-use crate::{
-    ogc::types::common::{ConformanceDeclaration, LandingPage, conformance_classes},
-    repo::PostgresRepo,
-};
+use crate::ogc::types::common::{ConformanceDeclaration, LandingPage, conformance_classes};
 
 pub struct AppState {
     pub landing_page: LandingPage,
     pub conformance_declaration: ConformanceDeclaration,
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AppState {
