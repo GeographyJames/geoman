@@ -6,7 +6,7 @@ use strum::{Display, EnumString};
 #[strum(ascii_case_insensitive, serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum GeoManEnvironment {
-    Local,
+    Development,
     Demo,
     Staging,
     Production,

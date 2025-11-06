@@ -10,6 +10,7 @@ use geoman::app::{
     telemetry::{get_subscriber, init_subscriber},
 };
 use secrecy::ExposeSecret;
+use sqlx::PgPool;
 use std::sync::LazyLock;
 use uuid::Uuid;
 
@@ -27,6 +28,7 @@ static TRACING: LazyLock<()> = LazyLock::new(|| {
 
 pub struct TestApp {
     db_settings: DatabaseSettings,
+    pub db_pool: PgPool,
     pub api_client: HttpClient,
     pub auth: ClerkAuthProvider,
     pub health_check_service: HttpService,
@@ -63,8 +65,11 @@ impl TestApp {
         let api_client = HttpClient::new(format!("http://127.0.0.1:{}", app.port));
         let _ = tokio::spawn(app.run_untill_stopped());
 
+        let db_pool = db_settings.get_connection_pool();
+
         Self {
             db_settings,
+            db_pool,
             api_client,
             auth,
             health_check_service: HttpService {

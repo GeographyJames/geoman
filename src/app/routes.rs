@@ -36,7 +36,9 @@ pub fn ogc_routes(cfg: &mut utoipa_actix_web::service_config::ServiceConfig) {
                     .service(ogc_api::get_conformance_declaration),
             )
             .service(
-                utoipa_scope(URLS.ogc_api.collections.as_str()).service(ogc_api::get_collections),
+                utoipa_scope(URLS.ogc_api.collections.as_str())
+                    .service(ogc_api::get_collections)
+                    .service(ogc_api::get_collection),
             ),
     );
 }
