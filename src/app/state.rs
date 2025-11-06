@@ -1,4 +1,3 @@
-
 use crate::ogc::types::common::{ConformanceDeclaration, LandingPage, conformance_classes};
 
 pub struct AppState {
