@@ -1,13 +1,15 @@
-use secrecy::{ExposeSecret, SecretBox};
+use secrecy::ExposeSecret;
 use serde::Deserialize;
 use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use sqlx::{ConnectOptions, PgPool};
 
+use crate::app::config::password::Password;
+
 /// PostgreSQL database settings
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct DatabaseSettings {
     pub username: String,
-    pub password: SecretBox<String>,
+    pub password: Password,
     pub port: u16,
     pub host: String,
     pub database_name: String,

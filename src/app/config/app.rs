@@ -18,7 +18,7 @@ pub struct AppConfig {
 }
 
 /// Application settings
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct AppSettings {
     pub environment: GeoManEnvironment,
     pub host: String,
