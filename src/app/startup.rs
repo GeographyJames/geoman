@@ -1,7 +1,10 @@
-use crate::app::{
-    AppState, URLS,
-    config::AppConfig,
-    routes::{api_routes, docs_routes, ogc_routes},
+use crate::{
+    app::{
+        AppState, URLS,
+        config::AppConfig,
+        routes::{api_routes, docs_routes, ogc_routes},
+    },
+    repo::PostgresRepo,
 };
 use actix_web::{App, HttpResponse, HttpServer, dev::Server, web};
 use anyhow::Context;
@@ -55,11 +58,13 @@ pub async fn run(
         None,
     );
     let clerk = Clerk::new(clerk_config);
-    let app_state = web::Data::new(AppState::new(db_pool));
+    let app_state = web::Data::new(AppState::new());
+    let repo = web::Data::new(PostgresRepo::new(db_pool));
 
     let server = HttpServer::new(move || {
         let (app, api_docs) = App::new()
             .app_data(app_state.clone())
+            .app_data(repo.clone())
             .wrap(TracingLogger::default())
             .route(&URLS.health_check, web::get().to(HttpResponse::Ok))
             .into_utoipa_app()

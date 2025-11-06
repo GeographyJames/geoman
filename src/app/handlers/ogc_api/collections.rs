@@ -1,6 +1,12 @@
-use actix_web::{HttpResponse, get};
+use actix_web::{HttpRequest, HttpResponse, get, web};
 
-use crate::ogc::types::common::Collections;
+use crate::{
+    app::URLS,
+    ogc::types::common::link_relations::{DATA, SELF},
+    ogc::types::common::media_types::JSON,
+    ogc::types::common::{Collection, Collections, Link},
+    repo::{PostgresRepo, ogc::CollectionRow},
+};
 
 /// The feature collections in the dataset.
 #[utoipa::path(
@@ -28,13 +34,58 @@ use crate::ogc::types::common::Collections;
             derived from the data; \
             \n* An optional indicator about the type of the items in the \
             collection (the default value, if the indicator is not provided, \
-            is 'feature').", 
+            is 'feature').",
             body = Collections
         )
     )
 )]
 #[get("")]
-#[tracing::instrument]
-pub async fn get_collections() -> HttpResponse {
-    HttpResponse::Ok().finish()
+#[tracing::instrument(skip(repo))]
+pub async fn get_collections(req: HttpRequest, repo: web::Data<PostgresRepo>) -> HttpResponse {
+    // Build base URL from request
+
+    let base_url = {
+        let connection_info = req.connection_info();
+        format!("{}://{}", connection_info.scheme(), connection_info.host())
+    };
+    let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
+
+    // Fetch collections from database
+    let collection_rows: Vec<CollectionRow> = repo
+        .select_all()
+        .await
+        .expect("failed to retrieve collections from database");
+
+    // Map database rows to OGC Collections with links
+    let collections: Vec<Collection> = collection_rows
+        .into_iter()
+        .map(
+            |CollectionRow {
+                 slug,
+                 title,
+                 description,
+                 ..
+             }| {
+                Collection {
+                    id: slug.clone(),
+                    title,
+                    description,
+                    links: vec![
+                        Link::new(format!("{}/{}", collections_url, slug), SELF).mediatype(JSON),
+                        Link::new(format!("{}/{}/items", collections_url, slug), DATA)
+                            .mediatype(JSON)
+                            .title("Items"),
+                    ],
+                }
+            },
+        )
+        .collect();
+
+    // Build response with top-level links
+    let response = Collections {
+        links: vec![Link::new(&collections_url, SELF).mediatype(JSON)],
+        collections,
+    };
+
+    HttpResponse::Ok().json(response)
 }
