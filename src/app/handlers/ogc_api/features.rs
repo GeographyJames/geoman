@@ -3,7 +3,13 @@ use actix_web::{HttpResponse, get, web};
 use crate::repo::{PostgresRepo, ogc::CollectionRow};
 
 /// The features in the collection
-#[utoipa::path(responses((status = 200, description = "todo!")))]
+#[utoipa::path(
+    path = "/collections/{collectionId}/items",
+    params(
+        ("collectionId" = String, Path, description = "local identifier of a collection")
+    ),
+    responses((status = 200, description = "todo!"))
+)]
 #[get("/{collectionId}/items")]
 #[tracing::instrument(skip(repo, collection_slug))]
 pub async fn get_features(
@@ -25,18 +31,23 @@ pub async fn get_features(
 
 /// A single feature
 #[utoipa::path(
+    path = "/collections/{collectionId}/items/{featureId}",
+    params(
+        ("collectionId" = String, Path, description = "local identifier of a collection"),
+        ("featureId" = i32, Path, description = "local identifier of a feature")
+    ),
     responses(
         (status = 200, description = "A single feature from the collection"),
         (status = 404, description = "Collection or feature not found")
     )
 )]
-#[get("/{collectionId}/items/{feature_id}")]
+#[get("/{collectionId}/items/{featureId}")]
 #[tracing::instrument(skip(repo, path))]
 pub async fn get_feature(
     repo: web::Data<PostgresRepo>,
     path: web::Path<(String, i32)>,
 ) -> HttpResponse {
-    let (collection_slug, feature_id) = path.into_inner();
+    let (collection_slug, featureId) = path.into_inner();
 
     // Get collection by slug
     let collection_row: CollectionRow = match repo.select_by_slug(&collection_slug).await {
@@ -46,7 +57,7 @@ pub async fn get_feature(
     };
 
     // Get feature by ID
-    match repo.select_feature(collection_row.id, feature_id).await {
+    match repo.select_feature(collection_row.id, featureId).await {
         Ok(Some(feature)) => HttpResponse::Ok().json(feature),
         Ok(None) => HttpResponse::NotFound().finish(),
         Err(_) => HttpResponse::InternalServerError().finish(),

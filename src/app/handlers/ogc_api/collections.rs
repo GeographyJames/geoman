@@ -2,7 +2,7 @@ use actix_web::{HttpRequest, HttpResponse, get, web};
 
 use crate::{
     app::URLS,
-    ogc::types::common::link_relations::{DATA, SELF},
+    ogc::types::common::link_relations::{ITEMS, SELF},
     ogc::types::common::media_types::JSON,
     ogc::types::common::{Collection, Collections, Link},
     repo::{PostgresRepo, ogc::CollectionRow},
@@ -73,7 +73,7 @@ pub async fn get_collections(req: HttpRequest, repo: web::Data<PostgresRepo>) ->
                     description,
                     links: vec![
                         Link::new(format!("{}/{}", collections_url, slug), SELF).mediatype(JSON),
-                        Link::new(format!("{}/{}/items", collections_url, slug), DATA)
+                        Link::new(format!("{}/{}/items", collections_url, slug), ITEMS)
                             .mediatype(JSON)
                             .title("Items"),
                     ],
@@ -94,7 +94,7 @@ pub async fn get_collections(req: HttpRequest, repo: web::Data<PostgresRepo>) ->
 /// Get a single collection by ID (slug)
 #[utoipa::path(
     get,
-    path = "/{collectionId}",
+    path = "/collections/{collectionId}",
     params(
         ("collectionId" = String, Path, description = "local identifier of a collection")
     ),
@@ -158,7 +158,7 @@ pub async fn get_collection(
             Link::new(format!("{}/{}", collections_url, collection_row.slug), SELF).mediatype(JSON),
             Link::new(
                 format!("{}/{}/items", collections_url, collection_row.slug),
-                DATA,
+                ITEMS,
             )
             .mediatype(JSON)
             .title("Items"),
