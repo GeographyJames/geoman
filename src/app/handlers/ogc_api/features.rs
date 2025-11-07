@@ -1,6 +1,5 @@
-use actix_web::{HttpResponse, get, web};
-
 use crate::repo::{PostgresRepo, ogc::CollectionRow};
+use actix_web::{HttpResponse, get, web};
 
 /// The features in the collection
 #[utoipa::path(
@@ -47,7 +46,7 @@ pub async fn get_feature(
     repo: web::Data<PostgresRepo>,
     path: web::Path<(String, i32)>,
 ) -> HttpResponse {
-    let (collection_slug, featureId) = path.into_inner();
+    let (collection_slug, feature_id) = path.into_inner();
 
     // Get collection by slug
     let collection_row: CollectionRow = match repo.select_by_slug(&collection_slug).await {
@@ -57,7 +56,7 @@ pub async fn get_feature(
     };
 
     // Get feature by ID
-    match repo.select_feature(collection_row.id, featureId).await {
+    match repo.select_feature(collection_row.id, feature_id).await {
         Ok(Some(feature)) => HttpResponse::Ok().json(feature),
         Ok(None) => HttpResponse::NotFound().finish(),
         Err(_) => HttpResponse::InternalServerError().finish(),
