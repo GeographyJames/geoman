@@ -7,6 +7,7 @@ use utoipa::ToSchema;
 /// returns the list of URIs of conformance classes implemented by the server.
 #[derive(Serialize, Deserialize, ToSchema, Default, Debug, Clone)]
 pub struct ConformanceDeclaration {
+    #[serde(rename = "conformsTo")]
     pub conforms_to: Vec<String>,
 }
 

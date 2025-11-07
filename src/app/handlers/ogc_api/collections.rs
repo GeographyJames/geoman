@@ -10,6 +10,7 @@ use crate::{
 
 /// The feature collections in the dataset.
 #[utoipa::path(
+    path = "/collections",
     responses(
         (
             status = 200,
@@ -127,7 +128,7 @@ pub async fn get_collections(req: HttpRequest, repo: web::Data<PostgresRepo>) ->
         )
     )
 )]
-#[get("/{collection_slug}")]
+#[get("/{collectionId}")]
 #[tracing::instrument(skip(repo, req, collection_slug))]
 pub async fn get_collection(
     req: HttpRequest,

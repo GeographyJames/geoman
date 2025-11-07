@@ -5,13 +5,14 @@ use crate::ogc::types::common::{LandingPage, Link, Linked};
 use actix_web::{HttpRequest, HttpResponse, get, web};
 
 #[utoipa::path(
+    path = "/",
     responses(
         (
             status = 200,
             description = "The landing page provides links to the API \
             definition (link relations `service-desc` and `service-doc`), and \
             the Conformance declaration (path `/conformance`, link relation \
-            `conformance`).", 
+            `conformance`).",
             body = LandingPage
         ),
     ),

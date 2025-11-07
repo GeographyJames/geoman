@@ -7,6 +7,7 @@ use crate::{app::AppState, ogc::types::common::ConformanceDeclaration};
 /// A list of all conformance classes specified in a standard that
 /// the server conforms to.
 #[utoipa::path(
+    path = "/conformance",
     responses(
         (
             status = 200,
@@ -14,7 +15,7 @@ use crate::{app::AppState, ogc::types::common::ConformanceDeclaration};
                 \n\n To support \"generic\" clients that want to access multiple \
                 OGC API Features implementations - and not \"just\" a specific \
                 API / server, the server declares the conformance classes it \
-                implements and conforms to", 
+                implements and conforms to",
             body = ConformanceDeclaration
         ),
     )

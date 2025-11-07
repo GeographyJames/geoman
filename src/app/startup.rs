@@ -1,8 +1,9 @@
 use crate::{
     app::{
-        AppState, URLS,
+        ApiDoc, AppState, URLS,
         config::AppConfig,
         enums::GeoManEnvironment,
+        handlers::docs::get_api_docs,
         routes::{api_routes, docs_routes, ogc_routes},
     },
     repo::PostgresRepo,
@@ -14,8 +15,7 @@ use secrecy::ExposeSecret;
 use sqlx::PgPool;
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
-use utoipa_actix_web::AppExt;
-use utoipa_swagger_ui::SwaggerUi;
+use utoipa::OpenApi;
 
 pub struct Application {
     pub server: Server,
@@ -62,29 +62,27 @@ pub async fn run(
     let clerk = Clerk::new(clerk_config);
     let app_state = web::Data::new(AppState::new());
     let repo = web::Data::new(PostgresRepo::new(db_pool));
+    let openapi = ApiDoc::openapi();
 
     let server = HttpServer::new(move || {
-        let (app, api_docs) = App::new()
+        let app = App::new()
             .app_data(app_state.clone())
             .app_data(repo.clone())
+            .app_data(web::Data::new(openapi.clone()))
             .wrap(middleware::NormalizePath::trim())
             .wrap(TracingLogger::default())
             .route(&URLS.health_check, web::get().to(HttpResponse::Ok))
-            .into_utoipa_app()
             .configure(|cfg| api_routes(cfg, clerk.clone()))
-            .configure(ogc_routes)
-            .split_for_parts();
+            .configure(ogc_routes);
 
         match config.app_settings.environment {
-            // Include Swagger UI in development
-            GeoManEnvironment::Development => app.service(
-                SwaggerUi::new("/swagger-ui/{_:.*}")
-                    .url(format!("{}{}", URLS.docs.base, URLS.docs.api), api_docs),
+            // Serve docs unprotected
+            GeoManEnvironment::Development => app.route(
+                &format!("{}{}", URLS.docs.base, URLS.docs.api),
+                web::get().to(get_api_docs),
             ),
-            // Serve api docs without Swagger UI
-            _ => app
-                .app_data(web::Data::new(api_docs))
-                .configure(|cfg| docs_routes(cfg, clerk.clone())),
+            // Serve api docs protected
+            _ => app.configure(|cfg| docs_routes(cfg, clerk.clone())),
         }
     })
     .listen(listener)

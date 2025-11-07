@@ -4,7 +4,7 @@ use crate::repo::{PostgresRepo, ogc::CollectionRow};
 
 /// The features in the collection
 #[utoipa::path(responses((status = 200, description = "todo!")))]
-#[get("/{collection_slug}/items")]
+#[get("/{collectionId}/items")]
 #[tracing::instrument(skip(repo, collection_slug))]
 pub async fn get_features(
     repo: web::Data<PostgresRepo>,
@@ -30,7 +30,7 @@ pub async fn get_features(
         (status = 404, description = "Collection or feature not found")
     )
 )]
-#[get("/{collection_slug}/items/{feature_id}")]
+#[get("/{collectionId}/items/{feature_id}")]
 #[tracing::instrument(skip(repo, path))]
 pub async fn get_feature(
     repo: web::Data<PostgresRepo>,
