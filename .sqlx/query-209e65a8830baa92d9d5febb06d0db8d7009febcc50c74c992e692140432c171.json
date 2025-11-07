@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT jsonb_build_object(\n                'type', 'Feature',\n                'id', id,\n                'geometry', ST_AsGeoJSON(geom)::jsonb,\n                'properties', properties || jsonb_build_object('name', name)\n            ) as feature\n            FROM app.features\n            WHERE collection_id = $1 AND id = $2 AND status = 'ACTIVE'\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "feature",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "209e65a8830baa92d9d5febb06d0db8d7009febcc50c74c992e692140432c171"
+}

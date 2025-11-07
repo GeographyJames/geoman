@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT jsonb_build_object(\n                'type', 'FeatureCollection',\n                'features', COALESCE(jsonb_agg(\n                    jsonb_build_object(\n                        'type', 'Feature',\n                        'id', id,\n                        'geometry', ST_AsGeoJSON(geom)::jsonb,\n                        'properties', properties || jsonb_build_object('name', name)\n                    )\n                ), '[]'::jsonb)\n            ) as feature_collection\n            FROM app.features\n            WHERE collection_id = $1 AND status = 'ACTIVE'\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "feature_collection",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "0056dd9d764fa8f58c851d7114ffe537d9b4dc4d45ec45736a3ccb2a55442020"
+}
