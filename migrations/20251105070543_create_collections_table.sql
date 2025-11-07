@@ -3,7 +3,7 @@ CREATE TABLE app.collections (
     title text NOT NULL UNIQUE,
     slug slug NOT NULL UNIQUE,
     description TEXT,
-    geometry_type app.geometry_type NOT NULL,
+    geometry_type geometry_type NOT NULL,
 
     added_by integer NOT NULL REFERENCES app.users(id),
     added timestamptz NOT NULL DEFAULT now(),

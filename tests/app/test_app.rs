@@ -5,11 +5,14 @@ use crate::app::{
     services::{HttpClient, HttpService, OgcService},
 };
 use dotenvy::dotenv;
-use geoman::app::{
-    Application, DatabaseSettings, URLS,
-    enums::GeoManEnvironment,
-    get_config,
-    telemetry::{get_subscriber, init_subscriber},
+use geoman::{
+    app::{
+        Application, DatabaseSettings, URLS,
+        enums::GeoManEnvironment,
+        get_config,
+        telemetry::{get_subscriber, init_subscriber},
+    },
+    domain::{GeometryType, Slug},
 };
 use secrecy::ExposeSecret;
 use sqlx::PgPool;
@@ -44,12 +47,6 @@ impl TestApp {
         LazyLock::force(&TRACING);
         let db_name = Uuid::new_v4().to_string();
         let mut config = get_config().expect("failed to intialise app config");
-        let testing_environment = GeoManEnvironment::Production;
-        tracing::info!(
-            "Spawning GeoMan test app for environment '{}'",
-            testing_environment
-        );
-        config.app_settings.environment = testing_environment.clone();
         config.db_settings.database_name = db_name.clone();
         // Set port to 0 so TCP Listner binds to random free port for tests
         config.app_settings.port = 0;
@@ -66,6 +63,13 @@ impl TestApp {
             )),
             test_user_id,
         };
+        // Set environment for running the app
+        let testing_environment = GeoManEnvironment::Production;
+        config.app_settings.environment = testing_environment.clone();
+        tracing::info!(
+            "Spawning GeoMan test app for environment '{}'",
+            testing_environment
+        );
         let app = Application::build(config)
             .await
             .expect("failed to build application");
@@ -99,5 +103,61 @@ impl TestApp {
         self.auth
             .get_test_session_token(&self.api_client.client)
             .await
+    }
+
+    pub async fn insert_team(&self, name: &str) -> i32 {
+        let record = sqlx::query!(
+            "INSERT INTO app.teams (name) VALUES ($1) RETURNING id",
+            name
+        )
+        .fetch_one(&self.db_pool)
+        .await
+        .expect("Failled to save team in database");
+        record.id
+    }
+
+    pub async fn generate_team_id(&self) -> i32 {
+        self.insert_team(&uuid::Uuid::new_v4().to_string()).await
+    }
+
+    pub async fn insert_user(&self, team_id: i32) -> i32 {
+        let record = sqlx::query!(
+            "INSERT INTO app.users (team_id) VALUES ($1) RETURNING id",
+            team_id
+        )
+        .fetch_one(&self.db_pool)
+        .await
+        .expect("Failed to save user in database");
+        record.id
+    }
+
+    pub async fn generate_user_id(&self) -> i32 {
+        let team_id = self.generate_team_id().await;
+        self.insert_user(team_id).await
+    }
+
+    pub async fn insert_collection(
+        &self,
+        title: &str,
+        slug: &Slug,
+        geometry_type: GeometryType,
+        user_id: i32,
+    ) -> i32 {
+        let record = sqlx::query!(
+            "INSERT INTO app.collections (title, slug, geometry_type, added_by, last_updated_by) VALUES ($1, $2, $3, $4, $4) RETURNING id",
+            title,
+            slug as &Slug,
+            geometry_type as GeometryType,
+            user_id
+        ).fetch_one(&self.db_pool).await.expect("Failed to save collection in database");
+        record.id
+    }
+    pub async fn generate_collection_slug(&self) -> Slug {
+        let user_id = self.generate_user_id().await;
+        let title = uuid::Uuid::new_v4().to_string();
+        let slug = Slug::parse(title.clone()).expect("Failed to create slug");
+        self.insert_collection(&title, &slug, GeometryType::MultiPolygon, user_id)
+            .await;
+        slug
     }
 }

@@ -27,10 +27,18 @@ impl OgcService {
         req.send().await.expect(REQUEST_FAILED)
     }
 
-    pub async fn get_collection(&self, client: &HttpClient, collection_id: &str) -> Response {
+    pub async fn get_collection(&self, client: &HttpClient, collection_slug: &str) -> Response {
         let req = client.get(format!(
             "{}{}/{}",
-            &URLS.ogc_api.base, &URLS.ogc_api.collections, collection_id
+            &URLS.ogc_api.base, &URLS.ogc_api.collections, collection_slug
+        ));
+        req.send().await.expect(REQUEST_FAILED)
+    }
+
+    pub async fn get_features(&self, client: &HttpClient, collection_slug: &str) -> Response {
+        let req = client.get(format!(
+            "{}{}/{}/items",
+            &URLS.ogc_api.base, &URLS.ogc_api.collections, collection_slug
         ));
         req.send().await.expect(REQUEST_FAILED)
     }

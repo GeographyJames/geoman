@@ -1,13 +1,14 @@
 CREATE SCHEMA app;
 CREATE TYPE app.status AS ENUM ('ACTIVE', 'ARCHIVED', 'DELETED');
 CREATE TYPE app.visibility AS ENUM ('PRIVATE', 'TEAM', 'PUBLIC');
-CREATE TYPE app.geometry_type AS ENUM (
+CREATE TYPE geometry_type AS ENUM (
     'POINT',
     'LINESTRING',
     'POLYGON',
     'MULTIPOINT',
     'MULTILINESTRING',
-    'MULTIPOLYGON'
+    'MULTIPOLYGON',
+    'GEOMETRYCOLLECTION'
 );
 
 CREATE OR REPLACE FUNCTION update_last_updated()
