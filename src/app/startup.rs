@@ -7,7 +7,7 @@ use crate::{
     },
     repo::PostgresRepo,
 };
-use actix_web::{App, HttpResponse, HttpServer, dev::Server, web};
+use actix_web::{App, HttpResponse, HttpServer, dev::Server, middleware, web};
 use anyhow::Context;
 use clerk_rs::{ClerkConfiguration, clerk::Clerk};
 use secrecy::ExposeSecret;
@@ -67,6 +67,7 @@ pub async fn run(
         let (app, api_docs) = App::new()
             .app_data(app_state.clone())
             .app_data(repo.clone())
+            .wrap(middleware::NormalizePath::trim())
             .wrap(TracingLogger::default())
             .route(&URLS.health_check, web::get().to(HttpResponse::Ok))
             .into_utoipa_app()

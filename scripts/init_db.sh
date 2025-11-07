@@ -97,7 +97,9 @@ then
     >&2 echo "Seeding data..."
     run_sql_file "teams.sql"
     run_sql_file "users.sql"
+    run_sql_file "projects.sql"
     run_sql_file "collections.sql"
+    run_sql_file "features.sql"
     >&2 echo "Data seeded successfully"
 fi
 

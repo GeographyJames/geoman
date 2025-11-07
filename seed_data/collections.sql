@@ -10,4 +10,16 @@ INSERT INTO app.collections (
     'MULTIPOLYGON',
     (SELECT id FROM app.users WHERE username = 'root'),
     (SELECT id FROM app.users WHERE username = 'root')
-)
+), (
+    'access tracks',
+    'access-tracks',
+    'MULTILINESTRING',
+    (SELECT id FROM app.users WHERE username = 'root'),
+    (SELECT id FROM app.users WHERE username = 'root')
+), (
+    'cable routes',
+    'cable-routes',
+    'MULTILINESTRING',
+    (SELECT id FROM app.users WHERE username = 'root'),
+    (SELECT id FROM app.users WHERE username = 'root')
+);
