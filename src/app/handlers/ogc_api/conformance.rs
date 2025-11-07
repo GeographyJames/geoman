@@ -1,6 +1,6 @@
 use actix_web::{HttpResponse, get, web};
 
-use crate::{app::AppState, ogc::types::common::ConformanceDeclaration};
+use crate::app::AppState;
 
 /// API conformance definition
 ///

@@ -1,7 +1,7 @@
 use crate::app::{AppState, URLS};
 use crate::ogc::types::common::link_relations::{CONFORMANCE, DATA, ROOT, SELF, SERVICE_DESC};
 use crate::ogc::types::common::media_types::{JSON, OPEN_API_JSON};
-use crate::ogc::types::common::{LandingPage, Link, Linked};
+use crate::ogc::types::common::{Link, Linked};
 use actix_web::{HttpRequest, HttpResponse, get, web};
 
 #[utoipa::path(
