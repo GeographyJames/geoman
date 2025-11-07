@@ -1,4 +1,4 @@
-use geoman::app::URLS;
+use geoman::{app::URLS, domain::FeatureId};
 use reqwest::Response;
 
 use crate::app::{constants::REQUEST_FAILED, services::HttpClient};
@@ -39,6 +39,19 @@ impl OgcService {
         let req = client.get(format!(
             "{}{}/{}/items",
             &URLS.ogc_api.base, &URLS.ogc_api.collections, collection_slug
+        ));
+        req.send().await.expect(REQUEST_FAILED)
+    }
+
+    pub async fn get_feature(
+        &self,
+        client: &HttpClient,
+        collection_slug: &str,
+        id: FeatureId,
+    ) -> Response {
+        let req = client.get(format!(
+            "{}{}/{}/items/{}",
+            &URLS.ogc_api.base, &URLS.ogc_api.collections, collection_slug, id.0
         ));
         req.send().await.expect(REQUEST_FAILED)
     }

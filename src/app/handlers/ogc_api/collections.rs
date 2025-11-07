@@ -127,11 +127,11 @@ pub async fn get_collections(req: HttpRequest, repo: web::Data<PostgresRepo>) ->
         )
     )
 )]
-#[get("/{collection_id}")]
-#[tracing::instrument(skip(repo, req, collection_id))]
+#[get("/{collection_slug}")]
+#[tracing::instrument(skip(repo, req, collection_slug))]
 pub async fn get_collection(
     req: HttpRequest,
-    collection_id: web::Path<String>,
+    collection_slug: web::Path<String>,
     repo: web::Data<PostgresRepo>,
 ) -> HttpResponse {
     // Build base URL from request
@@ -142,7 +142,7 @@ pub async fn get_collection(
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
 
     // Fetch collection from database
-    let collection_row: CollectionRow = match repo.select_by_slug(&collection_id).await {
+    let collection_row: CollectionRow = match repo.select_by_slug(&collection_slug).await {
         Ok(Some(row)) => row,
         Ok(None) => return HttpResponse::NotFound().finish(),
         Err(_) => return HttpResponse::InternalServerError().finish(),

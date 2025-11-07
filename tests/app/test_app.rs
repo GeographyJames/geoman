@@ -12,8 +12,9 @@ use geoman::{
         get_config,
         telemetry::{get_subscriber, init_subscriber},
     },
-    domain::{GeometryType, Slug},
+    domain::{CollectionId, FeatureId, GeometryType, ProjectId, Slug, TeamId, UserId},
 };
+use rand::Rng;
 use secrecy::ExposeSecret;
 use sqlx::PgPool;
 use std::sync::LazyLock;
@@ -116,14 +117,14 @@ impl TestApp {
         record.id
     }
 
-    pub async fn generate_team_id(&self) -> i32 {
-        self.insert_team(&uuid::Uuid::new_v4().to_string()).await
+    pub async fn generate_team_id(&self) -> TeamId {
+        TeamId(self.insert_team(&uuid::Uuid::new_v4().to_string()).await)
     }
 
-    pub async fn insert_user(&self, team_id: i32) -> i32 {
+    pub async fn insert_user(&self, team_id: TeamId) -> i32 {
         let record = sqlx::query!(
             "INSERT INTO app.users (team_id) VALUES ($1) RETURNING id",
-            team_id
+            team_id.0
         )
         .fetch_one(&self.db_pool)
         .await
@@ -131,9 +132,8 @@ impl TestApp {
         record.id
     }
 
-    pub async fn generate_user_id(&self) -> i32 {
-        let team_id = self.generate_team_id().await;
-        self.insert_user(team_id).await
+    pub async fn generate_user_id(&self, team_id: TeamId) -> UserId {
+        UserId(self.insert_user(team_id).await)
     }
 
     pub async fn insert_collection(
@@ -141,23 +141,87 @@ impl TestApp {
         title: &str,
         slug: &Slug,
         geometry_type: GeometryType,
-        user_id: i32,
+        user_id: UserId,
     ) -> i32 {
         let record = sqlx::query!(
             "INSERT INTO app.collections (title, slug, geometry_type, added_by, last_updated_by) VALUES ($1, $2, $3, $4, $4) RETURNING id",
             title,
             slug as &Slug,
             geometry_type as GeometryType,
-            user_id
+            user_id.0
         ).fetch_one(&self.db_pool).await.expect("Failed to save collection in database");
         record.id
     }
-    pub async fn generate_collection_slug(&self) -> Slug {
-        let user_id = self.generate_user_id().await;
+
+    pub async fn generate_collection_slug_and_id(&self, user_id: UserId) -> (Slug, CollectionId) {
         let title = uuid::Uuid::new_v4().to_string();
         let slug = Slug::parse(title.clone()).expect("Failed to create slug");
-        self.insert_collection(&title, &slug, GeometryType::MultiPolygon, user_id)
-            .await;
-        slug
+        let collection_id = CollectionId(
+            self.insert_collection(&title, &slug, GeometryType::MultiPolygon, user_id)
+                .await,
+        );
+        (slug, collection_id)
+    }
+
+    pub async fn insert_project(&self, name: &str, slug: &Slug, user_id: UserId) -> i32 {
+        let record = sqlx::query!(
+            "INSERT INTO app.projects (name, slug, owner, added_by, last_updated_by) VALUES ($1, $2, $3, $3, $3) RETURNING id",
+            name,
+            slug as &Slug,
+            user_id.0
+        ).fetch_one(&self.db_pool).await.expect("Failed to save project in database");
+        record.id
+    }
+
+    pub async fn generate_project_id(&self, user_id: UserId) -> ProjectId {
+        let name = uuid::Uuid::new_v4().to_string();
+        let slug = Slug::parse(name.clone()).expect("failed po create slug");
+        ProjectId(self.insert_project(&name, &slug, user_id).await)
+    }
+
+    pub async fn insert_feature(
+        &self,
+        name: &str,
+        collection_id: CollectionId,
+        project_id: ProjectId,
+        user_id: UserId,
+        geom_ewkt: &str,
+    ) -> i32 {
+        let record = sqlx::query!(
+            "INSERT INTO app.features (
+                project_id,
+                collection_id,
+                name,
+                geom,
+                added_by,
+                last_updated_by
+            ) VALUES ($1, $2, $3, ST_GeomFromEWKT($4), $5, $5) RETURNING id",
+            project_id.0,
+            collection_id.0,
+            name,
+            geom_ewkt,
+            user_id.0
+        )
+        .fetch_one(&self.db_pool)
+        .await
+        .expect("Failed to save feature in database");
+        record.id
+    }
+
+    pub async fn generate_feature_id(
+        &self,
+        collection_id: CollectionId,
+        project_id: ProjectId,
+        user_id: UserId,
+    ) -> FeatureId {
+        let name = uuid::Uuid::new_v4().to_string();
+        let mut rng = rand::rng();
+        let easting: u32 = rng.random_range(..700_000);
+        let northing: u32 = rng.random_range(..1_300_000);
+        let geom_wkt = format!("SRID=27700;POINT({} {})", easting, northing);
+        FeatureId(
+            self.insert_feature(&name, collection_id, project_id, user_id, &geom_wkt)
+                .await,
+        )
     }
 }

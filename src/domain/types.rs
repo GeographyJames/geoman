@@ -18,3 +18,15 @@ impl Slug {
         }
     }
 }
+
+#[derive(Clone, Copy)]
+pub struct ProjectId(pub i32);
+#[derive(Clone, Copy)]
+pub struct UserId(pub i32);
+#[derive(Clone, Copy)]
+pub struct TeamId(pub i32);
+#[derive(Clone, Copy)]
+pub struct FeatureId(pub i32);
+
+#[derive(Clone, Copy)]
+pub struct CollectionId(pub i32);

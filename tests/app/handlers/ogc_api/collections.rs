@@ -23,7 +23,9 @@ async fn get_collections_works() {
 #[actix_web::test]
 async fn get_collection_works() {
     let app = TestApp::spawn_with_db().await;
-    let collection_slug = app.generate_collection_slug().await;
+    let team_id = app.generate_team_id().await;
+    let user_id = app.generate_user_id(team_id).await;
+    let (collection_slug, _) = app.generate_collection_slug_and_id(user_id).await;
 
     let response = app
         .ogc_service

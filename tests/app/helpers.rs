@@ -8,15 +8,14 @@ pub fn assert_ok(response: &reqwest::Response) {
 pub async fn handle_json_response<T: DeserializeOwned>(
     response: Response,
 ) -> Result<T, anyhow::Error> {
+    let status = response.status().as_u16();
+
     if response.status().is_success() {
-        let json: T = response
-            .json()
-            .await
-            .expect("failed to deserialise successful response");
+        let json: T = response.json().await.expect(&format!(
+            "Failed to deserialise successful {status} response"
+        ));
         return Ok(json);
     }
-
-    let status = response.status().as_u16();
 
     let error = response
         .text()
@@ -24,7 +23,7 @@ pub async fn handle_json_response<T: DeserializeOwned>(
         .unwrap_or("no repsonse body".to_string());
 
     Err(anyhow::anyhow!(
-        "response status: {status}\nbody:\n{:#}",
+        "Unsuccessful response status: {status}\nbody:\n{:#}",
         error,
     ))
 }
