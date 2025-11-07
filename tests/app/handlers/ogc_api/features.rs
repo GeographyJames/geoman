@@ -66,8 +66,13 @@ fn check_feature(feature: &geojson::Feature, feature_id: FeatureId) {
 
     match id {
         feature::Id::Number(number) => {
-            let id_value = number.as_i64().expect("feature id is not a valid i64");
-            assert_eq!(id_value, feature_id.0 as i64, "feature id does not match");
+            let id_value: i32 = number
+                .as_i64()
+                .expect("feature id is not a valid i64")
+                .try_into()
+                .expect("feature id is not valid i32");
+
+            assert_eq!(id_value, feature_id.0, "feature id does not match");
         }
         feature::Id::String(_) => panic!("feature id is a string, expected number"),
     }
