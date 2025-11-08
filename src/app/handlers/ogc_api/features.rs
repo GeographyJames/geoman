@@ -1,11 +1,14 @@
 use crate::repo::{PostgresRepo, ogc::CollectionRow};
 use actix_web::{HttpResponse, get, web};
+use serde::Deserialize;
+use utoipa::IntoParams;
 
 /// The features in the collection
 #[utoipa::path(
     path = "/collections/{collectionId}/items",
     params(
-        ("collectionId" = String, Path, description = "local identifier of a collection")
+        ("collectionId" = String, Path, description = "local identifier of a collection"),
+        Query
     ),
     responses(
         (status = 200, description = "todo!"),
@@ -43,7 +46,8 @@ pub async fn get_features(
     path = "/collections/{collectionId}/items/{featureId}",
     params(
         ("collectionId" = String, Path, description = "local identifier of a collection"),
-        ("featureId" = i32, Path, description = "local identifier of a feature")
+        ("featureId" = i32, Path, description = "local identifier of a feature"),
+        
     ),
     responses(
         (status = 200, description = "A single feature from the collection"),
@@ -71,4 +75,15 @@ pub async fn get_feature(
         Ok(None) => HttpResponse::NotFound().finish(),
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
+}
+
+#[derive(Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
+pub struct Query {
+    #[param(style = Form, required = false)]
+    pub limit: Option<i32>,
+    #[param(style = Form, explode = false, value_type = Option<Vec<f64>>, required = false, min_items = 4, max_items = 6)]
+    pub bbox: Option<Vec<f64>>,
+    #[param(style = Form, required = false)]
+    pub datetime: Option<String>,
 }
