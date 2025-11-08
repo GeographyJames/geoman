@@ -7,25 +7,35 @@ use actix_web::{HttpResponse, get, web};
     params(
         ("collectionId" = String, Path, description = "local identifier of a collection")
     ),
-    responses((status = 200, description = "todo!"))
+    responses(
+        (status = 200, description = "todo!"),
+        (status = 404, description = "todo!"))
 )]
 #[get("/{collectionId}/items")]
 #[tracing::instrument(skip(repo, collection_slug))]
 pub async fn get_features(
     repo: web::Data<PostgresRepo>,
     collection_slug: web::Path<String>,
-) -> HttpResponse {
-    let collection_row: CollectionRow = repo
+) -> Result<HttpResponse, actix_web::Error> {
+    let collection_row: CollectionRow = match repo
         .select_by_slug(&collection_slug)
         .await
         .expect("failed to query database")
-        .expect("no collection with this slug");
+    {
+        Some(row) => row,
+        None => {
+            return Err(actix_web::error::ErrorNotFound(format!(
+                "Collection id {} does not exist",
+                collection_slug
+            )));
+        }
+    };
     let collection_id = collection_row.id;
     let features = repo
         .select_features(collection_id)
         .await
         .expect("failed to retrieve feature");
-    HttpResponse::Ok().json(features)
+    Ok(HttpResponse::Ok().json(features))
 }
 
 /// A single feature

@@ -2,7 +2,7 @@ use geoman::ogc::types::common::{Collection, Collections};
 
 use crate::app::{
     TestApp,
-    helpers::{assert_ok, handle_json_response},
+    helpers::{assert_ok, assert_status, handle_json_response},
 };
 
 #[actix_web::test]
@@ -51,5 +51,5 @@ async fn get_collection_returns_404_when_not_found() {
         .get_collection(&app.api_client, &uuid::Uuid::new_v4().to_string())
         .await;
 
-    assert_eq!(response.status(), 404);
+    assert_status(&response, 404);
 }

@@ -1,9 +1,8 @@
-use geojson::{Feature, FeatureCollection, feature};
-use geoman::domain::FeatureId;
+use geojson::{Feature, FeatureCollection};
 
 use crate::app::{
     TestApp,
-    helpers::{assert_ok, handle_json_response},
+    helpers::{assert_ok, assert_status, check_feature, handle_json_response},
 };
 
 #[actix_web::test]
@@ -57,33 +56,12 @@ async fn get_feature_works() {
     check_feature(&feature, feature_id);
 }
 
-fn check_feature(feature: &geojson::Feature, feature_id: FeatureId) {
-    // Verify the feature has geometry
-    assert!(feature.geometry.is_some(), "feature has no geometry");
-
-    // Verify the feature has id that matches the expected feature_id
-    let id = feature.id.as_ref().expect("feature has no id");
-
-    match id {
-        feature::Id::Number(number) => {
-            let id_value: i32 = number
-                .as_i64()
-                .expect("feature id is not a valid i64")
-                .try_into()
-                .expect("feature id is not valid i32");
-
-            assert_eq!(id_value, feature_id.0, "feature id does not match");
-        }
-        feature::Id::String(_) => panic!("feature id is a string, expected number"),
-    }
-
-    // Verify the feature has properties with a name
-    let properties = feature
-        .properties
-        .as_ref()
-        .expect("feature has no properties");
-    assert!(
-        properties.contains_key("name"),
-        "properties has no name field"
-    );
+#[actix_web::test]
+async fn get_features_returns_404_for_non_existent_collection() {
+    let app = TestApp::spawn_with_db().await;
+    let response = app
+        .ogc_service
+        .get_features(&app.api_client, &uuid::Uuid::new_v4().to_string())
+        .await;
+    assert_status(&response, 404);
 }
