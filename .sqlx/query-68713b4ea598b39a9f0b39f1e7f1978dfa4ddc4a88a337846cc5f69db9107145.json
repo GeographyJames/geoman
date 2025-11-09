@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO app.features (\n                project_id,\n                collection_id,\n                name,\n                geom,\n                added_by,\n                last_updated_by\n            ) VALUES ($1, $2, $3, ST_GeomFromEWKT($4), $5, $5) RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "68713b4ea598b39a9f0b39f1e7f1978dfa4ddc4a88a337846cc5f69db9107145"
+}

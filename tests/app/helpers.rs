@@ -28,10 +28,13 @@ pub async fn handle_json_response<T: DeserializeOwned>(
     let status = response.status();
 
     if status.is_success() {
-        let json: T = response
-            .json()
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to deserialize successful {} response: {}", status, e))?;
+        let json: T = response.json().await.map_err(|e| {
+            anyhow::anyhow!(
+                "Failed to deserialize successful {} response: {}",
+                status,
+                e
+            )
+        })?;
         return Ok(json);
     }
 

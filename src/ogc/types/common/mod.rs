@@ -13,3 +13,5 @@ mod collections;
 pub use collections::Collections;
 mod collection;
 pub use collection::Collection;
+mod bbox;
+pub use bbox::Bbox;

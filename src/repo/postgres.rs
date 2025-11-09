@@ -86,9 +86,8 @@ impl PostgresRepo {
 
         match result {
             Some(row) => {
-                let feature: geojson::Feature =
-                    serde_json::from_value(row.feature.unwrap())
-                        .map_err(|e| sqlx::Error::Decode(Box::new(e)))?;
+                let feature: geojson::Feature = serde_json::from_value(row.feature.unwrap())
+                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))?;
                 Ok(Some(feature))
             }
             None => Ok(None),
