@@ -1,7 +1,7 @@
 use crate::app::{
     auth::clerk::ClerkAuthProvider,
     configure_database,
-    constants::CLERK_USER_ID_KEY,
+    constants::{CLERK_USER_ID_KEY, GEOMAN_TEST_ENVIRONMENT_KEY},
     services::{HttpClient, HttpService, OgcService},
 };
 use dotenvy::dotenv;
@@ -17,7 +17,7 @@ use geoman::{
 use rand::Rng;
 use secrecy::ExposeSecret;
 use sqlx::PgPool;
-use std::sync::LazyLock;
+use std::{str::FromStr, sync::LazyLock};
 use uuid::Uuid;
 
 static TRACING: LazyLock<()> = LazyLock::new(|| {
@@ -65,11 +65,16 @@ impl TestApp {
             test_user_id,
         };
         // Set environment for running the app
-        let testing_environment = GeoManEnvironment::Production;
-        config.app_settings.environment = testing_environment.clone();
+        if let Ok(env) = std::env::var(GEOMAN_TEST_ENVIRONMENT_KEY) {
+            config.app_settings.environment = GeoManEnvironment::from_str(&env).expect(&format!(
+                "Invalid GeoMan environment variable, '{}', set for {} environment variable",
+                env, GEOMAN_TEST_ENVIRONMENT_KEY
+            ));
+        }
+
         tracing::info!(
             "Spawning GeoMan test app for environment '{}'",
-            testing_environment
+            config.app_settings.environment
         );
         let app = Application::build(config)
             .await

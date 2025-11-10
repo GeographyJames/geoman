@@ -62,13 +62,13 @@ pub async fn run(
     let clerk = Clerk::new(clerk_config);
     let app_state = web::Data::new(AppState::new());
     let repo = web::Data::new(PostgresRepo::new(db_pool));
-    let openapi = ApiDoc::openapi();
+    let openapi = web::Data::new(ApiDoc::openapi());
 
     let server = HttpServer::new(move || {
         let app = App::new()
             .app_data(app_state.clone())
             .app_data(repo.clone())
-            .app_data(web::Data::new(openapi.clone()))
+            .app_data(openapi.clone())
             .wrap(middleware::NormalizePath::trim())
             .wrap(TracingLogger::default())
             .route(&URLS.health_check, web::get().to(HttpResponse::Ok))
