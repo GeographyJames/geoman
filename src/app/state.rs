@@ -20,11 +20,7 @@ impl AppState {
         };
 
         let mut conformance_declaration = ConformanceDeclaration::default();
-        conformance_declaration.extend(&[
-            conformance_classes::CORE,
-            conformance_classes::GEOJSON,
-            conformance_classes::OAS30,
-        ]);
+        conformance_declaration.extend(&[conformance_classes::CORE, conformance_classes::GEOJSON]);
 
         Self {
             conformance_declaration,

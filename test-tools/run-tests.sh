@@ -1,11 +1,25 @@
 #!/bin/bash
 # Run OGC API Features test suite and show quick summary
-# Usage: ./run-tests.sh [-q|--quiet]
+# Usage: ./run-tests.sh [-q|--quiet] [-o|--open]
 
 QUIET=false
-if [[ "$1" == "-q" || "$1" == "--quiet" ]]; then
-    QUIET=true
-fi
+OPEN_BROWSER=false
+
+# Parse arguments
+for arg in "$@"; do
+    case $arg in
+        -q|--quiet)
+            QUIET=true
+            shift
+            ;;
+        -o|--open)
+            OPEN_BROWSER=true
+            shift
+            ;;
+        *)
+            ;;
+    esac
+done
 
 echo "🧪 Running OGC API Features tests..."
 echo ""
@@ -91,6 +105,13 @@ if [ -f "$RESULTS" ]; then
     # Show report location
     HTML_REPORT=$(find test-tools/testng -name "index.html" 2>/dev/null | head -1)
     echo "📄 Full report: $HTML_REPORT"
+
+    # Open in browser if requested
+    if [ "$OPEN_BROWSER" = true ] && [ -f "$HTML_REPORT" ]; then
+        echo ""
+        echo "🌐 Opening report in browser..."
+        xdg-open "$HTML_REPORT" 2>/dev/null || open "$HTML_REPORT" 2>/dev/null || echo "⚠️  Could not open browser automatically"
+    fi
 else
     echo "⚠️  No results file found"
 fi

@@ -3,7 +3,7 @@ use actix_web::{HttpRequest, HttpResponse, get, web};
 use crate::{
     app::URLS,
     ogc::types::common::link_relations::{ITEMS, SELF},
-    ogc::types::common::media_types::JSON,
+    ogc::types::common::media_types::{GEOJSON, JSON},
     ogc::types::common::{Collection, Collections, Link},
     repo::{PostgresRepo, ogc::CollectionRow},
 };
@@ -74,7 +74,7 @@ pub async fn get_collections(req: HttpRequest, repo: web::Data<PostgresRepo>) ->
                     links: vec![
                         Link::new(format!("{}/{}", collections_url, slug), SELF).mediatype(JSON),
                         Link::new(format!("{}/{}/items", collections_url, slug), ITEMS)
-                            .mediatype(JSON)
+                            .mediatype(GEOJSON)
                             .title("Items"),
                     ],
                 }
@@ -160,7 +160,7 @@ pub async fn get_collection(
                 format!("{}/{}/items", collections_url, collection_row.slug),
                 ITEMS,
             )
-            .mediatype(JSON)
+            .mediatype(GEOJSON)
             .title("Items"),
         ],
     };
