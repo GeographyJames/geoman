@@ -1,8 +1,61 @@
 use crate::{
+    app::URLS,
     ogc::types::features::Query,
     repo::{PostgresRepo, ogc::CollectionRow},
 };
-use actix_web::{HttpResponse, get, web};
+use actix_web::{HttpRequest, HttpResponse, get, web};
+
+/// Add links to a GeoJSON feature (self and collection)
+fn add_feature_links(feature: &mut geojson::Feature, self_href: String, collection_href: String) {
+    let links = serde_json::json!([
+        {
+            "href": self_href,
+            "rel": "self",
+            "type": "application/geo+json"
+        },
+        {
+            "href": collection_href,
+            "rel": "collection",
+            "type": "application/json"
+        }
+    ]);
+
+    if let Some(foreign_members) = feature.foreign_members.as_mut() {
+        foreign_members.insert("links".to_string(), links);
+    } else {
+        let mut members = serde_json::Map::new();
+        members.insert("links".to_string(), links);
+        feature.foreign_members = Some(members);
+    }
+}
+
+/// Add links to a GeoJSON FeatureCollection (self and collection)
+fn add_collection_links(
+    feature_collection: &mut geojson::FeatureCollection,
+    self_href: String,
+    collection_href: String,
+) {
+    let links = serde_json::json!([
+        {
+            "href": self_href,
+            "rel": "self",
+            "type": "application/geo+json"
+        },
+        {
+            "href": collection_href,
+            "rel": "collection",
+            "type": "application/json"
+        }
+    ]);
+
+    if let Some(foreign_members) = feature_collection.foreign_members.as_mut() {
+        foreign_members.insert("links".to_string(), links);
+    } else {
+        let mut members = serde_json::Map::new();
+        members.insert("links".to_string(), links);
+        feature_collection.foreign_members = Some(members);
+    }
+}
 
 /// The features in the collection
 #[utoipa::path(
@@ -16,11 +69,18 @@ use actix_web::{HttpResponse, get, web};
         (status = 404, description = "todo!"))
 )]
 #[get("/{collectionId}/items")]
-#[tracing::instrument(skip(repo, collection_slug))]
+#[tracing::instrument(skip(repo, req, collection_slug))]
 pub async fn get_features(
+    req: HttpRequest,
     repo: web::Data<PostgresRepo>,
     collection_slug: web::Path<String>,
 ) -> Result<HttpResponse, actix_web::Error> {
+    // Build base URL from request
+    let base_url = {
+        let connection_info = req.connection_info();
+        format!("{}://{}", connection_info.scheme(), connection_info.host())
+    };
+
     let collection_row: CollectionRow = match repo
         .select_by_slug(&collection_slug)
         .await
@@ -35,11 +95,33 @@ pub async fn get_features(
         }
     };
     let collection_id = collection_row.id;
-    let features = repo
+    let mut feature_collection = repo
         .select_features(collection_id)
         .await
         .expect("failed to retrieve feature");
-    Ok(HttpResponse::Ok().json(features))
+
+    // Build URLs
+    let collection_url = format!(
+        "{}{}/collections/{}",
+        base_url, URLS.ogc_api.base, collection_slug
+    );
+    let items_url = format!("{}/items", collection_url);
+
+    // Add links to the FeatureCollection
+    add_collection_links(&mut feature_collection, items_url, collection_url.clone());
+
+    // Add links to each feature
+    for feature in feature_collection.features.iter_mut() {
+        if let Some(geojson::feature::Id::Number(feature_id)) = &feature.id {
+            let feature_url = format!(
+                "{}{}/collections/{}/items/{}",
+                base_url, URLS.ogc_api.base, collection_slug, feature_id
+            );
+            add_feature_links(feature, feature_url, collection_url.clone());
+        }
+    }
+
+    Ok(HttpResponse::Ok().json(feature_collection))
 }
 
 /// A single feature
@@ -55,12 +137,19 @@ pub async fn get_features(
     )
 )]
 #[get("/{collectionId}/items/{featureId}")]
-#[tracing::instrument(skip(repo, path))]
+#[tracing::instrument(skip(repo, req, path))]
 pub async fn get_feature(
+    req: HttpRequest,
     repo: web::Data<PostgresRepo>,
     path: web::Path<(String, i32)>,
 ) -> HttpResponse {
     let (collection_slug, feature_id) = path.into_inner();
+
+    // Build base URL from request
+    let base_url = {
+        let connection_info = req.connection_info();
+        format!("{}://{}", connection_info.scheme(), connection_info.host())
+    };
 
     // Get collection by slug
     let collection_row: CollectionRow = match repo.select_by_slug(&collection_slug).await {
@@ -71,7 +160,20 @@ pub async fn get_feature(
 
     // Get feature by ID
     match repo.select_feature(collection_row.id, feature_id).await {
-        Ok(Some(feature)) => HttpResponse::Ok().json(feature),
+        Ok(Some(mut feature)) => {
+            // Add links to the feature
+            let feature_url = format!(
+                "{}{}/collections/{}/items/{}",
+                base_url, URLS.ogc_api.base, collection_slug, feature_id
+            );
+            let collection_url = format!(
+                "{}{}/collections/{}",
+                base_url, URLS.ogc_api.base, collection_slug
+            );
+            add_feature_links(&mut feature, feature_url, collection_url);
+
+            HttpResponse::Ok().json(feature)
+        }
         Ok(None) => HttpResponse::NotFound().finish(),
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
