@@ -32,31 +32,40 @@ impl PostgresRepo {
     pub async fn select_features(
         &self,
         collection_id: i32,
+        limit: Option<usize>,
     ) -> Result<FeatureCollection, sqlx::Error> {
-        let result = sqlx::query!(
+        let rows = sqlx::query!(
             r#"
             SELECT jsonb_build_object(
-                'type', 'FeatureCollection',
-                'features', COALESCE(jsonb_agg(
-                    jsonb_build_object(
-                        'type', 'Feature',
-                        'id', id,
-                        'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
-                        'properties', properties || jsonb_build_object('name', name)
-                    )
-                ), '[]'::jsonb)
-            ) as feature_collection
+                'type', 'Feature',
+                'id', id,
+                'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
+                'properties', properties || jsonb_build_object('name', name)
+            ) as feature
             FROM app.features
             WHERE collection_id = $1 AND status = 'ACTIVE'
+            ORDER BY id
+            LIMIT $2
             "#,
-            collection_id
+            collection_id,
+            limit.map(|l| l as i64)
         )
-        .fetch_one(&self.db_pool)
+        .fetch_all(&self.db_pool)
         .await?;
 
-        let feature_collection: FeatureCollection =
-            serde_json::from_value(result.feature_collection.unwrap())
-                .map_err(|e| sqlx::Error::Decode(Box::new(e)))?;
+        let features: Vec<geojson::Feature> = rows
+            .into_iter()
+            .map(|row| {
+                serde_json::from_value(row.feature.unwrap())
+                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+
+        let feature_collection = FeatureCollection {
+            bbox: None,
+            features,
+            foreign_members: None,
+        };
 
         Ok(feature_collection)
     }

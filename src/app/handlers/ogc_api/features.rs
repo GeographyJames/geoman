@@ -71,11 +71,12 @@ fn add_collection_links(
         (status = 404, description = "todo!"))
 )]
 #[get("/{collectionId}/items")]
-#[tracing::instrument(skip(repo, req, collection_slug))]
+#[tracing::instrument(skip(repo, req, collection_slug, query))]
 pub async fn get_features(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
     collection_slug: web::Path<String>,
+    query: web::Query<Query>,
 ) -> Result<HttpResponse, actix_web::Error> {
     // Build base URL from request
     let base_url = {
@@ -98,7 +99,7 @@ pub async fn get_features(
     };
     let collection_id = collection_row.id;
     let mut feature_collection = repo
-        .select_features(collection_id)
+        .select_features(collection_id, query.limit)
         .await
         .expect("failed to retrieve feature");
 

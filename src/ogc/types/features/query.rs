@@ -6,6 +6,7 @@ use crate::ogc::types::common::Bbox;
 
 #[derive(Deserialize, IntoParams)]
 #[into_params(parameter_in = Query)]
+#[serde(deny_unknown_fields)]
 pub struct Query {
     /// The optional limit parameter limits the number of items that are
     /// presented in the response document.
@@ -13,7 +14,7 @@ pub struct Query {
     /// Only items are counted that are on the first level of the  collection
     /// in the response document. Nested objects contained
     /// within the explicitly requested items shall not be counted.
-    #[param(style = Form, required = false)]
+    #[param(style = Form, required = false, maximum = 10000)]
     pub limit: Option<usize>,
 
     /// Only features that have a geometry that intersects the bounding box are selected
