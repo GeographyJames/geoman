@@ -5,6 +5,20 @@ use crate::{
 };
 use actix_web::{HttpRequest, HttpResponse, get, web};
 
+/// Helper to add links to foreign_members
+fn add_links_to_foreign_members(
+    foreign_members: &mut Option<serde_json::Map<String, serde_json::Value>>,
+    links: serde_json::Value,
+) {
+    if let Some(members) = foreign_members.as_mut() {
+        members.insert("links".to_string(), links);
+    } else {
+        let mut members = serde_json::Map::new();
+        members.insert("links".to_string(), links);
+        *foreign_members = Some(members);
+    }
+}
+
 /// Add links to a GeoJSON feature (self and collection)
 fn add_feature_links(feature: &mut geojson::Feature, self_href: String, collection_href: String) {
     let links = serde_json::json!([
@@ -20,13 +34,7 @@ fn add_feature_links(feature: &mut geojson::Feature, self_href: String, collecti
         }
     ]);
 
-    if let Some(foreign_members) = feature.foreign_members.as_mut() {
-        foreign_members.insert("links".to_string(), links);
-    } else {
-        let mut members = serde_json::Map::new();
-        members.insert("links".to_string(), links);
-        feature.foreign_members = Some(members);
-    }
+    add_links_to_foreign_members(&mut feature.foreign_members, links);
 }
 
 /// Add links to a GeoJSON FeatureCollection (self and collection)
@@ -48,13 +56,7 @@ fn add_collection_links(
         }
     ]);
 
-    if let Some(foreign_members) = feature_collection.foreign_members.as_mut() {
-        foreign_members.insert("links".to_string(), links);
-    } else {
-        let mut members = serde_json::Map::new();
-        members.insert("links".to_string(), links);
-        feature_collection.foreign_members = Some(members);
-    }
+    add_links_to_foreign_members(&mut feature_collection.foreign_members, links);
 }
 
 /// The features in the collection

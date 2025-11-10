@@ -41,7 +41,7 @@ impl PostgresRepo {
                     jsonb_build_object(
                         'type', 'Feature',
                         'id', id,
-                        'geometry', ST_AsGeoJSON(geom)::jsonb,
+                        'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
                         'properties', properties || jsonb_build_object('name', name)
                     )
                 ), '[]'::jsonb)
@@ -72,7 +72,7 @@ impl PostgresRepo {
             SELECT jsonb_build_object(
                 'type', 'Feature',
                 'id', id,
-                'geometry', ST_AsGeoJSON(geom)::jsonb,
+                'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
                 'properties', properties || jsonb_build_object('name', name)
             ) as feature
             FROM app.features
