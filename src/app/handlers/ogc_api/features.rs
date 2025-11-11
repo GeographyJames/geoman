@@ -1,9 +1,16 @@
 use crate::{
-    app::URLS,
+    app::{
+        URLS,
+        constants::DB_QUERY_FAIL,
+        helpers::{get_base_url, get_collection_row_from_slug},
+    },
     ogc::types::features::Query,
     repo::{PostgresRepo, ogc::CollectionRow},
 };
 use actix_web::{HttpRequest, HttpResponse, get, web};
+
+use futures::{StreamExt, TryStreamExt, stream};
+use sqlx::types::Json;
 
 /// Helper to add links to foreign_members
 fn add_links_to_foreign_members(
@@ -17,24 +24,6 @@ fn add_links_to_foreign_members(
         members.insert("links".to_string(), links);
         *foreign_members = Some(members);
     }
-}
-
-/// Add links to a GeoJSON feature (self and collection)
-fn add_feature_links(feature: &mut geojson::Feature, self_href: String, collection_href: String) {
-    let links = serde_json::json!([
-        {
-            "href": self_href,
-            "rel": "self",
-            "type": "application/geo+json"
-        },
-        {
-            "href": collection_href,
-            "rel": "collection",
-            "type": "application/json"
-        }
-    ]);
-
-    add_links_to_foreign_members(&mut feature.foreign_members, links);
 }
 
 /// Add links to a GeoJSON FeatureCollection (self and collection)
@@ -71,43 +60,23 @@ fn add_collection_links(
         (status = 404, description = "todo!"))
 )]
 #[get("/{collectionId}/items")]
-#[tracing::instrument(skip(repo, req, collection_slug, query))]
+#[tracing::instrument(skip(repo, req, slug, query))]
 pub async fn get_features(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-    collection_slug: web::Path<String>,
+    slug: web::Path<String>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    // Build base URL from request
-    let base_url = {
-        let connection_info = req.connection_info();
-        format!("{}://{}", connection_info.scheme(), connection_info.host())
-    };
+    let base_url = get_base_url(&req);
 
-    let collection_row: CollectionRow = match repo
-        .select_by_slug(&collection_slug)
-        .await
-        .expect("failed to query database")
-    {
-        Some(row) => row,
-        None => {
-            return Err(actix_web::error::ErrorNotFound(format!(
-                "Collection id {} does not exist",
-                collection_slug
-            )));
-        }
-    };
-    let collection_id = collection_row.id;
+    let collection_row = get_collection_row_from_slug(&slug, repo.get_ref()).await?;
     let mut feature_collection = repo
-        .select_features(collection_id, query.limit)
+        .select_features(collection_row.id, query.limit)
         .await
-        .expect("failed to retrieve feature");
+        .expect(DB_QUERY_FAIL);
 
     // Build URLs
-    let collection_url = format!(
-        "{}{}/collections/{}",
-        base_url, URLS.ogc_api.base, collection_slug
-    );
+    let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
     let items_url = format!("{}/items", collection_url);
 
     // Add links to the FeatureCollection
@@ -115,16 +84,60 @@ pub async fn get_features(
 
     // Add links to each feature
     for feature in feature_collection.features.iter_mut() {
-        if let Some(geojson::feature::Id::Number(feature_id)) = &feature.id {
-            let feature_url = format!(
-                "{}{}/collections/{}/items/{}",
-                base_url, URLS.ogc_api.base, collection_slug, feature_id
-            );
-            add_feature_links(feature, feature_url, collection_url.clone());
-        }
+        add_feature_links(feature, collection_url.clone());
     }
 
     Ok(HttpResponse::Ok().json(feature_collection))
+}
+
+#[get("/{collectionId}/items")]
+#[tracing::instrument(skip(repo, req, slug, query))]
+pub async fn get_features_streaming(
+    req: HttpRequest,
+    repo: web::Data<PostgresRepo>,
+    slug: web::Path<String>,
+    query: web::Query<Query>,
+) -> Result<HttpResponse, actix_web::Error> {
+    let base_url = get_base_url(&req);
+    let collection_row = get_collection_row_from_slug(&slug, repo.get_ref()).await?;
+    let collection_id = collection_row.id;
+    // Build URLs
+    let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
+    let items_url = format!("{}/items", collection_url);
+
+    let feature_stream = repo
+        .select_features_streaming(collection_row.id, query.limit)
+        .map(move |res| {
+            res.and_then(|Json(mut feature)| {
+                add_feature_links(&mut feature, collection_url.clone());
+
+                Ok(feature)
+            })
+        });
+
+    todo!()
+}
+
+/// Add links to a GeoJSON feature (self and collection)
+fn add_feature_links(feature: &mut geojson::Feature, collection_url: String) {
+    let feature_id = match feature.id.as_ref().expect("Feature has no id") {
+        geojson::feature::Id::String(_) => panic!("feature id is a string (should be number"),
+        geojson::feature::Id::Number(n) => n.as_i64().expect("feature id is not valid i64"),
+    };
+    let links = serde_json::json!([
+        {
+            "href": format!("{collection_url}/items/{feature_id}", ),
+            "rel": "self",
+            "type": "application/geo+json"
+        },
+        {
+            "href": collection_url,
+            "rel": "collection",
+            "type": "application/json"
+        }
+    ]);
+
+    add_links_to_foreign_members(&mut feature.foreign_members, links);
 }
 
 /// A single feature
@@ -145,39 +158,25 @@ pub async fn get_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
     path: web::Path<(String, i32)>,
-) -> HttpResponse {
-    let (collection_slug, feature_id) = path.into_inner();
-
-    // Build base URL from request
-    let base_url = {
-        let connection_info = req.connection_info();
-        format!("{}://{}", connection_info.scheme(), connection_info.host())
-    };
-
-    // Get collection by slug
-    let collection_row: CollectionRow = match repo.select_by_slug(&collection_slug).await {
-        Ok(Some(row)) => row,
-        Ok(None) => return HttpResponse::NotFound().finish(),
-        Err(_) => return HttpResponse::InternalServerError().finish(),
-    };
-
+) -> Result<HttpResponse, actix_web::Error> {
+    let (slug, feature_id) = path.into_inner();
+    let base_url = get_base_url(&req);
+    let collection_row = get_collection_row_from_slug(&slug, repo.get_ref()).await?;
+    let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
     // Get feature by ID
-    match repo.select_feature(collection_row.id, feature_id).await {
-        Ok(Some(mut feature)) => {
+    match repo
+        .select_feature(collection_row.id, feature_id)
+        .await
+        .expect("Failed go retrieve feature from database")
+    {
+        Some(sqlx::types::Json(mut feature)) => {
             // Add links to the feature
-            let feature_url = format!(
-                "{}{}/collections/{}/items/{}",
-                base_url, URLS.ogc_api.base, collection_slug, feature_id
-            );
-            let collection_url = format!(
-                "{}{}/collections/{}",
-                base_url, URLS.ogc_api.base, collection_slug
-            );
-            add_feature_links(&mut feature, feature_url, collection_url);
-
-            HttpResponse::Ok().json(feature)
+            add_feature_links(&mut feature, collection_url);
+            Ok(HttpResponse::Ok().json(feature))
         }
-        Ok(None) => HttpResponse::NotFound().finish(),
-        Err(_) => HttpResponse::InternalServerError().finish(),
+        None => Err(actix_web::error::ErrorNotFound(format!(
+            "Feature id {} does not exist",
+            feature_id
+        ))),
     }
 }

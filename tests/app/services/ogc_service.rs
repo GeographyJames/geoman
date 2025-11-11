@@ -1,5 +1,6 @@
-use geoman::{app::URLS, domain::FeatureId};
+use geoman::{app::URLS, domain::FeatureId, ogc::types::features::Query};
 use reqwest::Response;
+use sqlx::query;
 
 use crate::app::{constants::REQUEST_FAILED, services::HttpClient};
 
@@ -35,11 +36,19 @@ impl OgcService {
         req.send().await.expect(REQUEST_FAILED)
     }
 
-    pub async fn get_features(&self, client: &HttpClient, collection_slug: &str) -> Response {
-        let req = client.get(format!(
+    pub async fn get_features(
+        &self,
+        client: &HttpClient,
+        collection_slug: &str,
+        params: Option<&Query>,
+    ) -> Response {
+        let mut req = client.get(format!(
             "{}{}/{}/items",
             &URLS.ogc_api.base, &URLS.ogc_api.collections, collection_slug
         ));
+        if let Some(query) = params {
+            req = req.query(query)
+        }
         req.send().await.expect(REQUEST_FAILED)
     }
 

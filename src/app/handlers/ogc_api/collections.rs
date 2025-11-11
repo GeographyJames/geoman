@@ -1,10 +1,16 @@
 use actix_web::{HttpRequest, HttpResponse, get, web};
 
 use crate::{
-    app::URLS,
-    ogc::types::common::link_relations::{ITEMS, SELF},
-    ogc::types::common::media_types::{GEOJSON, JSON},
-    ogc::types::common::{Collection, Collections, Link},
+    app::{
+        URLS,
+        constants::DB_QUERY_FAIL,
+        helpers::{get_base_url, get_collection_row_from_slug},
+    },
+    ogc::types::common::{
+        Collection, Collections, Link,
+        link_relations::{ITEMS, SELF},
+        media_types::{GEOJSON, JSON},
+    },
     repo::{PostgresRepo, ogc::CollectionRow},
 };
 
@@ -45,17 +51,11 @@ use crate::{
 pub async fn get_collections(req: HttpRequest, repo: web::Data<PostgresRepo>) -> HttpResponse {
     // Build base URL from request
 
-    let base_url = {
-        let connection_info = req.connection_info();
-        format!("{}://{}", connection_info.scheme(), connection_info.host())
-    };
+    let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
 
     // Fetch collections from database
-    let collection_rows: Vec<CollectionRow> = repo
-        .select_all()
-        .await
-        .expect("failed to retrieve collections from database");
+    let collection_rows: Vec<CollectionRow> = repo.select_all().await.expect(DB_QUERY_FAIL);
 
     // Map database rows to OGC Collections with links
     let collections: Vec<Collection> = collection_rows
@@ -129,25 +129,17 @@ pub async fn get_collections(req: HttpRequest, repo: web::Data<PostgresRepo>) ->
     )
 )]
 #[get("/{collectionId}")]
-#[tracing::instrument(skip(repo, req, collection_slug))]
+#[tracing::instrument(skip(repo, req, slug))]
 pub async fn get_collection(
     req: HttpRequest,
-    collection_slug: web::Path<String>,
+    slug: web::Path<String>,
     repo: web::Data<PostgresRepo>,
-) -> HttpResponse {
-    // Build base URL from request
-    let base_url = {
-        let connection_info = req.connection_info();
-        format!("{}://{}", connection_info.scheme(), connection_info.host())
-    };
+) -> Result<HttpResponse, actix_web::Error> {
+    let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
 
     // Fetch collection from database
-    let collection_row: CollectionRow = match repo.select_by_slug(&collection_slug).await {
-        Ok(Some(row)) => row,
-        Ok(None) => return HttpResponse::NotFound().finish(),
-        Err(_) => return HttpResponse::InternalServerError().finish(),
-    };
+    let collection_row = get_collection_row_from_slug(&slug, repo.as_ref()).await?;
 
     // Map database row to OGC Collection with links
     let collection = Collection {
@@ -165,5 +157,5 @@ pub async fn get_collection(
         ],
     };
 
-    HttpResponse::Ok().json(collection)
+    Ok(HttpResponse::Ok().json(collection))
 }

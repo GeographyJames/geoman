@@ -1,10 +1,10 @@
 use chrono::{DateTime, Utc};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use utoipa::IntoParams;
 
 use crate::ogc::types::common::Bbox;
 
-#[derive(Deserialize, IntoParams)]
+#[derive(Deserialize, Serialize, IntoParams, Default)]
 #[into_params(parameter_in = Query)]
 #[serde(deny_unknown_fields)]
 pub struct Query {
