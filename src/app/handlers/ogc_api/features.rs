@@ -4,13 +4,18 @@ use crate::{
         helpers::{get_base_url, get_collection_row_from_slug},
     },
     constants::DB_QUERY_FAIL,
+    domain::{CollectionId, FeatureId},
     ogc::{
         self,
         types::{FeatureCollection, features::Query},
     },
-    repo::PostgresRepo,
+    repo::{
+        PostgresRepo,
+        ogc::{FeatureRow, features::DbQueryParams},
+    },
 };
 use actix_web::{HttpRequest, get, web};
+use sqlx::types::Json;
 
 /// The features in the collection
 #[utoipa::path(
@@ -34,16 +39,25 @@ pub async fn get_features(
     let base_url = get_base_url(&req);
 
     let collection_row = get_collection_row_from_slug(&slug, repo.get_ref()).await?;
-    let feature_collection_row = repo
-        .select_features(collection_row.id, query.limit)
+    let feature_rows = repo
+        .select_one_with_params::<Json<Vec<FeatureRow>>>(
+            &CollectionId(collection_row.id),
+            &DbQueryParams {
+                limit: query.limit.map(|l| l as i64),
+            },
+        )
         .await
-        .expect(DB_QUERY_FAIL);
+        .expect(DB_QUERY_FAIL)
+        .ok_or_else(|| {
+            actix_web::error::ErrorNotFound(format!(
+                "Collection {} does not exist",
+                collection_row.slug
+            ))
+        })?
+        .0;
     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
-    let feature_collection = FeatureCollection::from_feature_collection_row(
-        feature_collection_row,
-        collection_url,
-        slug.to_string(),
-    );
+    let feature_collection =
+        FeatureCollection::from_feature_rows(feature_rows, collection_url, slug.to_string());
 
     Ok(web::Json(feature_collection))
 }
@@ -97,16 +111,16 @@ pub async fn get_feature(
 ) -> Result<web::Json<ogc::types::Feature>, actix_web::Error> {
     let (slug, feature_id) = path.into_inner();
     let base_url = get_base_url(&req);
-    let collection_row = get_collection_row_from_slug(&slug, repo.get_ref()).await?;
     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
     // Get feature by ID
     let feature_row = repo
-        .select_feature(collection_row.id, feature_id)
+        .select_one::<Json<FeatureRow>>(&FeatureId(feature_id))
         .await
         .expect("Failed go retrieve feature from database")
         .ok_or_else(|| {
             actix_web::error::ErrorNotFound(format!("Feature id {} does not exist", feature_id))
-        })?;
+        })?
+        .0;
 
     let feature = ogc::types::Feature::from_feature_row(feature_row, collection_url);
     Ok(web::Json(feature))

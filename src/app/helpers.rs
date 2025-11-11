@@ -22,7 +22,7 @@ pub async fn get_collection_row_from_slug(
     slug: &str,
     repo: &PostgresRepo,
 ) -> Result<CollectionRow, actix_web::Error> {
-    repo.select_by_slug(slug)
+    repo.select_one(slug)
         .await
         .expect(DB_QUERY_FAIL)
         .ok_or_else(|| {

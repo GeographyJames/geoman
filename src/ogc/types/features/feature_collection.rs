@@ -6,7 +6,7 @@ use crate::{
         Feature,
         common::{Link, link_relations::SELF, media_types::MediaType},
     },
-    repo::ogc::FeatureCollectionRow,
+    repo::ogc::FeatureRow,
 };
 
 #[derive(Serialize, Default, Deserialize)]
@@ -24,16 +24,11 @@ pub struct FeatureCollection {
 }
 
 impl FeatureCollection {
-    pub fn from_feature_collection_row(
-        row: FeatureCollectionRow,
-        collection_url: String,
-        slug: String,
-    ) -> Self {
-        let FeatureCollectionRow { features } = row;
+    pub fn from_feature_rows(rows: Vec<FeatureRow>, collection_url: String, slug: String) -> Self {
         Self {
             id: slug,
             r#type: Type::default(),
-            features: features
+            features: rows
                 .into_iter()
                 .map(|f| Feature::from_feature_row(f, collection_url.clone()))
                 .collect(),
@@ -46,11 +41,8 @@ impl FeatureCollection {
 
 impl Default for FeatureCollection {
     fn default() -> Self {
-        let row = FeatureCollectionRow {
-            features: Default::default(),
-        };
-        Self::from_feature_collection_row(
-            row,
+        Self::from_feature_rows(
+            Vec::default(),
             Uuid::new_v4().to_string(),
             Uuid::new_v4().to_string(),
         )

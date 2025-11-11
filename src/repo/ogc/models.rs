@@ -14,7 +14,3 @@ pub struct FeatureRow {
     pub properties: Map<String, Value>,
     pub geometry: geojson::Geometry,
 }
-
-pub struct FeatureCollectionRow {
-    pub features: Vec<FeatureRow>,
-}

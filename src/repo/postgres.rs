@@ -1,5 +1,4 @@
-use crate::repo::ogc::{FeatureCollectionRow, FeatureRow};
-use crate::repo::traits::{SelectAll, SelectBySlug};
+use crate::repo::traits::{SelectAll, SelectOne, SelectOneWithParams};
 use futures::Stream;
 use sqlx::PgPool;
 use sqlx::types::Json;
@@ -21,49 +20,24 @@ impl PostgresRepo {
         T::select_all(&self.db_pool).await
     }
 
-    #[tracing::instrument(skip(self, slug))]
-    pub async fn select_by_slug<T>(&self, slug: &str) -> Result<Option<T>, sqlx::Error>
+    #[tracing::instrument(skip(self, id))]
+    pub async fn select_one<'a, T>(&self, id: T::Id<'a>) -> Result<Option<T>, sqlx::Error>
     where
-        T: SelectBySlug,
+        T: SelectOne,
     {
-        T::select_by_slug(&self.db_pool, slug).await
+        T::select_one(&self.db_pool, id).await
     }
 
-    #[tracing::instrument(skip(self, collection_id, limit))]
-    pub async fn select_features(
+    #[tracing::instrument(skip(self, id, params))]
+    pub async fn select_one_with_params<'a, T>(
         &self,
-        collection_id: i32,
-        limit: Option<usize>,
-    ) -> Result<FeatureCollectionRow, sqlx::Error> {
-        let rows = sqlx::query!(
-            r#"
-            SELECT jsonb_build_object(
-                'id', id,
-                'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
-                'properties', properties || jsonb_build_object('name', name, 'is_primary', is_primary)
-            ) as feature
-            FROM app.features
-            WHERE collection_id = $1 AND status = 'ACTIVE'
-            ORDER BY id
-            LIMIT $2
-            "#,
-            collection_id,
-            limit.map(|l| l as i64)
-        )
-        .fetch_all(&self.db_pool)
-        .await?;
-
-        let features: Vec<FeatureRow> = rows
-            .into_iter()
-            .map(|row| {
-                serde_json::from_value(row.feature.unwrap())
-                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-
-        let feature_collection = FeatureCollectionRow { features };
-
-        Ok(feature_collection)
+        id: T::Id<'a>,
+        params: T::Params<'a>,
+    ) -> Result<Option<T>, sqlx::Error>
+    where
+        T: SelectOneWithParams,
+    {
+        T::select_one_with_params(&self.db_pool, id, params).await
     }
 
     #[tracing::instrument(skip(self, collection_id, limit))]
@@ -88,38 +62,5 @@ impl PostgresRepo {
             limit.map(|l| l as i64)
         )
         .fetch(&self.db_pool)
-    }
-
-    #[tracing::instrument(skip(self, collection_id, feature_id))]
-    pub async fn select_feature(
-        &self,
-        collection_id: i32,
-        feature_id: i32,
-    ) -> Result<Option<FeatureRow>, sqlx::Error> {
-        let result = sqlx::query!(
-            r#"
-            SELECT jsonb_build_object(
-                'type', 'Feature',
-                'id', id,
-                'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
-                'properties',  properties || jsonb_build_object('name', name, 'is_primary', is_primary) 
-            ) as feature
-            FROM app.features
-            WHERE collection_id = $1 AND id = $2 AND status = 'ACTIVE'
-            "#,
-            collection_id,
-            feature_id
-        )
-        .fetch_optional(&self.db_pool)
-        .await?;
-
-        match result {
-            Some(row) => {
-                let feature: FeatureRow = serde_json::from_value(row.feature.unwrap())
-                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))?;
-                Ok(Some(feature))
-            }
-            None => Ok(None),
-        }
     }
 }

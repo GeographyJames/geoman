@@ -1,6 +1,6 @@
 use crate::repo::{
     ogc::CollectionRow,
-    traits::{SelectAll, SelectBySlug},
+    traits::{SelectAll, SelectOne},
 };
 
 impl SelectAll for CollectionRow {
@@ -17,8 +17,12 @@ impl SelectAll for CollectionRow {
     }
 }
 
-impl SelectBySlug for CollectionRow {
-    async fn select_by_slug<'e, E>(executor: E, slug: &str) -> Result<Option<Self>, sqlx::Error>
+impl SelectOne for CollectionRow {
+    type Id<'a> = &'a str;
+    async fn select_one<'a, 'e, E>(
+        executor: E,
+        slug: Self::Id<'a>,
+    ) -> Result<Option<Self>, sqlx::Error>
     where
         E: sqlx::PgExecutor<'e>,
     {
