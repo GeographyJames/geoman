@@ -1,6 +1,5 @@
 use geoman::{app::URLS, domain::FeatureId, ogc::types::features::Query};
 use reqwest::Response;
-use sqlx::query;
 
 use crate::app::{constants::REQUEST_FAILED, services::HttpClient};
 

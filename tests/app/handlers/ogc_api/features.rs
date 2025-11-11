@@ -1,6 +1,5 @@
 use geojson::{Feature, FeatureCollection};
 use geoman::ogc::types::features::Query;
-use utoipa::openapi::response;
 
 use crate::app::{
     TestApp,

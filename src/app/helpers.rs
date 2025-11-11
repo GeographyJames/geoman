@@ -24,11 +24,9 @@ pub async fn get_collection_row_from_slug(
 ) -> Result<CollectionRow, actix_web::Error> {
     match repo.select_by_slug(slug).await.expect(DB_QUERY_FAIL) {
         Some(row) => Ok(row),
-        None => {
-            Err(actix_web::error::ErrorNotFound(format!(
-                "Collection id '{}' does not exist",
-                slug
-            )))
-        }
+        None => Err(actix_web::error::ErrorNotFound(format!(
+            "Collection id '{}' does not exist",
+            slug
+        ))),
     }
 }
