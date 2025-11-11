@@ -50,6 +50,22 @@ pub async fn handle_json_response<T: DeserializeOwned>(
     ))
 }
 
+pub fn check_feature_collection(feature_collection: &geojson::FeatureCollection) {
+    // Verify the collection has two links
+    let links = feature_collection
+        .foreign_members
+        .as_ref()
+        .expect("no foreign members")
+        .get("links")
+        .expect("feature has no links");
+    match links {
+        serde_json::Value::Array(values) => {
+            assert_eq!(values.len(), 1, "feature should have 1 link")
+        }
+        _ => panic!("links is not an array"),
+    }
+}
+
 /// Asserts a GeoJson feature matches required criteria
 pub fn check_feature<P: DeserializeOwned>(
     feature: &geojson::Feature,
@@ -58,15 +74,19 @@ pub fn check_feature<P: DeserializeOwned>(
     // Verify the feature has geometry
     assert!(feature.geometry.is_some(), "feature has no geometry");
 
-    // Verify the feature has links
-    assert!(
-        feature
-            .foreign_members
-            .as_ref()
-            .expect("no foreign members")
-            .contains_key("links"),
-        "feature has no links"
-    );
+    // Verify the feature has two links
+    let links = feature
+        .foreign_members
+        .as_ref()
+        .expect("no foreign members")
+        .get("links")
+        .expect("feature has no links");
+    match links {
+        serde_json::Value::Array(values) => {
+            assert_eq!(values.len(), 2, "feature should have 2 links")
+        }
+        _ => panic!("links is not an array"),
+    }
 
     // Verify the feature has id that matches the expected feature_id
     let id = feature.id.as_ref().expect("feature has no id");

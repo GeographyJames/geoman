@@ -1,6 +1,6 @@
 use crate::app::{AppState, URLS};
 use crate::ogc::types::common::link_relations::{CONFORMANCE, DATA, ROOT, SELF, SERVICE_DESC};
-use crate::ogc::types::common::media_types::{JSON, OPEN_API_JSON};
+use crate::ogc::types::common::media_types::MediaType;
 use crate::ogc::types::common::{LandingPage, Link, Linked};
 use actix_web::{HttpRequest, get, web};
 
@@ -28,8 +28,8 @@ pub async fn get_landing_page(
     let base_url = format!("{}://{}", connection_info.scheme(), connection_info.host(),);
     let ogc_api_base_url = format!("{}{}", base_url, URLS.ogc_api.base);
     let links = [
-        Link::new(&ogc_api_base_url, SELF).mediatype(JSON),
-        Link::new(&ogc_api_base_url, ROOT).mediatype(JSON),
+        Link::new(&ogc_api_base_url, SELF).mediatype(MediaType::Json),
+        Link::new(&ogc_api_base_url, ROOT).mediatype(MediaType::Json),
         Link::new(
             format!(
                 "{}{}",
@@ -37,14 +37,14 @@ pub async fn get_landing_page(
             ),
             CONFORMANCE,
         )
-        .mediatype(JSON)
+        .mediatype(MediaType::Json)
         .title("Conformance declaration"),
-        Link::new(format!("{}/collections", ogc_api_base_url), DATA).mediatype(JSON),
+        Link::new(format!("{}/collections", ogc_api_base_url), DATA).mediatype(MediaType::Json),
         Link::new(
             format!("{}{}{}", base_url, URLS.docs.base, URLS.docs.api),
             SERVICE_DESC,
         )
-        .mediatype(OPEN_API_JSON)
+        .mediatype(MediaType::OpenApi)
         .title("API definition"),
     ];
 

@@ -4,7 +4,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::app::{
     TestApp,
-    helpers::{assert_ok, assert_status, check_feature, handle_json_response},
+    helpers::{
+        assert_ok, assert_status, check_feature, check_feature_collection, handle_json_response,
+    },
 };
 
 #[derive(Serialize, Deserialize)]
@@ -46,6 +48,8 @@ async fn get_features_works() {
     let feature_collection: FeatureCollection = handle_json_response(response)
         .await
         .expect("failed to retrieve feature collection");
+
+    check_feature_collection(&feature_collection);
 
     assert_eq!(feature_collection.features.len(), 1);
     let feature = feature_collection.features.iter().next().unwrap();

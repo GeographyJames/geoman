@@ -20,3 +20,5 @@ pub const ITEMS: &str = "items";
 pub const DATA: &str = "data";
 
 pub const ROOT: &str = "root";
+
+pub const COLLECTION: &str = "collection";

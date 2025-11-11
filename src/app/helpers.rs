@@ -2,7 +2,7 @@ use actix_web::HttpRequest;
 use anyhow::Context;
 
 use crate::{
-    app::constants::{CONFIGURATION_DIRECTORY, DB_QUERY_FAIL},
+    constants::{CONFIGURATION_DIRECTORY, DB_QUERY_FAIL},
     repo::{PostgresRepo, ogc::CollectionRow},
 };
 

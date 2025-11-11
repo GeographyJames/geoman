@@ -1,7 +1,7 @@
 //! The main Actix Web application
 
 mod config;
-mod constants;
+
 pub mod enums;
 mod helpers;
 mod startup;

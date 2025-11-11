@@ -1,6 +1,6 @@
+use crate::repo::ogc::{FeatureCollectionRow, FeatureRow};
 use crate::repo::traits::{SelectAll, SelectBySlug};
 use futures::Stream;
-use geojson::FeatureCollection;
 use sqlx::PgPool;
 use sqlx::types::Json;
 
@@ -34,11 +34,10 @@ impl PostgresRepo {
         &self,
         collection_id: i32,
         limit: Option<usize>,
-    ) -> Result<FeatureCollection, sqlx::Error> {
+    ) -> Result<FeatureCollectionRow, sqlx::Error> {
         let rows = sqlx::query!(
             r#"
             SELECT jsonb_build_object(
-                'type', 'Feature',
                 'id', id,
                 'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
                 'properties', properties || jsonb_build_object('name', name, 'is_primary', is_primary)
@@ -54,7 +53,7 @@ impl PostgresRepo {
         .fetch_all(&self.db_pool)
         .await?;
 
-        let features: Vec<geojson::Feature> = rows
+        let features: Vec<FeatureRow> = rows
             .into_iter()
             .map(|row| {
                 serde_json::from_value(row.feature.unwrap())
@@ -62,11 +61,7 @@ impl PostgresRepo {
             })
             .collect::<Result<Vec<_>, _>>()?;
 
-        let feature_collection = FeatureCollection {
-            bbox: None,
-            features,
-            foreign_members: None,
-        };
+        let feature_collection = FeatureCollectionRow { features };
 
         Ok(feature_collection)
     }
@@ -100,7 +95,7 @@ impl PostgresRepo {
         &self,
         collection_id: i32,
         feature_id: i32,
-    ) -> Result<Option<geojson::Feature>, sqlx::Error> {
+    ) -> Result<Option<FeatureRow>, sqlx::Error> {
         let result = sqlx::query!(
             r#"
             SELECT jsonb_build_object(
@@ -120,7 +115,7 @@ impl PostgresRepo {
 
         match result {
             Some(row) => {
-                let feature: geojson::Feature = serde_json::from_value(row.feature.unwrap())
+                let feature: FeatureRow = serde_json::from_value(row.feature.unwrap())
                     .map_err(|e| sqlx::Error::Decode(Box::new(e)))?;
                 Ok(Some(feature))
             }

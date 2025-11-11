@@ -3,13 +3,13 @@ use actix_web::{HttpRequest, get, web};
 use crate::{
     app::{
         URLS,
-        constants::DB_QUERY_FAIL,
         helpers::{get_base_url, get_collection_row_from_slug},
     },
+    constants::DB_QUERY_FAIL,
     ogc::types::common::{
         Collection, Collections, Link,
         link_relations::{ITEMS, SELF},
-        media_types::{GEOJSON, JSON},
+        media_types::MediaType,
     },
     repo::{PostgresRepo, ogc::CollectionRow},
 };
@@ -75,9 +75,10 @@ pub async fn get_collections(
                     title,
                     description,
                     links: vec![
-                        Link::new(format!("{}/{}", collections_url, slug), SELF).mediatype(JSON),
+                        Link::new(format!("{}/{}", collections_url, slug), SELF)
+                            .mediatype(MediaType::Json),
                         Link::new(format!("{}/{}/items", collections_url, slug), ITEMS)
-                            .mediatype(GEOJSON)
+                            .mediatype(MediaType::GeoJson)
                             .title("Items"),
                     ],
                 }
@@ -87,7 +88,7 @@ pub async fn get_collections(
 
     // Build response with top-level links
     let collections = Collections {
-        links: vec![Link::new(&collections_url, SELF).mediatype(JSON)],
+        links: vec![Link::new(&collections_url, SELF).mediatype(MediaType::Json)],
         collections: collections_vec,
     };
 
@@ -150,12 +151,13 @@ pub async fn get_collection(
         title: collection_row.title,
         description: collection_row.description,
         links: vec![
-            Link::new(format!("{}/{}", collections_url, collection_row.slug), SELF).mediatype(JSON),
+            Link::new(format!("{}/{}", collections_url, collection_row.slug), SELF)
+                .mediatype(MediaType::Json),
             Link::new(
                 format!("{}/{}/items", collections_url, collection_row.slug),
                 ITEMS,
             )
-            .mediatype(GEOJSON)
+            .mediatype(MediaType::GeoJson)
             .title("Items"),
         ],
     };

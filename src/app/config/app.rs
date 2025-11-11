@@ -1,8 +1,10 @@
-use crate::app::{
-    config::{clerk::ClerkAuthSettings, db::DatabaseSettings},
+use crate::{
+    app::{
+        config::{clerk::ClerkAuthSettings, db::DatabaseSettings},
+        enums::GeoManEnvironment,
+        helpers::get_configuration_directory,
+    },
     constants::ENVIRONMENT_VARIABLE_PREFIX,
-    enums::GeoManEnvironment,
-    helpers::get_configuration_directory,
 };
 use anyhow::Context;
 use dotenvy::dotenv;
