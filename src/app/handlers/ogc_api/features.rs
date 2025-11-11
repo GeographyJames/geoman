@@ -5,11 +5,11 @@ use crate::{
         helpers::{get_base_url, get_collection_row_from_slug},
     },
     ogc::types::features::Query,
-    repo::{PostgresRepo, ogc::CollectionRow},
+    repo::PostgresRepo,
 };
 use actix_web::{HttpRequest, HttpResponse, get, web};
 
-use futures::{StreamExt, TryStreamExt, stream};
+use futures::{StreamExt, TryStreamExt};
 use sqlx::types::Json;
 
 /// Helper to add links to foreign_members
@@ -108,10 +108,10 @@ pub async fn get_features_streaming(
     let feature_stream = repo
         .select_features_streaming(collection_row.id, query.limit)
         .map(move |res| {
-            res.and_then(|Json(mut feature)| {
+            res.map(|Json(mut feature)| {
                 add_feature_links(&mut feature, collection_url.clone());
 
-                Ok(feature)
+                feature
             })
         });
 
