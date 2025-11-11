@@ -41,7 +41,7 @@ impl PostgresRepo {
                 'type', 'Feature',
                 'id', id,
                 'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
-                'properties', properties || jsonb_build_object('name', name)
+                'properties', properties || jsonb_build_object('name', name, 'is_primary', is_primary)
             ) as feature
             FROM app.features
             WHERE collection_id = $1 AND status = 'ACTIVE'
@@ -100,21 +100,31 @@ impl PostgresRepo {
         &self,
         collection_id: i32,
         feature_id: i32,
-    ) -> Result<Option<Json<geojson::Feature>>, sqlx::Error> {
-        sqlx::query_scalar!(
+    ) -> Result<Option<geojson::Feature>, sqlx::Error> {
+        let result = sqlx::query!(
             r#"
-            SELECT ST_AsGeoJSON(t.*, id_column => 'id')::jsonb as "f!: Json<geojson::Feature>"
-            FROM (
-                SELECT id, name, ST_Transform(geom, 4326) as geom
-                FROM app.features
-                WHERE collection_id = $1 AND id = $2 AND status = 'ACTIVE' 
-                ) 
-            as t(id, name, geom)
+            SELECT jsonb_build_object(
+                'type', 'Feature',
+                'id', id,
+                'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
+                'properties',  properties || jsonb_build_object('name', name, 'is_primary', is_primary) 
+            ) as feature
+            FROM app.features
+            WHERE collection_id = $1 AND id = $2 AND status = 'ACTIVE'
             "#,
             collection_id,
             feature_id
         )
         .fetch_optional(&self.db_pool)
-        .await
+        .await?;
+
+        match result {
+            Some(row) => {
+                let feature: geojson::Feature = serde_json::from_value(row.feature.unwrap())
+                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))?;
+                Ok(Some(feature))
+            }
+            None => Ok(None),
+        }
     }
 }

@@ -16,6 +16,8 @@ use geoman::{
 };
 use rand::Rng;
 use secrecy::ExposeSecret;
+use serde::Serialize;
+use serde_json::json;
 use sqlx::PgPool;
 use std::{str::FromStr, sync::LazyLock};
 use uuid::Uuid;
@@ -184,13 +186,14 @@ impl TestApp {
         ProjectId(self.insert_project(&name, &slug, user_id).await)
     }
 
-    pub async fn insert_feature(
+    pub async fn insert_feature<P: Serialize>(
         &self,
         name: &str,
         collection_id: CollectionId,
         project_id: ProjectId,
         user_id: UserId,
         geom_ewkt: &str,
+        properties: Option<P>,
     ) -> i32 {
         let record = sqlx::query!(
             "INSERT INTO app.features (
@@ -199,13 +202,15 @@ impl TestApp {
                 name,
                 geom,
                 added_by,
-                last_updated_by
-            ) VALUES ($1, $2, $3, ST_GeomFromEWKT($4), $5, $5) RETURNING id",
+                last_updated_by,
+                properties
+            ) VALUES ($1, $2, $3, ST_GeomFromEWKT($4), $5, $5, $6) RETURNING id",
             project_id.0,
             collection_id.0,
             name,
             geom_ewkt,
-            user_id.0
+            user_id.0,
+            json!(properties)
         )
         .fetch_one(&self.db_pool)
         .await
@@ -213,11 +218,12 @@ impl TestApp {
         record.id
     }
 
-    pub async fn generate_feature_id(
+    pub async fn generate_feature_id<P: Serialize>(
         &self,
         collection_id: CollectionId,
         project_id: ProjectId,
         user_id: UserId,
+        properties: Option<P>,
     ) -> FeatureId {
         let name = uuid::Uuid::new_v4().to_string();
         let mut rng = rand::rng();
@@ -225,8 +231,15 @@ impl TestApp {
         let northing: u32 = rng.random_range(..1_300_000);
         let geom_wkt = format!("SRID=27700;POINT({} {})", easting, northing);
         FeatureId(
-            self.insert_feature(&name, collection_id, project_id, user_id, &geom_wkt)
-                .await,
+            self.insert_feature(
+                &name,
+                collection_id,
+                project_id,
+                user_id,
+                &geom_wkt,
+                properties,
+            )
+            .await,
         )
     }
 }

@@ -50,10 +50,23 @@ pub async fn handle_json_response<T: DeserializeOwned>(
     ))
 }
 
-/// Asserts a GeoJson feature matches certain criteria
-pub fn check_feature(feature: &geojson::Feature, feature_id: Option<FeatureId>) {
+/// Asserts a GeoJson feature matches required criteria
+pub fn check_feature<P: DeserializeOwned>(
+    feature: &geojson::Feature,
+    feature_id: Option<FeatureId>,
+) {
     // Verify the feature has geometry
     assert!(feature.geometry.is_some(), "feature has no geometry");
+
+    // Verify the feature has links
+    assert!(
+        feature
+            .foreign_members
+            .as_ref()
+            .expect("no foreign members")
+            .contains_key("links"),
+        "feature has no links"
+    );
 
     // Verify the feature has id that matches the expected feature_id
     let id = feature.id.as_ref().expect("feature has no id");
@@ -73,13 +86,26 @@ pub fn check_feature(feature: &geojson::Feature, feature_id: Option<FeatureId>) 
         geojson::feature::Id::String(_) => panic!("feature id is a string, expected number"),
     }
 
-    // Verify the feature has properties with a name
-    let properties = feature
+    // Verify the feature has properties
+    let mut properties = feature
         .properties
         .as_ref()
-        .expect("feature has no properties");
-    assert!(
-        properties.contains_key("name"),
-        "properties has no name field"
-    );
+        .expect("feature has no properties")
+        .clone();
+
+    // Verify properties has string field 'name'
+    let name = properties
+        .remove("name")
+        .expect("properties has no name field");
+    assert!(name.is_string(), "name field is not string");
+
+    // Verify properties has a boolean field 'is_primary'
+    let is_primary = properties
+        .remove("is_primary")
+        .expect("properties has no is_primary field");
+    assert!(is_primary.is_boolean(), "is_primary is not a boolean");
+
+    // Verify properties remaingin fields match type P
+    let _properties_struct: P = serde_json::from_value(serde_json::Value::Object(properties))
+        .expect("failed to deserialize properties to properties struct");
 }

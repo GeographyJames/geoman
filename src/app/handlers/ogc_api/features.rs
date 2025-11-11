@@ -170,7 +170,7 @@ pub async fn get_feature(
         .await
         .expect("Failed go retrieve feature from database")
     {
-        Some(sqlx::types::Json(mut feature)) => {
+        Some(mut feature) => {
             // Add links to the feature
             add_feature_links(&mut feature, collection_url);
             Ok(web::Json(feature))
