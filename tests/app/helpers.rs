@@ -51,7 +51,7 @@ pub async fn handle_json_response<T: DeserializeOwned>(
 }
 
 /// Asserts a GeoJson feature matches certain criteria
-pub fn check_feature(feature: &geojson::Feature, feature_id: FeatureId) {
+pub fn check_feature(feature: &geojson::Feature, feature_id: Option<FeatureId>) {
     // Verify the feature has geometry
     assert!(feature.geometry.is_some(), "feature has no geometry");
 
@@ -66,7 +66,9 @@ pub fn check_feature(feature: &geojson::Feature, feature_id: FeatureId) {
                 .try_into()
                 .expect("feature id is not valid i32");
 
-            assert_eq!(id_value, feature_id.0, "feature id does not match");
+            if let Some(id) = feature_id {
+                assert_eq!(id_value, id.0, "feature id does not match");
+            }
         }
         geojson::feature::Id::String(_) => panic!("feature id is a string, expected number"),
     }

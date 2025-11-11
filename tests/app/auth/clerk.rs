@@ -6,12 +6,12 @@ use crate::app::helpers::handle_json_response;
 
 static TEST_SESSION: OnceCell<ClerkSession> = OnceCell::const_new();
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct ClerkSession {
     id: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ClerkSessionToken {
     pub jwt: String,
 }
