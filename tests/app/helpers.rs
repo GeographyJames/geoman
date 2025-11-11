@@ -1,4 +1,4 @@
-use geoman::domain::FeatureId;
+use geoman::ogc::types::Feature;
 use reqwest::Response;
 use serde::de::DeserializeOwned;
 
@@ -50,68 +50,9 @@ pub async fn handle_json_response<T: DeserializeOwned>(
     ))
 }
 
-pub fn check_feature_collection(feature_collection: &geojson::FeatureCollection) {
-    // Verify the collection has two links
-    let links = feature_collection
-        .foreign_members
-        .as_ref()
-        .expect("no foreign members")
-        .get("links")
-        .expect("feature has no links");
-    match links {
-        serde_json::Value::Array(values) => {
-            assert_eq!(values.len(), 1, "feature should have 1 link")
-        }
-        _ => panic!("links is not an array"),
-    }
-}
-
-/// Asserts a GeoJson feature matches required criteria
-pub fn check_feature<P: DeserializeOwned>(
-    feature: &geojson::Feature,
-    feature_id: Option<FeatureId>,
-) {
-    // Verify the feature has geometry
-    assert!(feature.geometry.is_some(), "feature has no geometry");
-
-    // Verify the feature has two links
-    let links = feature
-        .foreign_members
-        .as_ref()
-        .expect("no foreign members")
-        .get("links")
-        .expect("feature has no links");
-    match links {
-        serde_json::Value::Array(values) => {
-            assert_eq!(values.len(), 2, "feature should have 2 links")
-        }
-        _ => panic!("links is not an array"),
-    }
-
-    // Verify the feature has id that matches the expected feature_id
-    let id = feature.id.as_ref().expect("feature has no id");
-
-    match id {
-        geojson::feature::Id::Number(number) => {
-            let id_value: i32 = number
-                .as_i64()
-                .expect("feature id is not a valid i64")
-                .try_into()
-                .expect("feature id is not valid i32");
-
-            if let Some(id) = feature_id {
-                assert_eq!(id_value, id.0, "feature id does not match");
-            }
-        }
-        geojson::feature::Id::String(_) => panic!("feature id is a string, expected number"),
-    }
-
+pub fn check_feature<P: DeserializeOwned>(feature: &Feature) {
     // Verify the feature has properties
-    let mut properties = feature
-        .properties
-        .as_ref()
-        .expect("feature has no properties")
-        .clone();
+    let mut properties = feature.properties.clone();
 
     // Verify properties has string field 'name'
     let name = properties

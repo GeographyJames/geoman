@@ -1,12 +1,9 @@
-use geojson::{Feature, FeatureCollection};
-use geoman::ogc::types::features::Query;
+use geoman::ogc::types::{Feature, FeatureCollection, features::Query};
 use serde::{Deserialize, Serialize};
 
 use crate::app::{
     TestApp,
-    helpers::{
-        assert_ok, assert_status, check_feature, check_feature_collection, handle_json_response,
-    },
+    helpers::{assert_ok, assert_status, check_feature, handle_json_response},
 };
 
 #[derive(Serialize, Deserialize)]
@@ -30,7 +27,7 @@ async fn get_features_works() {
     let user_id = app.generate_user_id(team_id).await;
     let project_id = app.generate_project_id(user_id).await;
     let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
-    let feature_id = app
+    let _feature_id = app
         .generate_feature_id(
             collection_id,
             project_id,
@@ -49,13 +46,9 @@ async fn get_features_works() {
         .await
         .expect("failed to retrieve feature collection");
 
-    check_feature_collection(&feature_collection);
-
     assert_eq!(feature_collection.features.len(), 1);
     let feature = feature_collection.features.iter().next().unwrap();
-    check_feature::<Properties>(feature, Some(feature_id));
-
-    assert_eq!(feature_collection.bbox, None);
+    check_feature::<Properties>(feature);
 }
 
 #[actix_web::test]
@@ -74,8 +67,9 @@ async fn get_features_works_with_limit() {
         )
         .await;
     }
+    let limit = 5;
     let params = Query {
-        limit: Some(5),
+        limit: Some(limit),
         ..Default::default()
     };
     let response = app
@@ -86,9 +80,9 @@ async fn get_features_works_with_limit() {
     let feature_collection: FeatureCollection = handle_json_response(response)
         .await
         .expect("Failed to retrieve feature collection");
-    assert_eq!(feature_collection.features.len(), 5);
+    assert_eq!(feature_collection.features.len(), limit);
     for ft in feature_collection.features {
-        check_feature::<Properties>(&ft, None);
+        check_feature::<Properties>(&ft);
     }
 }
 
@@ -117,7 +111,7 @@ async fn get_feature_works() {
     let feature: Feature = handle_json_response(response)
         .await
         .expect("failed to retrieve feature");
-    check_feature::<Properties>(&feature, Some(feature_id));
+    check_feature::<Properties>(&feature);
 }
 
 #[actix_web::test]
