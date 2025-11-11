@@ -1,8 +1,13 @@
-use actix_web::{HttpResponse, web};
-use utoipa::openapi::OpenApi;
+use std::sync::LazyLock;
 
-#[tracing::instrument(skip(api_docs))]
-pub async fn get_api_docs(api_docs: web::Data<OpenApi>) -> HttpResponse {
-    let openapi = api_docs.as_ref();
-    HttpResponse::Ok().json(openapi)
+use actix_web::web;
+use utoipa::{OpenApi, openapi::OpenApi as ApiDocs};
+
+use crate::app::ApiDoc;
+
+static API_DOC: LazyLock<ApiDocs> = LazyLock::new(|| ApiDoc::openapi());
+
+#[tracing::instrument]
+pub async fn get_api_docs() -> web::Json<&'static ApiDocs> {
+    web::Json(&API_DOC)
 }

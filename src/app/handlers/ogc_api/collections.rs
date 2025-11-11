@@ -1,4 +1,4 @@
-use actix_web::{HttpRequest, HttpResponse, get, web};
+use actix_web::{HttpRequest, get, web};
 
 use crate::{
     app::{
@@ -48,7 +48,10 @@ use crate::{
 )]
 #[get("")]
 #[tracing::instrument(skip(repo, req))]
-pub async fn get_collections(req: HttpRequest, repo: web::Data<PostgresRepo>) -> HttpResponse {
+pub async fn get_collections(
+    req: HttpRequest,
+    repo: web::Data<PostgresRepo>,
+) -> web::Json<Collections> {
     // Build base URL from request
 
     let base_url = get_base_url(&req);
@@ -58,7 +61,7 @@ pub async fn get_collections(req: HttpRequest, repo: web::Data<PostgresRepo>) ->
     let collection_rows: Vec<CollectionRow> = repo.select_all().await.expect(DB_QUERY_FAIL);
 
     // Map database rows to OGC Collections with links
-    let collections: Vec<Collection> = collection_rows
+    let collections_vec: Vec<Collection> = collection_rows
         .into_iter()
         .map(
             |CollectionRow {
@@ -83,12 +86,12 @@ pub async fn get_collections(req: HttpRequest, repo: web::Data<PostgresRepo>) ->
         .collect();
 
     // Build response with top-level links
-    let response = Collections {
+    let collections = Collections {
         links: vec![Link::new(&collections_url, SELF).mediatype(JSON)],
-        collections,
+        collections: collections_vec,
     };
 
-    HttpResponse::Ok().json(response)
+    web::Json(collections)
 }
 
 /// Get a single collection by ID (slug)
@@ -134,7 +137,7 @@ pub async fn get_collection(
     req: HttpRequest,
     slug: web::Path<String>,
     repo: web::Data<PostgresRepo>,
-) -> Result<HttpResponse, actix_web::Error> {
+) -> Result<web::Json<Collection>, actix_web::Error> {
     let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
 
@@ -157,5 +160,5 @@ pub async fn get_collection(
         ],
     };
 
-    Ok(HttpResponse::Ok().json(collection))
+    Ok(web::Json(collection))
 }

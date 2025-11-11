@@ -1,5 +1,12 @@
-use crate::app::AppState;
-use actix_web::{HttpResponse, get, web};
+use crate::ogc::types::common::{ConformanceDeclaration, conformance_classes};
+use actix_web::{get, web};
+use std::sync::LazyLock;
+
+static CONFORMANCE_DECLARATION: LazyLock<ConformanceDeclaration> = LazyLock::new(|| {
+    let mut declaration = ConformanceDeclaration::default();
+    declaration.extend(&[conformance_classes::CORE, conformance_classes::GEOJSON]);
+    declaration
+});
 
 /// API conformance definition
 ///
@@ -20,8 +27,7 @@ use actix_web::{HttpResponse, get, web};
     )
 )]
 #[get("")]
-#[tracing::instrument(skip(state))]
-pub async fn get_conformance_declaration(state: web::Data<AppState>) -> HttpResponse {
-    let conformance = &state.conformance_declaration;
-    HttpResponse::Ok().json(conformance)
+#[tracing::instrument]
+pub async fn get_conformance_declaration() -> web::Json<&'static ConformanceDeclaration> {
+    web::Json(&CONFORMANCE_DECLARATION)
 }

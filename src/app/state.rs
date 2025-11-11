@@ -1,8 +1,7 @@
-use crate::ogc::types::common::{ConformanceDeclaration, LandingPage, conformance_classes};
+use crate::ogc::types::common::LandingPage;
 
 pub struct AppState {
     pub landing_page: LandingPage,
-    pub conformance_declaration: ConformanceDeclaration,
 }
 
 impl Default for AppState {
@@ -19,12 +18,6 @@ impl AppState {
             links: vec![],
         };
 
-        let mut conformance_declaration = ConformanceDeclaration::default();
-        conformance_declaration.extend(&[conformance_classes::CORE, conformance_classes::GEOJSON]);
-
-        Self {
-            conformance_declaration,
-            landing_page,
-        }
+        Self { landing_page }
     }
 }

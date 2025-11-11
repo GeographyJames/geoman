@@ -1,8 +1,8 @@
 use crate::app::{AppState, URLS};
 use crate::ogc::types::common::link_relations::{CONFORMANCE, DATA, ROOT, SELF, SERVICE_DESC};
 use crate::ogc::types::common::media_types::{JSON, OPEN_API_JSON};
-use crate::ogc::types::common::{Link, Linked};
-use actix_web::{HttpRequest, HttpResponse, get, web};
+use crate::ogc::types::common::{LandingPage, Link, Linked};
+use actix_web::{HttpRequest, get, web};
 
 #[utoipa::path(
     path = "/",
@@ -19,7 +19,10 @@ use actix_web::{HttpRequest, HttpResponse, get, web};
 )]
 #[get("")]
 #[tracing::instrument(skip(req, state))]
-pub async fn get_landing_page(req: HttpRequest, state: web::Data<AppState>) -> HttpResponse {
+pub async fn get_landing_page(
+    req: HttpRequest,
+    state: web::Data<AppState>,
+) -> web::Json<LandingPage> {
     // Build base URL from request
     let connection_info = req.connection_info();
     let base_url = format!("{}://{}", connection_info.scheme(), connection_info.host(),);
@@ -48,5 +51,5 @@ pub async fn get_landing_page(req: HttpRequest, state: web::Data<AppState>) -> H
     let mut landing_page = state.landing_page.to_owned();
     landing_page.links.insert_or_update(&links);
 
-    HttpResponse::Ok().json(landing_page)
+    web::Json(landing_page)
 }

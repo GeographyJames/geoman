@@ -7,9 +7,10 @@ use crate::{
     ogc::types::features::Query,
     repo::PostgresRepo,
 };
-use actix_web::{HttpRequest, HttpResponse, get, web};
+use actix_web::{HttpRequest, get, web};
 
-use futures::{StreamExt, TryStreamExt};
+use futures::StreamExt;
+use geojson::{Feature, FeatureCollection};
 use sqlx::types::Json;
 
 /// Helper to add links to foreign_members
@@ -66,7 +67,7 @@ pub async fn get_features(
     repo: web::Data<PostgresRepo>,
     slug: web::Path<String>,
     query: web::Query<Query>,
-) -> Result<HttpResponse, actix_web::Error> {
+) -> Result<web::Json<FeatureCollection>, actix_web::Error> {
     let base_url = get_base_url(&req);
 
     let collection_row = get_collection_row_from_slug(&slug, repo.get_ref()).await?;
@@ -87,7 +88,7 @@ pub async fn get_features(
         add_feature_links(feature, collection_url.clone());
     }
 
-    Ok(HttpResponse::Ok().json(feature_collection))
+    Ok(web::Json(feature_collection))
 }
 
 #[get("/{collectionId}/items")]
@@ -97,15 +98,15 @@ pub async fn get_features_streaming(
     repo: web::Data<PostgresRepo>,
     slug: web::Path<String>,
     query: web::Query<Query>,
-) -> Result<HttpResponse, actix_web::Error> {
+) -> Result<web::Json<FeatureCollection>, actix_web::Error> {
     let base_url = get_base_url(&req);
     let collection_row = get_collection_row_from_slug(&slug, repo.get_ref()).await?;
-    let collection_id = collection_row.id;
+    let _collection_id = collection_row.id;
     // Build URLs
     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
-    let items_url = format!("{}/items", collection_url);
+    let _items_url = format!("{}/items", collection_url);
 
-    let feature_stream = repo
+    let _feature_stream = repo
         .select_features_streaming(collection_row.id, query.limit)
         .map(move |res| {
             res.map(|Json(mut feature)| {
@@ -158,7 +159,7 @@ pub async fn get_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
     path: web::Path<(String, i32)>,
-) -> Result<HttpResponse, actix_web::Error> {
+) -> Result<web::Json<Feature>, actix_web::Error> {
     let (slug, feature_id) = path.into_inner();
     let base_url = get_base_url(&req);
     let collection_row = get_collection_row_from_slug(&slug, repo.get_ref()).await?;
@@ -172,7 +173,7 @@ pub async fn get_feature(
         Some(sqlx::types::Json(mut feature)) => {
             // Add links to the feature
             add_feature_links(&mut feature, collection_url);
-            Ok(HttpResponse::Ok().json(feature))
+            Ok(web::Json(feature))
         }
         None => Err(actix_web::error::ErrorNotFound(format!(
             "Feature id {} does not exist",
