@@ -1,10 +1,11 @@
-use anyhow::Context;
-use once_cell::sync::Lazy;
-use serde::Deserialize;
+use std::sync::LazyLock;
 
 use crate::app::helpers::get_configuration_directory;
+use anyhow::Context;
+use serde::Deserialize;
 
-pub static URLS: Lazy<Urls> = Lazy::new(|| initialise_urls().expect("failed to initialise urls"));
+pub static URLS: LazyLock<Urls> =
+    LazyLock::new(|| initialise_urls().expect("failed to initialise urls"));
 
 #[derive(Deserialize)]
 pub struct Urls {

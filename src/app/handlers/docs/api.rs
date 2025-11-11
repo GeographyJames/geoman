@@ -1,9 +1,7 @@
-use std::sync::LazyLock;
-
-use actix_web::web;
-use utoipa::{OpenApi, openapi::OpenApi as ApiDocs};
-
 use crate::app::ApiDoc;
+use actix_web::web;
+use std::sync::LazyLock;
+use utoipa::{OpenApi, openapi::OpenApi as ApiDocs};
 
 static API_DOC: LazyLock<ApiDocs> = LazyLock::new(ApiDoc::openapi);
 
