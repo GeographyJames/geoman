@@ -4,7 +4,6 @@ use utoipa::ToSchema;
 use crate::ogc::types::common::media_types::MediaType;
 
 /// Hyperlink to enable Hypermedia Access
-#[serde_with::skip_serializing_none]
 #[derive(Serialize, Deserialize, ToSchema, Debug, PartialEq, Eq, Clone)]
 pub struct Link {
     /// Supplies the URI to a remote resource (or resource fragment).
@@ -14,10 +13,12 @@ pub struct Link {
     /// A hint indicating what the media type of the result of dereferencing
     /// the link should be.
     #[schema(nullable = false)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub r#type: Option<MediaType>,
     /// Used to label the destination of a link such that it can be used as a
     /// human-readable identifier.
     #[schema(nullable = false)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
 }
 

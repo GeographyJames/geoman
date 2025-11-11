@@ -1,8 +1,7 @@
-use std::sync::LazyLock;
-
 use crate::app::helpers::get_configuration_directory;
 use anyhow::Context;
 use serde::Deserialize;
+use std::sync::LazyLock;
 
 pub static URLS: LazyLock<Urls> =
     LazyLock::new(|| initialise_urls().expect("failed to initialise urls"));

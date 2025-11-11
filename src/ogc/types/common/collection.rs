@@ -4,7 +4,6 @@ use utoipa::ToSchema;
 use crate::ogc::types::common::Links;
 
 /// A single collection in the OGC API
-#[serde_with::skip_serializing_none]
 #[derive(Serialize, Deserialize, ToSchema, Debug, Clone)]
 pub struct Collection {
     /// Unique identifier for the collection (slug)
@@ -14,6 +13,7 @@ pub struct Collection {
     pub title: String,
 
     /// Description of the collection
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 
     /// Links related to this collection

@@ -34,7 +34,7 @@ utoipa = { version = "4.2.3", features = [
     "actix_extras",
 ] } # Cannot upgrade to 5 due to OpenAPI 3.1 breaking OGC test suit 
 
-serde_with = "3.15.1"
+# serde_with = "3.15.1"
 sqlx = { version = "0.8.6", features = [
     "runtime-tokio-rustls",
     "macros",
