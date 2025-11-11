@@ -1,7 +1,7 @@
 use sqlx::types::Json;
 
 use crate::{
-    domain::{CollectionId, FeatureId},
+    domain::FeatureId,
     repo::{
         ogc::FeatureRow,
         traits::{SelectOne, SelectOneWithParams},
@@ -39,11 +39,11 @@ pub struct DbQueryParams {
 }
 
 impl SelectOneWithParams for Json<Vec<FeatureRow>> {
-    type Id<'a> = &'a CollectionId;
+    type Id<'a> = &'a str;
     type Params<'a> = &'a DbQueryParams;
     async fn select_one_with_params<'a, 'e, E>(
         executor: E,
-        id: Self::Id<'a>,
+        slug: Self::Id<'a>,
         params: Self::Params<'a>,
     ) -> Result<Option<Self>, sqlx::Error>
     where
@@ -51,25 +51,32 @@ impl SelectOneWithParams for Json<Vec<FeatureRow>> {
     {
         sqlx::query_scalar!(
             r#"
-            SELECT COALESCE(
-                json_agg(
-                    jsonb_build_object(
-                        'id', id,
-                        'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
-                        'properties', properties || jsonb_build_object('name', name, 'is_primary', is_primary)
-                    )
-                ),
-                '[]'::json
-            ) as "features!: Json<Vec<FeatureRow>>"
-            FROM (
-                SELECT id, name, is_primary, properties, geom
-                FROM app.features
-                WHERE collection_id = $1 AND status = 'ACTIVE'
-                ORDER BY id
-                LIMIT $2
-            ) t
+SELECT COALESCE(
+          (
+              SELECT json_agg(
+                  jsonb_build_object(
+                      'id', f.id,
+                      'geometry',
+  ST_AsGeoJSON(ST_Transform(f.geom, 4326))::jsonb,
+                      'properties', f.properties ||
+  jsonb_build_object('name', f.name, 'is_primary', f.is_primary)
+                  )
+              )
+              FROM (
+                  SELECT id, name, is_primary, properties, geom
+                  FROM app.features
+                  WHERE collection_id = c.id
+                    AND status = 'ACTIVE'
+                  ORDER BY id
+                  LIMIT $2
+              ) f
+          ),
+          '[]'::json
+      ) as "features!: Json<Vec<FeatureRow>>"
+      FROM app.collections c
+      WHERE c.slug = $1
             "#,
-            id.0,
+            slug,
             params.limit
         )
         .fetch_optional(executor)

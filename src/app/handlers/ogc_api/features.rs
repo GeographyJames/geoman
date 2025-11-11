@@ -1,10 +1,7 @@
 use crate::{
-    app::{
-        URLS,
-        helpers::{get_base_url, get_collection_row_from_slug},
-    },
+    app::{URLS, helpers::get_base_url},
     constants::DB_QUERY_FAIL,
-    domain::{CollectionId, FeatureId},
+    domain::FeatureId,
     ogc::{
         self,
         types::{FeatureCollection, features::Query},
@@ -37,11 +34,9 @@ pub async fn get_features(
     query: web::Query<Query>,
 ) -> Result<web::Json<ogc::types::FeatureCollection>, actix_web::Error> {
     let base_url = get_base_url(&req);
-
-    let collection_row = get_collection_row_from_slug(&slug, repo.get_ref()).await?;
     let feature_rows = repo
         .select_one_with_params::<Json<Vec<FeatureRow>>>(
-            &CollectionId(collection_row.id),
+            &slug,
             &DbQueryParams {
                 limit: query.limit.map(|l| l as i64),
             },
@@ -49,16 +44,12 @@ pub async fn get_features(
         .await
         .expect(DB_QUERY_FAIL)
         .ok_or_else(|| {
-            actix_web::error::ErrorNotFound(format!(
-                "Collection {} does not exist",
-                collection_row.slug
-            ))
+            actix_web::error::ErrorNotFound(format!("Collection {} does not exist", slug))
         })?
         .0;
     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
     let feature_collection =
         FeatureCollection::from_feature_rows(feature_rows, collection_url, slug.to_string());
-
     Ok(web::Json(feature_collection))
 }
 
@@ -112,7 +103,6 @@ pub async fn get_feature(
     let (slug, feature_id) = path.into_inner();
     let base_url = get_base_url(&req);
     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
-    // Get feature by ID
     let feature_row = repo
         .select_one::<Json<FeatureRow>>(&FeatureId(feature_id))
         .await
@@ -121,7 +111,6 @@ pub async fn get_feature(
             actix_web::error::ErrorNotFound(format!("Feature id {} does not exist", feature_id))
         })?
         .0;
-
     let feature = ogc::types::Feature::from_feature_row(feature_row, collection_url);
     Ok(web::Json(feature))
 }

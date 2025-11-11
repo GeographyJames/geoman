@@ -1,10 +1,7 @@
 use actix_web::{HttpRequest, get, web};
 
 use crate::{
-    app::{
-        URLS,
-        helpers::{get_base_url, get_collection_row_from_slug},
-    },
+    app::{URLS, helpers::get_base_url},
     constants::DB_QUERY_FAIL,
     ogc::types::common::{
         Collection, Collections, Link,
@@ -142,8 +139,16 @@ pub async fn get_collection(
     let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
 
+    tracing::info!("\n\nhere");
+
     // Fetch collection from database
-    let collection_row = get_collection_row_from_slug(&slug, repo.as_ref()).await?;
+    let collection_row = repo
+        .select_one::<CollectionRow>(&slug)
+        .await
+        .expect(DB_QUERY_FAIL)
+        .ok_or_else(|| {
+            actix_web::error::ErrorNotFound(format!("Collection {} does not exist", slug))
+        })?;
 
     // Map database row to OGC Collection with links
     let collection = Collection {

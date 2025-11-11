@@ -1,10 +1,7 @@
 use actix_web::HttpRequest;
 use anyhow::Context;
 
-use crate::{
-    constants::{CONFIGURATION_DIRECTORY, DB_QUERY_FAIL},
-    repo::{PostgresRepo, ogc::CollectionRow},
-};
+use crate::constants::CONFIGURATION_DIRECTORY;
 
 pub fn get_configuration_directory() -> anyhow::Result<std::path::PathBuf> {
     let base_path = std::env::current_dir().context("failed to determine current directory")?;
@@ -15,17 +12,4 @@ pub fn get_configuration_directory() -> anyhow::Result<std::path::PathBuf> {
 pub fn get_base_url(req: &HttpRequest) -> String {
     let connection_info = req.connection_info();
     format!("{}://{}", connection_info.scheme(), connection_info.host())
-}
-
-/// Retrieve the collection ID from the given slug. Returns a 404 Not Found if no collection is found
-pub async fn get_collection_row_from_slug(
-    slug: &str,
-    repo: &PostgresRepo,
-) -> Result<CollectionRow, actix_web::Error> {
-    repo.select_one(slug)
-        .await
-        .expect(DB_QUERY_FAIL)
-        .ok_or_else(|| {
-            actix_web::error::ErrorNotFound(format!("No '{}' collection found in database", slug))
-        })
 }
