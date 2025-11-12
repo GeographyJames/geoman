@@ -135,7 +135,7 @@ async fn get_feature_returns_404_for_non_existent_feature() {
     let (slug, _) = app.generate_collection_slug_and_id(user_id).await;
     let response = app
         .ogc_service
-        .get_feature(&app.api_client, &slug, FeatureId(1))
+        .get_feature(&app.api_client, &slug, FeatureId::default())
         .await;
     assert_status(&response, 404);
 }
