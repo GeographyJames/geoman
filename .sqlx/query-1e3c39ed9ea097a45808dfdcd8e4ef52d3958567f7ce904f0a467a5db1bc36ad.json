@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT jsonb_build_object(\n            'id', f.id,\n            'geometry', ST_AsGeoJSON(ST_Transform(f.geom, 4326))::jsonb,\n            'properties', f.properties ||  jsonb_build_object('name', f.name, 'is_primary', f.is_primary)\n        )\n            as \"feature!: Json<FeatureRow>\"\n                FROM app.features f\n                JOIN app.collections c ON c.id = f.collection_id\n                WHERE c.slug = $1 AND status = 'ACTIVE'\n                ORDER BY f.id\n                LIMIT $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "feature!: Json<FeatureRow>",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "1e3c39ed9ea097a45808dfdcd8e4ef52d3958567f7ce904f0a467a5db1bc36ad"
+}

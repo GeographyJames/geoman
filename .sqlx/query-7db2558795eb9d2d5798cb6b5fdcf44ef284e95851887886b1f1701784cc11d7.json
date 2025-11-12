@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DROP SCHEMA app CASCADE",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "7db2558795eb9d2d5798cb6b5fdcf44ef284e95851887886b1f1701784cc11d7"
+}
