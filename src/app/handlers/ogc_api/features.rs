@@ -8,7 +8,7 @@ use crate::{
     },
     repo::{
         PostgresRepo,
-        ogc::{FeatureRow, features::DbQueryParams},
+        models::ogc::{FeatureRow, feature::DbQueryParams},
     },
 };
 use actix_web::{HttpRequest, get, web};
@@ -35,7 +35,7 @@ pub async fn get_features(
 ) -> Result<web::Json<ogc::types::FeatureCollection>, actix_web::Error> {
     let base_url = get_base_url(&req);
     let feature_rows = repo
-        .select_one_with_params::<Json<Vec<FeatureRow>>>(
+        .select_one_with_params::<Vec<FeatureRow>>(
             &slug,
             &DbQueryParams {
                 limit: query.limit.map(|l| l as i64),
@@ -45,8 +45,7 @@ pub async fn get_features(
         .expect(DB_QUERY_FAIL)
         .ok_or_else(|| {
             actix_web::error::ErrorNotFound(format!("Collection {} does not exist", slug))
-        })?
-        .0;
+        })?;
     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
     let feature_collection =
         FeatureCollection::from_feature_rows(feature_rows, collection_url, slug.to_string());
@@ -104,13 +103,12 @@ pub async fn get_feature(
     let base_url = get_base_url(&req);
     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
     let feature_row = repo
-        .select_one::<Json<FeatureRow>>(&FeatureId(feature_id))
+        .select_one::<FeatureRow>(&FeatureId(feature_id))
         .await
         .expect("Failed go retrieve feature from database")
         .ok_or_else(|| {
             actix_web::error::ErrorNotFound(format!("Feature id {} does not exist", feature_id))
-        })?
-        .0;
+        })?;
     let feature = ogc::types::Feature::from_feature_row(feature_row, collection_url);
     Ok(web::Json(feature))
 }

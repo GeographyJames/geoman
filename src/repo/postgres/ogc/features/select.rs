@@ -3,12 +3,12 @@ use sqlx::types::Json;
 use crate::{
     domain::FeatureId,
     repo::{
-        ogc::FeatureRow,
+        models::ogc::{FeatureRow, feature::DbQueryParams},
         traits::{SelectOne, SelectOneWithParams},
     },
 };
 
-impl SelectOne for Json<FeatureRow> {
+impl SelectOne for FeatureRow {
     type Id<'a> = &'a FeatureId;
     async fn select_one<'a, 'e, E>(
         executor: E,
@@ -30,15 +30,11 @@ impl SelectOne for Json<FeatureRow> {
             id.0
         )
         .fetch_optional(executor)
-        .await
+        .await.map(|opt|opt.map(|json|json.0))
     }
 }
 
-pub struct DbQueryParams {
-    pub limit: Option<i64>,
-}
-
-impl SelectOneWithParams for Json<Vec<FeatureRow>> {
+impl SelectOneWithParams for Vec<FeatureRow> {
     type Id<'a> = &'a str;
     type Params<'a> = &'a DbQueryParams;
     async fn select_one_with_params<'a, 'e, E>(
@@ -81,5 +77,6 @@ SELECT COALESCE(
         )
         .fetch_optional(executor)
         .await
+        .map(|opt| opt.map(|json| json.0))
     }
 }

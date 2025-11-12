@@ -1,11 +1,8 @@
 use serde::Deserialize;
 use serde_json::{Map, Value};
 
-pub struct CollectionRow {
-    pub id: i32,
-    pub title: String,
-    pub slug: String,
-    pub description: Option<String>,
+pub struct DbQueryParams {
+    pub limit: Option<i64>,
 }
 
 #[derive(Deserialize)]

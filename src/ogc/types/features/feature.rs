@@ -4,7 +4,7 @@ use crate::{
         link_relations::{COLLECTION, SELF},
         media_types::MediaType,
     },
-    repo::ogc::FeatureRow,
+    repo::models::ogc::FeatureRow,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};

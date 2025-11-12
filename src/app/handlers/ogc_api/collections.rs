@@ -8,7 +8,7 @@ use crate::{
         link_relations::{ITEMS, SELF},
         media_types::MediaType,
     },
-    repo::{PostgresRepo, ogc::CollectionRow},
+    repo::{PostgresRepo, models::ogc::CollectionRow},
 };
 
 /// The feature collections in the dataset.

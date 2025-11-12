@@ -6,7 +6,7 @@ use crate::{
         Feature,
         common::{Link, link_relations::SELF, media_types::MediaType},
     },
-    repo::ogc::FeatureRow,
+    repo::models::ogc::FeatureRow,
 };
 
 #[derive(Serialize, Default, Deserialize)]
