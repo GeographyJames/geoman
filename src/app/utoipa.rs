@@ -1,7 +1,7 @@
 use crate::app::handlers::ogc_api::{
     collections::{__path_get_collection, __path_get_collections},
     conformance::__path_get_conformance_declaration,
-    features::{__path_get_feature, __path_get_features},
+    features::{__path_get_feature, __path_get_features_streaming},
     landing_page::__path_get_landing_page,
 };
 use crate::ogc::types::common::{Collection, Collections, ConformanceDeclaration, LandingPage};
@@ -14,7 +14,7 @@ use utoipa::OpenApi;
         get_conformance_declaration,
         get_collections,
         get_collection,
-        get_features,
+        get_features_streaming,
         get_feature,
     ),
     components(

@@ -1,4 +1,6 @@
 use crate::repo::models::ogc::FeatureRow;
+use crate::repo::postgres::PoolWrapper;
+use crate::repo::postgres::ogc::features::SelectAllParams;
 use crate::repo::traits::{SelectAll, SelectAllWithParams, SelectOne, SelectOneWithParams};
 use futures::{Stream, StreamExt};
 use sqlx::PgPool;
@@ -53,10 +55,19 @@ impl PostgresRepo {
     }
 
     #[tracing::instrument(skip(self, params))]
-    pub fn select_all_with_params_streaming(
+    pub async fn select_all_features_by_collection<'a>(
         &self,
-        params: DbQueryParams,
-    ) -> impl Stream<Item = Result<FeatureRow, sqlx::Error>> + '_ {
+        params: &SelectAllParams<'a>,
+    ) -> Result<Option<Vec<FeatureRow>>, sqlx::Error> {
+        FeatureRow::select_all_features_by_collection(&self.db_pool, params).await
+    }
+
+    pub fn select_all_with_params_streaming<'a>(
+        &self,
+        params: SelectAllParams,
+    ) -> impl Stream<Item = Result<FeatureRow, sqlx::Error>> + 'a {
+        let pool = PoolWrapper(self.db_pool.clone()); // Cheap clone - Arc internally
+
         sqlx::query_scalar!(
             r#"
             SELECT jsonb_build_object(
@@ -69,17 +80,12 @@ impl PostgresRepo {
                 JOIN app.collections c ON c.id = f.collection_id
                 WHERE c.slug = $1 AND status = 'ACTIVE'
                 ORDER BY f.id
-                LIMIT $2 
+                LIMIT $2
             "#,
             params.slug,
-            params.limit
+            params.limit.map(|l| l as i64)
         )
-        .fetch(&self.db_pool)
+        .fetch(pool)
         .map(|res| res.map(|json| json.0))
     }
-}
-
-pub struct DbQueryParams {
-    slug: String,
-    limit: Option<i64>,
 }

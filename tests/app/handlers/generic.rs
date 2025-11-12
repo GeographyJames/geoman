@@ -57,7 +57,7 @@ async fn handler_returns_500_for_fatal_databas_error(
 
 #[rstest]
 #[actix_web::test]
-async fn handler_returns_404_for_non_existent_data(
+async fn handler_returns_404_for_not_found(
     #[values(Endpoint::GetCollection, Endpoint::GetFeatures, Endpoint::GetFeature)]
     endpoint: Endpoint,
 ) {

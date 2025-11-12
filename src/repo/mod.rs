@@ -1,5 +1,5 @@
 //! Application data repository
 pub mod models;
-mod postgres;
+pub mod postgres;
 mod traits;
 pub use postgres::PostgresRepo;

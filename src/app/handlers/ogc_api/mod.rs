@@ -5,4 +5,4 @@ pub use conformance::get_conformance_declaration;
 pub mod collections;
 pub use collections::{get_collection, get_collections};
 pub mod features;
-pub use features::{get_feature, get_features};
+pub use features::{get_feature, get_features_streaming};

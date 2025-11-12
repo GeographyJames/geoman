@@ -2,10 +2,7 @@ use sqlx::types::Json;
 
 use crate::{
     domain::FeatureId,
-    repo::{
-        models::ogc::{FeatureRow, feature::DbQueryParams},
-        traits::{SelectOne, SelectOneWithParams},
-    },
+    repo::{models::ogc::FeatureRow, traits::SelectOne},
 };
 
 impl SelectOne for FeatureRow {
@@ -34,14 +31,27 @@ impl SelectOne for FeatureRow {
     }
 }
 
-impl SelectOneWithParams for Vec<FeatureRow> {
-    type Id<'a> = &'a str;
-    type Params<'a> = &'a DbQueryParams;
-    async fn select_one_with_params<'a, 'e, E>(
+#[derive(Clone)]
+#[non_exhaustive]
+pub struct SelectAllParams<'a> {
+    pub limit: Option<usize>,
+    pub slug: &'a str,
+}
+
+impl<'a> SelectAllParams<'a> {
+    pub fn new(slug: &'a str) -> Self {
+        SelectAllParams { limit: None, slug }
+    }
+    pub fn set_limit(&mut self, limit: usize) {
+        self.limit = Some(limit)
+    }
+}
+
+impl FeatureRow {
+    pub async fn select_all_features_by_collection<'a, 'e, E>(
         executor: E,
-        slug: Self::Id<'a>,
-        params: Self::Params<'a>,
-    ) -> Result<Option<Self>, sqlx::Error>
+        params: &SelectAllParams<'a>,
+    ) -> Result<Option<Vec<FeatureRow>>, sqlx::Error>
     where
         E: sqlx::PgExecutor<'e>,
     {
@@ -72,8 +82,8 @@ SELECT COALESCE(
       FROM app.collections c
       WHERE c.slug = $1
             "#,
-            slug,
-            params.limit
+            params.slug,
+            params.limit.map(|l| l as i64)
         )
         .fetch_optional(executor)
         .await

@@ -38,7 +38,7 @@ pub fn ogc_routes(cfg: &mut web::ServiceConfig) {
                 scope(URLS.ogc_api.collections.as_str())
                     .service(ogc_api::get_collections)
                     .service(ogc_api::get_collection)
-                    .service(ogc_api::get_features)
+                    .service(ogc_api::get_features_streaming)
                     .service(ogc_api::get_feature),
             ),
     );

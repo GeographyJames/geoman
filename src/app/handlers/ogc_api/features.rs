@@ -4,86 +4,139 @@ use crate::{
     domain::FeatureId,
     ogc::{
         self,
-        types::{FeatureCollection, features::Query},
+        types::{common::media_types::GEOJSON, features::Query},
     },
     repo::{
         PostgresRepo,
-        models::ogc::{FeatureRow, feature::DbQueryParams},
+        models::ogc::{CollectionRow, FeatureRow},
+        postgres::features::SelectAllParams,
     },
 };
-use actix_web::{HttpRequest, get, web};
+use actix_web::{
+    HttpRequest, HttpResponse, get,
+    web::{self, Bytes},
+};
 use anyhow::Context;
+use futures::StreamExt;
+
+// /// The features in the collection
+// #[utoipa::path(
+//     path = "/collections/{collectionId}/items",
+//     params(
+//         ("collectionId" = String, Path, description = "Identifier of a collection"),
+//         Query
+//     ),
+//     responses(
+//         (status = 200, description = "Features in the collection"),
+//         (status = 404, description = "Collection not found"))
+// )]
+// #[get("/{collectionId}/items")]
+// #[tracing::instrument(skip(repo, req, slug, query))]
+// pub async fn get_features(
+//     req: HttpRequest,
+//     repo: web::Data<PostgresRepo>,
+//     slug: web::Path<String>,
+//     query: web::Query<Query>,
+// ) -> Result<web::Json<ogc::types::FeatureCollection>, ApiError> {
+//     let base_url = get_base_url(&req);
+//     let mut params = SelectAllParams::new(&slug);
+//     params.limit = query.limit;
+
+//     let feature_rows = repo
+//         .select_all_features_by_collection(&params)
+//         .await
+//         .context(DB_QUERY_FAIL)?
+//         .ok_or_else(|| ApiError::NotFound(format!("Collection: '{}'", slug)))?;
+//     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
+//     let feature_collection =
+//         FeatureCollection::from_feature_rows(feature_rows, collection_url, slug.to_string());
+//     Ok(web::Json(feature_collection))
+// }
 
 /// The features in the collection
 #[utoipa::path(
     path = "/collections/{collectionId}/items",
     params(
-        ("collectionId" = String, Path, description = "local identifier of a collection"),
+        ("collectionId" = String, Path, description = "Identifier of a collection"),
         Query
     ),
     responses(
-        (status = 200, description = "todo!"),
-        (status = 404, description = "todo!"))
+        (status = 200, description = "Features in the collection"),
+        (status = 404, description = "Collection not found"))
 )]
 #[get("/{collectionId}/items")]
 #[tracing::instrument(skip(repo, req, slug, query))]
-pub async fn get_features(
+// #[tracing::instrument(skip(repo, req, slug, query))]
+pub async fn get_features_streaming(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
     slug: web::Path<String>,
     query: web::Query<Query>,
-) -> Result<web::Json<ogc::types::FeatureCollection>, ApiError> {
-    let base_url = get_base_url(&req);
-    let feature_rows = repo
-        .select_one_with_params::<Vec<FeatureRow>>(
-            &slug,
-            &DbQueryParams {
-                limit: query.limit.map(|l| l as i64),
-            },
-        )
+) -> Result<HttpResponse, ApiError> {
+    // Check collection exists
+    repo.select_one::<CollectionRow>(&slug.as_str())
         .await
         .context(DB_QUERY_FAIL)?
         .ok_or_else(|| ApiError::NotFound(format!("Collection: '{}'", slug)))?;
-    let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
-    let feature_collection =
-        FeatureCollection::from_feature_rows(feature_rows, collection_url, slug.to_string());
-    Ok(web::Json(feature_collection))
+    let base_url = get_base_url(&req);
+    let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, &slug);
+    let slug_clone = slug.clone();
+    let url_clone = collection_url.clone();
+
+    let opening_stream = futures::stream::once(async move {
+        Ok::<_, sqlx::Error>(Bytes::from(opening_json(&slug_clone, &url_clone)))
+    });
+
+    let mut params = SelectAllParams::new(&slug);
+    params.limit = query.limit;
+
+    let mut first = true;
+    let feature_stream = repo
+        .select_all_with_params_streaming(params)
+        .map(move |res| {
+            res.and_then(|feature_row| {
+                let feature =
+                    ogc::types::Feature::from_feature_row(feature_row, collection_url.clone());
+                let mut bytes = if first {
+                    first = false;
+                    Vec::new()
+                } else {
+                    vec![b',']
+                };
+                serde_json::to_writer(&mut bytes, &feature)
+                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))?;
+                Ok(Bytes::from(bytes))
+            })
+        });
+
+    let closing_stream =
+        futures::stream::once(async move { Ok::<_, sqlx::Error>(Bytes::from("]}")) });
+    let byte_stream = opening_stream.chain(feature_stream).chain(closing_stream);
+
+    Ok(HttpResponse::Ok()
+        .content_type(GEOJSON.to_string())
+        .streaming(byte_stream))
 }
 
-// #[get("/{collectionId}/items")]
-// #[tracing::instrument(skip(repo, req, slug, query))]
-// pub async fn get_features_streaming(
-//     req: HttpRequest,
-//     repo: web::Data<PostgresRepo>,
-//     slug: web::Path<String>,
-//     query: web::Query<Query>,
-// ) -> Result<web::Json<FeatureCollection>, actix_web::Error> {
-//     let base_url = get_base_url(&req);
-//     let collection_row = get_collection_row_from_slug(&slug, repo.get_ref()).await?;
-//     let _collection_id = collection_row.id;
-//     // Build URLs
-//     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
-//     let _items_url = format!("{}/items", collection_url);
-
-//     let _feature_stream = repo
-//         .select_features_streaming(collection_row.id, query.limit)
-//         .map(move |res| {
-//             res.map(|Json(mut feature)| {
-//                 add_feature_links(&mut feature, collection_url.clone());
-
-//                 feature
-//             })
-//         });
-
-//     todo!()
-// }
+fn opening_json(slug: &str, collection_url: &str) -> String {
+    format!(
+        r#"{{"type":"FeatureCollection","id":"{}","links":{},"features":["#,
+        slug,
+        serde_json::to_string(&[ogc::types::common::Link::new(
+            format!("{}/items", collection_url),
+            ogc::types::common::link_relations::SELF
+        )
+        .mediatype(ogc::types::common::media_types::MediaType::GeoJson)])
+        .unwrap()
+    )
+}
 
 /// A single feature
 #[utoipa::path(
     path = "/collections/{collectionId}/items/{featureId}",
     params(
-        ("collectionId" = String, Path, description = "local identifier of a collection"),
-        ("featureId" = i32, Path, description = "local identifier of a feature"),
+        ("collectionId" = String, Path, description = "Identifier of a collection"),
+        ("featureId" = i32, Path, description = "Identifier of a feature"),
     ),
     responses(
         (status = 200, description = "A single feature from the collection"),
