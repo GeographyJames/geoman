@@ -74,7 +74,7 @@ pub async fn get_features_streaming(
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     // Check collection exists
-    repo.select_one::<CollectionRow>(&slug.as_str())
+    repo.select_one::<CollectionRow>(slug.as_str())
         .await
         .context(DB_QUERY_FAIL)?
         .ok_or_else(|| ApiError::NotFound(format!("Collection: '{}'", slug)))?;
