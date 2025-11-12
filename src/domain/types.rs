@@ -19,14 +19,20 @@ impl Slug {
     }
 }
 
-#[derive(Clone, Copy)]
+impl Default for Slug {
+    fn default() -> Self {
+        Self(uuid::Uuid::new_v4().to_string())
+    }
+}
+
+#[derive(Clone, Copy, Default)]
 pub struct ProjectId(pub i32);
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct UserId(pub i32);
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct TeamId(pub i32);
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct FeatureId(pub i32);
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct CollectionId(pub i32);

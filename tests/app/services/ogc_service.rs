@@ -1,4 +1,8 @@
-use geoman::{app::URLS, domain::FeatureId, ogc::types::features::Query};
+use geoman::{
+    app::URLS,
+    domain::{FeatureId, Slug},
+    ogc::types::features::Query,
+};
 use reqwest::Response;
 
 use crate::app::{constants::REQUEST_FAILED, services::HttpClient};
@@ -27,10 +31,12 @@ impl OgcService {
         req.send().await.expect(REQUEST_FAILED)
     }
 
-    pub async fn get_collection(&self, client: &HttpClient, collection_slug: &str) -> Response {
+    pub async fn get_collection(&self, client: &HttpClient, collection_slug: &Slug) -> Response {
         let req = client.get(format!(
             "{}{}/{}",
-            &URLS.ogc_api.base, &URLS.ogc_api.collections, collection_slug
+            &URLS.ogc_api.base,
+            &URLS.ogc_api.collections,
+            collection_slug.as_ref()
         ));
         req.send().await.expect(REQUEST_FAILED)
     }
@@ -38,12 +44,14 @@ impl OgcService {
     pub async fn get_features(
         &self,
         client: &HttpClient,
-        collection_slug: &str,
+        collection_slug: &Slug,
         params: Option<&Query>,
     ) -> Response {
         let mut req = client.get(format!(
             "{}{}/{}/items",
-            &URLS.ogc_api.base, &URLS.ogc_api.collections, collection_slug
+            &URLS.ogc_api.base,
+            &URLS.ogc_api.collections,
+            collection_slug.as_ref()
         ));
         if let Some(query) = params {
             req = req.query(query)
@@ -54,12 +62,15 @@ impl OgcService {
     pub async fn get_feature(
         &self,
         client: &HttpClient,
-        collection_slug: &str,
+        collection_slug: &Slug,
         id: FeatureId,
     ) -> Response {
         let req = client.get(format!(
             "{}{}/{}/items/{}",
-            &URLS.ogc_api.base, &URLS.ogc_api.collections, collection_slug, id.0
+            &URLS.ogc_api.base,
+            &URLS.ogc_api.collections,
+            collection_slug.as_ref(),
+            id.0
         ));
         req.send().await.expect(REQUEST_FAILED)
     }
