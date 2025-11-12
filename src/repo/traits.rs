@@ -6,6 +6,19 @@ pub trait SelectAll {
         E: sqlx::PgExecutor<'e>;
 }
 
+pub trait SelectAllWithParams {
+    type Params<'a>;
+
+    #[allow(async_fn_in_trait)]
+    async fn select_all_with_params<'a, 'e, E>(
+        executor: E,
+        params: Self::Params<'a>,
+    ) -> Result<Vec<Self>, sqlx::Error>
+    where
+        Self: Sized,
+        E: sqlx::PgExecutor<'e>;
+}
+
 pub trait SelectOne {
     type Id<'a>;
 

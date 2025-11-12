@@ -1,5 +1,6 @@
-use crate::repo::traits::{SelectAll, SelectOne, SelectOneWithParams};
-use futures::Stream;
+use crate::repo::models::ogc::FeatureRow;
+use crate::repo::traits::{SelectAll, SelectAllWithParams, SelectOne, SelectOneWithParams};
+use futures::{Stream, StreamExt};
 use sqlx::PgPool;
 use sqlx::types::Json;
 
@@ -40,27 +41,45 @@ impl PostgresRepo {
         T::select_one_with_params(&self.db_pool, id, params).await
     }
 
-    #[tracing::instrument(skip(self, collection_id, limit))]
-    pub fn select_features_streaming(
+    #[tracing::instrument(skip(self, params))]
+    pub async fn select_all_with_params<'a, T>(
         &self,
-        collection_id: i32,
-        limit: Option<usize>,
-    ) -> impl Stream<Item = Result<Json<geojson::Feature>, sqlx::Error>> + '_ {
+        params: T::Params<'a>,
+    ) -> Result<Vec<T>, sqlx::Error>
+    where
+        T: SelectAllWithParams,
+    {
+        T::select_all_with_params(&self.db_pool, params).await
+    }
+
+    #[tracing::instrument(skip(self, params))]
+    pub fn select_all_with_params_streaming(
+        &self,
+        params: DbQueryParams,
+    ) -> impl Stream<Item = Result<FeatureRow, sqlx::Error>> + '_ {
         sqlx::query_scalar!(
             r#"
-            SELECT ST_AsGeoJSON(t.*, id_column => 'id')::jsonb as "f!: Json<geojson::Feature>"
-            FROM (
-                SELECT id, name, ST_Transform(geom, 4326) as geom
-                FROM app.features
-                WHERE collection_id = $1 AND status = 'ACTIVE'
-                ORDER BY id
+            SELECT jsonb_build_object(
+            'id', f.id,
+            'geometry', ST_AsGeoJSON(ST_Transform(f.geom, 4326))::jsonb,
+            'properties', f.properties ||  jsonb_build_object('name', f.name, 'is_primary', f.is_primary)
+        )
+            as "feature!: Json<FeatureRow>"
+                FROM app.features f
+                JOIN app.collections c ON c.id = f.collection_id
+                WHERE c.slug = $1 AND status = 'ACTIVE'
+                ORDER BY f.id
                 LIMIT $2 
-                ) 
-            as t(id, name, geom)
             "#,
-            collection_id,
-            limit.map(|l| l as i64)
+            params.slug,
+            params.limit
         )
         .fetch(&self.db_pool)
+        .map(|res| res.map(|json| json.0))
     }
+}
+
+pub struct DbQueryParams {
+    slug: String,
+    limit: Option<i64>,
 }
