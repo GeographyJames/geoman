@@ -1,9 +1,15 @@
-use geoman::ogc::types::{Feature, FeatureCollection, features::Query};
+use geoman::{
+    constants::DB_QUERY_FAIL,
+    domain::FeatureId,
+    ogc::types::{Feature, FeatureCollection, features::Query},
+};
 use serde::{Deserialize, Serialize};
 
 use crate::app::{
     TestApp,
-    helpers::{assert_ok, assert_status, check_feature, handle_json_response},
+    helpers::{
+        assert_ok, assert_status, check_error_response, check_feature, handle_json_response,
+    },
 };
 
 #[derive(Serialize, Deserialize)]
@@ -23,9 +29,7 @@ impl Default for Properties {
 #[actix_web::test]
 async fn get_features_works() {
     let app = TestApp::spawn_with_db().await;
-    let team_id = app.generate_team_id().await;
-    let user_id = app.generate_user_id(team_id).await;
-    let project_id = app.generate_project_id(user_id).await;
+    let (_, user_id, project_id) = app.generate_ids().await;
     let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
     let _feature_id = app
         .generate_feature_id(
@@ -54,9 +58,7 @@ async fn get_features_works() {
 #[actix_web::test]
 async fn get_features_works_with_limit() {
     let app = TestApp::spawn_with_db().await;
-    let team_id = app.generate_team_id().await;
-    let user_id = app.generate_user_id(team_id).await;
-    let project_id = app.generate_project_id(user_id).await;
+    let (_, user_id, project_id) = app.generate_ids().await;
     let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
     for _ in 0..10 {
         app.generate_feature_id(
@@ -89,9 +91,7 @@ async fn get_features_works_with_limit() {
 #[actix_web::test]
 async fn get_feature_works() {
     let app = TestApp::spawn_with_db().await;
-    let team_id = app.generate_team_id().await;
-    let user_id = app.generate_user_id(team_id).await;
-    let project_id = app.generate_project_id(user_id).await;
+    let (_, user_id, project_id) = app.generate_ids().await;
     let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
     let feature_id = app
         .generate_feature_id(
@@ -122,4 +122,73 @@ async fn get_features_returns_404_for_non_existent_collection() {
         .get_features(&app.api_client, &uuid::Uuid::new_v4().to_string(), None)
         .await;
     assert_status(&response, 404);
+}
+
+#[actix_web::test]
+async fn get_features_returns_empty_vec_for_no_features_in_collection() {
+    let app = TestApp::spawn_with_db().await;
+    let (_, user_id, _) = app.generate_ids().await;
+    let (slug, _) = app.generate_collection_slug_and_id(user_id).await;
+    let response = app
+        .ogc_service
+        .get_features(&app.api_client, slug.as_ref(), None)
+        .await;
+    assert_ok(&response);
+
+    let feature_collection: FeatureCollection = handle_json_response(response)
+        .await
+        .expect("failed to retrieve feature collection");
+    assert!(feature_collection.features.is_empty())
+}
+
+#[actix_web::test]
+async fn get_feature_returns_404_for_non_existent_collection() {
+    let app = TestApp::spawn_with_db().await;
+    let response = app
+        .ogc_service
+        .get_feature(
+            &app.api_client,
+            &uuid::Uuid::new_v4().to_string(),
+            FeatureId(1),
+        )
+        .await;
+    assert_status(&response, 404);
+}
+
+#[actix_web::test]
+async fn get_feature_returns_404_for_non_existent_feature() {
+    let app = TestApp::spawn_with_db().await;
+    let (_, user_id, _) = app.generate_ids().await;
+    let (slug, _) = app.generate_collection_slug_and_id(user_id).await;
+    let response = app
+        .ogc_service
+        .get_feature(&app.api_client, &slug.as_ref(), FeatureId(1))
+        .await;
+    assert_status(&response, 404);
+}
+
+#[actix_web::test]
+async fn get_feature_returns_500_when_db_corrupt() {
+    let app = TestApp::spawn_with_db().await;
+    app.drop_app_schema().await;
+    let response = app
+        .ogc_service
+        .get_feature(
+            &app.api_client,
+            &uuid::Uuid::new_v4().to_string(),
+            FeatureId(1),
+        )
+        .await;
+    check_error_response(response, 500, DB_QUERY_FAIL).await
+}
+
+#[actix_web::test]
+async fn get_features_returns_500_when_db_corrupt() {
+    let app = TestApp::spawn_with_db().await;
+    app.drop_app_schema().await;
+    let response = app
+        .ogc_service
+        .get_features(&app.api_client, &uuid::Uuid::new_v4().to_string(), None)
+        .await;
+    check_error_response(response, 500, DB_QUERY_FAIL).await
 }

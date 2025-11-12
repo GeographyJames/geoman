@@ -1,5 +1,5 @@
 use crate::{
-    app::{URLS, helpers::get_base_url},
+    app::{URLS, errors::ApiError, helpers::get_base_url},
     constants::DB_QUERY_FAIL,
     domain::FeatureId,
     ogc::{
@@ -12,7 +12,7 @@ use crate::{
     },
 };
 use actix_web::{HttpRequest, get, web};
-use sqlx::types::Json;
+use anyhow::Context;
 
 /// The features in the collection
 #[utoipa::path(
@@ -32,7 +32,7 @@ pub async fn get_features(
     repo: web::Data<PostgresRepo>,
     slug: web::Path<String>,
     query: web::Query<Query>,
-) -> Result<web::Json<ogc::types::FeatureCollection>, actix_web::Error> {
+) -> Result<web::Json<ogc::types::FeatureCollection>, ApiError> {
     let base_url = get_base_url(&req);
     let feature_rows = repo
         .select_one_with_params::<Vec<FeatureRow>>(
@@ -42,10 +42,8 @@ pub async fn get_features(
             },
         )
         .await
-        .expect(DB_QUERY_FAIL)
-        .ok_or_else(|| {
-            actix_web::error::ErrorNotFound(format!("Collection {} does not exist", slug))
-        })?;
+        .context(DB_QUERY_FAIL)?
+        .ok_or_else(|| ApiError::NotFound(format!("Collection: '{}'", slug)))?;
     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
     let feature_collection =
         FeatureCollection::from_feature_rows(feature_rows, collection_url, slug.to_string());
@@ -98,16 +96,19 @@ pub async fn get_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
     path: web::Path<(String, i32)>,
-) -> Result<web::Json<ogc::types::Feature>, actix_web::Error> {
+) -> Result<web::Json<ogc::types::Feature>, ApiError> {
     let (slug, feature_id) = path.into_inner();
     let base_url = get_base_url(&req);
     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
     let feature_row = repo
         .select_one::<FeatureRow>(&FeatureId(feature_id))
         .await
-        .expect("Failed go retrieve feature from database")
+        .context(DB_QUERY_FAIL)?
         .ok_or_else(|| {
-            actix_web::error::ErrorNotFound(format!("Feature id {} does not exist", feature_id))
+            ApiError::NotFound(format!(
+                "Feature with collection: {}, id: {},",
+                slug, feature_id
+            ))
         })?;
     let feature = ogc::types::Feature::from_feature_row(feature_row, collection_url);
     Ok(web::Json(feature))

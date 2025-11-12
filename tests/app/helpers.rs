@@ -21,6 +21,18 @@ pub fn assert_status(response: &reqwest::Response, expected_status: u16) {
     )
 }
 
+pub async fn check_error_response(
+    response: reqwest::Response,
+    expected_status: u16,
+    message: &str,
+) {
+    assert_status(&response, expected_status);
+    assert_eq!(
+        response.text().await.expect("response has no body"),
+        message
+    )
+}
+
 /// Handles a response by returning the specified Json for successful responses or elegantly handling error cases or cases where the response body is not as expected
 pub async fn handle_json_response<T: DeserializeOwned>(
     response: Response,

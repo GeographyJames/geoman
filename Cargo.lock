@@ -1021,6 +1021,7 @@ dependencies = [
  "slug",
  "sqlx",
  "strum",
+ "thiserror",
  "tokio",
  "tracing",
  "tracing-actix-web",

@@ -1,7 +1,8 @@
 use actix_web::{HttpRequest, get, web};
+use anyhow::Context;
 
 use crate::{
-    app::{URLS, helpers::get_base_url},
+    app::{URLS, errors::ApiError, helpers::get_base_url},
     constants::DB_QUERY_FAIL,
     ogc::types::common::{
         Collection, Collections, Link,
@@ -48,14 +49,14 @@ use crate::{
 pub async fn get_collections(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-) -> web::Json<Collections> {
+) -> Result<web::Json<Collections>, ApiError> {
     // Build base URL from request
 
     let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
 
     // Fetch collections from database
-    let collection_rows: Vec<CollectionRow> = repo.select_all().await.expect(DB_QUERY_FAIL);
+    let collection_rows: Vec<CollectionRow> = repo.select_all().await.context(DB_QUERY_FAIL)?;
 
     // Map database rows to OGC Collections with links
     let collections_vec: Vec<Collection> = collection_rows
@@ -89,7 +90,7 @@ pub async fn get_collections(
         collections: collections_vec,
     };
 
-    web::Json(collections)
+    Ok(web::Json(collections))
 }
 
 /// Get a single collection by ID (slug)
@@ -135,7 +136,7 @@ pub async fn get_collection(
     req: HttpRequest,
     slug: web::Path<String>,
     repo: web::Data<PostgresRepo>,
-) -> Result<web::Json<Collection>, actix_web::Error> {
+) -> Result<web::Json<Collection>, ApiError> {
     let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
 
@@ -145,10 +146,8 @@ pub async fn get_collection(
     let collection_row = repo
         .select_one::<CollectionRow>(&slug)
         .await
-        .expect(DB_QUERY_FAIL)
-        .ok_or_else(|| {
-            actix_web::error::ErrorNotFound(format!("Collection {} does not exist", slug))
-        })?;
+        .context(DB_QUERY_FAIL)?
+        .ok_or_else(|| ApiError::NotFound(format!("collection: {}", slug)))?;
 
     // Map database row to OGC Collection with links
     let collection = Collection {

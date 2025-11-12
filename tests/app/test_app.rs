@@ -242,4 +242,18 @@ impl TestApp {
             .await,
         )
     }
+
+    pub async fn drop_app_schema(&self) {
+        sqlx::query!("DROP SCHEMA app CASCADE")
+            .execute(&self.db_pool)
+            .await
+            .expect("failed to drop schema");
+    }
+
+    pub async fn generate_ids(&self) -> (TeamId, UserId, ProjectId) {
+        let team_id = self.generate_team_id().await;
+        let user_id = self.generate_user_id(team_id).await;
+        let project_id = self.generate_project_id(user_id).await;
+        (team_id, user_id, project_id)
+    }
 }
