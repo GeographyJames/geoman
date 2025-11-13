@@ -52,7 +52,7 @@ impl Default for FeatureCollection {
 #[cfg(test)]
 mod tests {
 
-    use crate::ogc::types::{FeatureCollection, common::Link};
+    use super::*;
     use serde_json::json;
 
     #[test]

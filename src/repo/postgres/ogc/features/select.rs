@@ -2,6 +2,7 @@ use sqlx::types::Json;
 
 use crate::{
     domain::FeatureId,
+    ogc::types::features::Query,
     repo::{models::ogc::FeatureRow, traits::SelectOne},
 };
 
@@ -33,60 +34,60 @@ impl SelectOne for FeatureRow {
 
 #[derive(Clone)]
 #[non_exhaustive]
-pub struct SelectAllParams<'a> {
+pub struct SelectAllParams {
     pub limit: Option<usize>,
-    pub slug: &'a str,
+    pub slug: String,
 }
 
-impl<'a> SelectAllParams<'a> {
-    pub fn new(slug: &'a str) -> Self {
-        SelectAllParams { limit: None, slug }
-    }
-    pub fn set_limit(&mut self, limit: usize) {
-        self.limit = Some(limit)
+impl SelectAllParams {
+    pub fn from_query(query: Query, slug: String) -> Self {
+        SelectAllParams {
+            limit: query.limit,
+            slug,
+        }
     }
 }
 
-impl FeatureRow {
-    pub async fn select_all_features_by_collection<'a, 'e, E>(
-        executor: E,
-        params: &SelectAllParams<'a>,
-    ) -> Result<Option<Vec<FeatureRow>>, sqlx::Error>
-    where
-        E: sqlx::PgExecutor<'e>,
-    {
-        sqlx::query_scalar!(
-            r#"
-SELECT COALESCE(
-          (
-              SELECT json_agg(
-                  jsonb_build_object(
-                      'id', f.id,
-                      'geometry',
-  ST_AsGeoJSON(ST_Transform(f.geom, 4326))::jsonb,
-                      'properties', f.properties ||
-  jsonb_build_object('name', f.name, 'is_primary', f.is_primary)
-                  )
-              )
-              FROM (
-                  SELECT id, name, is_primary, properties, geom
-                  FROM app.features
-                  WHERE collection_id = c.id
-                    AND status = 'ACTIVE'
-                  ORDER BY id
-                  LIMIT $2
-              ) f
-          ),
-          '[]'::json
-      ) as "features!: Json<Vec<FeatureRow>>"
-      FROM app.collections c
-      WHERE c.slug = $1
-            "#,
-            params.slug,
-            params.limit.map(|l| l as i64)
-        )
-        .fetch_optional(executor)
-        .await
-        .map(|opt| opt.map(|json| json.0))
-    }
-}
+// impl FeatureRow {
+//     pub async fn select_all_features_by_collection<'a, 'e, E>(
+//         executor: E,
+//         params: &SelectAllParams<'a>,
+//     ) -> Result<Option<Vec<FeatureRow>>, sqlx::Error>
+//     where
+//         E: sqlx::PgExecutor<'e>,
+//     {
+//         sqlx::query_scalar!(
+//             r#"
+// SELECT COALESCE(
+//           (
+//               SELECT json_agg(
+//                   jsonb_build_object(
+//                       'id', f.id,
+//                       'geometry',
+//   ST_AsGeoJSON(ST_Transform(f.geom, 4326))::jsonb,
+//                       'properties', f.properties ||
+//   jsonb_build_object('name', f.name, 'is_primary', f.is_primary)
+//                   )
+//               )
+//               FROM (
+//                   SELECT id, name, is_primary, properties, geom
+//                   FROM app.features
+//                   WHERE collection_id = c.id
+//                     AND status = 'ACTIVE'
+//                   ORDER BY id
+//                   LIMIT $2
+//               ) f
+//           ),
+//           '[]'::json
+//       ) as "features!: Json<Vec<FeatureRow>>"
+//       FROM app.collections c
+//       WHERE c.slug = $1
+//             "#,
+//             params.slug,
+//             params.limit.map(|l| l as i64)
+//         )
+//         .fetch_optional(executor)
+//         .await
+//         .map(|opt| opt.map(|json| json.0))
+//     }
+// }

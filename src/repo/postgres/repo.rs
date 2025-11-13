@@ -1,7 +1,7 @@
 use crate::repo::models::ogc::FeatureRow;
 use crate::repo::postgres::PoolWrapper;
 use crate::repo::postgres::ogc::features::SelectAllParams;
-use crate::repo::traits::{SelectAll, SelectAllWithParams, SelectOne, SelectOneWithParams};
+use crate::repo::traits::{SelectAll, SelectOne};
 use futures::{Stream, StreamExt};
 use sqlx::PgPool;
 use sqlx::types::Json;
@@ -31,41 +31,41 @@ impl PostgresRepo {
         T::select_one(&self.db_pool, id).await
     }
 
-    #[tracing::instrument(skip(self, id, params))]
-    pub async fn select_one_with_params<'a, T>(
-        &self,
-        id: T::Id<'a>,
-        params: T::Params<'a>,
-    ) -> Result<Option<T>, sqlx::Error>
-    where
-        T: SelectOneWithParams,
-    {
-        T::select_one_with_params(&self.db_pool, id, params).await
-    }
+    // #[tracing::instrument(skip(self, id, params))]
+    // pub async fn select_one_with_params<'a, T>(
+    //     &self,
+    //     id: T::Id<'a>,
+    //     params: T::Params<'a>,
+    // ) -> Result<Option<T>, sqlx::Error>
+    // where
+    //     T: SelectOneWithParams,
+    // {
+    //     T::select_one_with_params(&self.db_pool, id, params).await
+    // }
 
-    #[tracing::instrument(skip(self, params))]
-    pub async fn select_all_with_params<'a, T>(
-        &self,
-        params: T::Params<'a>,
-    ) -> Result<Vec<T>, sqlx::Error>
-    where
-        T: SelectAllWithParams,
-    {
-        T::select_all_with_params(&self.db_pool, params).await
-    }
+    // #[tracing::instrument(skip(self, params))]
+    // pub async fn select_all_with_params<'a, T>(
+    //     &self,
+    //     params: T::Params<'a>,
+    // ) -> Result<Vec<T>, sqlx::Error>
+    // where
+    //     T: SelectAllWithParams,
+    // {
+    //     T::select_all_with_params(&self.db_pool, params).await
+    // }
 
-    #[tracing::instrument(skip(self, params))]
-    pub async fn select_all_features_by_collection<'a>(
-        &self,
-        params: &SelectAllParams<'a>,
-    ) -> Result<Option<Vec<FeatureRow>>, sqlx::Error> {
-        FeatureRow::select_all_features_by_collection(&self.db_pool, params).await
-    }
+    // #[tracing::instrument(skip(self, params))]
+    // pub async fn select_all_features_by_collection<'a>(
+    //     &self,
+    //     params: &SelectAllParams<'a>,
+    // ) -> Result<Option<Vec<FeatureRow>>, sqlx::Error> {
+    //     FeatureRow::select_all_features_by_collection(&self.db_pool, params).await
+    // }
 
-    pub fn select_all_with_params_streaming<'a>(
+    pub fn select_all_with_params_streaming(
         &self,
         params: SelectAllParams,
-    ) -> impl Stream<Item = Result<FeatureRow, sqlx::Error>> + 'a {
+    ) -> impl Stream<Item = Result<FeatureRow, sqlx::Error>> + use<> {
         let pool = PoolWrapper(self.db_pool.clone()); // Cheap clone - Arc internally
 
         sqlx::query_scalar!(

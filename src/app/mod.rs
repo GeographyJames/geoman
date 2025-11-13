@@ -16,3 +16,4 @@ mod routes;
 mod state;
 pub mod telemetry;
 pub use state::AppState;
+pub mod streaming;

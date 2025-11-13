@@ -1,5 +1,5 @@
 use crate::{
-    app::{URLS, errors::ApiError, helpers::get_base_url},
+    app::{URLS, errors::ApiError, helpers::get_base_url, streaming::features_byte_stream},
     constants::DB_QUERY_FAIL,
     domain::FeatureId,
     ogc::{
@@ -14,10 +14,9 @@ use crate::{
 };
 use actix_web::{
     HttpRequest, HttpResponse, get,
-    web::{self, Bytes},
+    web::{self},
 };
 use anyhow::Context;
-use futures::StreamExt;
 
 // /// The features in the collection
 // #[utoipa::path(
@@ -65,7 +64,7 @@ use futures::StreamExt;
         (status = 404, description = "Collection not found"))
 )]
 #[get("/{collectionId}/items")]
-#[tracing::instrument(skip(repo, req, slug, query))]
+
 // #[tracing::instrument(skip(repo, req, slug, query))]
 pub async fn get_features_streaming(
     req: HttpRequest,
@@ -80,55 +79,11 @@ pub async fn get_features_streaming(
         .ok_or_else(|| ApiError::NotFound(format!("Collection: '{}'", slug)))?;
     let base_url = get_base_url(&req);
     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, &slug);
-    let slug_clone = slug.clone();
-    let url_clone = collection_url.clone();
-
-    let opening_stream = futures::stream::once(async move {
-        Ok::<_, sqlx::Error>(Bytes::from(opening_json(&slug_clone, &url_clone)))
-    });
-
-    let mut params = SelectAllParams::new(&slug);
-    params.limit = query.limit;
-
-    let mut first = true;
-    let feature_stream = repo
-        .select_all_with_params_streaming(params)
-        .map(move |res| {
-            res.and_then(|feature_row| {
-                let feature =
-                    ogc::types::Feature::from_feature_row(feature_row, collection_url.clone());
-                let mut bytes = if first {
-                    first = false;
-                    Vec::new()
-                } else {
-                    vec![b',']
-                };
-                serde_json::to_writer(&mut bytes, &feature)
-                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))?;
-                Ok(Bytes::from(bytes))
-            })
-        });
-
-    let closing_stream =
-        futures::stream::once(async move { Ok::<_, sqlx::Error>(Bytes::from("]}")) });
-    let byte_stream = opening_stream.chain(feature_stream).chain(closing_stream);
-
+    let params = SelectAllParams::from_query(query.into_inner(), slug.to_string());
+    let byte_stream = features_byte_stream(repo, params, collection_url);
     Ok(HttpResponse::Ok()
         .content_type(GEOJSON.to_string())
         .streaming(byte_stream))
-}
-
-fn opening_json(slug: &str, collection_url: &str) -> String {
-    format!(
-        r#"{{"type":"FeatureCollection","id":"{}","links":{},"features":["#,
-        slug,
-        serde_json::to_string(&[ogc::types::common::Link::new(
-            format!("{}/items", collection_url),
-            ogc::types::common::link_relations::SELF
-        )
-        .mediatype(ogc::types::common::media_types::MediaType::GeoJson)])
-        .unwrap()
-    )
 }
 
 /// A single feature
