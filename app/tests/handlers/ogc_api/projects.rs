@@ -1,4 +1,4 @@
-use domain::{Project, Slug};
+use domain::Slug;
 use ogc::types::FeatureCollection;
 
 use crate::common::{
@@ -9,6 +9,7 @@ use crate::common::{
 #[actix_web::test]
 async fn get_projects_works() {
     let app = TestApp::spawn_with_db().await;
+    let _ids = app.generate_ids().await;
     let response = app
         .ogc_service
         .get_features(
@@ -18,7 +19,8 @@ async fn get_projects_works() {
         )
         .await;
     assert_ok(&response);
-    let _projects: FeatureCollection = handle_json_response(response)
+    let projects: FeatureCollection = handle_json_response(response)
         .await
         .expect("failed to retrieve projects");
+    assert!(!projects.features.is_empty())
 }

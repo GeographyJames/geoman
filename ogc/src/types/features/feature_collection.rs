@@ -1,3 +1,4 @@
+use domain::ProjectRow;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -29,6 +30,14 @@ impl FeatureCollection {
             .map(|f| Feature::from_feature_row(f, collection_url.clone()))
             .collect();
         Self::new(collection_url, slug).append_features(features)
+    }
+
+    pub fn from_project_rows(rows: Vec<ProjectRow>, collection_url: String, slug: String) -> Self {
+        let projects = rows
+            .into_iter()
+            .map(|p| Feature::from_project_row(p, collection_url.clone()))
+            .collect();
+        Self::new(collection_url, slug).append_features(projects)
     }
 
     pub fn new(collection_url: String, slug: String) -> Self {

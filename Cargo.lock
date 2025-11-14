@@ -1826,6 +1826,7 @@ name = "ogc"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "domain",
  "geojson",
  "serde",
  "serde_json",
