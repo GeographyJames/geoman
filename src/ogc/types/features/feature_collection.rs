@@ -6,7 +6,7 @@ use crate::{
         Feature,
         common::{Link, link_relations::SELF, media_types::MediaType},
     },
-    repo::models::ogc::FeatureRow,
+    postgres::ogc::features::FeatureRow,
 };
 
 #[derive(Serialize, Default, Deserialize)]
@@ -15,6 +15,7 @@ pub enum Type {
     FeatureCollection,
 }
 
+#[non_exhaustive]
 #[derive(Serialize, Deserialize)]
 pub struct FeatureCollection {
     pub id: String,
@@ -25,17 +26,38 @@ pub struct FeatureCollection {
 
 impl FeatureCollection {
     pub fn from_feature_rows(rows: Vec<FeatureRow>, collection_url: String, slug: String) -> Self {
+        let features = rows
+            .into_iter()
+            .map(|f| Feature::from_feature_row(f, collection_url.clone()))
+            .collect();
+        Self::new(collection_url, slug).append_features(features)
+    }
+
+    pub fn new(collection_url: String, slug: String) -> Self {
         Self {
             id: slug,
             r#type: Type::default(),
-            features: rows
-                .into_iter()
-                .map(|f| Feature::from_feature_row(f, collection_url.clone()))
-                .collect(),
+            features: Default::default(),
             links: [
                 Link::new(format!("{}/items", collection_url), SELF).mediatype(MediaType::GeoJson)
             ],
         }
+    }
+    pub fn append_features(mut self, mut features: Vec<Feature>) -> Self {
+        self.features.append(&mut features);
+        self
+    }
+
+    pub fn opening_json(&self) -> Result<String, serde_json::Error> {
+        Ok(format!(
+            r#"{{"type":{},"id":{},"links":{},"features":["#,
+            serde_json::to_string(&self.r#type)?,
+            serde_json::to_string(&self.id)?,
+            serde_json::to_string(&self.links)?
+        ))
+    }
+    pub fn closing_json(&self) -> String {
+        "]}".to_string()
     }
 }
 
@@ -51,7 +73,6 @@ impl Default for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
     use serde_json::json;
 
@@ -65,6 +86,19 @@ mod tests {
         let json = json!(geojson);
         let _feature_collection: FeatureCollection =
             serde_json::from_value(json).expect("failed to deserialise to ogc feature collection");
+    }
+
+    #[test]
+    fn feature_collection_opening_and_closing_json_serialises_to_geojson_and_deserialises_to_feature_collection()
+     {
+        let fc = FeatureCollection::default();
+        let json_string = format!(
+            "{}{}",
+            fc.opening_json().expect("failed to serialise opening json"),
+            fc.closing_json()
+        );
+        let _: FeatureCollection = serde_json::from_str(&json_string)
+            .expect("failed to deserialise to feature collection");
     }
 
     fn check_geojson(geojson: &geojson::FeatureCollection) {

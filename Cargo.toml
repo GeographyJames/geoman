@@ -13,7 +13,7 @@ name = "geoman"
 
 
 [dependencies]
-actix-web = "4.11.0"
+actix-web = "4.11"
 uuid = { version = "1.18", features = ["v4"] }
 anyhow = "1.0"
 strum = { version = "0.27", features = ["derive"] }

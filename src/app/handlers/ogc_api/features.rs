@@ -1,15 +1,19 @@
 use crate::{
-    app::{URLS, errors::ApiError, helpers::get_base_url, streaming::features_byte_stream},
+    app::{
+        URLS, errors::ApiError, helpers::get_base_url, streaming::feature_collection_byte_stream,
+    },
     constants::DB_QUERY_FAIL,
     domain::FeatureId,
     ogc::{
         self,
         types::{common::media_types::GEOJSON, features::Query},
     },
-    repo::{
+    postgres::{
         PostgresRepo,
-        models::ogc::{CollectionRow, FeatureRow},
-        postgres::features::SelectAllParams,
+        ogc::{
+            collections::CollectionRow,
+            features::{FeatureRow, SelectAllParams},
+        },
     },
 };
 use actix_web::{
@@ -80,7 +84,7 @@ pub async fn get_features_streaming(
     let base_url = get_base_url(&req);
     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, &slug);
     let params = SelectAllParams::from_query(query.into_inner(), slug.to_string());
-    let byte_stream = features_byte_stream(repo, params, collection_url);
+    let byte_stream = feature_collection_byte_stream(repo, params, collection_url)?;
     Ok(HttpResponse::Ok()
         .content_type(GEOJSON.to_string())
         .streaming(byte_stream))

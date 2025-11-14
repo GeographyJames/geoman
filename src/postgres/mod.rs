@@ -1,6 +1,7 @@
-mod ogc;
+//! Application data repository
 mod repo;
-pub use ogc::*;
+mod traits;
 pub use repo::PostgresRepo;
 mod pool_wrapper;
 pub use pool_wrapper::PoolWrapper;
+pub mod ogc;

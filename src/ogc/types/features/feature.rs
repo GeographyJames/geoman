@@ -4,7 +4,7 @@ use crate::{
         link_relations::{COLLECTION, SELF},
         media_types::MediaType,
     },
-    repo::models::ogc::FeatureRow,
+    postgres::ogc::features::FeatureRow,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -16,7 +16,7 @@ pub enum Type {
     Feature,
 }
 
-/// Abstraction of real world phenomena (ISO 19101-1:2014)
+#[non_exhaustive]
 #[derive(Serialize, Deserialize)]
 pub struct Feature {
     pub id: i32,

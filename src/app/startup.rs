@@ -6,7 +6,7 @@ use crate::{
         handlers::docs::get_api_docs,
         routes::{api_routes, docs_routes, ogc_routes},
     },
-    repo::PostgresRepo,
+    postgres::PostgresRepo,
 };
 use actix_web::{App, HttpResponse, HttpServer, dev::Server, middleware, web};
 use anyhow::Context;

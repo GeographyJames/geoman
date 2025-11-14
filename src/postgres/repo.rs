@@ -1,10 +1,8 @@
-use crate::repo::models::ogc::FeatureRow;
-use crate::repo::postgres::PoolWrapper;
-use crate::repo::postgres::ogc::features::SelectAllParams;
-use crate::repo::traits::{SelectAll, SelectOne};
-use futures::{Stream, StreamExt};
+use crate::postgres::PoolWrapper;
+use crate::postgres::traits::SelectAllWithParamsStreaming;
+use crate::postgres::traits::{SelectAll, SelectOne};
+use futures::Stream;
 use sqlx::PgPool;
-use sqlx::types::Json;
 
 pub struct PostgresRepo {
     pub db_pool: PgPool,
@@ -13,6 +11,10 @@ pub struct PostgresRepo {
 impl PostgresRepo {
     pub fn new(db_pool: PgPool) -> Self {
         Self { db_pool }
+    }
+
+    pub fn pool_wrapper(&self) -> PoolWrapper {
+        PoolWrapper(self.db_pool.clone())
     }
 
     #[tracing::instrument(skip(self))]
@@ -29,6 +31,18 @@ impl PostgresRepo {
         T: SelectOne,
     {
         T::select_one(&self.db_pool, id).await
+    }
+
+    #[tracing::instrument(skip(self, params))]
+    pub fn select_all_with_params_streaming<T>(
+        &self,
+        params: T::Params,
+    ) -> impl Stream<Item = Result<T, sqlx::Error>> + use<T>
+    where
+        T: SelectAllWithParamsStreaming,
+    {
+        let executor = self.pool_wrapper();
+        T::select_all_with_params_streaming(executor, params)
     }
 
     // #[tracing::instrument(skip(self, id, params))]
@@ -61,31 +75,4 @@ impl PostgresRepo {
     // ) -> Result<Option<Vec<FeatureRow>>, sqlx::Error> {
     //     FeatureRow::select_all_features_by_collection(&self.db_pool, params).await
     // }
-
-    pub fn select_all_with_params_streaming(
-        &self,
-        params: SelectAllParams,
-    ) -> impl Stream<Item = Result<FeatureRow, sqlx::Error>> + use<> {
-        let pool = PoolWrapper(self.db_pool.clone()); // Cheap clone - Arc internally
-
-        sqlx::query_scalar!(
-            r#"
-            SELECT jsonb_build_object(
-            'id', f.id,
-            'geometry', ST_AsGeoJSON(ST_Transform(f.geom, 4326))::jsonb,
-            'properties', f.properties ||  jsonb_build_object('name', f.name, 'is_primary', f.is_primary)
-        )
-            as "feature!: Json<FeatureRow>"
-                FROM app.features f
-                JOIN app.collections c ON c.id = f.collection_id
-                WHERE c.slug = $1 AND status = 'ACTIVE'
-                ORDER BY f.id
-                LIMIT $2
-            "#,
-            params.slug,
-            params.limit.map(|l| l as i64)
-        )
-        .fetch(pool)
-        .map(|res| res.map(|json| json.0))
-    }
 }

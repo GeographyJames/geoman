@@ -5,4 +5,4 @@ pub mod constants;
 pub mod domain;
 pub mod geo;
 pub mod ogc;
-pub mod repo;
+pub mod postgres;

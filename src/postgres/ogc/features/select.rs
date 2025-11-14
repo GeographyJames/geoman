@@ -1,9 +1,14 @@
+use futures::{Stream, StreamExt};
 use sqlx::types::Json;
 
 use crate::{
     domain::FeatureId,
     ogc::types::features::Query,
-    repo::{models::ogc::FeatureRow, traits::SelectOne},
+    postgres::{
+        PoolWrapper,
+        ogc::features::FeatureRow,
+        traits::{SelectAllWithParamsStreaming, SelectOne},
+    },
 };
 
 impl SelectOne for FeatureRow {
@@ -45,6 +50,35 @@ impl SelectAllParams {
             limit: query.limit,
             slug,
         }
+    }
+}
+
+impl SelectAllWithParamsStreaming for FeatureRow {
+    type Params = SelectAllParams;
+
+    fn select_all_with_params_streaming(
+        executor: PoolWrapper,
+        params: Self::Params,
+    ) -> impl Stream<Item = Result<FeatureRow, sqlx::Error>> + use<> {
+        sqlx::query_scalar!(
+            r#"
+            SELECT jsonb_build_object(
+            'id', f.id,
+            'geometry', ST_AsGeoJSON(ST_Transform(f.geom, 4326))::jsonb,
+            'properties', f.properties ||  jsonb_build_object('name', f.name, 'is_primary', f.is_primary)
+        )
+            as "feature!: Json<FeatureRow>"
+                FROM app.features f
+                JOIN app.collections c ON c.id = f.collection_id
+                WHERE c.slug = $1 AND status = 'ACTIVE'
+                ORDER BY f.id
+                LIMIT $2
+            "#,
+            params.slug,
+            params.limit.map(|l| l as i64)
+        )
+        .fetch(executor)
+        .map(|res| res.map(|json| json.0))
     }
 }
 

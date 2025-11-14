@@ -1,5 +1,5 @@
-use crate::repo::{
-    models::ogc::CollectionRow,
+use crate::postgres::{
+    ogc::collections::CollectionRow,
     traits::{SelectAll, SelectOne},
 };
 
