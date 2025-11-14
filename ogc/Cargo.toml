@@ -1,0 +1,12 @@
+[package]
+name = "ogc"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { workspace = true }
+geojson = "0.24"
+chrono = { version = "0.4", features = ["serde"] }
+serde_json = { workspace = true }
+utoipa = { workspace = true }
+uuid = { workspace = true }
