@@ -1,6 +1,6 @@
 use ogc::types::common::ConformanceDeclaration;
 
-use crate::app::{
+use crate::common::{
     TestApp,
     helpers::{assert_ok, handle_json_response},
 };

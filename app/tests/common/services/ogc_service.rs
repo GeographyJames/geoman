@@ -3,7 +3,7 @@ use domain::{FeatureId, Slug};
 use ogc::types::features::Query;
 use reqwest::Response;
 
-use crate::app::{constants::REQUEST_FAILED, services::HttpClient};
+use crate::common::{constants::REQUEST_FAILED, services::HttpClient};
 
 pub struct OgcService {}
 

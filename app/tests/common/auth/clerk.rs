@@ -2,7 +2,7 @@ use secrecy::{ExposeSecret, SecretBox};
 use serde::Deserialize;
 use tokio::sync::OnceCell;
 
-use crate::app::helpers::handle_json_response;
+use crate::common::helpers::handle_json_response;
 
 static TEST_SESSION: OnceCell<ClerkSession> = OnceCell::const_new();
 

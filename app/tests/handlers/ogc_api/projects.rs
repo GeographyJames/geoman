@@ -1,6 +1,10 @@
 use domain::{Project, Slug};
+use ogc::types::FeatureCollection;
 
-use crate::app::{TestApp, helpers::assert_ok};
+use crate::common::{
+    TestApp,
+    helpers::{assert_ok, handle_json_response},
+};
 
 #[actix_web::test]
 async fn get_projects_works() {
@@ -14,5 +18,7 @@ async fn get_projects_works() {
         )
         .await;
     assert_ok(&response);
-    let _projects: Vec<Project> = todo!();
+    let _projects: FeatureCollection = handle_json_response(response)
+        .await
+        .expect("failed to retrieve projects");
 }

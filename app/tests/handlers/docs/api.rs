@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::common::{
     TestApp,
     helpers::{assert_ok, assert_status},
 };

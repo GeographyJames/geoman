@@ -2,7 +2,7 @@ use domain::FeatureId;
 use ogc::types::{Feature, FeatureCollection, features::Query};
 use serde::{Deserialize, Serialize};
 
-use crate::app::{
+use crate::common::{
     TestApp,
     helpers::{assert_ok, assert_status, check_feature, handle_json_response},
 };

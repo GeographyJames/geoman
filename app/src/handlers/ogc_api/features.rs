@@ -8,6 +8,7 @@ use actix_web::{
 };
 use anyhow::Context;
 use ogc::types::{
+    FeatureCollection,
     common::{CollectionRow, conformance_classes::GEOJSON},
     features::{FeatureRow, Query},
 };
@@ -33,20 +34,25 @@ pub async fn get_features_streaming(
     collection: web::Path<Collection>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
-    // Check collection exists
+    let base_url = get_base_url(&req);
+    let collection_url = format!(
+        "{}{}/collections/{}",
+        base_url, URLS.ogc_api.base, &collection
+    );
     match collection.as_ref() {
-        Collection::Projects => todo!(),
+        Collection::Projects => {
+            return Ok(HttpResponse::Ok().json(FeatureCollection::new(
+                collection_url,
+                "projects".to_string(),
+            )));
+        }
         Collection::Other(_) => {}
     }
     repo.select_one::<CollectionRow>(&collection.to_string())
         .await
         .context(DB_QUERY_FAIL)?
         .ok_or_else(|| ApiError::NotFound(format!("Collection: '{}'", collection)))?;
-    let base_url = get_base_url(&req);
-    let collection_url = format!(
-        "{}{}/collections/{}",
-        base_url, URLS.ogc_api.base, &collection
-    );
+
     let params = SelectAllParams::from_query(query.into_inner(), collection.to_string());
     let byte_stream = feature_collection_byte_stream(repo, params, collection_url)?;
     Ok(HttpResponse::Ok()

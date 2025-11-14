@@ -4,7 +4,6 @@ CREATE TABLE app.collections (
     slug slug NOT NULL UNIQUE,
     description TEXT,
     geometry_type geometry_type NOT NULL,
-
     added_by integer NOT NULL REFERENCES app.users(id),
     added timestamptz NOT NULL DEFAULT now(),
     last_updated_by integer NOT NULL REFERENCES app.users(id),

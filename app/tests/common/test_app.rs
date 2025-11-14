@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::common::{
     auth::clerk::ClerkAuthProvider,
     configure_database,
     constants::{CLERK_USER_ID_KEY, GEOMAN_TEST_ENVIRONMENT_KEY},
@@ -195,7 +195,7 @@ impl TestApp {
         properties: Option<P>,
     ) -> i32 {
         let record = sqlx::query!(
-            "INSERT INTO app.features (
+            "INSERT INTO app.project_features (
                 project_id,
                 collection_id,
                 name,

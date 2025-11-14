@@ -1,5 +1,5 @@
 -- Features for site-boundaries collection
-INSERT INTO app.features (
+INSERT INTO app.project_features (
     project_id,
     collection_id,
     name,
@@ -42,7 +42,7 @@ INSERT INTO app.features (
 );
 
 -- Features for access-tracks collection
-INSERT INTO app.features (
+INSERT INTO app.project_features (
     project_id,
     collection_id,
     name,
@@ -93,7 +93,7 @@ INSERT INTO app.features (
 );
 
 -- Features for cable-routes collection
-INSERT INTO app.features (
+INSERT INTO app.project_features (
     project_id,
     collection_id,
     name,

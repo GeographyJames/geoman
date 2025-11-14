@@ -22,7 +22,7 @@ impl SelectOne for FeatureRow {
                 'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
                 'properties',  properties || jsonb_build_object('name', name, 'is_primary', is_primary) 
             ) as "feature!: Json<FeatureRow>"
-            FROM app.features
+            FROM app.project_features
             WHERE id = $1
             "#,
             id
@@ -63,7 +63,7 @@ impl SelectAllWithParamsStreaming for FeatureRow {
             'properties', f.properties ||  jsonb_build_object('name', f.name, 'is_primary', f.is_primary)
         )
             as "feature!: Json<FeatureRow>"
-                FROM app.features f
+                FROM app.project_features f
                 JOIN app.collections c ON c.id = f.collection_id
                 WHERE c.slug = $1 AND status = 'ACTIVE'
                 ORDER BY f.id

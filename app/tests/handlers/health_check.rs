@@ -1,4 +1,4 @@
-use crate::app::{TestApp, helpers::assert_ok};
+use crate::common::{TestApp, helpers::assert_ok};
 
 #[actix_web::test]
 async fn health_check_works() {

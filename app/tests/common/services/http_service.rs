@@ -1,4 +1,4 @@
-use crate::app::{constants::REQUEST_FAILED, services::HttpClient};
+use crate::common::{constants::REQUEST_FAILED, services::HttpClient};
 use reqwest::Response;
 
 pub struct HttpService {
