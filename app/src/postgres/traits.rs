@@ -33,3 +33,11 @@ pub trait SelectAllWithParamsStreaming {
     where
         Self: Sized;
 }
+
+pub trait SelectAllStreaiming {
+    fn select_all_streaming(
+        executor: PoolWrapper,
+    ) -> impl Stream<Item = Result<Self, sqlx::Error>> + use<Self>
+    where
+        Self: Sized;
+}

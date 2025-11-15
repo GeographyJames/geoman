@@ -1,9 +1,5 @@
-use crate::{
-    constants::DB_QUERY_FAIL,
-    errors::ApiError,
-    postgres::{PostgresRepo, traits::SelectAllWithParamsStreaming},
-};
-use actix_web::web::{self, Bytes};
+use crate::{constants::DB_QUERY_FAIL, errors::ApiError};
+use actix_web::web::Bytes;
 use anyhow::Context;
 use domain::IntoOGCFeature;
 use futures::{Stream, StreamExt};
@@ -30,14 +26,14 @@ where
     })
 }
 
-pub fn feature_collection_byte_stream<T>(
-    repo: web::Data<PostgresRepo>,
-    params: T::Params,
+pub fn ogc_feature_collection_byte_stream<T, S>(
+    database_stream: S,
     collection_url: String,
     collection_id: String,
 ) -> Result<impl Stream<Item = Result<Bytes, ApiError>>, ApiError>
 where
-    T: SelectAllWithParamsStreaming + IntoOGCFeature,
+    S: Stream<Item = Result<T, sqlx::Error>>,
+    T: IntoOGCFeature,
 {
     let feature_collection = FeatureCollection::new(collection_url.clone(), collection_id);
 
@@ -46,7 +42,6 @@ where
         .context("failed to deserialise feature collection opening json")?;
     let opening_stream = futures::stream::once(async move { Bytes::from(opening_json) });
 
-    let database_stream = repo.as_ref().select_all_with_params_streaming::<T>(params);
     let feature_stream = ogc_feature_byte_stream(database_stream, collection_url);
 
     let closing_json = feature_collection.closing_json();

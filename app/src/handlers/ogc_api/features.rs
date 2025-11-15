@@ -5,16 +5,16 @@ use crate::{
     errors::ApiError,
     helpers::get_base_url,
     postgres::{PostgresRepo, project_features::SelectAllParams},
-    streaming::feature_collection_byte_stream,
+    streaming::ogc_feature_collection_byte_stream,
 };
 use actix_web::{
-    Either, HttpRequest, HttpResponse, get,
-    web::{self, Json},
+    HttpRequest, HttpResponse, get,
+    web::{self},
 };
 use anyhow::Context;
 use domain::{IntoOGCFeature, Project, ProjectFeature};
+use futures::Stream;
 use ogc::types::{
-    FeatureCollection,
     common::{CollectionRow, conformance_classes::GEOJSON},
     features::Query,
 };
@@ -38,25 +38,32 @@ pub async fn get_features(
     repo: web::Data<PostgresRepo>,
     collection: web::Path<Collection>,
     query: web::Query<Query>,
-) -> Result<Either<Json<FeatureCollection>, HttpResponse>, ApiError> {
+) -> Result<HttpResponse, ApiError> {
     let base_url = get_base_url(&req);
     let collection_url = format!(
         "{}{}/collections/{}",
         base_url, URLS.ogc_api.base, &collection
     );
     match collection.as_ref() {
-        Collection::Projects => Ok(Either::Left(
-            get_projects(&repo, collection_url, Collection::Projects.to_string()).await?,
-        )),
-        Collection::Other(_) => Ok(Either::Right(
-            get_project_features_streaming(
-                collection.to_string(),
+        Collection::Projects => {
+            let projects = repo.select_all_streaming::<Project>();
+            let bytes = ogc_feature_collection_byte_stream(
+                projects,
                 collection_url,
-                query.into_inner(),
-                repo,
-            )
-            .await?,
-        )),
+                collection.to_string(),
+            )?;
+            Ok(HttpResponse::Ok().content_type(GEOJSON).streaming(bytes))
+        }
+        Collection::Other(_) => {
+            let features =
+                project_features_stream(collection.to_string(), query.into_inner(), repo).await?;
+            let bytes = ogc_feature_collection_byte_stream(
+                features,
+                collection_url,
+                collection.to_string(),
+            )?;
+            Ok(HttpResponse::Ok().content_type(GEOJSON).streaming(bytes))
+        }
     }
 }
 
@@ -96,36 +103,17 @@ pub async fn get_feature(
     Ok(web::Json(feature))
 }
 
-async fn get_project_features_streaming(
+async fn project_features_stream(
     collection: String,
-    collection_url: String,
     query: Query,
     repo: web::Data<PostgresRepo>,
-) -> Result<HttpResponse, ApiError> {
+) -> Result<impl Stream<Item = Result<ProjectFeature, sqlx::Error>>, ApiError> {
     repo.select_one::<CollectionRow>(&collection)
         .await
         .context(DB_QUERY_FAIL)?
         .ok_or_else(|| ApiError::NotFound(format!("Collection: '{}'", collection)))?;
     let params = SelectAllParams::from_query(query, collection.clone());
-    let byte_stream =
-        feature_collection_byte_stream::<ProjectFeature>(repo, params, collection_url, collection)?;
-
-    Ok(HttpResponse::Ok()
-        .content_type(GEOJSON.to_string())
-        .streaming(byte_stream))
-}
-
-async fn get_projects(
-    repo: &PostgresRepo,
-    collection_url: String,
-    slug: String,
-) -> Result<Json<FeatureCollection>, ApiError> {
-    let project_rows: Vec<Project> = repo.select_all().await.context(DB_QUERY_FAIL)?;
-    let projects = project_rows
-        .into_iter()
-        .map(|p| p.into_ogc_feature(collection_url.clone()))
-        .collect();
-    let projects_collection =
-        FeatureCollection::new(collection_url, slug).append_features(projects);
-    Ok(Json(projects_collection))
+    Ok(repo
+        .as_ref()
+        .select_all_with_params_streaming::<ProjectFeature>(params))
 }

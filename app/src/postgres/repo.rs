@@ -3,7 +3,7 @@ use sqlx::PgPool;
 
 use crate::postgres::{
     PoolWrapper,
-    traits::{SelectAll, SelectAllWithParamsStreaming, SelectOne},
+    traits::{SelectAll, SelectAllStreaiming, SelectAllWithParamsStreaming, SelectOne},
 };
 /// Appplication repository
 pub struct PostgresRepo {
@@ -41,5 +41,14 @@ impl PostgresRepo {
     {
         let executor = PoolWrapper(self.db_pool.clone());
         T::select_all_with_params_streaming(executor, params)
+    }
+
+    #[tracing::instrument(skip(self))]
+    pub fn select_all_streaming<T>(&self) -> impl Stream<Item = Result<T, sqlx::Error>> + use<T>
+    where
+        T: SelectAllStreaiming,
+    {
+        let executor = PoolWrapper(self.db_pool.clone());
+        T::select_all_streaming(executor)
     }
 }
