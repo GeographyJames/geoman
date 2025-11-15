@@ -1,14 +1,14 @@
-use domain::ProjectRow;
+use domain::Project;
 
-use crate::traits::SelectAll;
+use crate::repo::pg_repo::SelectAll;
 
-impl SelectAll for ProjectRow {
+impl SelectAll for Project {
     async fn select_all<'e, E>(executor: E) -> Result<Vec<Self>, sqlx::Error>
     where
         Self: Sized,
         E: sqlx::PgExecutor<'e>,
     {
-        sqlx::query_as!(ProjectRow, "SELECT id, name, slug FROM app.projects")
+        sqlx::query_as!(Project, "SELECT id, name, slug FROM app.projects")
             .fetch_all(executor)
             .await
     }

@@ -2,21 +2,13 @@ use crate::types::common::{
     Link, MediaType,
     link_relations::{COLLECTION, SELF},
 };
-use domain::ProjectRow;
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value, json};
+use serde_json::{Map, Value};
 
 #[derive(Serialize, Default, Deserialize)]
 pub enum Type {
     #[default]
     Feature,
-}
-
-#[derive(Deserialize)]
-pub struct FeatureRow {
-    pub id: i32,
-    pub properties: Map<String, Value>,
-    pub geometry: geojson::Geometry,
 }
 
 #[non_exhaustive]
@@ -52,23 +44,6 @@ impl Feature {
     pub fn set_geometry(mut self, geometry: geojson::Geometry) -> Self {
         self.geometry = Some(geometry);
         self
-    }
-
-    pub fn from_feature_row(row: FeatureRow, collection_url: String) -> Self {
-        let FeatureRow {
-            id,
-            properties,
-            geometry,
-        } = row;
-        Self::new(id, collection_url)
-            .set_geometry(geometry)
-            .set_properties(properties)
-    }
-    pub fn from_project_row(row: ProjectRow, collection_url: String) -> Self {
-        let ProjectRow { id, name, .. } = row;
-        let mut project = Self::new(id, collection_url);
-        project.properties.insert("name".to_string(), json!(name));
-        project
     }
 }
 

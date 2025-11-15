@@ -10,4 +10,3 @@ chrono = { version = "0.4", features = ["serde"] }
 serde_json = { workspace = true }
 utoipa = { workspace = true }
 uuid = { workspace = true }
-domain = { path = "../domain" }

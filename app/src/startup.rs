@@ -3,12 +3,13 @@ use crate::{
     config::AppConfig,
     enums::GeoManEnvironment,
     handlers::docs::get_api_docs,
+    repo::PostgresRepo,
     routes::{api_routes, docs_routes, ogc_routes},
 };
 use actix_web::{App, HttpResponse, HttpServer, dev::Server, middleware, web};
 use anyhow::Context;
 use clerk_rs::{ClerkConfiguration, clerk::Clerk};
-use postgres::PostgresRepo;
+
 use secrecy::ExposeSecret;
 use sqlx::PgPool;
 use std::net::TcpListener;

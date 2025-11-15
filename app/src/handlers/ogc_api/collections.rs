@@ -1,9 +1,10 @@
 use actix_web::{HttpRequest, get, web};
 use anyhow::Context;
 
-use crate::{URLS, constants::DB_QUERY_FAIL, errors::ApiError, helpers::get_base_url};
+use crate::{
+    URLS, constants::DB_QUERY_FAIL, errors::ApiError, helpers::get_base_url, repo::PostgresRepo,
+};
 use ogc::types::common::{Collection, CollectionRow, Collections};
-use postgres::PostgresRepo;
 
 /// The feature collections in the dataset.
 #[utoipa::path(

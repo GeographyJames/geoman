@@ -1,12 +1,8 @@
-use domain::ProjectRow;
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-
 use crate::types::{
     Feature,
     common::{Link, MediaType, link_relations::SELF},
-    features::FeatureRow,
 };
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Default, Deserialize)]
 pub enum Type {
@@ -24,22 +20,6 @@ pub struct FeatureCollection {
 }
 
 impl FeatureCollection {
-    pub fn from_feature_rows(rows: Vec<FeatureRow>, collection_url: String, slug: String) -> Self {
-        let features = rows
-            .into_iter()
-            .map(|f| Feature::from_feature_row(f, collection_url.clone()))
-            .collect();
-        Self::new(collection_url, slug).append_features(features)
-    }
-
-    pub fn from_project_rows(rows: Vec<ProjectRow>, collection_url: String, slug: String) -> Self {
-        let projects = rows
-            .into_iter()
-            .map(|p| Feature::from_project_row(p, collection_url.clone()))
-            .collect();
-        Self::new(collection_url, slug).append_features(projects)
-    }
-
     pub fn new(collection_url: String, slug: String) -> Self {
         Self {
             id: slug,
@@ -68,20 +48,18 @@ impl FeatureCollection {
     }
 }
 
-impl Default for FeatureCollection {
-    fn default() -> Self {
-        Self::from_feature_rows(
-            Vec::default(),
-            Uuid::new_v4().to_string(),
-            Uuid::new_v4().to_string(),
-        )
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use serde_json::json;
+    impl Default for FeatureCollection {
+        fn default() -> Self {
+            Self::new(
+                uuid::Uuid::new_v4().to_string(),
+                uuid::Uuid::new_v4().to_string(),
+            )
+        }
+    }
 
     #[test]
     fn feature_collection_serialises_to_and_from_geojson() {

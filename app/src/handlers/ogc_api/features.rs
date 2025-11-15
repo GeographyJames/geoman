@@ -1,5 +1,10 @@
 use crate::{
-    URLS, constants::DB_QUERY_FAIL, enums::Collection, errors::ApiError, helpers::get_base_url,
+    URLS,
+    constants::DB_QUERY_FAIL,
+    enums::Collection,
+    errors::ApiError,
+    helpers::get_base_url,
+    repo::{PostgresRepo, project_features::SelectAllParams},
     streaming::feature_collection_byte_stream,
 };
 use actix_web::{
@@ -7,13 +12,12 @@ use actix_web::{
     web::{self, Json},
 };
 use anyhow::Context;
-use domain::ProjectRow;
+use domain::{IntoOGCFeature, Project, ProjectFeature};
 use ogc::types::{
     FeatureCollection,
     common::{CollectionRow, conformance_classes::GEOJSON},
-    features::{FeatureRow, Query},
+    features::Query,
 };
-use postgres::{PostgresRepo, ogc::features::SelectAllParams};
 
 /// The features in the collection
 #[utoipa::path(
@@ -29,7 +33,7 @@ use postgres::{PostgresRepo, ogc::features::SelectAllParams};
 #[get("/{collectionId}/items")]
 
 // #[tracing::instrument(skip(repo, req, slug, query))]
-pub async fn get_features_streaming(
+pub async fn get_features(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
     collection: web::Path<Collection>,
@@ -45,7 +49,7 @@ pub async fn get_features_streaming(
             get_projects(&repo, collection_url, Collection::Projects.to_string()).await?,
         )),
         Collection::Other(_) => Ok(Either::Right(
-            get_project_features(
+            get_project_features_streaming(
                 collection.to_string(),
                 collection_url,
                 query.into_inner(),
@@ -79,7 +83,7 @@ pub async fn get_feature(
     let base_url = get_base_url(&req);
     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
     let feature_row = repo
-        .select_one::<FeatureRow>(feature_id)
+        .select_one::<ProjectFeature>(feature_id)
         .await
         .context(DB_QUERY_FAIL)?
         .ok_or_else(|| {
@@ -88,45 +92,11 @@ pub async fn get_feature(
                 slug, feature_id
             ))
         })?;
-    let feature = ogc::types::Feature::from_feature_row(feature_row, collection_url);
+    let feature = feature_row.into_ogc_feature(collection_url);
     Ok(web::Json(feature))
 }
 
-// /// The features in the collection
-// #[utoipa::path(
-//     path = "/collections/{collectionId}/items",
-//     params(
-//         ("collectionId" = String, Path, description = "Identifier of a collection"),
-//         Query
-//     ),
-//     responses(
-//         (status = 200, description = "Features in the collection"),
-//         (status = 404, description = "Collection not found"))
-// )]
-// #[get("/{collectionId}/items")]
-// #[tracing::instrument(skip(repo, req, slug, query))]
-// pub async fn get_features(
-//     req: HttpRequest,
-//     repo: web::Data<PostgresRepo>,
-//     slug: web::Path<String>,
-//     query: web::Query<Query>,
-// ) -> Result<web::Json<ogc::types::FeatureCollection>, ApiError> {
-//     let base_url = get_base_url(&req);
-//     let mut params = SelectAllParams::new(&slug);
-//     params.limit = query.limit;
-
-//     let feature_rows = repo
-//         .select_all_features_by_collection(&params)
-//         .await
-//         .context(DB_QUERY_FAIL)?
-//         .ok_or_else(|| ApiError::NotFound(format!("Collection: '{}'", slug)))?;
-//     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
-//     let feature_collection =
-//         FeatureCollection::from_feature_rows(feature_rows, collection_url, slug.to_string());
-//     Ok(web::Json(feature_collection))
-// }
-
-async fn get_project_features(
+async fn get_project_features_streaming(
     collection: String,
     collection_url: String,
     query: Query,
@@ -149,8 +119,12 @@ async fn get_projects(
     collection_url: String,
     slug: String,
 ) -> Result<Json<FeatureCollection>, ApiError> {
-    let project_rows: Vec<ProjectRow> = repo.select_all().await.context(DB_QUERY_FAIL)?;
+    let project_rows: Vec<Project> = repo.select_all().await.context(DB_QUERY_FAIL)?;
+    let projects = project_rows
+        .into_iter()
+        .map(|p| p.into_ogc_feature(collection_url.clone()))
+        .collect();
     let projects_collection =
-        FeatureCollection::from_project_rows(project_rows, collection_url, slug);
+        FeatureCollection::new(collection_url, slug).append_features(projects);
     Ok(Json(projects_collection))
 }

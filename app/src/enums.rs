@@ -32,17 +32,12 @@ impl<'de> Deserialize<'de> for Collection {
     }
 }
 
-impl Collection {
-    pub fn to_string(&self) -> String {
-        match self {
-            Collection::Projects => "projects".to_string(),
-            Collection::Other(s) => s.clone(),
-        }
-    }
-}
-
 impl std::fmt::Display for Collection {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.to_string())
+        let s = match self {
+            Collection::Projects => "projects".to_string(),
+            Collection::Other(s) => s.clone(),
+        };
+        write!(f, "{}", s)
     }
 }

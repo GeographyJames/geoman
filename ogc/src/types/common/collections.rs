@@ -23,7 +23,7 @@ impl Collections {
             .map(|row| Collection::from_collection_row(row, collections_url.to_string()))
             .collect();
         Self {
-            links: vec![Link::new(&collections_url, SELF).mediatype(MediaType::Json)],
+            links: vec![Link::new(collections_url, SELF).mediatype(MediaType::Json)],
             collections,
         }
     }

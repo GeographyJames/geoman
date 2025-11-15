@@ -10,7 +10,6 @@ name = "geoman"
 [dependencies]
 ogc = { path = "../ogc" }
 actix-web = "4.11"
-postgres = { path = "../postgres" }
 clerk-rs = { version = "0.4", features = ["actix"] }
 anyhow = "1.0"
 config = "0.15"
