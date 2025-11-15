@@ -1,6 +1,6 @@
 use domain::Project;
 
-use crate::repo::pg_repo::SelectAll;
+use crate::postgres::traits::SelectAll;
 
 impl SelectAll for Project {
     async fn select_all<'e, E>(executor: E) -> Result<Vec<Self>, sqlx::Error>

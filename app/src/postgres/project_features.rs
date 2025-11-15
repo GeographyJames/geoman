@@ -3,7 +3,10 @@ use futures::{Stream, StreamExt};
 use ogc::types::features::Query;
 use sqlx::types::Json;
 
-use crate::repo::pg_repo::{PoolWrapper, SelectAllWithParamsStreaming, SelectOne};
+use crate::postgres::{
+    PoolWrapper,
+    traits::{SelectAllWithParamsStreaming, SelectOne},
+};
 
 impl SelectOne for ProjectFeature {
     type Id<'a> = i32;

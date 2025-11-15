@@ -15,5 +15,5 @@ mod state;
 pub mod telemetry;
 pub use state::AppState;
 pub mod constants;
-mod repo;
+mod postgres;
 pub mod streaming;

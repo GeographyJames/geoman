@@ -1,6 +1,6 @@
 use futures::Stream;
 
-use crate::repo::pg_repo::PoolWrapper;
+use crate::postgres::pool_wrapper::PoolWrapper;
 
 pub trait SelectAll {
     #[allow(async_fn_in_trait)]

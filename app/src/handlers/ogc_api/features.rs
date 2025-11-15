@@ -4,7 +4,7 @@ use crate::{
     enums::Collection,
     errors::ApiError,
     helpers::get_base_url,
-    repo::{PostgresRepo, project_features::SelectAllParams},
+    postgres::{PostgresRepo, project_features::SelectAllParams},
     streaming::feature_collection_byte_stream,
 };
 use actix_web::{
@@ -106,8 +106,9 @@ async fn get_project_features_streaming(
         .await
         .context(DB_QUERY_FAIL)?
         .ok_or_else(|| ApiError::NotFound(format!("Collection: '{}'", collection)))?;
-    let params = SelectAllParams::from_query(query, collection);
-    let byte_stream = feature_collection_byte_stream(repo, params, collection_url)?;
+    let params = SelectAllParams::from_query(query, collection.clone());
+    let byte_stream =
+        feature_collection_byte_stream::<ProjectFeature>(repo, params, collection_url, collection)?;
 
     Ok(HttpResponse::Ok()
         .content_type(GEOJSON.to_string())

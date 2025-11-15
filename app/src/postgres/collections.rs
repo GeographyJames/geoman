@@ -1,6 +1,6 @@
 use ogc::types::common::CollectionRow;
 
-use crate::repo::pg_repo::{SelectAll, SelectOne};
+use crate::postgres::traits::{SelectAll, SelectOne};
 
 impl SelectAll for CollectionRow {
     async fn select_all<'e, E>(executor: E) -> Result<Vec<Self>, sqlx::Error>

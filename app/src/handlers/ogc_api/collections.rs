@@ -2,7 +2,7 @@ use actix_web::{HttpRequest, get, web};
 use anyhow::Context;
 
 use crate::{
-    URLS, constants::DB_QUERY_FAIL, errors::ApiError, helpers::get_base_url, repo::PostgresRepo,
+    URLS, constants::DB_QUERY_FAIL, errors::ApiError, helpers::get_base_url, postgres::PostgresRepo,
 };
 use ogc::types::common::{Collection, CollectionRow, Collections};
 

@@ -1,8 +1,10 @@
 use futures::Stream;
 use sqlx::PgPool;
 
-use crate::repo::pg_repo::{PoolWrapper, SelectAll, SelectAllWithParamsStreaming, SelectOne};
-
+use crate::postgres::{
+    PoolWrapper,
+    traits::{SelectAll, SelectAllWithParamsStreaming, SelectOne},
+};
 /// Appplication repository
 pub struct PostgresRepo {
     pub db_pool: PgPool,

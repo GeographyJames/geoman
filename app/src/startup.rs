@@ -3,7 +3,7 @@ use crate::{
     config::AppConfig,
     enums::GeoManEnvironment,
     handlers::docs::get_api_docs,
-    repo::PostgresRepo,
+    postgres::PostgresRepo,
     routes::{api_routes, docs_routes, ogc_routes},
 };
 use actix_web::{App, HttpResponse, HttpServer, dev::Server, middleware, web};
