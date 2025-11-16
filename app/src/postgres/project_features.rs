@@ -104,16 +104,15 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
         executor: PoolWrapper,
         params: Self::Params,
     ) -> impl Stream<Item = Result<Self, RepositoryError>> + use<> {
-        sqlx::query_scalar!(
+        sqlx::query_as!(
+            ProjectFeatureRow,
             r#"
-            SELECT jsonb_build_object(
-            'id', f.id,
-            'geometry', ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb,
-            'is_primary', f.is_primary,
-            'name', f.name,
-            'properties', f.properties 
-        )
-            as "feature!: Json<ProjectFeature>"
+            SELECT 
+            f.id,
+            ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as "geometry!: Json<Geometry>",
+            f.is_primary,
+            f.name,
+            f.properties 
                 FROM app.project_features f
                 JOIN app.collections c ON c.id = f.collection_id
                 JOIN app.feature_objects fo ON fo.project_feature_id = f.id
@@ -125,6 +124,6 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             params.limit.map(|l| l as i64)
         )
         .fetch(executor)
-        .map(|res| res.map_err(RepositoryError::from).map(|json| json.0))
+        .map(|res| res?.try_into())
     }
 }

@@ -30,23 +30,27 @@ impl SelectOne for Project {
     where
         E: sqlx::PgExecutor<'e>,
     {
-        match id {
-            ProjectIdentifier::Id(id) => sqlx::query_as!(
-                Project,
-                "SELECT id, name, slug FROM app.projects WHERE id = $1",
-                id.0
-            )
-            .fetch_optional(executor)
-            .await
-            .map_err(RepositoryError::from),
-            ProjectIdentifier::Slug(slug) => sqlx::query_as!(
-                Project,
-                "SELECT id, name, slug FROM app.projects WHERE slug = $1",
-                slug
-            )
-            .fetch_optional(executor)
-            .await
-            .map_err(RepositoryError::from),
-        }
+        let project = match id {
+            ProjectIdentifier::Id(id) => {
+                sqlx::query_as!(
+                    Project,
+                    "SELECT id, name, slug FROM app.projects WHERE id = $1",
+                    id.0
+                )
+                .fetch_optional(executor)
+                .await?
+            }
+
+            ProjectIdentifier::Slug(slug) => {
+                sqlx::query_as!(
+                    Project,
+                    "SELECT id, name, slug FROM app.projects WHERE slug = $1",
+                    slug
+                )
+                .fetch_optional(executor)
+                .await?
+            }
+        };
+        Ok(project)
     }
 }
