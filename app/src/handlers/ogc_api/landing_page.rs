@@ -28,7 +28,7 @@ pub async fn get_landing_page(
     landing_page(&state, &req)
 }
 
-#[get("/{project_identifier}")]
+#[get("")]
 #[tracing::instrument(skip(repo, project, state))]
 pub async fn get_project_landing_page(
     repo: web::Data<PostgresRepo>,
@@ -39,7 +39,7 @@ pub async fn get_project_landing_page(
     let _project = repo
         .select_one::<Project>(&project)
         .await?
-        .ok_or_else(|| ApiError::ProjectNotFound(project.into_inner()))?;
+        .ok_or(ApiError::ProjectNotFound(project.into_inner()))?;
     let landing_page = landing_page(&state, &req);
     Ok(landing_page)
 }

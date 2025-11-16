@@ -7,7 +7,7 @@ use app::{
 async fn main() -> anyhow::Result<()> {
     let config = get_config().expect("Failed to initialise app config");
     let subscriber = get_subscriber(
-        "geoman".to_string(),
+        "GeoMan".to_string(),
         "info,sqlx=error".to_string(),
         std::io::stdout,
     );
@@ -19,11 +19,11 @@ async fn main() -> anyhow::Result<()> {
     );
     let app = Application::build(config)
         .await
-        .expect("failed to build application");
+        .expect("Failed to build application");
 
     app.run_untill_stopped()
         .await
-        .expect("failed to run application");
+        .expect("Failed to run application");
 
     Ok(())
 }

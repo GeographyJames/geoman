@@ -107,17 +107,17 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             ProjectFeatureRow,
             r#"
             SELECT 
-            f.id,
-            ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as "geometry!: Json<Geometry>",
-            f.is_primary,
-            f.name,
-            f.properties 
-                FROM app.project_features f
-                JOIN app.collections c ON c.id = f.collection_id
-                JOIN app.feature_objects fo ON fo.project_feature_id = f.id
-                WHERE c.slug = $1 AND status = 'ACTIVE'
-                ORDER BY f.id
-                LIMIT $2
+                f.id,
+                ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as "geometry!: Json<Geometry>",
+                f.is_primary,
+                f.name,
+                f.properties 
+            FROM app.project_features f
+            JOIN app.collections c ON c.id = f.collection_id
+            JOIN app.feature_objects fo ON fo.project_feature_id = f.id
+            WHERE c.slug = $1 AND status = 'ACTIVE'
+            ORDER BY f.id
+            LIMIT $2
             "#,
             params.slug,
             params.limit.map(|l| l as i64)

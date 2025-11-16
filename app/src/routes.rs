@@ -18,7 +18,7 @@ pub fn docs_routes(cfg: &mut web::ServiceConfig, clerk: Clerk) {
 }
 
 pub fn api_routes(cfg: &mut web::ServiceConfig, clerk: Clerk) {
-    let scp = scope(URLS.api.base.as_str());
+    let scp = scope(&URLS.api.base);
     cfg.service(scp.wrap(ClerkMiddleware::new(
         MemoryCacheJwksProvider::new(clerk),
         None,
@@ -28,19 +28,30 @@ pub fn api_routes(cfg: &mut web::ServiceConfig, clerk: Clerk) {
 
 pub fn ogc_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
-        scope(URLS.ogc_api.base.as_str())
+        scope(&URLS.ogc_api.base)
+            .service(scope(&URLS.ogc_api.project).configure(project_ogc_routes))
             .service(ogc_api::get_landing_page)
-            .service(scope(&URLS.ogc_api.project).service(ogc_api::get_project_landing_page))
             .service(
-                scope(URLS.ogc_api.conformance_declaration.as_str())
+                scope(&URLS.ogc_api.conformance_declaration)
                     .service(ogc_api::get_conformance_declaration),
             )
             .service(
-                scope(URLS.ogc_api.collections.as_str())
+                scope(&URLS.ogc_api.collections)
                     .service(ogc_api::get_collections)
                     .service(ogc_api::get_collection)
                     .service(ogc_api::get_features)
                     .service(ogc_api::get_feature),
+            ),
+    );
+}
+
+pub fn project_ogc_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        scope("/{project}")
+            .service(ogc_api::get_project_landing_page)
+            .service(
+                scope(&URLS.ogc_api.conformance_declaration)
+                    .service(ogc_api::get_project_conformance_declaration),
             ),
     );
 }

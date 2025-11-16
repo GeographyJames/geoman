@@ -34,6 +34,21 @@ impl OgcService {
         req.send().await.expect(REQUEST_FAILED)
     }
 
+    pub async fn get_project_conformance_declaration(
+        &self,
+        client: &HttpClient,
+        project: ProjectIdentifier,
+    ) -> Response {
+        let req = client.get(format!(
+            "{}{}/{}{}",
+            &URLS.ogc_api.base,
+            &URLS.ogc_api.project,
+            project,
+            &URLS.ogc_api.conformance_declaration
+        ));
+        req.send().await.expect(REQUEST_FAILED)
+    }
+
     pub async fn get_collections(&self, client: &HttpClient) -> Response {
         let req = client.get(format!(
             "{}{}",
