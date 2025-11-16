@@ -1,6 +1,5 @@
 use crate::IntoOGCFeature;
 use anyhow::anyhow;
-use ogc::types::Feature;
 use serde_json::{Map, Value, json};
 
 pub struct ProjectFeature {
@@ -12,7 +11,7 @@ pub struct ProjectFeature {
 }
 
 impl IntoOGCFeature for ProjectFeature {
-    fn into_ogc_feature(self, collection_url: String) -> ogc::types::Feature {
+    fn into_ogc_feature(self, collection_url: String) -> ogc::Feature {
         let ProjectFeature {
             id,
             properties,
@@ -20,7 +19,7 @@ impl IntoOGCFeature for ProjectFeature {
             name,
             is_primary,
         } = self;
-        Feature::new(id, collection_url)
+        ogc::Feature::new(id, collection_url)
             .set_geometry(geometry)
             .set_properties(properties)
             .insert_property("name".to_string(), json!(name))
@@ -28,7 +27,7 @@ impl IntoOGCFeature for ProjectFeature {
     }
 }
 
-impl TryFrom<ogc::types::Feature> for ProjectFeature {
+impl TryFrom<ogc::Feature> for ProjectFeature {
     type Error = anyhow::Error;
     fn try_from(value: ogc::Feature) -> Result<Self, Self::Error> {
         let ogc::Feature {

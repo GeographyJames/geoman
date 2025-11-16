@@ -2,14 +2,13 @@ use crate::common::{
     TestApp,
     helpers::{assert_ok, handle_json_response},
 };
-use ogc::types::common::{Collection, Collections};
 
 #[actix_web::test]
 async fn get_collections_works() {
     let app = TestApp::spawn_with_db().await;
     let response = app.ogc_service.get_collections(&app.api_client).await;
     assert_ok(&response);
-    let _collections: Collections = handle_json_response(response)
+    let _collections: ogc::Collections = handle_json_response(response)
         .await
         .expect("failed to retrieve collections");
 }
@@ -24,7 +23,7 @@ async fn get_collection_works() {
 
     assert_ok(&response);
 
-    let collection: Collection = handle_json_response(response)
+    let collection: ogc::Collection = handle_json_response(response)
         .await
         .expect("failed to retrieve collection");
 
@@ -37,7 +36,7 @@ async fn get_collection_includes_projects() {
     let app = TestApp::spawn_with_db().await;
     let response = app.ogc_service.get_collections(&app.api_client).await;
     assert_ok(&response);
-    let collections: Collections = handle_json_response(response)
+    let collections: ogc::Collections = handle_json_response(response)
         .await
         .expect("failed to retrieve collections");
     let _projects_collection = collections

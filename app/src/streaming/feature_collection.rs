@@ -3,7 +3,6 @@ use actix_web::web::Bytes;
 use anyhow::Context;
 use domain::IntoOGCFeature;
 use futures::{Stream, StreamExt};
-use ogc::types::FeatureCollection;
 
 fn ogc_feature_byte_stream<T, F>(
     stream: T,
@@ -33,7 +32,7 @@ where
     S: Stream<Item = Result<T, RepositoryError>>,
     T: IntoOGCFeature,
 {
-    let feature_collection = FeatureCollection::new(collection_url.clone(), collection_id);
+    let feature_collection = ogc::FeatureCollection::new(collection_url.clone(), collection_id);
 
     let opening_json = feature_collection
         .opening_json()

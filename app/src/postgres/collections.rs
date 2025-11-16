@@ -1,17 +1,17 @@
-use ogc::types::common::CollectionRow;
+use domain::Collection;
 
 use crate::{
     errors::RepositoryError,
     postgres::traits::{SelectAll, SelectOne},
 };
 
-impl SelectAll for CollectionRow {
+impl SelectAll for Collection {
     async fn select_all<'e, E>(executor: E) -> Result<Vec<Self>, RepositoryError>
     where
         E: sqlx::PgExecutor<'e>,
     {
         sqlx::query_as!(
-            CollectionRow,
+            Collection,
             "SELECT id, title, slug, description FROM app.collections"
         )
         .fetch_all(executor)
@@ -20,7 +20,7 @@ impl SelectAll for CollectionRow {
     }
 }
 
-impl SelectOne for CollectionRow {
+impl SelectOne for Collection {
     type Id<'a> = &'a str;
     async fn select_one<'a, 'e, E>(
         executor: E,
@@ -30,7 +30,7 @@ impl SelectOne for CollectionRow {
         E: sqlx::PgExecutor<'e>,
     {
         sqlx::query_as!(
-            CollectionRow,
+            Collection,
             "SELECT id, title, slug, description FROM app.collections WHERE slug = $1",
             slug
         )

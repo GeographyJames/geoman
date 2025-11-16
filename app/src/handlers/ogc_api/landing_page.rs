@@ -1,7 +1,7 @@
 use crate::{AppState, URLS, enums::ProjectIdentifier, errors::ApiError, postgres::PostgresRepo};
 use actix_web::{HttpRequest, get, web};
 use domain::Project;
-use ogc::types::common::{
+use ogc::{
     LandingPage, Link, Linked, MediaType,
     link_relations::{CONFORMANCE, DATA, ROOT, SELF, SERVICE_DESC},
 };

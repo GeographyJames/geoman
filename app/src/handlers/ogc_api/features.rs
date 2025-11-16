@@ -1,6 +1,5 @@
 use crate::{
-    URLS,
-    enums::Collection,
+    URLS, enums,
     errors::{ApiError, RepositoryError},
     helpers::get_base_url,
     postgres::{PostgresRepo, project_features::SelectAllParams},
@@ -10,12 +9,9 @@ use actix_web::{
     HttpRequest, HttpResponse, get,
     web::{self},
 };
-use domain::{IntoOGCFeature, Project, ProjectFeature};
+use domain::{Collection, IntoOGCFeature, Project, ProjectFeature};
 use futures::Stream;
-use ogc::types::{
-    common::{CollectionRow, conformance_classes::GEOJSON},
-    features::Query,
-};
+use ogc::{conformance_classes::GEOJSON, features::Query};
 
 /// The features in the collection
 #[utoipa::path(
@@ -34,7 +30,7 @@ use ogc::types::{
 pub async fn get_features(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-    collection: web::Path<Collection>,
+    collection: web::Path<enums::Collection>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let base_url = get_base_url(&req);
@@ -43,7 +39,7 @@ pub async fn get_features(
         base_url, URLS.ogc_api.base, &collection
     );
     let response = match collection.as_ref() {
-        Collection::Projects => {
+        enums::Collection::Projects => {
             let projects = repo.select_all_streaming::<Project>();
             let bytes = ogc_feature_collection_byte_stream(
                 projects,
@@ -52,7 +48,7 @@ pub async fn get_features(
             )?;
             HttpResponse::Ok().content_type(GEOJSON).streaming(bytes)
         }
-        Collection::Other(_) => {
+        enums::Collection::Other(_) => {
             let features =
                 project_features_stream(collection.to_string(), query.into_inner(), repo).await?;
             let bytes = ogc_feature_collection_byte_stream(
@@ -84,7 +80,7 @@ pub async fn get_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
     path: web::Path<(String, i32)>,
-) -> Result<web::Json<ogc::types::Feature>, ApiError> {
+) -> Result<web::Json<ogc::Feature>, ApiError> {
     let (slug, feature_id) = path.into_inner();
     let base_url = get_base_url(&req);
     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
@@ -104,7 +100,7 @@ async fn project_features_stream(
     query: Query,
     repo: web::Data<PostgresRepo>,
 ) -> Result<impl Stream<Item = Result<ProjectFeature, RepositoryError>>, ApiError> {
-    repo.select_one::<CollectionRow>(&collection)
+    repo.select_one::<Collection>(&collection)
         .await?
         .ok_or_else(|| ApiError::CollectionNotFound {
             collection_slug: collection.clone(),

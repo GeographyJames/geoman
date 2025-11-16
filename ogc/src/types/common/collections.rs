@@ -1,9 +1,7 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::types::common::{
-    CollectionRow, Link, Links, link_relations::SELF, media_types::MediaType,
-};
+use crate::types::common::{Link, Links, link_relations::SELF, media_types::MediaType};
 
 use super::Collection;
 
@@ -14,21 +12,18 @@ pub struct Collections {
 }
 
 impl Collections {
-    pub fn from_collection_rows(
-        collection_rows: Vec<CollectionRow>,
-        collections_url: &str,
-    ) -> Self {
-        let collections: Vec<Collection> = collection_rows
-            .into_iter()
-            .map(|row| Collection::from_collection_row(row, collections_url.to_string()))
-            .collect();
-        Self {
+    pub fn new(collections_url: &str) -> Self {
+        Collections {
             links: vec![Link::new(collections_url, SELF).mediatype(MediaType::Json)],
-            collections,
+            collections: Vec::new(),
         }
     }
     pub fn add_collection(mut self, collection: Collection) -> Self {
         self.collections.push(collection);
+        self
+    }
+    pub fn append_collections(mut self, mut collections: Vec<Collection>) -> Self {
+        self.collections.append(&mut collections);
         self
     }
 }

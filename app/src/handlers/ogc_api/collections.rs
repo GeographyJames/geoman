@@ -1,7 +1,7 @@
 use actix_web::{HttpRequest, get, web};
+use domain::Collection;
 
 use crate::{URLS, errors::ApiError, helpers::get_base_url, postgres::PostgresRepo};
-use ogc::types::common::{Collection, CollectionRow, Collections};
 
 /// The feature collections in the dataset.
 #[utoipa::path(
@@ -40,22 +40,28 @@ use ogc::types::common::{Collection, CollectionRow, Collections};
 pub async fn get_collections(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-) -> Result<web::Json<Collections>, ApiError> {
+) -> Result<web::Json<ogc::Collections>, ApiError> {
     // Build base URL from request
 
     let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
 
-    let collection_rows: Vec<CollectionRow> = repo.select_all().await?;
-    let collections = Collections::from_collection_rows(collection_rows, &collections_url)
-        .add_collection(Collection::new(
+    let collections: Vec<Collection> = repo.select_all().await?;
+    let ogc_collections = collections
+        .into_iter()
+        .map(|c| c.into_ogc_collection(&collections_url))
+        .collect();
+
+    let ogc_collections = ogc::Collections::new(&collections_url)
+        .append_collections(ogc_collections)
+        .add_collection(ogc::Collection::new(
             "projects".to_string(),
             "Projects".to_string(),
             Some("The projects".to_string()),
-            collections_url,
+            &collections_url,
         ));
 
-    Ok(web::Json(collections))
+    Ok(web::Json(ogc_collections))
 }
 
 /// Get a single collection by ID (slug)
@@ -101,22 +107,21 @@ pub async fn get_collection(
     req: HttpRequest,
     slug: web::Path<String>,
     repo: web::Data<PostgresRepo>,
-) -> Result<web::Json<Collection>, ApiError> {
+) -> Result<web::Json<ogc::Collection>, ApiError> {
     let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
 
     tracing::info!("\n\nhere");
 
     // Fetch collection from database
-    let collection_row = repo
-        .select_one::<CollectionRow>(&slug)
-        .await?
-        .ok_or_else(|| ApiError::CollectionNotFound {
+    let collection = repo.select_one::<Collection>(&slug).await?.ok_or_else(|| {
+        ApiError::CollectionNotFound {
             collection_slug: slug.into_inner(),
-        })?;
+        }
+    })?;
 
     // Map database row to OGC Collection with links
-    let collection = Collection::from_collection_row(collection_row, collections_url);
+    let ogc_collection = collection.into_ogc_collection(&collections_url);
 
-    Ok(web::Json(collection))
+    Ok(web::Json(ogc_collection))
 }

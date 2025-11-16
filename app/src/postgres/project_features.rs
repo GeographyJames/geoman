@@ -1,7 +1,6 @@
 use domain::ProjectFeature;
 use futures::{Stream, StreamExt};
 use geojson::Geometry;
-use ogc::types::features::Query;
 use serde::Deserialize;
 use serde_json::Value;
 use sqlx::types::Json;
@@ -89,7 +88,7 @@ pub struct SelectAllParams {
 }
 
 impl SelectAllParams {
-    pub fn from_query(query: Query, slug: String) -> Self {
+    pub fn from_query(query: ogc::features::Query, slug: String) -> Self {
         SelectAllParams {
             limit: query.limit,
             slug,

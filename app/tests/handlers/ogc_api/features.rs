@@ -1,5 +1,5 @@
 use domain::FeatureId;
-use ogc::types::{Feature, FeatureCollection, features::Query};
+
 use serde::{Deserialize, Serialize};
 
 use crate::common::{
@@ -41,7 +41,7 @@ async fn get_features_works() {
 
     assert_ok(&response);
 
-    let feature_collection: FeatureCollection = handle_json_response(response)
+    let feature_collection: ogc::FeatureCollection = handle_json_response(response)
         .await
         .expect("failed to retrieve feature collection");
 
@@ -65,7 +65,7 @@ async fn get_features_works_with_limit() {
         .await;
     }
     let limit = 5;
-    let params = Query {
+    let params = ogc::features::Query {
         limit: Some(limit),
         ..Default::default()
     };
@@ -74,7 +74,7 @@ async fn get_features_works_with_limit() {
         .get_features(&app.api_client, &slug, Some(&params))
         .await;
     assert_ok(&response);
-    let feature_collection: FeatureCollection = handle_json_response(response)
+    let feature_collection: ogc::FeatureCollection = handle_json_response(response)
         .await
         .expect("Failed to retrieve feature collection");
     assert_eq!(feature_collection.features.len(), limit);
@@ -103,7 +103,7 @@ async fn get_feature_works() {
 
     assert_ok(&response);
 
-    let ogc_feature: Feature = handle_json_response(response)
+    let ogc_feature: ogc::Feature = handle_json_response(response)
         .await
         .expect("failed to retrieve feature");
     check_ogc_feature::<Properties>(ogc_feature);
@@ -120,7 +120,7 @@ async fn get_features_returns_empty_vec_for_no_features_in_collection() {
         .await;
     assert_ok(&response);
 
-    let feature_collection: FeatureCollection = handle_json_response(response)
+    let feature_collection: ogc::FeatureCollection = handle_json_response(response)
         .await
         .expect("failed to retrieve feature collection");
     assert!(feature_collection.features.is_empty())

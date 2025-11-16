@@ -4,7 +4,6 @@ use crate::common::{
 };
 use app::enums::ProjectIdentifier;
 use domain::ProjectId;
-use ogc::types::common::LandingPage;
 use reqwest::Response;
 
 #[actix_web::test]
@@ -38,7 +37,7 @@ async fn get_project_landing_page_returns_404_for_project_not_found() {
 
 async fn check_landing_page_response(response: Response) {
     assert_ok(&response);
-    let _landing_page: LandingPage = handle_json_response(response)
+    let _landing_page: ogc::LandingPage = handle_json_response(response)
         .await
         .expect("failed to retrieve landing page");
 }

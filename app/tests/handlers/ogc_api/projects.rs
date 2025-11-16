@@ -1,5 +1,4 @@
 use domain::Slug;
-use ogc::types::FeatureCollection;
 
 use crate::common::{
     TestApp,
@@ -19,7 +18,7 @@ async fn get_projects_works() {
         )
         .await;
     assert_ok(&response);
-    let projects: FeatureCollection = handle_json_response(response)
+    let projects: ogc::FeatureCollection = handle_json_response(response)
         .await
         .expect("failed to retrieve projects");
     assert!(!projects.features.is_empty())

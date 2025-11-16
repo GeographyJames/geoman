@@ -1,4 +1,4 @@
-use ogc::types::common::LandingPage;
+use ogc::LandingPage;
 
 pub struct AppState {
     pub landing_page: LandingPage,

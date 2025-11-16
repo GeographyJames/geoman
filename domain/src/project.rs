@@ -1,4 +1,3 @@
-use ogc::types::Feature;
 use serde::Deserialize;
 use serde_json::json;
 
@@ -12,9 +11,9 @@ pub struct Project {
 }
 
 impl IntoOGCFeature for Project {
-    fn into_ogc_feature(self, collection_url: String) -> ogc::types::Feature {
+    fn into_ogc_feature(self, collection_url: String) -> ogc::Feature {
         let Project { id, name, .. } = self;
-        let mut project = Feature::new(id, collection_url);
+        let mut project = ogc::Feature::new(id, collection_url);
         project.properties.insert("name".to_string(), json!(name));
         project
     }

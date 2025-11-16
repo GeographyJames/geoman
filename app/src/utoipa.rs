@@ -4,7 +4,7 @@ use crate::handlers::ogc_api::{
     features::{__path_get_feature, __path_get_features},
     landing_page::__path_get_landing_page,
 };
-use ogc::types::common::{Collection, Collections, ConformanceDeclaration, LandingPage};
+use ogc::{Collection, Collections, ConformanceDeclaration, LandingPage};
 use utoipa::OpenApi;
 
 #[derive(OpenApi)]

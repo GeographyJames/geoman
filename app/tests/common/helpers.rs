@@ -1,5 +1,4 @@
 use domain::ProjectFeature;
-use ogc::types::Feature;
 use reqwest::Response;
 use serde::de::DeserializeOwned;
 
@@ -63,7 +62,7 @@ pub async fn handle_json_response<T: DeserializeOwned>(
     ))
 }
 
-pub fn check_ogc_feature<P: DeserializeOwned>(ogc_feature: Feature) {
+pub fn check_ogc_feature<P: DeserializeOwned>(ogc_feature: ogc::Feature) {
     let project_feature = ProjectFeature::try_from(ogc_feature)
         .expect("failed to convert ogc featuer to project feature");
     let _props: P = serde_json::from_value(serde_json::Value::Object(project_feature.properties))

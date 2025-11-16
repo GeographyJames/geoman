@@ -7,13 +7,6 @@ use crate::types::common::{
     media_types::MediaType,
 };
 
-pub struct CollectionRow {
-    pub id: i32,
-    pub title: String,
-    pub slug: String,
-    pub description: Option<String>,
-}
-
 /// A single collection in the OGC API
 #[derive(Serialize, Deserialize, ToSchema, Debug, Clone)]
 #[non_exhaustive]
@@ -37,7 +30,7 @@ impl Collection {
         id: String,
         title: String,
         description: Option<String>,
-        collections_url: String,
+        collections_url: &str,
     ) -> Self {
         let links = vec![
             Link::new(format!("{}/{}", collections_url, id), SELF).mediatype(MediaType::Json),
@@ -51,8 +44,5 @@ impl Collection {
             description,
             links,
         }
-    }
-    pub fn from_collection_row(row: CollectionRow, collections_url: String) -> Self {
-        Collection::new(row.slug, row.title, row.description, collections_url)
     }
 }

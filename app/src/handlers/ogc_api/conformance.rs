@@ -1,5 +1,5 @@
 use actix_web::{get, web};
-use ogc::types::common::{ConformanceDeclaration, conformance_classes};
+use ogc::{ConformanceDeclaration, conformance_classes};
 use std::sync::LazyLock;
 
 static CONFORMANCE_DECLARATION: LazyLock<ConformanceDeclaration> = LazyLock::new(|| {

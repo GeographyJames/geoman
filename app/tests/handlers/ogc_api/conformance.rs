@@ -1,5 +1,3 @@
-use ogc::types::common::ConformanceDeclaration;
-
 use crate::common::{
     TestApp,
     helpers::{assert_ok, handle_json_response},
@@ -16,7 +14,7 @@ async fn get_conformance_declaration_works() {
 
     assert_ok(&response);
 
-    let _conformance: ConformanceDeclaration = handle_json_response(response)
+    let _conformance: ogc::ConformanceDeclaration = handle_json_response(response)
         .await
         .expect("failed to retrieve conformance");
 }

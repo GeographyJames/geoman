@@ -10,3 +10,5 @@ mod poject_feature;
 pub use poject_feature::ProjectFeature;
 mod traits;
 pub use traits::IntoOGCFeature;
+mod collection;
+pub use collection::*;

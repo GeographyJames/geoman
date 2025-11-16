@@ -1,7 +1,7 @@
 use app::{URLS, enums::ProjectIdentifier};
 
 use domain::{FeatureId, Slug};
-use ogc::types::features::Query;
+use ogc::features::Query;
 use reqwest::Response;
 
 use crate::common::{constants::REQUEST_FAILED, services::HttpClient};
