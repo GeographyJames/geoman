@@ -20,12 +20,13 @@ impl SelectOne for ProjectFeature {
         sqlx::query_scalar!(
             r#"
             SELECT jsonb_build_object(
-                'id', id,
-                'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
-                'properties',  properties || jsonb_build_object('name', name, 'is_primary', is_primary) 
+                'id', f.id,
+                'geometry', ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb,
+                'properties',  f.properties || jsonb_build_object('name', f.name, 'is_primary', f.is_primary) 
             ) as "feature!: Json<ProjectFeature>"
-            FROM app.project_features
-            WHERE id = $1
+            FROM app.project_features f
+            JOIN app.feature_objects fo ON fo.project_feature_id = f.id
+            WHERE f.id = $1
             "#,
             id
         )
@@ -61,12 +62,13 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             r#"
             SELECT jsonb_build_object(
             'id', f.id,
-            'geometry', ST_AsGeoJSON(ST_Transform(f.geom, 4326))::jsonb,
+            'geometry', ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb,
             'properties', f.properties ||  jsonb_build_object('name', f.name, 'is_primary', f.is_primary)
         )
             as "feature!: Json<ProjectFeature>"
                 FROM app.project_features f
                 JOIN app.collections c ON c.id = f.collection_id
+                JOIN app.feature_objects fo ON fo.project_feature_id = f.id
                 WHERE c.slug = $1 AND status = 'ACTIVE'
                 ORDER BY f.id
                 LIMIT $2

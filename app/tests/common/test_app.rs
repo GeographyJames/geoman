@@ -195,15 +195,24 @@ impl TestApp {
         properties: Option<P>,
     ) -> i32 {
         let record = sqlx::query!(
-            "INSERT INTO app.project_features (
-                project_id,
-                collection_id,
-                name,
-                geom,
-                added_by,
-                last_updated_by,
-                properties
-            ) VALUES ($1, $2, $3, ST_GeomFromEWKT($4), $5, $5, $6) RETURNING id",
+            "WITH inserted_feature AS (
+                INSERT INTO app.project_features (
+                    project_id,
+                    collection_id,
+                    name,
+                    added_by,
+                    last_updated_by,
+                    properties
+                ) 
+                VALUES ($1, $2, $3, $5, $5, $6) RETURNING id
+             )
+            INSERT INTO app.feature_objects (
+                project_feature_id,
+                geom
+                )
+            SELECT id, ST_GeomFromEWKT($4)
+            FROM inserted_feature
+            RETURNING project_feature_id",
             project_id.0,
             collection_id.0,
             name,
@@ -214,7 +223,7 @@ impl TestApp {
         .fetch_one(&self.db_pool)
         .await
         .expect("Failed to save feature in database");
-        record.id
+        record.project_feature_id
     }
 
     pub async fn generate_feature_id<P: Serialize>(

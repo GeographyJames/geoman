@@ -44,7 +44,7 @@ pub async fn get_features(
         "{}{}/collections/{}",
         base_url, URLS.ogc_api.base, &collection
     );
-    match collection.as_ref() {
+    let response = match collection.as_ref() {
         Collection::Projects => {
             let projects = repo.select_all_streaming::<Project>();
             let bytes = ogc_feature_collection_byte_stream(
@@ -52,7 +52,7 @@ pub async fn get_features(
                 collection_url,
                 collection.to_string(),
             )?;
-            Ok(HttpResponse::Ok().content_type(GEOJSON).streaming(bytes))
+            HttpResponse::Ok().content_type(GEOJSON).streaming(bytes)
         }
         Collection::Other(_) => {
             let features =
@@ -62,9 +62,10 @@ pub async fn get_features(
                 collection_url,
                 collection.to_string(),
             )?;
-            Ok(HttpResponse::Ok().content_type(GEOJSON).streaming(bytes))
+            HttpResponse::Ok().content_type(GEOJSON).streaming(bytes)
         }
-    }
+    };
+    Ok(response)
 }
 
 /// A single feature

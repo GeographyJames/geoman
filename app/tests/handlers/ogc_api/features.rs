@@ -78,8 +78,8 @@ async fn get_features_works_with_limit() {
         .await
         .expect("Failed to retrieve feature collection");
     assert_eq!(feature_collection.features.len(), limit);
-    for ft in feature_collection.features {
-        check_feature::<Properties>(&ft);
+    for feature in feature_collection.features {
+        check_feature::<Properties>(&feature);
     }
 }
 
