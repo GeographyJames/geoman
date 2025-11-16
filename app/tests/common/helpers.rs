@@ -1,3 +1,4 @@
+use domain::ProjectFeature;
 use ogc::types::Feature;
 use reqwest::Response;
 use serde::de::DeserializeOwned;
@@ -62,23 +63,9 @@ pub async fn handle_json_response<T: DeserializeOwned>(
     ))
 }
 
-pub fn check_feature<P: DeserializeOwned>(feature: &Feature) {
-    // Verify the feature has properties
-    let mut properties = feature.properties.clone();
-
-    // Verify properties has string field 'name'
-    let name = properties
-        .remove("name")
-        .expect("properties has no name field");
-    assert!(name.is_string(), "name field is not string");
-
-    // Verify properties has a boolean field 'is_primary'
-    let is_primary = properties
-        .remove("is_primary")
-        .expect("properties has no is_primary field");
-    assert!(is_primary.is_boolean(), "is_primary is not a boolean");
-
-    // Verify properties remaingin fields match type P
-    let _properties_struct: P = serde_json::from_value(serde_json::Value::Object(properties))
-        .expect("failed to deserialize properties to properties struct");
+pub fn check_ogc_feature<P: DeserializeOwned>(ogc_feature: Feature) {
+    let project_feature = ProjectFeature::try_from(ogc_feature)
+        .expect("failed to convert ogc featuer to project feature");
+    let _props: P = serde_json::from_value(serde_json::Value::Object(project_feature.properties))
+        .expect("failed to deserialise feature properties to properties struct");
 }

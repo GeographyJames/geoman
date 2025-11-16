@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::common::{
     TestApp,
-    helpers::{assert_ok, assert_status, check_feature, handle_json_response},
+    helpers::{assert_ok, assert_status, check_ogc_feature, handle_json_response},
 };
 
 #[derive(Serialize, Deserialize)]
@@ -46,8 +46,8 @@ async fn get_features_works() {
         .expect("failed to retrieve feature collection");
 
     assert_eq!(feature_collection.features.len(), 1);
-    let feature = feature_collection.features.iter().next().unwrap();
-    check_feature::<Properties>(feature);
+    let ogc_feature = feature_collection.features.into_iter().next().unwrap();
+    check_ogc_feature::<Properties>(ogc_feature);
 }
 
 #[actix_web::test]
@@ -78,8 +78,8 @@ async fn get_features_works_with_limit() {
         .await
         .expect("Failed to retrieve feature collection");
     assert_eq!(feature_collection.features.len(), limit);
-    for feature in feature_collection.features {
-        check_feature::<Properties>(&feature);
+    for ogc_feature in feature_collection.features {
+        check_ogc_feature::<Properties>(ogc_feature);
     }
 }
 
@@ -103,10 +103,10 @@ async fn get_feature_works() {
 
     assert_ok(&response);
 
-    let feature: Feature = handle_json_response(response)
+    let ogc_feature: Feature = handle_json_response(response)
         .await
         .expect("failed to retrieve feature");
-    check_feature::<Properties>(&feature);
+    check_ogc_feature::<Properties>(ogc_feature);
 }
 
 #[actix_web::test]

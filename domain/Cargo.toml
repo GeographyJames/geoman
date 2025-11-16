@@ -11,3 +11,4 @@ slug = "0.1"
 geojson = { workspace = true }
 serde_json = { workspace = true }
 ogc = { path = "../ogc" }
+anyhow = { workspace = true }
