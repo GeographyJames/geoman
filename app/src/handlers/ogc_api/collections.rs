@@ -1,9 +1,6 @@
 use actix_web::{HttpRequest, get, web};
-use anyhow::Context;
 
-use crate::{
-    URLS, constants::DB_QUERY_FAIL, errors::ApiError, helpers::get_base_url, postgres::PostgresRepo,
-};
+use crate::{URLS, errors::ApiError, helpers::get_base_url, postgres::PostgresRepo};
 use ogc::types::common::{Collection, CollectionRow, Collections};
 
 /// The feature collections in the dataset.
@@ -49,7 +46,7 @@ pub async fn get_collections(
     let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
 
-    let collection_rows: Vec<CollectionRow> = repo.select_all().await.context(DB_QUERY_FAIL)?;
+    let collection_rows: Vec<CollectionRow> = repo.select_all().await?;
     let collections = Collections::from_collection_rows(collection_rows, &collections_url)
         .add_collection(Collection::new(
             "projects".to_string(),
@@ -113,9 +110,10 @@ pub async fn get_collection(
     // Fetch collection from database
     let collection_row = repo
         .select_one::<CollectionRow>(&slug)
-        .await
-        .context(DB_QUERY_FAIL)?
-        .ok_or_else(|| ApiError::NotFound(format!("collection: {}", slug)))?;
+        .await?
+        .ok_or_else(|| ApiError::CollectionNotFound {
+            collection_slug: slug.into_inner(),
+        })?;
 
     // Map database row to OGC Collection with links
     let collection = Collection::from_collection_row(collection_row, collections_url);

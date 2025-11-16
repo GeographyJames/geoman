@@ -41,8 +41,17 @@ impl Feature {
         self
     }
 
+    pub fn append_properties(mut self, properties: &mut Map<String, Value>) -> Self {
+        self.properties.append(properties);
+        self
+    }
+
     pub fn set_geometry(mut self, geometry: geojson::Geometry) -> Self {
         self.geometry = Some(geometry);
+        self
+    }
+    pub fn insert_property(mut self, key: String, value: serde_json::Value) -> Self {
+        self.properties.insert(key, value);
         self
     }
 }

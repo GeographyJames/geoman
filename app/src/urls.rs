@@ -30,6 +30,7 @@ pub struct Ogcapi {
     pub base: String,
     pub conformance_declaration: String,
     pub collections: String,
+    pub project: String,
 }
 
 fn initialise_urls() -> Result<Urls, anyhow::Error> {

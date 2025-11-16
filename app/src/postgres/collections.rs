@@ -1,9 +1,12 @@
 use ogc::types::common::CollectionRow;
 
-use crate::postgres::traits::{SelectAll, SelectOne};
+use crate::{
+    errors::RepositoryError,
+    postgres::traits::{SelectAll, SelectOne},
+};
 
 impl SelectAll for CollectionRow {
-    async fn select_all<'e, E>(executor: E) -> Result<Vec<Self>, sqlx::Error>
+    async fn select_all<'e, E>(executor: E) -> Result<Vec<Self>, RepositoryError>
     where
         E: sqlx::PgExecutor<'e>,
     {
@@ -13,6 +16,7 @@ impl SelectAll for CollectionRow {
         )
         .fetch_all(executor)
         .await
+        .map_err(RepositoryError::from)
     }
 }
 
@@ -21,7 +25,7 @@ impl SelectOne for CollectionRow {
     async fn select_one<'a, 'e, E>(
         executor: E,
         slug: Self::Id<'a>,
-    ) -> Result<Option<Self>, sqlx::Error>
+    ) -> Result<Option<Self>, RepositoryError>
     where
         E: sqlx::PgExecutor<'e>,
     {
@@ -32,5 +36,6 @@ impl SelectOne for CollectionRow {
         )
         .fetch_optional(executor)
         .await
+        .map_err(RepositoryError::from)
     }
 }

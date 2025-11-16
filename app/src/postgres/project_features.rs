@@ -1,29 +1,73 @@
 use domain::ProjectFeature;
 use futures::{Stream, StreamExt};
+use geojson::Geometry;
 use ogc::types::features::Query;
+use serde::Deserialize;
+use serde_json::Value;
 use sqlx::types::Json;
 
-use crate::postgres::{
-    PoolWrapper,
-    traits::{SelectAllWithParamsStreaming, SelectOne},
+use crate::{
+    errors::RepositoryError,
+    postgres::{
+        PoolWrapper,
+        traits::{SelectAllWithParamsStreaming, SelectOne},
+    },
 };
+
+#[derive(Deserialize)]
+struct ProjectFeatureRow {
+    pub id: i32,
+    pub properties: serde_json::Value,
+    pub name: String,
+    pub geometry: Json<geojson::Geometry>,
+    pub is_primary: bool,
+}
+
+impl TryInto<ProjectFeature> for ProjectFeatureRow {
+    type Error = RepositoryError;
+    fn try_into(self) -> Result<ProjectFeature, RepositoryError> {
+        let Self {
+            id,
+            properties,
+            name,
+            geometry,
+            is_primary,
+        } = self;
+        let properties = match properties {
+            Value::Object(map) => map,
+            _ => {
+                return Err(RepositoryError::UnexpectedError(anyhow::anyhow!(
+                    "invalid feature properties"
+                )));
+            }
+        };
+        Ok(ProjectFeature {
+            id,
+            properties,
+            name,
+            geometry: geometry.0,
+            is_primary,
+        })
+    }
+}
 
 impl SelectOne for ProjectFeature {
     type Id<'a> = i32;
     async fn select_one<'a, 'e, E>(
         executor: E,
         id: Self::Id<'a>,
-    ) -> Result<Option<Self>, sqlx::Error>
+    ) -> Result<Option<Self>, RepositoryError>
     where
         E: sqlx::PgExecutor<'e>,
     {
-        sqlx::query_scalar!(
+        sqlx::query_as!(
+            ProjectFeatureRow,
             r#"
-            SELECT jsonb_build_object(
-                'id', f.id,
-                'geometry', ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb,
-                'properties',  f.properties || jsonb_build_object('name', f.name, 'is_primary', f.is_primary) 
-            ) as "feature!: Json<ProjectFeature>"
+            SELECT f.id,
+                f.name,
+                f.is_primary,
+                ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as "geometry!: Json<Geometry>",
+                f.properties
             FROM app.project_features f
             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
             WHERE f.id = $1
@@ -31,7 +75,9 @@ impl SelectOne for ProjectFeature {
             id
         )
         .fetch_optional(executor)
-        .await.map(|opt|opt.map(|json|json.0))
+        .await?
+        .map(|row| row.try_into())
+        .transpose()
     }
 }
 
@@ -57,13 +103,15 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
     fn select_all_with_params_streaming(
         executor: PoolWrapper,
         params: Self::Params,
-    ) -> impl Stream<Item = Result<Self, sqlx::Error>> + use<> {
+    ) -> impl Stream<Item = Result<Self, RepositoryError>> + use<> {
         sqlx::query_scalar!(
             r#"
             SELECT jsonb_build_object(
             'id', f.id,
             'geometry', ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb,
-            'properties', f.properties ||  jsonb_build_object('name', f.name, 'is_primary', f.is_primary)
+            'is_primary', f.is_primary,
+            'name', f.name,
+            'properties', f.properties 
         )
             as "feature!: Json<ProjectFeature>"
                 FROM app.project_features f
@@ -77,6 +125,6 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             params.limit.map(|l| l as i64)
         )
         .fetch(executor)
-        .map(|res| res.map(|json| json.0))
+        .map(|res| res.map_err(RepositoryError::from).map(|json| json.0))
     }
 }

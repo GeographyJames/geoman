@@ -1,9 +1,12 @@
 use futures::Stream;
 use sqlx::PgPool;
 
-use crate::postgres::{
-    PoolWrapper,
-    traits::{SelectAll, SelectAllStreaiming, SelectAllWithParamsStreaming, SelectOne},
+use crate::{
+    errors::RepositoryError,
+    postgres::{
+        PoolWrapper,
+        traits::{SelectAll, SelectAllStreaiming, SelectAllWithParamsStreaming, SelectOne},
+    },
 };
 /// Appplication repository
 pub struct PostgresRepo {
@@ -16,7 +19,7 @@ impl PostgresRepo {
     }
 
     #[tracing::instrument(skip(self))]
-    pub async fn select_all<T>(&self) -> Result<Vec<T>, sqlx::Error>
+    pub async fn select_all<T>(&self) -> Result<Vec<T>, RepositoryError>
     where
         T: SelectAll,
     {
@@ -24,7 +27,7 @@ impl PostgresRepo {
     }
 
     #[tracing::instrument(skip(self, id))]
-    pub async fn select_one<'a, T>(&self, id: T::Id<'a>) -> Result<Option<T>, sqlx::Error>
+    pub async fn select_one<'a, T>(&self, id: T::Id<'a>) -> Result<Option<T>, RepositoryError>
     where
         T: SelectOne,
     {
@@ -35,7 +38,7 @@ impl PostgresRepo {
     pub fn select_all_with_params_streaming<T>(
         &self,
         params: T::Params,
-    ) -> impl Stream<Item = Result<T, sqlx::Error>> + use<T>
+    ) -> impl Stream<Item = Result<T, RepositoryError>> + use<T>
     where
         T: SelectAllWithParamsStreaming,
     {
@@ -44,7 +47,7 @@ impl PostgresRepo {
     }
 
     #[tracing::instrument(skip(self))]
-    pub fn select_all_streaming<T>(&self) -> impl Stream<Item = Result<T, sqlx::Error>> + use<T>
+    pub fn select_all_streaming<T>(&self) -> impl Stream<Item = Result<T, RepositoryError>> + use<T>
     where
         T: SelectAllStreaiming,
     {

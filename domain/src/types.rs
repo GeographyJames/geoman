@@ -30,7 +30,7 @@ impl AsRef<str> for Slug {
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 pub struct ProjectId(pub i32);
 #[derive(Clone, Copy, Default)]
 pub struct UserId(pub i32);

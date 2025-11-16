@@ -30,6 +30,7 @@ pub fn ogc_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         scope(URLS.ogc_api.base.as_str())
             .service(ogc_api::get_landing_page)
+            .service(scope(&URLS.ogc_api.project).service(ogc_api::get_project_landing_page))
             .service(
                 scope(URLS.ogc_api.conformance_declaration.as_str())
                     .service(ogc_api::get_conformance_declaration),

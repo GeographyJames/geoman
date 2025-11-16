@@ -1,8 +1,7 @@
 use crate::{
     URLS,
-    constants::DB_QUERY_FAIL,
     enums::Collection,
-    errors::ApiError,
+    errors::{ApiError, RepositoryError},
     helpers::get_base_url,
     postgres::{PostgresRepo, project_features::SelectAllParams},
     streaming::ogc_feature_collection_byte_stream,
@@ -11,7 +10,6 @@ use actix_web::{
     HttpRequest, HttpResponse, get,
     web::{self},
 };
-use anyhow::Context;
 use domain::{IntoOGCFeature, Project, ProjectFeature};
 use futures::Stream;
 use ogc::types::{
@@ -92,13 +90,10 @@ pub async fn get_feature(
     let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
     let feature_row = repo
         .select_one::<ProjectFeature>(feature_id)
-        .await
-        .context(DB_QUERY_FAIL)?
-        .ok_or_else(|| {
-            ApiError::NotFound(format!(
-                "Feature with collection: {}, id: {},",
-                slug, feature_id
-            ))
+        .await?
+        .ok_or_else(|| ApiError::FeatureNotFound {
+            feature_id,
+            collection_slug: slug,
         })?;
     let feature = feature_row.into_ogc_feature(collection_url);
     Ok(web::Json(feature))
@@ -108,12 +103,13 @@ async fn project_features_stream(
     collection: String,
     query: Query,
     repo: web::Data<PostgresRepo>,
-) -> Result<impl Stream<Item = Result<ProjectFeature, sqlx::Error>>, ApiError> {
+) -> Result<impl Stream<Item = Result<ProjectFeature, RepositoryError>>, ApiError> {
     repo.select_one::<CollectionRow>(&collection)
-        .await
-        .context(DB_QUERY_FAIL)?
-        .ok_or_else(|| ApiError::NotFound(format!("Collection: '{}'", collection)))?;
-    let params = SelectAllParams::from_query(query, collection.clone());
+        .await?
+        .ok_or_else(|| ApiError::CollectionNotFound {
+            collection_slug: collection.clone(),
+        })?;
+    let params = SelectAllParams::from_query(query, collection);
     Ok(repo
         .as_ref()
         .select_all_with_params_streaming::<ProjectFeature>(params))

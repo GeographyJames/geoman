@@ -2,7 +2,6 @@ use crate::common::{
     TestApp,
     helpers::{assert_status, check_error_response},
 };
-use app::constants::DB_QUERY_FAIL;
 use domain::{FeatureId, Slug};
 use rstest::rstest;
 
@@ -50,7 +49,7 @@ async fn handler_returns_500_for_fatal_databas_error(
     let app = TestApp::spawn_with_db().await;
     app.drop_app_schema().await;
     let response = endpoint.call(&app).await;
-    check_error_response(response, 500, DB_QUERY_FAIL).await
+    check_error_response(response, 500, "database error").await
 }
 
 #[rstest]

@@ -1,4 +1,5 @@
-use app::URLS;
+use app::{URLS, enums::ProjectIdentifier};
+
 use domain::{FeatureId, Slug};
 use ogc::types::features::Query;
 use reqwest::Response;
@@ -10,6 +11,18 @@ pub struct OgcService {}
 impl OgcService {
     pub async fn get_landing_page(&self, client: &HttpClient) -> Response {
         let req = client.get(&URLS.ogc_api.base);
+        req.send().await.expect(REQUEST_FAILED)
+    }
+
+    pub async fn get_project_landing_page(
+        &self,
+        client: &HttpClient,
+        project: ProjectIdentifier,
+    ) -> Response {
+        let req = client.get(format!(
+            "{}{}/{}",
+            &URLS.ogc_api.base, &URLS.ogc_api.project, project
+        ));
         req.send().await.expect(REQUEST_FAILED)
     }
 

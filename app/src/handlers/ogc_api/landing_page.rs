@@ -1,5 +1,6 @@
-use crate::{AppState, URLS};
+use crate::{AppState, URLS, enums::ProjectIdentifier, errors::ApiError, postgres::PostgresRepo};
 use actix_web::{HttpRequest, get, web};
+use domain::Project;
 use ogc::types::common::{
     LandingPage, Link, Linked, MediaType,
     link_relations::{CONFORMANCE, DATA, ROOT, SELF, SERVICE_DESC},
@@ -24,7 +25,26 @@ pub async fn get_landing_page(
     req: HttpRequest,
     state: web::Data<AppState>,
 ) -> web::Json<LandingPage> {
-    // Build base URL from request
+    landing_page(&state, &req)
+}
+
+#[get("/{project_identifier}")]
+#[tracing::instrument(skip(repo, project, state))]
+pub async fn get_project_landing_page(
+    repo: web::Data<PostgresRepo>,
+    project: web::Path<ProjectIdentifier>,
+    state: web::Data<AppState>,
+    req: HttpRequest,
+) -> Result<web::Json<LandingPage>, ApiError> {
+    let _project = repo
+        .select_one::<Project>(&project)
+        .await?
+        .ok_or_else(|| ApiError::ProjectNotFound(project.into_inner()))?;
+    let landing_page = landing_page(&state, &req);
+    Ok(landing_page)
+}
+
+fn landing_page(app_state: &AppState, req: &HttpRequest) -> web::Json<LandingPage> {
     let connection_info = req.connection_info();
     let base_url = format!("{}://{}", connection_info.scheme(), connection_info.host(),);
     let ogc_api_base_url = format!("{}{}", base_url, URLS.ogc_api.base);
@@ -49,8 +69,7 @@ pub async fn get_landing_page(
         .title("API definition"),
     ];
 
-    let mut landing_page = state.landing_page.to_owned();
+    let mut landing_page = app_state.landing_page.to_owned();
     landing_page.links.insert_or_update(&links);
-
     web::Json(landing_page)
 }
