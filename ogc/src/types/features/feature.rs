@@ -54,6 +54,17 @@ impl Feature {
         self.properties.insert(key, value);
         self
     }
+
+    /// Removes the key from the feature properties and returns the value if the key
+    /// is in the feature properties. Fails is the value is not a string.
+    pub fn remove_string_property(
+        &mut self,
+        key: &str,
+    ) -> Option<Result<String, serde_json::Error>> {
+        self.properties
+            .remove(key)
+            .map(|name| serde_json::from_value(name))
+    }
 }
 
 #[cfg(test)]

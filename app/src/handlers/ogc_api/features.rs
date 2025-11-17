@@ -1,5 +1,6 @@
 use crate::{
-    URLS, enums,
+    URLS,
+    enums::{self, ProjectIdentifier},
     errors::{ApiError, RepositoryError},
     helpers::get_base_url,
     postgres::{PostgresRepo, project_features::SelectAllParams},
@@ -9,7 +10,7 @@ use actix_web::{
     HttpRequest, HttpResponse, get,
     web::{self},
 };
-use domain::{Collection, IntoOGCFeature, Project, ProjectFeature};
+use domain::{Collection, IntoOGCFeature, Project, ProjectFeature, ProjectId};
 use futures::Stream;
 use ogc::{conformance_classes::GEOJSON, features::Query};
 
@@ -40,7 +41,8 @@ pub async fn get_features(
     );
     let response = match collection.as_ref() {
         enums::Collection::Projects => {
-            let projects = repo.select_all_streaming::<Project>();
+            let projects =
+                repo.select_all_with_params_streaming::<Project>(query.into_inner().into());
             let bytes = ogc_feature_collection_byte_stream(
                 projects,
                 collection_url,
@@ -79,19 +81,32 @@ pub async fn get_features(
 pub async fn get_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-    path: web::Path<(String, i32)>,
+    path: web::Path<(enums::Collection, i32)>,
 ) -> Result<web::Json<ogc::Feature>, ApiError> {
-    let (slug, feature_id) = path.into_inner();
+    let (collection, feature_id) = path.into_inner();
     let base_url = get_base_url(&req);
-    let collection_url = format!("{}{}/collections/{}", base_url, URLS.ogc_api.base, slug);
-    let feature_row = repo
-        .select_one::<ProjectFeature>(feature_id)
-        .await?
-        .ok_or_else(|| ApiError::FeatureNotFound {
-            feature_id,
-            collection_slug: slug,
-        })?;
-    let feature = feature_row.into_ogc_feature(collection_url);
+    let collection_url = format!(
+        "{}{}/collections/{}",
+        base_url, URLS.ogc_api.base, collection
+    );
+    let feature = match collection {
+        enums::Collection::Projects => {
+            let identifier = ProjectIdentifier::Id(ProjectId(feature_id));
+            repo.select_one::<Project>(&identifier)
+                .await?
+                .ok_or_else(|| ApiError::ProjectNotFound(identifier))?
+                .into_ogc_feature(collection_url)
+        }
+        enums::Collection::Other(slug) => repo
+            .select_one::<ProjectFeature>(feature_id)
+            .await?
+            .ok_or_else(|| ApiError::FeatureNotFound {
+                feature_id,
+                collection_slug: slug,
+            })?
+            .into_ogc_feature(collection_url),
+    };
+
     Ok(web::Json(feature))
 }
 

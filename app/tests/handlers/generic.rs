@@ -10,6 +10,7 @@ enum Endpoint {
     GetCollections,
     GetFeature,
     GetFeatures,
+    GetProject,
 }
 
 impl Endpoint {
@@ -29,6 +30,15 @@ impl Endpoint {
             Endpoint::GetFeature => {
                 app.ogc_service
                     .get_feature(&app.api_client, &Slug::default(), FeatureId::default())
+                    .await
+            }
+            Endpoint::GetProject => {
+                app.ogc_service
+                    .get_feature(
+                        &app.api_client,
+                        &Slug::parse("projects".to_string()).unwrap(),
+                        FeatureId::default(),
+                    )
                     .await
             }
         }
@@ -55,7 +65,12 @@ async fn handler_returns_500_for_fatal_databas_error(
 #[rstest]
 #[actix_web::test]
 async fn handler_returns_404_for_not_found(
-    #[values(Endpoint::GetCollection, Endpoint::GetFeatures, Endpoint::GetFeature)]
+    #[values(
+        Endpoint::GetCollection,
+        Endpoint::GetFeatures,
+        Endpoint::GetFeature,
+        Endpoint::GetProject
+    )]
     endpoint: Endpoint,
 ) {
     let app = TestApp::spawn_with_db().await;

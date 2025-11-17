@@ -17,7 +17,7 @@ impl OgcService {
     pub async fn get_project_landing_page(
         &self,
         client: &HttpClient,
-        project: ProjectIdentifier,
+        project: &ProjectIdentifier,
     ) -> Response {
         let req = client.get(format!(
             "{}{}/{}",
@@ -37,7 +37,7 @@ impl OgcService {
     pub async fn get_project_conformance_declaration(
         &self,
         client: &HttpClient,
-        project: ProjectIdentifier,
+        project: &ProjectIdentifier,
     ) -> Response {
         let req = client.get(format!(
             "{}{}/{}{}",

@@ -13,6 +13,13 @@ use crate::{
     },
 };
 
+#[derive(Clone)]
+#[non_exhaustive]
+pub struct SelectAllParams {
+    pub limit: Option<usize>,
+    pub slug: String,
+}
+
 #[derive(Deserialize)]
 struct ProjectFeatureRow {
     pub id: i32,
@@ -78,13 +85,6 @@ impl SelectOne for ProjectFeature {
         .map(|row| row.try_into())
         .transpose()
     }
-}
-
-#[derive(Clone)]
-#[non_exhaustive]
-pub struct SelectAllParams {
-    pub limit: Option<usize>,
-    pub slug: String,
 }
 
 impl SelectAllParams {

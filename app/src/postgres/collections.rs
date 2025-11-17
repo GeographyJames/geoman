@@ -12,7 +12,7 @@ impl SelectAll for Collection {
     {
         sqlx::query_as!(
             Collection,
-            "SELECT id, title, slug, description FROM app.collections"
+            "SELECT id, title, slug, description FROM app.collections ORDER by id"
         )
         .fetch_all(executor)
         .await

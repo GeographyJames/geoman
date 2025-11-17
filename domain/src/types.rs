@@ -16,6 +16,9 @@ impl Slug {
             Err("value is not a slug".to_string())
         }
     }
+    pub fn into_inner(self) -> String {
+        self.0
+    }
 }
 
 impl Default for Slug {

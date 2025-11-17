@@ -1,28 +1,46 @@
 use domain::Project;
 use futures::{Stream, StreamExt};
+use ogc::features::Query;
 
 use crate::{
     enums::ProjectIdentifier,
     errors::RepositoryError,
     postgres::{
         PoolWrapper,
-        traits::{SelectAllStreaiming, SelectOne},
+        traits::{SelectAllWithParamsStreaming, SelectOne},
     },
 };
 
-impl SelectAllStreaiming for Project {
-    fn select_all_streaming(
+#[derive(Default)]
+pub struct SelectAllParams {
+    limit: Option<usize>,
+}
+
+impl From<Query> for SelectAllParams {
+    fn from(value: Query) -> Self {
+        let Query { limit, .. } = value;
+        Self { limit }
+    }
+}
+
+impl SelectAllWithParamsStreaming for Project {
+    type Params = SelectAllParams;
+    fn select_all_with_params_streaming(
         executor: PoolWrapper,
+        params: Self::Params,
     ) -> impl Stream<Item = Result<Self, RepositoryError>> + use<> {
-        sqlx::query_as!(Project, "SELECT id, name, slug FROM app.projects")
-            .fetch(executor)
-            .map(|res| res.map_err(RepositoryError::from))
+        sqlx::query_as!(
+            Project,
+            "SELECT id, name, slug FROM app.projects ORDER BY id LIMIT $1",
+            params.limit.map(|l| l as i64)
+        )
+        .fetch(executor)
+        .map(|res| res.map_err(RepositoryError::from))
     }
 }
 
 impl SelectOne for Project {
     type Id<'a> = &'a ProjectIdentifier;
-
     async fn select_one<'a, 'e, E>(
         executor: E,
         id: Self::Id<'a>,

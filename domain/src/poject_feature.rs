@@ -1,5 +1,5 @@
 use crate::IntoOGCFeature;
-use anyhow::anyhow;
+use anyhow::{Context, anyhow};
 use serde_json::{Map, Value, json};
 
 pub struct ProjectFeature {
@@ -29,18 +29,16 @@ impl IntoOGCFeature for ProjectFeature {
 
 impl TryFrom<ogc::Feature> for ProjectFeature {
     type Error = anyhow::Error;
-    fn try_from(value: ogc::Feature) -> Result<Self, Self::Error> {
+    fn try_from(mut ogc_feature: ogc::Feature) -> Result<Self, Self::Error> {
+        let name = ogc_feature
+            .remove_string_property("name")
+            .context("No 'name' field in feature properties")??;
         let ogc::Feature {
             id,
             mut properties,
             geometry,
             ..
-        } = value;
-        let name: String = serde_json::from_value(
-            properties
-                .remove("name")
-                .ok_or(anyhow!("No 'name' field in feature properties"))?,
-        )?;
+        } = ogc_feature;
         let is_primary: bool = serde_json::from_value(
             properties
                 .remove("is_primary")

@@ -25,7 +25,7 @@ async fn get_project_conformance_declaration_works() {
     let (_, _, project_id) = app.generate_ids().await;
     let response = app
         .ogc_service
-        .get_project_conformance_declaration(&app.api_client, ProjectIdentifier::Id(project_id))
+        .get_project_conformance_declaration(&app.api_client, &ProjectIdentifier::Id(project_id))
         .await;
     check_conformance_declaration_response(response).await;
 }
@@ -35,7 +35,7 @@ async fn get_project_conformance_declaration_returns_404_for_project_not_found()
     let app = TestApp::spawn_with_db().await;
     let response = app
         .ogc_service
-        .get_project_conformance_declaration(&app.api_client, ProjectIdentifier::Id(ProjectId(0)))
+        .get_project_conformance_declaration(&app.api_client, &ProjectIdentifier::Id(ProjectId(0)))
         .await;
     assert_status(&response, 404);
 }
