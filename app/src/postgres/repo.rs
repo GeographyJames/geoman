@@ -5,7 +5,7 @@ use crate::{
     errors::RepositoryError,
     postgres::{
         PoolWrapper,
-        traits::{SelectAll, SelectAllStreaiming, SelectAllWithParamsStreaming, SelectOne},
+        traits::{SelectAll, SelectAllWithParamsStreaming, SelectOne},
     },
 };
 /// Appplication repository
@@ -44,14 +44,5 @@ impl PostgresRepo {
     {
         let executor = PoolWrapper(self.db_pool.clone());
         T::select_all_with_params_streaming(executor, params)
-    }
-
-    #[tracing::instrument(skip(self))]
-    pub fn select_all_streaming<T>(&self) -> impl Stream<Item = Result<T, RepositoryError>> + use<T>
-    where
-        T: SelectAllStreaiming,
-    {
-        let executor = PoolWrapper(self.db_pool.clone());
-        T::select_all_streaming(executor)
     }
 }

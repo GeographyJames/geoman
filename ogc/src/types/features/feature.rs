@@ -61,9 +61,7 @@ impl Feature {
         &mut self,
         key: &str,
     ) -> Option<Result<String, serde_json::Error>> {
-        self.properties
-            .remove(key)
-            .map(|name| serde_json::from_value(name))
+        self.properties.remove(key).map(serde_json::from_value)
     }
 }
 

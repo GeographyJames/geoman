@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, title, slug, description FROM app.collections",
+  "query": "SELECT id, name, slug FROM app.projects ORDER BY id LIMIT $1",
   "describe": {
     "columns": [
       {
@@ -10,29 +10,25 @@
       },
       {
         "ordinal": 1,
-        "name": "title",
+        "name": "name",
         "type_info": "Text"
       },
       {
         "ordinal": 2,
         "name": "slug",
         "type_info": "Text"
-      },
-      {
-        "ordinal": 3,
-        "name": "description",
-        "type_info": "Text"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Int8"
+      ]
     },
     "nullable": [
       false,
       false,
-      false,
-      true
+      false
     ]
   },
-  "hash": "dc45ef61120f9da4db59e01e6430d655379e7961a2465750951aad210463576d"
+  "hash": "e70177e7de0d82c474f957e1c65ee90d468d0a90830868c46b9221f238be4537"
 }
