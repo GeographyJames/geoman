@@ -1,8 +1,8 @@
-use domain::Collection;
+use domain::{Collection, ProjectId};
 
 use crate::{
     errors::RepositoryError,
-    postgres::traits::{SelectAll, SelectOne},
+    postgres::traits::{SelectAll, SelectAllWithParams, SelectOne},
 };
 
 impl SelectAll for Collection {
@@ -12,7 +12,7 @@ impl SelectAll for Collection {
     {
         sqlx::query_as!(
             Collection,
-            "SELECT id, title, slug, description FROM app.collections ORDER by id"
+            "SELECT id, title, slug, description FROM app.collections ORDER BY id"
         )
         .fetch_all(executor)
         .await
@@ -35,6 +35,38 @@ impl SelectOne for Collection {
             slug
         )
         .fetch_optional(executor)
+        .await
+        .map_err(RepositoryError::from)
+    }
+}
+
+pub struct SelectAllParams {
+    pub project_id: ProjectId,
+}
+
+impl SelectAllWithParams for Collection {
+    type Params = SelectAllParams;
+    async fn select_all_with_params<'e, E>(
+        executor: E,
+        params: Self::Params,
+    ) -> Result<Vec<Self>, RepositoryError>
+    where
+        E: sqlx::PgExecutor<'e>,
+    {
+        sqlx::query_as!(
+            Collection,
+            "  SELECT id, title, slug, description
+  FROM app.collections c
+  WHERE EXISTS (
+      SELECT 1
+      FROM app.project_features f
+      WHERE f.collection_id = c.id 
+      AND f.project_id =  $1
+  )
+  ORDER BY id",
+            params.project_id.0
+        )
+        .fetch_all(executor)
         .await
         .map_err(RepositoryError::from)
     }

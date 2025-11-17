@@ -1,4 +1,7 @@
-use crate::{AppState, URLS, enums::ProjectIdentifier, errors::ApiError, postgres::PostgresRepo};
+use crate::{
+    AppState, URLS, enums::ProjectIdentifier, errors::ApiError, helpers::get_base_url,
+    postgres::PostgresRepo,
+};
 use actix_web::{HttpRequest, get, web};
 use domain::Project;
 use ogc::{
@@ -25,7 +28,10 @@ pub async fn get_landing_page(
     req: HttpRequest,
     state: web::Data<AppState>,
 ) -> web::Json<LandingPage> {
-    landing_page(&state, &req)
+    let base_url = get_base_url(&req);
+    let api_url = format!("{}{}", base_url, URLS.ogc_api.base);
+
+    landing_page(&state, &api_url, &base_url)
 }
 
 #[get("")]
@@ -39,28 +45,27 @@ pub async fn get_project_landing_page(
     let _project = repo
         .select_one::<Project>(&project)
         .await?
-        .ok_or(ApiError::ProjectNotFound(project.into_inner()))?;
-    let landing_page = landing_page(&state, &req);
+        .ok_or(ApiError::ProjectNotFound(project.clone()))?;
+    let base_url = get_base_url(&req);
+    let api_url = format!(
+        "{}{}{}/{}",
+        base_url, URLS.ogc_api.base, URLS.ogc_api.project, &project
+    );
+    let landing_page = landing_page(&state, &api_url, &base_url);
     Ok(landing_page)
 }
 
-fn landing_page(app_state: &AppState, req: &HttpRequest) -> web::Json<LandingPage> {
-    let connection_info = req.connection_info();
-    let base_url = format!("{}://{}", connection_info.scheme(), connection_info.host(),);
-    let ogc_api_base_url = format!("{}{}", base_url, URLS.ogc_api.base);
+fn landing_page(app_state: &AppState, api_url: &str, base_url: &str) -> web::Json<LandingPage> {
     let links = [
-        Link::new(&ogc_api_base_url, SELF).mediatype(MediaType::Json),
-        Link::new(&ogc_api_base_url, ROOT).mediatype(MediaType::Json),
+        Link::new(&api_url, SELF).mediatype(MediaType::Json),
+        Link::new(&api_url, ROOT).mediatype(MediaType::Json),
         Link::new(
-            format!(
-                "{}{}",
-                ogc_api_base_url, &URLS.ogc_api.conformance_declaration
-            ),
+            format!("{}{}", api_url, &URLS.ogc_api.conformance_declaration),
             CONFORMANCE,
         )
         .mediatype(MediaType::Json)
         .title("Conformance declaration"),
-        Link::new(format!("{}/collections", ogc_api_base_url), DATA).mediatype(MediaType::Json),
+        Link::new(format!("{}/collections", api_url), DATA).mediatype(MediaType::Json),
         Link::new(
             format!("{}{}{}", base_url, URLS.docs.base, URLS.docs.api),
             SERVICE_DESC,

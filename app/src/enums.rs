@@ -1,4 +1,4 @@
-use domain::ProjectId;
+use domain::{ProjectId, Slug};
 use serde::{Deserialize, Deserializer};
 use strum::EnumString;
 
@@ -24,6 +24,14 @@ pub enum Collection {
 pub enum ProjectIdentifier {
     Id(ProjectId),
     Slug(String),
+}
+
+impl TryInto<Slug> for Collection {
+    type Error = String;
+
+    fn try_into(self) -> Result<Slug, Self::Error> {
+        Slug::parse(self.to_string())
+    }
 }
 
 impl<'de> Deserialize<'de> for ProjectIdentifier {

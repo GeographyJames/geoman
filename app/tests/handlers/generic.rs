@@ -2,7 +2,7 @@ use crate::common::{
     TestApp,
     helpers::{assert_status, check_error_response},
 };
-use app::enums::ProjectIdentifier;
+use app::enums::{Collection, ProjectIdentifier};
 use domain::{FeatureId, ProjectId, Slug};
 use rstest::rstest;
 
@@ -15,6 +15,7 @@ enum Endpoint {
     GetProjects,
     GetProjectLandingPage,
     GetProjectConformanceDeclaration,
+    GetProjectCollections,
 }
 
 impl Endpoint {
@@ -40,7 +41,7 @@ impl Endpoint {
                 app.ogc_service
                     .get_feature(
                         &app.api_client,
-                        &Slug::parse("projects".to_string()).unwrap(),
+                        &Collection::Projects.try_into().unwrap(),
                         FeatureId::default(),
                     )
                     .await
@@ -57,7 +58,7 @@ impl Endpoint {
                 app.ogc_service
                     .get_project_conformance_declaration(
                         &app.api_client,
-                        &ProjectIdentifier::Id(ProjectId(0)),
+                        &ProjectIdentifier::Id(ProjectId::default()),
                     )
                     .await
             }
@@ -65,8 +66,16 @@ impl Endpoint {
                 app.ogc_service
                     .get_features(
                         &app.api_client,
-                        &Slug::parse("projects".to_string()).unwrap(),
+                        &Collection::Projects.try_into().unwrap(),
                         None,
+                    )
+                    .await
+            }
+            Endpoint::GetProjectCollections => {
+                app.ogc_service
+                    .get_project_collections(
+                        &app.api_client,
+                        &ProjectIdentifier::Id(ProjectId::default()),
                     )
                     .await
             }
@@ -85,7 +94,8 @@ async fn handler_returns_500_for_fatal_database_error(
         Endpoint::GetProject,
         Endpoint::GetProjects,
         Endpoint::GetProjectConformanceDeclaration,
-        Endpoint::GetProjectLandingPage
+        Endpoint::GetProjectLandingPage,
+        Endpoint::GetProjectCollections
     )]
     endpoint: Endpoint,
 ) {

@@ -1,4 +1,5 @@
-use domain::{FeatureId, Project, Slug};
+use app::enums::Collection;
+use domain::{FeatureId, Project};
 
 use crate::common::{
     TestApp,
@@ -13,7 +14,7 @@ async fn get_projects_works() {
         .ogc_service
         .get_features(
             &app.api_client,
-            &Slug::parse("projects".to_string()).unwrap(),
+            &Collection::Projects.try_into().unwrap(),
             None,
         )
         .await;
@@ -36,7 +37,7 @@ async fn get_project_works() {
         .ogc_service
         .get_feature(
             &app.api_client,
-            &Slug::parse("projects".to_string()).unwrap(),
+            &Collection::Projects.try_into().unwrap(),
             FeatureId(project_id.0),
         )
         .await;
@@ -64,7 +65,7 @@ async fn get_projects_works_with_limit() {
         .ogc_service
         .get_features(
             &app.api_client,
-            &Slug::parse("projects".to_string()).unwrap(),
+            &Collection::Projects.try_into().unwrap(),
             Some(&params),
         )
         .await;

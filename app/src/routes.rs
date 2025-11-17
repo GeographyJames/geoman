@@ -52,6 +52,7 @@ pub fn project_ogc_routes(cfg: &mut web::ServiceConfig) {
             .service(
                 scope(&URLS.ogc_api.conformance_declaration)
                     .service(ogc_api::get_project_conformance_declaration),
-            ),
+            )
+            .service(scope(&URLS.ogc_api.collections).service(ogc_api::get_project_collections)),
     );
 }

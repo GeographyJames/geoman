@@ -1,4 +1,5 @@
 use futures::Stream;
+use sqlx::PgExecutor;
 
 use crate::{errors::RepositoryError, postgres::pool_wrapper::PoolWrapper};
 
@@ -7,7 +8,7 @@ pub trait SelectAll {
     async fn select_all<'e, E>(executor: E) -> Result<Vec<Self>, RepositoryError>
     where
         Self: Sized,
-        E: sqlx::PgExecutor<'e>;
+        E: PgExecutor<'e>;
 }
 
 pub trait SelectOne {
@@ -20,7 +21,7 @@ pub trait SelectOne {
     ) -> Result<Option<Self>, RepositoryError>
     where
         Self: Sized,
-        E: sqlx::PgExecutor<'e>;
+        E: PgExecutor<'e>;
 }
 
 pub trait SelectAllWithParamsStreaming {
@@ -32,4 +33,15 @@ pub trait SelectAllWithParamsStreaming {
     ) -> impl Stream<Item = Result<Self, RepositoryError>> + use<Self>
     where
         Self: Sized;
+}
+
+pub trait SelectAllWithParams {
+    type Params;
+    async fn select_all_with_params<'e, E>(
+        executor: E,
+        params: Self::Params,
+    ) -> Result<Vec<Self>, RepositoryError>
+    where
+        Self: Sized,
+        E: PgExecutor<'e>;
 }

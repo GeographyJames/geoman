@@ -1,7 +1,13 @@
 use actix_web::{HttpRequest, get, web};
-use domain::Collection;
+use domain::{Collection, Project, ProjectId};
 
-use crate::{URLS, errors::ApiError, helpers::get_base_url, postgres::PostgresRepo};
+use crate::{
+    URLS,
+    enums::{self, ProjectIdentifier},
+    errors::ApiError,
+    helpers::get_base_url,
+    postgres::{PostgresRepo, collections::SelectAllParams},
+};
 
 /// The feature collections in the dataset.
 #[utoipa::path(
@@ -55,12 +61,41 @@ pub async fn get_collections(
     let ogc_collections = ogc::Collections::new(&collections_url)
         .append_collections(ogc_collections)
         .add_collection(ogc::Collection::new(
-            "projects".to_string(),
+            enums::Collection::Projects.to_string(),
             "Projects".to_string(),
             Some("The projects".to_string()),
             &collections_url,
         ));
 
+    Ok(web::Json(ogc_collections))
+}
+
+#[get("")]
+#[tracing::instrument(skip(repo, req, project))]
+pub async fn get_project_collections(
+    req: HttpRequest,
+    repo: web::Data<PostgresRepo>,
+    project: web::Path<ProjectIdentifier>,
+) -> Result<web::Json<ogc::Collections>, ApiError> {
+    let project_row = repo
+        .select_one::<Project>(&project)
+        .await?
+        .ok_or(ApiError::ProjectNotFound(project.clone()))?;
+    let params = SelectAllParams {
+        project_id: ProjectId(project_row.id),
+    };
+    let base_url = get_base_url(&req);
+    let collections_url = format!(
+        "{}{}/{}/collections",
+        base_url, URLS.ogc_api.project, project
+    );
+    let collections: Vec<Collection> = repo.select_all_with_params(params).await?;
+    let ogc_collections = collections
+        .into_iter()
+        .map(|c| c.into_ogc_collection(&collections_url))
+        .collect();
+    let ogc_collections =
+        ogc::Collections::new(&collections_url).append_collections(ogc_collections);
     Ok(web::Json(ogc_collections))
 }
 
