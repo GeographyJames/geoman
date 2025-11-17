@@ -64,7 +64,9 @@ async fn get_project_features_works_with_limit() {
     let (_, user_id, project_id) = app.generate_ids().await;
     let (collection_slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
     for _ in 0..10 {
-        let _f = app.generate_feature_id(collection_id, project_id, user_id, Some({}));
+        let _f = app
+            .generate_feature_id(collection_id, project_id, user_id, Some({}))
+            .await;
     }
     let limit = 5;
     let params = ogc::features::Query {

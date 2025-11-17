@@ -105,13 +105,18 @@ impl OgcService {
         params: Option<&Query>,
     ) -> Response {
         let endopint = format!(
-            "{}/{}{}/{}/items",
+            "{}{}/{}{}/{}/items",
+            URLS.ogc_api.base,
             URLS.ogc_api.project,
             project,
             URLS.ogc_api.collections,
             collection_slug.as_ref()
         );
-        self.get_request(&endopint, client).await
+        let mut req = client.get(endopint);
+        if let Some(query) = params {
+            req = req.query(query)
+        }
+        req.send().await.expect(REQUEST_FAILED)
     }
 
     pub async fn get_feature(
@@ -127,14 +132,7 @@ impl OgcService {
             collection_slug.as_ref(),
             id.0
         ));
-        req.send().await.expect(REQUEST_FAILED)
-    }
 
-    pub async fn get_request(&self, endpoint: &str, client: &HttpClient) -> Response {
-        client
-            .get(format!("{}{}", URLS.ogc_api.base, endpoint))
-            .send()
-            .await
-            .expect(REQUEST_FAILED)
+        req.send().await.expect(REQUEST_FAILED)
     }
 }
