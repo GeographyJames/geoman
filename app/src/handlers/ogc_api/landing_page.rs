@@ -35,7 +35,7 @@ pub async fn get_landing_page(
 }
 
 #[get("")]
-#[tracing::instrument(skip(repo, project, state))]
+#[tracing::instrument(skip(repo, project, state, req))]
 pub async fn get_project_landing_page(
     repo: web::Data<PostgresRepo>,
     project: web::Path<ProjectIdentifier>,

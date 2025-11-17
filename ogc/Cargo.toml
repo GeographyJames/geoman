@@ -10,3 +10,5 @@ chrono = { version = "0.4", features = ["serde"] }
 serde_json = { workspace = true }
 utoipa = { workspace = true }
 uuid = { workspace = true }
+ogcapi-types = "0.3"
+serde_with = "1.14"
