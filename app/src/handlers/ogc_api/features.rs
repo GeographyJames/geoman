@@ -90,7 +90,7 @@ pub async fn get_project_features(
     let mut features = project_features_stream(collection.clone(), params, repo).await?;
     // Check if there are any features
     let first_item = features.next().await;
-    if let None = first_item {
+    if first_item.is_none() {
         return Err(ApiError::CollectionNotFound {
             collection_slug: collection,
         });

@@ -57,8 +57,8 @@ pub async fn get_project_landing_page(
 
 fn landing_page(app_state: &AppState, api_url: &str, base_url: &str) -> web::Json<LandingPage> {
     let links = [
-        Link::new(&api_url, SELF).mediatype(MediaType::Json),
-        Link::new(&api_url, ROOT).mediatype(MediaType::Json),
+        Link::new(api_url, SELF).mediatype(MediaType::Json),
+        Link::new(api_url, ROOT).mediatype(MediaType::Json),
         Link::new(
             format!("{}{}", api_url, &URLS.ogc_api.conformance_declaration),
             CONFORMANCE,
