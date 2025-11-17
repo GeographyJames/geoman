@@ -2,7 +2,7 @@ use domain::{Collection, ProjectId};
 
 use crate::{
     errors::RepositoryError,
-    postgres::traits::{SelectAll, SelectAllWithParams, SelectOne},
+    postgres::traits::{SelectAll, SelectAllWithParams, SelectOne, SelectOneWithParams},
 };
 
 impl SelectAll for Collection {
@@ -32,6 +32,42 @@ impl SelectOne for Collection {
         sqlx::query_as!(
             Collection,
             "SELECT id, title, slug, description FROM app.collections WHERE slug = $1",
+            slug
+        )
+        .fetch_optional(executor)
+        .await
+        .map_err(RepositoryError::from)
+    }
+}
+
+pub struct SelectOneParams {
+    pub project_id: ProjectId,
+}
+
+impl SelectOneWithParams for Collection {
+    type Params = SelectOneParams;
+    type Id<'a> = &'a str;
+    async fn select_one_with_params<'a, 'e, E>(
+        executor: E,
+        slug: Self::Id<'a>,
+        params: Self::Params,
+    ) -> Result<Option<Self>, RepositoryError>
+    where
+        Self: Sized,
+        E: sqlx::PgExecutor<'e>,
+    {
+        sqlx::query_as!(
+            Collection,
+            "  SELECT id, title, slug, description
+  FROM app.collections c
+  WHERE EXISTS (
+      SELECT 1
+      FROM app.project_features f
+      WHERE f.collection_id = c.id 
+      AND f.project_id =  $1
+  )
+  AND slug = $2",
+            params.project_id.0,
             slug
         )
         .fetch_optional(executor)

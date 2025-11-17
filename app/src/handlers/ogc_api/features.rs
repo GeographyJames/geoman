@@ -67,7 +67,7 @@ pub async fn get_features(
     Ok(response)
 }
 
-#[get("/{collection_id}/items")]
+#[get("/{collectionId}/items")]
 #[tracing::instrument(skip(req, repo, path, query))]
 pub async fn get_project_features(
     req: HttpRequest,

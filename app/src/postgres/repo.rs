@@ -5,7 +5,10 @@ use crate::{
     errors::RepositoryError,
     postgres::{
         PoolWrapper,
-        traits::{SelectAll, SelectAllWithParams, SelectAllWithParamsStreaming, SelectOne},
+        traits::{
+            SelectAll, SelectAllWithParams, SelectAllWithParamsStreaming, SelectOne,
+            SelectOneWithParams,
+        },
     },
 };
 /// Appplication repository
@@ -55,5 +58,17 @@ impl PostgresRepo {
         T: SelectAllWithParams,
     {
         T::select_all_with_params(&self.db_pool, params).await
+    }
+
+    #[tracing::instrument(skip(self, params, id))]
+    pub async fn select_one_with_params<'a, T>(
+        &self,
+        id: T::Id<'a>,
+        params: T::Params,
+    ) -> Result<Option<T>, RepositoryError>
+    where
+        T: SelectOneWithParams,
+    {
+        T::select_one_with_params(&self.db_pool, id, params).await
     }
 }

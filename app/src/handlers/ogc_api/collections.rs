@@ -6,7 +6,10 @@ use crate::{
     enums::{self, ProjectIdentifier},
     errors::ApiError,
     helpers::get_base_url,
-    postgres::{PostgresRepo, collections::SelectAllParams},
+    postgres::{
+        PostgresRepo,
+        collections::{SelectAllParams, SelectOneParams},
+    },
 };
 
 /// The feature collections in the dataset.
@@ -152,6 +155,41 @@ pub async fn get_collection(
             collection_slug: slug.into_inner(),
         }
     })?;
+
+    // Map database row to OGC Collection with links
+    let ogc_collection = collection.into_ogc_collection(&collections_url);
+
+    Ok(web::Json(ogc_collection))
+}
+
+#[get("/{collectionId}")]
+#[tracing::instrument(skip(repo, req, path))]
+pub async fn get_project_collection(
+    req: HttpRequest,
+    path: web::Path<(ProjectIdentifier, String)>,
+    repo: web::Data<PostgresRepo>,
+) -> Result<web::Json<ogc::Collection>, ApiError> {
+    let (project, collection) = path.into_inner();
+    let project_row = repo
+        .select_one::<Project>(&project)
+        .await?
+        .ok_or_else(|| ApiError::ProjectNotFound(project.clone()))?;
+    let base_url = get_base_url(&req);
+    let collections_url = format!(
+        "{}{}{}/{}/collections",
+        base_url, URLS.ogc_api.base, URLS.ogc_api.project, project
+    );
+
+    // Fetch collection from database
+    let params = SelectOneParams {
+        project_id: ProjectId(project_row.id),
+    };
+    let collection = repo
+        .select_one_with_params::<Collection>(&collection, params)
+        .await?
+        .ok_or_else(|| ApiError::CollectionNotFound {
+            collection_slug: collection,
+        })?;
 
     // Map database row to OGC Collection with links
     let ogc_collection = collection.into_ogc_collection(&collections_url);

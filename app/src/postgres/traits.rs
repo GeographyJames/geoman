@@ -37,10 +37,24 @@ pub trait SelectAllWithParamsStreaming {
 
 pub trait SelectAllWithParams {
     type Params;
+
     async fn select_all_with_params<'e, E>(
         executor: E,
         params: Self::Params,
     ) -> Result<Vec<Self>, RepositoryError>
+    where
+        Self: Sized,
+        E: PgExecutor<'e>;
+}
+
+pub trait SelectOneWithParams {
+    type Params;
+    type Id<'a>;
+    async fn select_one_with_params<'a, 'e, E>(
+        executor: E,
+        id: Self::Id<'a>,
+        params: Self::Params,
+    ) -> Result<Option<Self>, RepositoryError>
     where
         Self: Sized,
         E: PgExecutor<'e>;

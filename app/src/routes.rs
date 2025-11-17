@@ -56,6 +56,7 @@ pub fn project_ogc_routes(cfg: &mut web::ServiceConfig) {
             .service(
                 scope(&URLS.ogc_api.collections)
                     .service(ogc_api::get_project_collections)
+                    .service(ogc_api::get_project_collection)
                     .service(ogc_api::get_project_features),
             ),
     );

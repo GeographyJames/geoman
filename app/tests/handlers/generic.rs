@@ -16,6 +16,7 @@ enum Endpoint {
     GetProjectLandingPage,
     GetProjectConformanceDeclaration,
     GetProjectCollections,
+    GetProjectCollection,
     GetProjectFeatures,
 }
 
@@ -90,6 +91,15 @@ impl Endpoint {
                     )
                     .await
             }
+            Endpoint::GetProjectCollection => {
+                app.ogc_service
+                    .get_project_collection(
+                        &app.api_client,
+                        &ProjectIdentifier::default(),
+                        &Slug::default(),
+                    )
+                    .await
+            }
         }
     }
 }
@@ -107,6 +117,7 @@ async fn handler_returns_500_for_fatal_database_error(
         Endpoint::GetProjectConformanceDeclaration,
         Endpoint::GetProjectLandingPage,
         Endpoint::GetProjectCollections,
+        Endpoint::GetProjectCollection,
         Endpoint::GetProjectFeatures
     )]
     endpoint: Endpoint,
@@ -128,6 +139,7 @@ async fn handler_returns_404_for_not_found(
         Endpoint::GetProjectLandingPage,
         Endpoint::GetProjectConformanceDeclaration,
         Endpoint::GetProjectCollections,
+        Endpoint::GetProjectCollection,
         Endpoint::GetProjectFeatures
     )]
     endpoint: Endpoint,

@@ -57,6 +57,18 @@ impl OgcService {
         req.send().await.expect(REQUEST_FAILED)
     }
 
+    pub async fn get_project_collections(
+        &self,
+        client: &HttpClient,
+        project: &ProjectIdentifier,
+    ) -> Response {
+        let req = client.get(format!(
+            "{}{}/{}{}",
+            &URLS.ogc_api.base, &URLS.ogc_api.project, project, &URLS.ogc_api.collections
+        ));
+        req.send().await.expect(REQUEST_FAILED)
+    }
+
     pub async fn get_collection(&self, client: &HttpClient, collection_slug: &Slug) -> Response {
         let req = client.get(format!(
             "{}{}/{}",
@@ -67,14 +79,19 @@ impl OgcService {
         req.send().await.expect(REQUEST_FAILED)
     }
 
-    pub async fn get_project_collections(
+    pub async fn get_project_collection(
         &self,
         client: &HttpClient,
         project: &ProjectIdentifier,
+        collection_slug: &Slug,
     ) -> Response {
         let req = client.get(format!(
-            "{}{}/{}{}",
-            &URLS.ogc_api.base, &URLS.ogc_api.project, project, &URLS.ogc_api.collections
+            "{}{}/{}{}/{}",
+            URLS.ogc_api.base,
+            &URLS.ogc_api.project,
+            project,
+            URLS.ogc_api.collections,
+            collection_slug.as_ref()
         ));
         req.send().await.expect(REQUEST_FAILED)
     }

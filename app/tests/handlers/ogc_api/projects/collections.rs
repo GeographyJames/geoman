@@ -1,6 +1,6 @@
 use crate::common::{
     TestApp,
-    helpers::{assert_ok, handle_json_response},
+    helpers::{assert_ok, assert_status, handle_json_response},
 };
 use app::enums::ProjectIdentifier;
 
@@ -40,4 +40,44 @@ async fn get_collections_only_returns_collectinos_that_contain_items_for_the_pro
         .await
         .expect("failed to extract ogc collections");
     assert!(ogc_collections.collections.is_empty())
+}
+
+#[actix_web::test]
+async fn get_project_collection_works() {
+    let app = TestApp::spawn_with_db().await;
+    let (_, user_id, project_id) = app.generate_ids().await;
+    let (slug, _) = app.generate_collection_slug_and_id(user_id).await;
+    let response = app
+        .ogc_service
+        .get_project_collection(&app.api_client, &project_id.into(), &slug)
+        .await;
+    assert_ok(&response);
+}
+
+#[actix_web::test]
+async fn get_project_collection_returns_404_for_project_not_found() {
+    let app = TestApp::spawn_with_db().await;
+    let (_, user_id, _) = app.generate_ids().await;
+    let (slug, _) = app.generate_collection_slug_and_id(user_id).await;
+    let response = app
+        .ogc_service
+        .get_project_collection(&app.api_client, &ProjectIdentifier::default(), &slug)
+        .await;
+    assert_status(&response, 404);
+}
+
+#[actix_web::test]
+async fn get_project_collection_returns_404_for_collection_with_no_features() {
+    let app = TestApp::spawn_with_db().await;
+    let (_, user_id, project_id) = app.generate_ids().await;
+    let another_project = app.generate_project_id(user_id).await;
+    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let _feature = app
+        .generate_feature_id(collection_id, another_project, user_id, Some({}))
+        .await;
+    let response = app
+        .ogc_service
+        .get_project_collection(&app.api_client, &project_id.into(), &slug)
+        .await;
+    assert_status(&response, 404);
 }
