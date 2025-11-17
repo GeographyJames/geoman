@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, title, slug, description FROM app.collections ORDER by id",
+  "query": "  SELECT id, title, slug, description\n  FROM app.collections c\n  WHERE EXISTS (\n      SELECT 1\n      FROM app.project_features f\n      WHERE f.collection_id = c.id \n      AND f.project_id =  $1\n  )\n  ORDER BY id",
   "describe": {
     "columns": [
       {
@@ -25,7 +25,9 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Int4"
+      ]
     },
     "nullable": [
       false,
@@ -34,5 +36,5 @@
       true
     ]
   },
-  "hash": "2221618bebeac8a3fa4ea88b283929a0245540b5c3325d765dfae62c736c66e9"
+  "hash": "e11a53739effc1c2579d094aebb3c435ee8f7b58a5dfb4ed9c91e782ef4424f3"
 }

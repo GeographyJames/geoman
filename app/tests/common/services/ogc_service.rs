@@ -97,6 +97,23 @@ impl OgcService {
         req.send().await.expect(REQUEST_FAILED)
     }
 
+    pub async fn get_project_features(
+        &self,
+        client: &HttpClient,
+        collection_slug: &Slug,
+        project: &ProjectIdentifier,
+        params: Option<&Query>,
+    ) -> Response {
+        let endopint = format!(
+            "{}/{}{}/{}/items",
+            URLS.ogc_api.project,
+            project,
+            URLS.ogc_api.collections,
+            collection_slug.as_ref()
+        );
+        self.get_request(&endopint, client).await
+    }
+
     pub async fn get_feature(
         &self,
         client: &HttpClient,
@@ -111,5 +128,13 @@ impl OgcService {
             id.0
         ));
         req.send().await.expect(REQUEST_FAILED)
+    }
+
+    pub async fn get_request(&self, endpoint: &str, client: &HttpClient) -> Response {
+        client
+            .get(format!("{}{}", URLS.ogc_api.base, endpoint))
+            .send()
+            .await
+            .expect(REQUEST_FAILED)
     }
 }

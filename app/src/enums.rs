@@ -26,6 +26,18 @@ pub enum ProjectIdentifier {
     Slug(String),
 }
 
+impl Default for ProjectIdentifier {
+    fn default() -> Self {
+        ProjectIdentifier::Id(ProjectId(0))
+    }
+}
+
+impl From<ProjectId> for ProjectIdentifier {
+    fn from(value: ProjectId) -> Self {
+        ProjectIdentifier::Id(value)
+    }
+}
+
 impl TryInto<Slug> for Collection {
     type Error = String;
 

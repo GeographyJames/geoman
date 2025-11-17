@@ -5,4 +5,4 @@ pub use conformance::{get_conformance_declaration, get_project_conformance_decla
 pub mod collections;
 pub use collections::{get_collection, get_collections, get_project_collections};
 pub mod features;
-pub use features::{get_feature, get_features};
+pub use features::{get_feature, get_features, get_project_features};

@@ -1,4 +1,4 @@
-use domain::ProjectFeature;
+use domain::{ProjectFeature, ProjectId};
 use futures::{Stream, StreamExt};
 use geojson::Geometry;
 use serde::Deserialize;
@@ -18,6 +18,7 @@ use crate::{
 pub struct SelectAllParams {
     pub limit: Option<usize>,
     pub slug: String,
+    pub project_id: Option<ProjectId>,
 }
 
 #[derive(Deserialize)]
@@ -41,11 +42,7 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
         } = self;
         let properties = match properties {
             Value::Object(map) => map,
-            _ => {
-                return Err(RepositoryError::UnexpectedError(anyhow::anyhow!(
-                    "invalid feature properties"
-                )));
-            }
+            _ => serde_json::Map::default(),
         };
         Ok(ProjectFeature {
             id,
@@ -92,6 +89,7 @@ impl SelectAllParams {
         SelectAllParams {
             limit: query.limit,
             slug,
+            project_id: None,
         }
     }
 }
@@ -103,9 +101,33 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
         executor: PoolWrapper,
         params: Self::Params,
     ) -> impl Stream<Item = Result<Self, RepositoryError>> + use<> {
-        sqlx::query_as!(
-            ProjectFeatureRow,
-            r#"
+        let query = match params.project_id {
+            Some(id) => sqlx::query_as!(
+                ProjectFeatureRow,
+                r#"
+            SELECT 
+                f.id,
+                ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as "geometry!: Json<Geometry>",
+                f.is_primary,
+                f.name,
+                f.properties 
+            FROM app.project_features f
+            JOIN app.collections c ON c.id = f.collection_id
+            JOIN app.feature_objects fo ON fo.project_feature_id = f.id
+            WHERE c.slug = $1
+            AND status = 'ACTIVE'
+            AND f.project_id = $2
+            ORDER BY f.id
+            LIMIT $3
+            "#,
+                params.slug,
+                id.0,
+                params.limit.map(|l| l as i64)
+            )
+            .fetch(executor),
+            None => sqlx::query_as!(
+                ProjectFeatureRow,
+                r#"
             SELECT 
                 f.id,
                 ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as "geometry!: Json<Geometry>",
@@ -119,10 +141,34 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             ORDER BY f.id
             LIMIT $2
             "#,
-            params.slug,
-            params.limit.map(|l| l as i64)
-        )
-        .fetch(executor)
-        .map(|res| res?.try_into())
+                params.slug,
+                params.limit.map(|l| l as i64)
+            )
+            .fetch(executor),
+        };
+
+        query.map(|res| res?.try_into())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use domain::ProjectFeature;
+    use serde_json::json;
+
+    use crate::postgres::project_features::ProjectFeatureRow;
+
+    #[test]
+    fn project_feature_row_converts_to_project_feature() {
+        let row = ProjectFeatureRow {
+            id: 0,
+            properties: json!("{}"),
+            name: uuid::Uuid::new_v4().to_string(),
+            geometry: sqlx::types::Json(geojson::Geometry::new(geojson::Value::Point(vec![
+                1., 1.,
+            ]))),
+            is_primary: true,
+        };
+        let _feature: ProjectFeature = row.try_into().expect("failed to convert row to feature");
     }
 }

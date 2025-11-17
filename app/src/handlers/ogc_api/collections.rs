@@ -146,8 +146,6 @@ pub async fn get_collection(
     let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
 
-    tracing::info!("\n\nhere");
-
     // Fetch collection from database
     let collection = repo.select_one::<Collection>(&slug).await?.ok_or_else(|| {
         ApiError::CollectionNotFound {

@@ -11,7 +11,7 @@ use actix_web::{
     web::{self},
 };
 use domain::{Collection, IntoOGCFeature, Project, ProjectFeature, ProjectId};
-use futures::Stream;
+use futures::{Stream, StreamExt, stream};
 use ogc::{conformance_classes::GEOJSON, features::Query};
 
 /// The features in the collection
@@ -26,8 +26,7 @@ use ogc::{conformance_classes::GEOJSON, features::Query};
         (status = 404, description = "Collection not found"))
 )]
 #[get("/{collectionId}/items")]
-
-// #[tracing::instrument(skip(repo, req, slug, query))]
+#[tracing::instrument(skip(repo, req, collection, query))]
 pub async fn get_features(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
@@ -54,8 +53,8 @@ pub async fn get_features(
             response_builder.streaming(bytes)
         }
         enums::Collection::Other(_) => {
-            let features =
-                project_features_stream(collection.to_string(), query.into_inner(), repo).await?;
+            let params = SelectAllParams::from_query(query.into_inner(), collection.to_string());
+            let features = project_features_stream(collection.to_string(), params, repo).await?;
             let bytes = ogc_feature_collection_byte_stream(
                 features,
                 collection_url,
@@ -66,6 +65,40 @@ pub async fn get_features(
         }
     };
     Ok(response)
+}
+
+#[get("/{collection_id}/items")]
+#[tracing::instrument(skip(req, repo, path, query))]
+pub async fn get_project_features(
+    req: HttpRequest,
+    repo: web::Data<PostgresRepo>,
+    path: web::Path<(ProjectIdentifier, String)>,
+    query: web::Query<Query>,
+) -> Result<HttpResponse, ApiError> {
+    let (project, collection) = path.into_inner();
+    let project_row = repo
+        .select_one::<Project>(&project)
+        .await?
+        .ok_or_else(|| ApiError::ProjectNotFound(project.clone()))?;
+    let base_url = get_base_url(&req);
+    let collection_url = format!(
+        "{}{}{}/{}/collections/{}",
+        base_url, URLS.ogc_api.base, URLS.ogc_api.project, project, collection
+    );
+    let mut params = SelectAllParams::from_query(query.into_inner(), collection.clone());
+    params.project_id = Some(ProjectId(project_row.id));
+    let mut features = project_features_stream(collection.clone(), params, repo).await?;
+    // Check if there are any features
+    let first_item = features.next().await;
+    if let None = first_item {
+        return Err(ApiError::CollectionNotFound {
+            collection_slug: collection,
+        });
+    }
+    let features = stream::iter(first_item.into_iter()).chain(features);
+
+    let bytes = ogc_feature_collection_byte_stream(features, collection_url, collection).await?;
+    Ok(HttpResponse::Ok().content_type(GEOJSON).streaming(bytes))
 }
 
 /// A single feature
@@ -116,15 +149,15 @@ pub async fn get_feature(
 
 async fn project_features_stream(
     collection: String,
-    query: Query,
+    params: SelectAllParams,
     repo: web::Data<PostgresRepo>,
 ) -> Result<impl Stream<Item = Result<ProjectFeature, RepositoryError>>, ApiError> {
     repo.select_one::<Collection>(&collection)
         .await?
         .ok_or_else(|| ApiError::CollectionNotFound {
-            collection_slug: collection.clone(),
+            collection_slug: collection,
         })?;
-    let params = SelectAllParams::from_query(query, collection);
+
     Ok(repo
         .as_ref()
         .select_all_with_params_streaming::<ProjectFeature>(params))

@@ -11,4 +11,4 @@ serde_json = { workspace = true }
 utoipa = { workspace = true }
 uuid = { workspace = true }
 ogcapi-types = "0.3"
-serde_with = "1.14"
+serde_with = "3.16"
