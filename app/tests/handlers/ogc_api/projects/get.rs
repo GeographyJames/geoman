@@ -1,5 +1,4 @@
 use domain::{FeatureId, Project, Slug};
-use utoipa::openapi::response;
 
 use crate::common::{
     TestApp,

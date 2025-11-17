@@ -39,6 +39,8 @@ pub async fn get_features(
         "{}{}/collections/{}",
         base_url, URLS.ogc_api.base, &collection
     );
+    let mut response_builder = HttpResponse::Ok();
+    response_builder.content_type(GEOJSON);
     let response = match collection.as_ref() {
         enums::Collection::Projects => {
             let projects =
@@ -47,8 +49,9 @@ pub async fn get_features(
                 projects,
                 collection_url,
                 collection.to_string(),
-            )?;
-            HttpResponse::Ok().content_type(GEOJSON).streaming(bytes)
+            )
+            .await?;
+            response_builder.streaming(bytes)
         }
         enums::Collection::Other(_) => {
             let features =
@@ -57,8 +60,9 @@ pub async fn get_features(
                 features,
                 collection_url,
                 collection.to_string(),
-            )?;
-            HttpResponse::Ok().content_type(GEOJSON).streaming(bytes)
+            )
+            .await?;
+            response_builder.streaming(bytes)
         }
     };
     Ok(response)

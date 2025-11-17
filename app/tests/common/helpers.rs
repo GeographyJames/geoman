@@ -68,3 +68,17 @@ pub fn check_ogc_feature<P: DeserializeOwned>(ogc_feature: ogc::Feature) {
     let _props: P = serde_json::from_value(serde_json::Value::Object(project_feature.properties))
         .expect("failed to deserialise feature properties to properties struct");
 }
+
+pub async fn check_conformance_declaration_response(response: Response) {
+    assert_ok(&response);
+    let _conformance: ogc::ConformanceDeclaration = handle_json_response(response)
+        .await
+        .expect("failed to retrieve conformance");
+}
+
+pub async fn check_landing_page_response(response: Response) {
+    assert_ok(&response);
+    let _landing_page: ogc::LandingPage = handle_json_response(response)
+        .await
+        .expect("failed to retrieve landing page");
+}
