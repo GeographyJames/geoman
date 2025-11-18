@@ -48,12 +48,12 @@ pub trait SelectAllWithParams {
 }
 
 pub trait SelectOneWithParams {
-    type Params;
+    type Params<'a>;
     type Id<'a>;
     async fn select_one_with_params<'a, 'e, E>(
         executor: E,
         id: Self::Id<'a>,
-        params: Self::Params,
+        params: Self::Params<'a>,
     ) -> Result<Option<Self>, RepositoryError>
     where
         Self: Sized,

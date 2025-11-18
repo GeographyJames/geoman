@@ -37,9 +37,8 @@ pub struct TestApp {
     db_settings: DatabaseSettings,
     pub db_pool: PgPool,
     pub api_client: HttpClient,
-    pub auth: ClerkAuthProvider,
+    pub _auth: ClerkAuthProvider,
     pub health_check_service: HttpService,
-    pub api_docs_service: HttpService,
     pub ogc_service: OgcService,
 }
 
@@ -55,7 +54,7 @@ impl TestApp {
         let db_settings = config.db_settings.clone();
         let test_user_id = std::env::var(CLERK_USER_ID_KEY)
             .expect(&format!("no {CLERK_USER_ID_KEY} environment variable set"));
-        let auth = ClerkAuthProvider {
+        let _auth = ClerkAuthProvider {
             secret: secrecy::SecretBox::new(Box::new(
                 config
                     .auth_settings
@@ -89,12 +88,9 @@ impl TestApp {
             db_settings,
             db_pool,
             api_client,
-            auth,
+            _auth,
             health_check_service: HttpService {
                 endpoint: URLS.health_check.clone(),
-            },
-            api_docs_service: HttpService {
-                endpoint: format!("{}{}", &URLS.docs.base, &URLS.docs.api),
             },
             ogc_service: OgcService {},
         }
@@ -106,8 +102,8 @@ impl TestApp {
         app
     }
 
-    pub async fn get_test_session_token(&self) -> String {
-        self.auth
+    pub async fn _get_test_session_token(&self) -> String {
+        self._auth
             .get_test_session_token(&self.api_client.client)
             .await
     }

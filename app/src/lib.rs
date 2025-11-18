@@ -8,7 +8,6 @@ mod utoipa;
 pub use config::{DatabaseSettings, Password, get_config};
 pub use startup::Application;
 pub use urls::URLS;
-use utoipa::ApiDoc;
 mod handlers;
 mod routes;
 mod state;

@@ -45,12 +45,12 @@ pub struct SelectOneParams {
 }
 
 impl SelectOneWithParams for Collection {
-    type Params = SelectOneParams;
+    type Params<'a> = &'a SelectOneParams;
     type Id<'a> = &'a str;
     async fn select_one_with_params<'a, 'e, E>(
         executor: E,
         slug: Self::Id<'a>,
-        params: Self::Params,
+        params: Self::Params<'a>,
     ) -> Result<Option<Self>, RepositoryError>
     where
         Self: Sized,

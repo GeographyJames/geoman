@@ -153,6 +153,23 @@ impl OgcService {
         req.send().await.expect(REQUEST_FAILED)
     }
 
+    pub async fn get_openapi(&self, client: &HttpClient) -> Response {
+        let req = client.get(format!("{}{}", URLS.ogc_api.base, URLS.ogc_api.openapi));
+        req.send().await.expect(REQUEST_FAILED)
+    }
+
+    pub async fn get_project_openapi(
+        &self,
+        client: &HttpClient,
+        project: &ProjectIdentifier,
+    ) -> Response {
+        let req = client.get(format!(
+            "{}{}/{}{}",
+            URLS.ogc_api.base, URLS.ogc_api.project, project, URLS.ogc_api.openapi
+        ));
+        req.send().await.expect(REQUEST_FAILED)
+    }
+
     pub async fn get_project_feature(
         &self,
         client: &HttpClient,

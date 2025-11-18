@@ -9,7 +9,7 @@ use crate::{
     errors::RepositoryError,
     postgres::{
         PoolWrapper,
-        traits::{SelectAllWithParamsStreaming, SelectOne},
+        traits::{SelectAllWithParamsStreaming, SelectOneWithParams},
     },
 };
 
@@ -21,9 +21,15 @@ pub struct SelectAllParams {
     pub project_id: Option<ProjectId>,
 }
 
+#[derive(Clone)]
+pub struct SelectOneParams {
+    pub project_id: Option<ProjectId>,
+}
+
 #[derive(Deserialize)]
 struct ProjectFeatureRow {
     pub id: i32,
+    pub project_id: i32,
     pub collection_id: i32,
     pub properties: serde_json::Value,
     pub name: String,
@@ -41,6 +47,7 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
             geometry,
             is_primary,
             collection_id,
+            project_id,
         } = self;
         let properties = match properties {
             Value::Object(map) => map,
@@ -53,29 +60,62 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
             name,
             geometry: geometry.0,
             is_primary,
+            project_id,
         })
     }
 }
 
-impl SelectOne for ProjectFeature {
+impl SelectOneWithParams for ProjectFeature {
+    type Params<'a> = &'a SelectOneParams;
+
     type Id<'a> = &'a FeatureIdWithCollectionSlug;
-    async fn select_one<'a, 'e, E>(
+
+    async fn select_one_with_params<'a, 'e, E>(
         executor: E,
         feature_id: Self::Id<'a>,
+        params: Self::Params<'a>,
     ) -> Result<Option<Self>, RepositoryError>
     where
+        Self: Sized,
         E: sqlx::PgExecutor<'e>,
     {
         let FeatureIdWithCollectionSlug {
             collection_slug,
             id,
         } = feature_id;
-        sqlx::query_as!(
-            ProjectFeatureRow,
-            r#"
+        match params.project_id {
+            Some(project_id) => sqlx::query_as!(
+                ProjectFeatureRow,
+                r#"
             SELECT f.id,
                 f.name,
                 f.collection_id,
+                f.project_id,
+                f.is_primary,
+                ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as "geometry!: Json<Geometry>",
+                f.properties
+            FROM app.project_features f
+            JOIN app.feature_objects fo ON fo.project_feature_id = f.id
+            JOIN app.collections c ON f.collection_id = c.id
+            WHERE f.id = $1
+            AND c.slug = $2
+            AND f.project_id = $3
+            "#,
+                id,
+                collection_slug,
+                project_id.0
+            )
+            .fetch_optional(executor)
+            .await?
+            .map(|row| row.try_into())
+            .transpose(),
+            None => sqlx::query_as!(
+                ProjectFeatureRow,
+                r#"
+            SELECT f.id,
+                f.name,
+                f.collection_id,
+                f.project_id,
                 f.is_primary,
                 ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as "geometry!: Json<Geometry>",
                 f.properties
@@ -85,13 +125,14 @@ impl SelectOne for ProjectFeature {
             WHERE f.id = $1
             AND c.slug = $2
             "#,
-            id,
-            collection_slug
-        )
-        .fetch_optional(executor)
-        .await?
-        .map(|row| row.try_into())
-        .transpose()
+                id,
+                collection_slug
+            )
+            .fetch_optional(executor)
+            .await?
+            .map(|row| row.try_into())
+            .transpose(),
+        }
     }
 }
 
@@ -119,6 +160,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             SELECT 
                 f.id,
                 f.collection_id,
+                f.project_id,
                 ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as "geometry!: Json<Geometry>",
                 f.is_primary,
                 f.name,
@@ -143,6 +185,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             SELECT 
                 f.id,
                 f.collection_id,
+                f.project_id,
                 ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as "geometry!: Json<Geometry>",
                 f.is_primary,
                 f.name,
@@ -175,6 +218,7 @@ mod tests {
     fn project_feature_row_converts_to_project_feature() {
         let row = ProjectFeatureRow {
             id: 0,
+            project_id: 0,
             collection_id: 0,
             properties: json!("{}"),
             name: uuid::Uuid::new_v4().to_string(),

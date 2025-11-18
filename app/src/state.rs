@@ -1,7 +1,11 @@
 use ogc::LandingPage;
+use utoipa::{OpenApi, openapi};
+
+use crate::utoipa::ApiDoc;
 
 pub struct AppState {
     pub landing_page: LandingPage,
+    pub openapi: openapi::OpenApi,
 }
 
 impl Default for AppState {
@@ -17,7 +21,11 @@ impl AppState {
             description: "Geospatial Features API".to_string(),
             links: vec![],
         };
+        let openapi = ApiDoc::openapi();
 
-        Self { landing_page }
+        Self {
+            landing_page,
+            openapi,
+        }
     }
 }

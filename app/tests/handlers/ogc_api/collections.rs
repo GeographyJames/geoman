@@ -1,4 +1,4 @@
-use app::enums::Collection;
+use app::enums::{self, Collection};
 
 use crate::common::{
     TestApp,
@@ -35,6 +35,19 @@ async fn get_collection_works() {
 
     assert_eq!(&collection.id, slug.as_ref());
     assert!(!collection.links.is_empty());
+}
+
+#[actix_web::test]
+async fn get_project_collection_works() {
+    let app = TestApp::spawn_with_db().await;
+    let response = app
+        .ogc_service
+        .get_collection(
+            &app.api_client,
+            &enums::Collection::Projects.try_into().unwrap(),
+        )
+        .await;
+    assert_ok(&response);
 }
 
 #[actix_web::test]

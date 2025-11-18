@@ -64,7 +64,7 @@ impl PostgresRepo {
     pub async fn select_one_with_params<'a, T>(
         &self,
         id: T::Id<'a>,
-        params: T::Params,
+        params: T::Params<'a>,
     ) -> Result<Option<T>, RepositoryError>
     where
         T: SelectOneWithParams,

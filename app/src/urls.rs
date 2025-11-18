@@ -22,7 +22,6 @@ pub struct Api {
 #[derive(Deserialize)]
 pub struct Docs {
     pub base: String,
-    pub api: String,
 }
 
 #[derive(Deserialize)]
@@ -31,6 +30,7 @@ pub struct Ogcapi {
     pub conformance_declaration: String,
     pub collections: String,
     pub project: String,
+    pub openapi: String,
 }
 
 fn initialise_urls() -> Result<Urls, anyhow::Error> {

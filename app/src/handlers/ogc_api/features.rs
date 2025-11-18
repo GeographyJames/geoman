@@ -3,7 +3,10 @@ use crate::{
     enums::{self, ProjectIdentifier},
     errors::{ApiError, RepositoryError},
     helpers::get_base_url,
-    postgres::{PostgresRepo, project_features::SelectAllParams},
+    postgres::{
+        PostgresRepo,
+        project_features::{SelectAllParams, SelectOneParams},
+    },
     streaming::ogc_feature_collection_byte_stream,
 };
 use actix_web::{
@@ -90,14 +93,14 @@ pub async fn get_project_features(
     let mut params = SelectAllParams::from_query(query.into_inner(), collection.clone());
     params.project_id = Some(ProjectId(project_row.id));
     let mut features = project_features_stream(collection.clone(), params, repo).await?;
-    // Check if there are any features
-    let first_item = features.next().await;
-    if first_item.is_none() {
-        return Err(ApiError::CollectionNotFound {
-            collection_slug: collection,
-        });
-    }
-    let features = stream::iter(first_item.into_iter()).chain(features);
+    // // Check if there are any features
+    // let first_item = features.next().await;
+    // if first_item.is_none() {
+    //     return Err(ApiError::CollectionNotFound {
+    //         collection_slug: collection,
+    //     });
+    // }
+    // let features = stream::iter(first_item.into_iter()).chain(features);
 
     let bytes = ogc_feature_collection_byte_stream(features, collection_url, collection).await?;
     Ok(HttpResponse::Ok().content_type(GEOJSON).streaming(bytes))
@@ -130,7 +133,7 @@ pub async fn get_feature(
         base_url, URLS.ogc_api.base, collection
     );
     let feature =
-        retrieve_feature_from_database(repo, collection, feature_id, collection_url).await?;
+        retrieve_feature_from_database(repo, collection, feature_id, collection_url, None).await?;
 
     Ok(web::Json(feature))
 }
@@ -143,7 +146,7 @@ pub async fn get_project_feature(
     path: web::Path<(ProjectIdentifier, enums::Collection, i32)>,
 ) -> Result<Json<ogc::Feature>, ApiError> {
     let (project, collection, feature_id) = path.into_inner();
-    let _project_row = repo
+    let project_row = repo
         .select_one::<Project>(&project)
         .await?
         .ok_or_else(|| ApiError::ProjectNotFound(project.clone()))?;
@@ -152,8 +155,14 @@ pub async fn get_project_feature(
         "{}{}{}/{}/collections/{}",
         base_url, URLS.ogc_api.base, URLS.ogc_api.project, project, collection
     );
-    let feature =
-        retrieve_feature_from_database(repo, collection, feature_id, collection_url).await?;
+    let feature = retrieve_feature_from_database(
+        repo,
+        collection,
+        feature_id,
+        collection_url,
+        Some(ProjectId(project_row.id)),
+    )
+    .await?;
     Ok(web::Json(feature))
 }
 
@@ -178,6 +187,7 @@ async fn retrieve_feature_from_database(
     collection: enums::Collection,
     feature_id: i32,
     collection_url: String,
+    project_id: Option<ProjectId>,
 ) -> Result<ogc::Feature, ApiError> {
     let feature = match collection {
         enums::Collection::Projects => {
@@ -192,7 +202,8 @@ async fn retrieve_feature_from_database(
                 collection_slug,
                 id: feature_id,
             };
-            repo.select_one::<ProjectFeature>(&id)
+            let params = SelectOneParams { project_id };
+            repo.select_one_with_params::<ProjectFeature>(&id, &params)
                 .await?
                 .ok_or_else(|| ApiError::FeatureNotFound {
                     feature_id,

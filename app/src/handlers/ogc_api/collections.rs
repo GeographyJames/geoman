@@ -89,8 +89,8 @@ pub async fn get_project_collections(
     };
     let base_url = get_base_url(&req);
     let collections_url = format!(
-        "{}{}/{}/collections",
-        base_url, URLS.ogc_api.project, project
+        "{}{}{}/{}/collections",
+        base_url, URLS.ogc_api.base, URLS.ogc_api.project, project
     );
     let collections: Vec<Collection> = repo.select_all_with_params(params).await?;
     let ogc_collections = collections
@@ -140,25 +140,30 @@ pub async fn get_project_collections(
     )
 )]
 #[get("/{collectionId}")]
-#[tracing::instrument(skip(repo, req, slug))]
+#[tracing::instrument(skip(repo, req, collection))]
 pub async fn get_collection(
     req: HttpRequest,
-    slug: web::Path<String>,
+    collection: web::Path<enums::Collection>,
     repo: web::Data<PostgresRepo>,
 ) -> Result<web::Json<ogc::Collection>, ApiError> {
     let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
 
-    // Fetch collection from database
-    let collection = repo.select_one::<Collection>(&slug).await?.ok_or_else(|| {
-        ApiError::CollectionNotFound {
-            collection_slug: slug.into_inner(),
-        }
-    })?;
-
-    // Map database row to OGC Collection with links
-    let ogc_collection = collection.into_ogc_collection(&collections_url);
-
+    let ogc_collection = match collection.into_inner() {
+        enums::Collection::Projects => ogc::Collection::new(
+            enums::Collection::Projects.to_string(),
+            "Projects".to_string(),
+            Some("The projects".to_string()),
+            &collections_url,
+        ),
+        enums::Collection::Other(slug) => repo
+            .select_one::<Collection>(&slug)
+            .await?
+            .ok_or_else(|| ApiError::CollectionNotFound {
+                collection_slug: slug,
+            })?
+            .into_ogc_collection(&collections_url),
+    };
     Ok(web::Json(ogc_collection))
 }
 
@@ -185,7 +190,7 @@ pub async fn get_project_collection(
         project_id: ProjectId(project_row.id),
     };
     let collection = repo
-        .select_one_with_params::<Collection>(&collection, params)
+        .select_one_with_params::<Collection>(&collection, &params)
         .await?
         .ok_or_else(|| ApiError::CollectionNotFound {
             collection_slug: collection,

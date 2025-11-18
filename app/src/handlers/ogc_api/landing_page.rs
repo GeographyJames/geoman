@@ -30,8 +30,7 @@ pub async fn get_landing_page(
 ) -> web::Json<LandingPage> {
     let base_url = get_base_url(&req);
     let api_url = format!("{}{}", base_url, URLS.ogc_api.base);
-
-    landing_page(&state, &api_url, &base_url)
+    landing_page(&state, &api_url)
 }
 
 #[get("")]
@@ -51,11 +50,11 @@ pub async fn get_project_landing_page(
         "{}{}{}/{}",
         base_url, URLS.ogc_api.base, URLS.ogc_api.project, &project
     );
-    let landing_page = landing_page(&state, &api_url, &base_url);
+    let landing_page = landing_page(&state, &api_url);
     Ok(landing_page)
 }
 
-fn landing_page(app_state: &AppState, api_url: &str, base_url: &str) -> web::Json<LandingPage> {
+fn landing_page(app_state: &AppState, api_url: &str) -> web::Json<LandingPage> {
     let links = [
         Link::new(api_url, SELF).mediatype(MediaType::Json),
         Link::new(api_url, ROOT).mediatype(MediaType::Json),
@@ -66,12 +65,9 @@ fn landing_page(app_state: &AppState, api_url: &str, base_url: &str) -> web::Jso
         .mediatype(MediaType::Json)
         .title("Conformance declaration"),
         Link::new(format!("{}/collections", api_url), DATA).mediatype(MediaType::Json),
-        Link::new(
-            format!("{}{}{}", base_url, URLS.docs.base, URLS.docs.api),
-            SERVICE_DESC,
-        )
-        .mediatype(MediaType::OpenApi)
-        .title("API definition"),
+        Link::new(format!("{}{}", api_url, URLS.ogc_api.openapi), SERVICE_DESC)
+            .mediatype(MediaType::OpenApi)
+            .title("API definition"),
     ];
 
     let mut landing_page = app_state.landing_page.to_owned();

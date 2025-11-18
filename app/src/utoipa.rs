@@ -23,8 +23,5 @@ use utoipa::OpenApi;
     tags(
         (name = "OGC API", description = "OGC API Features endpoints")
     ),
-    servers(
-        (url = "/ogcapi", description = "OGC API Features server")
-    )
 )]
 pub struct ApiDoc;
