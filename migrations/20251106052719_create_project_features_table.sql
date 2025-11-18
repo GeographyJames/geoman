@@ -1,5 +1,7 @@
+CREATE SEQUENCE app.project_features_id_seq;
+
 CREATE TABLE app.project_features (
-    id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    id integer NOT NULL DEFAULT nextval('app.project_features_id_seq'),
     project_id integer NOT NULL REFERENCES app.projects(id),
     collection_id integer NOT NULL REFERENCES app.collections(id),
     name text NOT NULL,
@@ -10,6 +12,7 @@ CREATE TABLE app.project_features (
     added timestamptz NOT NULL DEFAULT now(),
     last_updated_by integer NOT NULL REFERENCES app.users(id),
     last_updated timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (collection_id, id),
     CHECK (NOT (is_primary AND status IN ('DELETED', 'ARCHIVED')))
 );
 

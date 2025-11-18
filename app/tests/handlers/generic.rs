@@ -3,7 +3,7 @@ use crate::common::{
     helpers::{assert_status, check_error_response},
 };
 use app::enums::{Collection, ProjectIdentifier};
-use domain::{FeatureId, ProjectId, Slug};
+use domain::{ProjectId, Slug};
 use rstest::rstest;
 
 enum Endpoint {
@@ -36,7 +36,7 @@ impl Endpoint {
             }
             Endpoint::GetFeature => {
                 app.ogc_service
-                    .get_feature(&app.api_client, &Slug::default(), FeatureId::default())
+                    .get_feature(&app.api_client, &Slug::default(), 0)
                     .await
             }
             Endpoint::GetProject => {
@@ -44,7 +44,7 @@ impl Endpoint {
                     .get_feature(
                         &app.api_client,
                         &Collection::Projects.try_into().unwrap(),
-                        FeatureId::default(),
+                        0,
                     )
                     .await
             }

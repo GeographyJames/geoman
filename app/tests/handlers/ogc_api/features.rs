@@ -1,5 +1,3 @@
-use domain::FeatureId;
-
 use serde::{Deserialize, Serialize};
 
 use crate::common::{
@@ -87,26 +85,56 @@ async fn get_features_works_with_limit() {
 async fn get_feature_works() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
-    let feature_id = app
-        .generate_feature_id(
-            collection_id,
+    let (slug_1, collection_1_id) = app.generate_collection_slug_and_id(user_id).await;
+    let (slug_2, collection_2_id) = app.generate_collection_slug_and_id(user_id).await;
+
+    let feature_1_id = app
+        .insert_feature_with_id(
+            1,
             project_id,
+            collection_1_id,
             user_id,
             Some(Properties::default()),
         )
         .await;
-    let response = app
+    let feature_2_id = app
+        .insert_feature_with_id(
+            1,
+            project_id,
+            collection_2_id,
+            user_id,
+            Some(Properties::default()),
+        )
+        .await;
+    let response_1 = app
         .ogc_service
-        .get_feature(&app.api_client, &slug, feature_id)
+        .get_feature(&app.api_client, &slug_1, 1)
         .await;
 
-    assert_ok(&response);
+    let response_2 = app
+        .ogc_service
+        .get_feature(&app.api_client, &slug_2, 1)
+        .await;
 
-    let ogc_feature: ogc::Feature = handle_json_response(response)
+    assert_ok(&response_1);
+    assert_ok(&response_2);
+
+    let ogc_feature_1: ogc::Feature = handle_json_response(response_1)
         .await
         .expect("failed to retrieve feature");
-    check_ogc_feature::<Properties>(ogc_feature);
+
+    let ogc_feature_2: ogc::Feature = handle_json_response(response_2)
+        .await
+        .expect("failed to retrieve feature");
+
+    check_ogc_feature::<Properties>(ogc_feature_1.clone());
+    check_ogc_feature::<Properties>(ogc_feature_2.clone());
+    let feature_1: domain::ProjectFeature = ogc_feature_1.try_into().unwrap();
+    let feature_2: domain::ProjectFeature = ogc_feature_2.try_into().unwrap();
+    assert_eq!(feature_1.id, feature_1_id.id);
+    assert_eq!(feature_2.id, feature_2_id.id);
+    assert_eq!(feature_1.collection_id, feature_1_id.collection_id.0);
+    assert_eq!(feature_2.collection_id, feature_2_id.collection_id.0);
 }
 
 #[actix_web::test]
@@ -131,9 +159,6 @@ async fn get_feature_returns_404_for_non_existent_feature() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, _) = app.generate_ids().await;
     let (slug, _) = app.generate_collection_slug_and_id(user_id).await;
-    let response = app
-        .ogc_service
-        .get_feature(&app.api_client, &slug, FeatureId::default())
-        .await;
+    let response = app.ogc_service.get_feature(&app.api_client, &slug, 0).await;
     assert_status(&response, 404);
 }

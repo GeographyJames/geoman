@@ -185,6 +185,51 @@ impl TestApp {
         ProjectId(self.insert_project(&name, &slug, user_id).await)
     }
 
+    pub async fn insert_feature_with_id<P: Serialize>(
+        &self,
+        id: i32,
+        project_id: ProjectId,
+        collection_id: CollectionId,
+        user_id: UserId,
+        properties: Option<P>,
+    ) -> FeatureId {
+        let record = sqlx::query!(
+            "WITH inserted_feature AS (
+                INSERT INTO app.project_features (
+                id,
+                    project_id,
+                    collection_id,
+                    name,
+                    added_by,
+                    last_updated_by,
+                    properties
+                ) 
+                VALUES ($1, $2, $3, $4, $5, $5, $6) RETURNING id
+             )
+            INSERT INTO app.feature_objects (
+                project_feature_id,
+                collection_id,
+                geom
+                )
+            SELECT id, $3, ST_GeomFromEWKT('SRID=27700;POINT(1 1)')
+            FROM inserted_feature
+            RETURNING project_feature_id, collection_id",
+            id,
+            project_id.0,
+            collection_id.0,
+            uuid::Uuid::new_v4().to_string(),
+            user_id.0,
+            json!(properties)
+        )
+        .fetch_one(&self.db_pool)
+        .await
+        .expect("failed to save feature to database");
+        FeatureId {
+            collection_id: CollectionId(record.collection_id),
+            id: record.project_feature_id,
+        }
+    }
+
     pub async fn insert_feature<P: Serialize>(
         &self,
         name: &str,
@@ -193,7 +238,7 @@ impl TestApp {
         user_id: UserId,
         geom_ewkt: &str,
         properties: Option<P>,
-    ) -> i32 {
+    ) -> FeatureId {
         let record = sqlx::query!(
             "WITH inserted_feature AS (
                 INSERT INTO app.project_features (
@@ -208,11 +253,12 @@ impl TestApp {
              )
             INSERT INTO app.feature_objects (
                 project_feature_id,
+                collection_id,
                 geom
                 )
-            SELECT id, ST_GeomFromEWKT($4)
+            SELECT id, $2, ST_GeomFromEWKT($4)
             FROM inserted_feature
-            RETURNING project_feature_id",
+            RETURNING project_feature_id, collection_id",
             project_id.0,
             collection_id.0,
             name,
@@ -223,7 +269,10 @@ impl TestApp {
         .fetch_one(&self.db_pool)
         .await
         .expect("Failed to save feature in database");
-        record.project_feature_id
+        FeatureId {
+            collection_id: CollectionId(record.collection_id),
+            id: record.project_feature_id,
+        }
     }
 
     pub async fn generate_feature_id<P: Serialize>(
@@ -238,17 +287,16 @@ impl TestApp {
         let easting: u32 = rng.random_range(..700_000);
         let northing: u32 = rng.random_range(..1_300_000);
         let geom_wkt = format!("SRID=27700;POINT({} {})", easting, northing);
-        FeatureId(
-            self.insert_feature(
-                &name,
-                collection_id,
-                project_id,
-                user_id,
-                &geom_wkt,
-                properties,
-            )
-            .await,
+
+        self.insert_feature(
+            &name,
+            collection_id,
+            project_id,
+            user_id,
+            &geom_wkt,
+            properties,
         )
+        .await
     }
 
     pub async fn drop_app_schema(&self) {

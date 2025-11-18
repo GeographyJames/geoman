@@ -10,6 +10,6 @@
 - `http://host.docker.internal:8000/ogcapi` - Application URL to test when running OGC testing suit in Docker container.
 - `http://localhost:8081/teamengine` - URL to access OGC testing suit in browser.
 
-### Connand Shell
+### Command Shell
 
 - `rm -rf test-tools/testng && java -jar test-tools/ets-ogcapi-features10-1.10-SNAPSHOT-aio.jar --outputDir test-tools --generateHtmlReport true test-tools/test-run-props.xml` - Runs the test suit from GeoMan root directory with the `test-run-props.xml` configuration. Removes previous test output and outputs the results and an HTML report to a testng directory.

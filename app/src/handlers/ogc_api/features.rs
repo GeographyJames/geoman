@@ -10,7 +10,9 @@ use actix_web::{
     HttpRequest, HttpResponse, get,
     web::{self},
 };
-use domain::{Collection, IntoOGCFeature, Project, ProjectFeature, ProjectId};
+use domain::{
+    Collection, FeatureIdWithCollectionSlug, IntoOGCFeature, Project, ProjectFeature, ProjectId,
+};
 use futures::{Stream, StreamExt, stream};
 use ogc::{conformance_classes::GEOJSON, features::Query};
 
@@ -134,14 +136,19 @@ pub async fn get_feature(
                 .ok_or_else(|| ApiError::ProjectNotFound(identifier))?
                 .into_ogc_feature(collection_url)
         }
-        enums::Collection::Other(slug) => repo
-            .select_one::<ProjectFeature>(feature_id)
-            .await?
-            .ok_or_else(|| ApiError::FeatureNotFound {
-                feature_id,
-                collection_slug: slug,
-            })?
-            .into_ogc_feature(collection_url),
+        enums::Collection::Other(collection_slug) => {
+            let id = FeatureIdWithCollectionSlug {
+                collection_slug,
+                id: feature_id,
+            };
+            repo.select_one::<ProjectFeature>(&id)
+                .await?
+                .ok_or_else(|| ApiError::FeatureNotFound {
+                    feature_id,
+                    collection_slug: id.collection_slug,
+                })?
+                .into_ogc_feature(collection_url)
+        }
     };
 
     Ok(web::Json(feature))

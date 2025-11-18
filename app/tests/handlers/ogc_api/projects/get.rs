@@ -1,5 +1,5 @@
 use app::enums::Collection;
-use domain::{FeatureId, Project};
+use domain::Project;
 
 use crate::common::{
     TestApp,
@@ -38,7 +38,7 @@ async fn get_project_works() {
         .get_feature(
             &app.api_client,
             &Collection::Projects.try_into().unwrap(),
-            FeatureId(project_id.0),
+            project_id.0,
         )
         .await;
     assert_ok(&response);

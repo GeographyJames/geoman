@@ -5,14 +5,14 @@ use crate::types::common::{
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
-#[derive(Serialize, Default, Deserialize)]
+#[derive(Serialize, Default, Deserialize, Clone)]
 pub enum Type {
     #[default]
     Feature,
 }
 
 #[non_exhaustive]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Feature {
     pub id: i32,
     pub r#type: Type,

@@ -1,6 +1,6 @@
 use app::{URLS, enums::ProjectIdentifier};
 
-use domain::{FeatureId, Slug};
+use domain::Slug;
 use ogc::features::Query;
 use reqwest::Response;
 
@@ -140,14 +140,14 @@ impl OgcService {
         &self,
         client: &HttpClient,
         collection_slug: &Slug,
-        id: FeatureId,
+        id: i32,
     ) -> Response {
         let req = client.get(format!(
             "{}{}/{}/items/{}",
             &URLS.ogc_api.base,
             &URLS.ogc_api.collections,
             collection_slug.as_ref(),
-            id.0
+            id
         ));
 
         req.send().await.expect(REQUEST_FAILED)

@@ -37,10 +37,11 @@ WITH inserted_features AS (
         (SELECT id FROM app.users WHERE username = 'root'),
         (SELECT id FROM app.users WHERE username = 'root')
     )
-    RETURNING id, name
+    RETURNING id, collection_id, name
 )
-INSERT INTO app.feature_objects (project_feature_id, geom)
+INSERT INTO app.feature_objects (collection_id, project_feature_id, geom)
 SELECT
+    collection_id,
     id,
     CASE name
         WHEN 'Manchester Development Site' THEN ST_GeomFromEWKT('SRID=27700;POLYGON((384000 398000, 384500 398000, 384500 398400, 384000 398400, 384000 398000))')
@@ -96,10 +97,11 @@ WITH inserted_features AS (
         (SELECT id FROM app.users WHERE username = 'root'),
         (SELECT id FROM app.users WHERE username = 'root')
     )
-    RETURNING id, name
+    RETURNING id, collection_id, name
 )
-INSERT INTO app.feature_objects (project_feature_id, geom)
+INSERT INTO app.feature_objects (collection_id, project_feature_id, geom)
 SELECT
+    collection_id,
     id,
     CASE name
         WHEN 'Pennine Way Section' THEN ST_GeomFromEWKT('SRID=27700;LINESTRING(398000 445000, 398200 445500, 398500 446000, 398700 446800)')
@@ -163,10 +165,11 @@ WITH inserted_features AS (
         (SELECT id FROM app.users WHERE username = 'root'),
         (SELECT id FROM app.users WHERE username = 'root')
     )
-    RETURNING id, name
+    RETURNING id, collection_id, name
 )
-INSERT INTO app.feature_objects (project_feature_id, geom)
+INSERT INTO app.feature_objects (collection_id, project_feature_id, geom)
 SELECT
+    collection_id,
     id,
     CASE name
         WHEN 'Fiber Optic Main Line' THEN ST_GeomFromEWKT('SRID=27700;LINESTRING(530000 180000, 531000 181000, 532000 182000, 533000 183000)')

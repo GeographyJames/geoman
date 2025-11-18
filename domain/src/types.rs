@@ -33,14 +33,21 @@ impl AsRef<str> for Slug {
     }
 }
 
+pub struct FeatureIdWithCollectionSlug {
+    pub collection_slug: String,
+    pub id: i32,
+}
+
+pub struct FeatureId {
+    pub collection_id: CollectionId,
+    pub id: i32,
+}
 #[derive(Clone, Copy, Default, Debug)]
 pub struct ProjectId(pub i32);
 #[derive(Clone, Copy, Default)]
 pub struct UserId(pub i32);
 #[derive(Clone, Copy, Default)]
 pub struct TeamId(pub i32);
-#[derive(Clone, Copy, Default)]
-pub struct FeatureId(pub i32);
 
 #[derive(Clone, Copy, Default)]
 pub struct CollectionId(pub i32);
