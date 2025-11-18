@@ -63,12 +63,7 @@ pub async fn get_collections(
 
     let ogc_collections = ogc::Collections::new(&collections_url)
         .append_collections(ogc_collections)
-        .add_collection(ogc::Collection::new(
-            enums::Collection::Projects.to_string(),
-            "Projects".to_string(),
-            Some("The projects".to_string()),
-            &collections_url,
-        ));
+        .add_collection(project_collection(&collections_url));
 
     Ok(web::Json(ogc_collections))
 }
@@ -150,12 +145,8 @@ pub async fn get_collection(
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
 
     let ogc_collection = match collection.into_inner() {
-        enums::Collection::Projects => ogc::Collection::new(
-            enums::Collection::Projects.to_string(),
-            "Projects".to_string(),
-            Some("The projects".to_string()),
-            &collections_url,
-        ),
+        enums::Collection::Projects => project_collection(&collections_url),
+
         enums::Collection::Other(slug) => repo
             .select_one::<Collection>(&slug)
             .await?
@@ -200,4 +191,13 @@ pub async fn get_project_collection(
     let ogc_collection = collection.into_ogc_collection(&collections_url);
 
     Ok(web::Json(ogc_collection))
+}
+
+fn project_collection(collections_url: &str) -> ogc::Collection {
+    ogc::Collection::new(
+        enums::Collection::Projects.to_string(),
+        "Projects".to_string(),
+        Some("The projects".to_string()),
+        collections_url,
+    )
 }
