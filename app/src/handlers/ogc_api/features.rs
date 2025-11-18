@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::{
     URLS,
     enums::{self, ProjectIdentifier},
@@ -8,10 +10,12 @@ use crate::{
         project_features::{SelectAllParams, SelectOneParams},
     },
     streaming::ogc_feature_collection_byte_stream,
+    urls::Api,
 };
 use actix_web::{
     HttpRequest, HttpResponse, get,
-    web::{self, Json},
+    http::header::{HeaderName, HeaderValue},
+    web::{self},
 };
 use domain::{
     Collection, FeatureIdWithCollectionSlug, IntoOGCFeature, Project, ProjectFeature, ProjectId,
@@ -45,7 +49,7 @@ pub async fn get_features(
     );
     let mut response_builder = HttpResponse::Ok();
     response_builder.content_type(GEOJSON);
-    let response = match collection.as_ref() {
+    let mut response = match collection.as_ref() {
         enums::Collection::Projects => {
             let projects =
                 repo.select_all_with_params_streaming::<Project>(query.into_inner().into());
@@ -69,6 +73,7 @@ pub async fn get_features(
             response_builder.streaming(bytes)
         }
     };
+    append_crs_header(&mut response);
     Ok(response)
 }
 
@@ -95,7 +100,9 @@ pub async fn get_project_features(
     let features = project_features_stream(collection.clone(), params, repo).await?;
 
     let bytes = ogc_feature_collection_byte_stream(features, collection_url, collection).await?;
-    Ok(HttpResponse::Ok().content_type(GEOJSON).streaming(bytes))
+    let mut response = HttpResponse::Ok().content_type(GEOJSON).streaming(bytes);
+    append_crs_header(&mut response);
+    Ok(response)
 }
 
 /// A single feature
@@ -116,7 +123,7 @@ pub async fn get_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
     path: web::Path<(enums::Collection, i32)>,
-) -> Result<web::Json<ogc::Feature>, ApiError> {
+) -> Result<HttpResponse, ApiError> {
     let (collection, feature_id) = path.into_inner();
 
     let base_url = get_base_url(&req);
@@ -126,8 +133,10 @@ pub async fn get_feature(
     );
     let feature =
         retrieve_feature_from_database(repo, collection, feature_id, collection_url, None).await?;
+    let mut response = HttpResponse::Ok().json(feature);
+    append_crs_header(&mut response);
 
-    Ok(web::Json(feature))
+    Ok(response)
 }
 
 #[get("/{collectionId}/items/{featureId}")]
@@ -136,7 +145,7 @@ pub async fn get_project_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
     path: web::Path<(ProjectIdentifier, enums::Collection, i32)>,
-) -> Result<Json<ogc::Feature>, ApiError> {
+) -> Result<HttpResponse, ApiError> {
     let (project, collection, feature_id) = path.into_inner();
     let project_row = repo
         .select_one::<Project>(&project)
@@ -155,7 +164,9 @@ pub async fn get_project_feature(
         Some(ProjectId(project_row.id)),
     )
     .await?;
-    Ok(web::Json(feature))
+    let mut response = HttpResponse::Ok().json(feature);
+    append_crs_header(&mut response);
+    Ok(response)
 }
 
 async fn project_features_stream(
@@ -205,4 +216,11 @@ async fn retrieve_feature_from_database(
         }
     };
     Ok(feature)
+}
+
+fn append_crs_header(response: &mut HttpResponse) {
+    response.headers_mut().append(
+        HeaderName::from_static("content-crs"),
+        HeaderValue::from_static("<http://www.opengis.net/def/crs/OGC/1.3/CRS84>"),
+    );
 }
