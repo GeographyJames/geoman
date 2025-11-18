@@ -1,12 +1,13 @@
 use chrono::{DateTime, Utc};
+use ogcapi_types::common::Crs;
 use serde::{Deserialize, Serialize};
 use serde_with::DisplayFromStr;
-use utoipa::IntoParams;
+use utoipa::{IntoParams, ToSchema};
 
 #[serde_with::serde_as]
-#[derive(Deserialize, Serialize, IntoParams, Default)]
+#[derive(Deserialize, Serialize, IntoParams, ToSchema, Default)]
 #[into_params(parameter_in = Query)]
-#[serde(deny_unknown_fields, default)]
+#[serde(deny_unknown_fields, default, rename_all = "kebab-case")]
 pub struct Query {
     /// The optional limit parameter limits the number of items that are
     /// presented in the response document.
@@ -26,4 +27,13 @@ pub struct Query {
     /// Either a date-time or an interval, open or closed. Date and time expressions adhere to RFC 3339
     #[param(style = Form, value_type = Option<String>, required = false)]
     pub datetime: Option<DateTime<Utc>>,
+    #[serde(default)]
+    #[serde_as(as = "Option<DisplayFromStr>")]
+    #[schema(value_type = String)]
+    pub bbox_crs: Option<Crs>,
+
+    #[serde(default)]
+    #[serde_as(as = "DisplayFromStr")]
+    #[param(value_type = String)]
+    pub crs: Crs,
 }

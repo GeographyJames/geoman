@@ -7,7 +7,12 @@ use crate::{enums::ProjectIdentifier, errors::ApiError, postgres::PostgresRepo};
 
 static CONFORMANCE_DECLARATION: LazyLock<ConformanceDeclaration> = LazyLock::new(|| {
     let mut declaration = ConformanceDeclaration::default();
-    declaration.extend(&[conformance_classes::CORE, conformance_classes::GEOJSON]);
+    declaration.extend(&[
+        conformance_classes::CORE,
+        conformance_classes::GEOJSON,
+        conformance_classes::OAS30,
+        conformance_classes::CRS,
+    ]);
     declaration
 });
 

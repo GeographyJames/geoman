@@ -1,4 +1,6 @@
+use ogcapi_types::common::Crs;
 use serde::{Deserialize, Serialize};
+use serde_with::DisplayFromStr;
 use utoipa::ToSchema;
 
 use crate::types::common::{
@@ -8,6 +10,7 @@ use crate::types::common::{
 };
 
 /// A single collection in the OGC API
+#[serde_with::serde_as]
 #[derive(Serialize, Deserialize, ToSchema, Debug, Clone)]
 #[non_exhaustive]
 pub struct Collection {
@@ -23,6 +26,12 @@ pub struct Collection {
 
     /// Links related to this collection
     pub links: Links,
+
+    /// The list of coordinate reference systems supported by the API; the first item is the default coordinate reference system.
+    #[serde(default)]
+    #[serde_as(as = "Vec<DisplayFromStr>")]
+    #[schema(value_type = Vec<String>)]
+    pub crs: Vec<Crs>,
 }
 
 impl Collection {
@@ -43,6 +52,7 @@ impl Collection {
             title,
             description,
             links,
+            crs: vec![Crs::default()],
         }
     }
 }
