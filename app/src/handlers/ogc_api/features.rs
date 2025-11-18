@@ -16,7 +16,7 @@ use actix_web::{
 use domain::{
     Collection, FeatureIdWithCollectionSlug, IntoOGCFeature, Project, ProjectFeature, ProjectId,
 };
-use futures::{Stream, StreamExt, stream};
+use futures::Stream;
 use ogc::{conformance_classes::GEOJSON, features::Query};
 
 /// The features in the collection
@@ -92,15 +92,7 @@ pub async fn get_project_features(
     );
     let mut params = SelectAllParams::from_query(query.into_inner(), collection.clone());
     params.project_id = Some(ProjectId(project_row.id));
-    let mut features = project_features_stream(collection.clone(), params, repo).await?;
-    // // Check if there are any features
-    // let first_item = features.next().await;
-    // if first_item.is_none() {
-    //     return Err(ApiError::CollectionNotFound {
-    //         collection_slug: collection,
-    //     });
-    // }
-    // let features = stream::iter(first_item.into_iter()).chain(features);
+    let features = project_features_stream(collection.clone(), params, repo).await?;
 
     let bytes = ogc_feature_collection_byte_stream(features, collection_url, collection).await?;
     Ok(HttpResponse::Ok().content_type(GEOJSON).streaming(bytes))

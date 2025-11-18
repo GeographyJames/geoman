@@ -18,7 +18,7 @@ pub async fn get_project_openapi(
     project: web::Path<ProjectIdentifier>,
 ) -> web::Json<openapi::OpenApi> {
     let mut openapi = state.openapi.to_owned();
-    openapi.servers = Some(vec![Server::new(&format!(
+    openapi.servers = Some(vec![Server::new(format!(
         "{}{}/{}",
         URLS.ogc_api.base, URLS.ogc_api.project, project
     ))]);

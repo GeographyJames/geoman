@@ -1,0 +1,60 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT f.id,\n                f.name,\n                f.collection_id,\n                f.project_id,\n                f.is_primary,\n                ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as \"geometry!: Json<Geometry>\",\n                f.properties\n            FROM app.project_features f\n            JOIN app.feature_objects fo ON fo.project_feature_id = f.id\n            JOIN app.collections c ON f.collection_id = c.id\n            WHERE f.id = $1\n            AND c.slug = $2\n            AND f.project_id = $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "collection_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "project_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "is_primary",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "geometry!: Json<Geometry>",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 6,
+        "name": "properties",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      false
+    ]
+  },
+  "hash": "9342321b0624cc1909e9507e141d4aa9485220185113fa9b0237fe6f44c7b43a"
+}

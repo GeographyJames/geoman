@@ -98,22 +98,6 @@ async fn get_features_returns_404_for_project_not_found() {
 }
 
 #[actix_web::test]
-async fn get_features_returns_404_for_empty_collection() {
-    let app = TestApp::spawn_with_db().await;
-    let (_, user_id, project_id) = app.generate_ids().await;
-    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
-    let another_project = app.generate_project_id(user_id).await;
-    let _feature = app
-        .generate_feature_id(collection_id, another_project, user_id, Some({}))
-        .await;
-    let response = app
-        .ogc_service
-        .get_project_features(&app.api_client, &slug, &project_id.into(), None)
-        .await;
-    assert_status(&response, 404);
-}
-
-#[actix_web::test]
 async fn get_project_features_works_with_limit() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;

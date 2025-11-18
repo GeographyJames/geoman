@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT f.id,\n                f.name,\n                f.collection_id,\n                f.is_primary,\n                ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as \"geometry!: Json<Geometry>\",\n                f.properties\n            FROM app.project_features f\n            JOIN app.feature_objects fo ON fo.project_feature_id = f.id\n            JOIN app.collections c ON f.collection_id = c.id\n            WHERE f.id = $1\n            AND c.slug = $2\n            ",
+  "query": "\n            SELECT f.id,\n                f.name,\n                f.collection_id,\n                f.project_id,\n                f.is_primary,\n                ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as \"geometry!: Json<Geometry>\",\n                f.properties\n            FROM app.project_features f\n            JOIN app.feature_objects fo ON fo.project_feature_id = f.id\n            JOIN app.collections c ON f.collection_id = c.id\n            WHERE f.id = $1\n            AND c.slug = $2\n            ",
   "describe": {
     "columns": [
       {
@@ -20,16 +20,21 @@
       },
       {
         "ordinal": 3,
+        "name": "project_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
         "name": "is_primary",
         "type_info": "Bool"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "geometry!: Json<Geometry>",
         "type_info": "Jsonb"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "properties",
         "type_info": "Jsonb"
       }
@@ -45,9 +50,10 @@
       false,
       false,
       false,
+      false,
       null,
       false
     ]
   },
-  "hash": "b1e2e0fe2af2b176b170d8b6aa0e594b00e41ecf29e52ecbeb1f895367f555a4"
+  "hash": "69627fa7ba6f36dd7193c52c5bf0622db4d65eecac44bfc8a73f0ca6e5e5b744"
 }
