@@ -54,7 +54,7 @@ pub fn project_ogc_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         scope("/{project}")
             .service(ogc_api::get_project_landing_page)
-            .service(scope(&URLS.ogc_api.openapi).service(ogc_api::get_project_openapi))
+            .service(scope(&URLS.ogc_api.openapi).service(ogc_api::get_openapi))
             .service(
                 scope(&URLS.ogc_api.conformance_declaration)
                     .service(ogc_api::get_project_conformance_declaration),
