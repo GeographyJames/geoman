@@ -81,6 +81,7 @@ async fn get_features_works_with_limit() {
     }
 }
 
+// We need to test the scenarion where two features have the same id but different collection  id
 #[actix_web::test]
 async fn get_feature_works() {
     let app = TestApp::spawn_with_db().await;

@@ -12,6 +12,7 @@ CREATE TABLE app.project_features (
     added timestamptz NOT NULL DEFAULT now(),
     last_updated_by integer NOT NULL REFERENCES app.users(id),
     last_updated timestamptz NOT NULL DEFAULT now(),
+    -- Composite primary key to support legacy database migration
     PRIMARY KEY (collection_id, id),
     CHECK (NOT (is_primary AND status IN ('DELETED', 'ARCHIVED')))
 );

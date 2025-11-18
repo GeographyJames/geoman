@@ -1,8 +1,6 @@
 use crate::{
     AppState, URLS,
     config::AppConfig,
-    enums::GeoManEnvironment,
-    handlers::docs::get_api_docs,
     postgres::PostgresRepo,
     routes::{api_routes, docs_routes, ogc_routes},
 };
@@ -62,24 +60,17 @@ pub async fn run(
     let repo = web::Data::new(PostgresRepo::new(db_pool));
 
     let server = HttpServer::new(move || {
-        let app = App::new()
+        App::new()
             .app_data(app_state.clone())
             .app_data(repo.clone())
             .wrap(middleware::NormalizePath::trim())
             .wrap(TracingLogger::default())
             .route(&URLS.health_check, web::get().to(HttpResponse::Ok))
             .configure(|cfg| api_routes(cfg, clerk.clone()))
-            .configure(ogc_routes);
-
-        match config.app_settings.environment {
-            // Serve docs unprotected
-            GeoManEnvironment::Development => app.route(
-                &format!("{}{}", URLS.docs.base, URLS.docs.api),
-                web::get().to(get_api_docs),
-            ),
-            // Serve api docs protected
-            _ => app.configure(|cfg| docs_routes(cfg, clerk.clone())),
-        }
+            .configure(ogc_routes)
+            .configure(|cfg| {
+                docs_routes(cfg, clerk.clone(), config.app_settings.environment.clone())
+            })
     })
     .listen(listener)
     .context("failed to bind to listener")?

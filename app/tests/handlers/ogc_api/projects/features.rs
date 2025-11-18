@@ -4,6 +4,7 @@ use crate::common::{
 };
 use app::enums::ProjectIdentifier;
 
+// Als ensures only features relating to the relevant project are returned
 #[actix_web::test]
 async fn get_features_works_for_project() {
     let app = TestApp::spawn_with_db().await;
@@ -21,10 +22,47 @@ async fn get_features_works_for_project() {
         .get_project_features(&app.api_client, &slug, &project_id.into(), None)
         .await;
     assert_ok(&response);
-    let features: ogc::FeatureCollection = handle_json_response(response)
+    let ogc_features: ogc::FeatureCollection = handle_json_response(response)
         .await
         .expect("failed to retrieve features");
-    assert_eq!(features.features.len(), 1);
+    assert_eq!(ogc_features.features.len(), 1);
+}
+
+#[actix_web::test]
+async fn get_feature_works_for_project() {
+    let app = TestApp::spawn_with_db().await;
+    let (_, user_id, project_id) = app.generate_ids().await;
+    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let feature_id = app
+        .generate_feature_id(collection_id, project_id, user_id, Some({}))
+        .await;
+
+    let response = app
+        .ogc_service
+        .get_project_feature(&app.api_client, &project_id.into(), &slug, feature_id.id)
+        .await;
+    assert_ok(&response)
+}
+
+#[actix_web::test]
+async fn get_feature_returns_404_for_project_not_found() {
+    let app = TestApp::spawn_with_db().await;
+    let (_, user_id, project_id) = app.generate_ids().await;
+    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let feature_id = app
+        .generate_feature_id(collection_id, project_id, user_id, Some({}))
+        .await;
+
+    let response = app
+        .ogc_service
+        .get_project_feature(
+            &app.api_client,
+            &ProjectIdentifier::default(),
+            &slug,
+            feature_id.id,
+        )
+        .await;
+    assert_status(&response, 404);
 }
 
 #[actix_web::test]
