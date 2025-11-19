@@ -5,6 +5,14 @@ use crate::{
     postgres::traits::{SelectAll, SelectAllWithParams, SelectOne, SelectOneWithParams},
 };
 
+pub struct SelectOneParams {
+    pub project_id: ProjectId,
+}
+
+pub struct SelectAllParams {
+    pub project_id: ProjectId,
+}
+
 impl SelectAll for Collection {
     async fn select_all<'e, E>(executor: E) -> Result<Vec<Self>, RepositoryError>
     where
@@ -40,10 +48,6 @@ impl SelectOne for Collection {
     }
 }
 
-pub struct SelectOneParams {
-    pub project_id: ProjectId,
-}
-
 impl SelectOneWithParams for Collection {
     type Params<'a> = &'a SelectOneParams;
     type Id<'a> = &'a str;
@@ -74,10 +78,6 @@ impl SelectOneWithParams for Collection {
         .await
         .map_err(RepositoryError::from)
     }
-}
-
-pub struct SelectAllParams {
-    pub project_id: ProjectId,
 }
 
 impl SelectAllWithParams for Collection {

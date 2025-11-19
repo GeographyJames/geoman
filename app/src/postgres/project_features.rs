@@ -14,7 +14,6 @@ use crate::{
 };
 
 #[derive(Clone)]
-#[non_exhaustive]
 pub struct SelectAllParams {
     pub limit: Option<usize>,
     pub slug: String,
@@ -28,6 +27,25 @@ pub struct SelectOneParams {
     pub srid: Option<i32>,
 }
 
+impl SelectAllParams {
+    pub fn from_query(query: &ogc::features::Query, slug: String) -> Self {
+        SelectAllParams {
+            limit: query.limit,
+            slug,
+            project_id: None,
+            srid: Some(query.crs.as_srid()),
+        }
+    }
+}
+
+impl SelectOneParams {
+    pub fn from_query(query: &ogc::features::Query) -> Self {
+        SelectOneParams {
+            project_id: None,
+            srid: Some(query.crs.as_srid()),
+        }
+    }
+}
 #[derive(Deserialize)]
 struct ProjectFeatureRow {
     pub id: i32,
@@ -59,7 +77,6 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
         };
         Ok(ProjectFeature {
             id,
-
             properties: Properties {
                 collection_id,
                 project_id,
@@ -67,7 +84,6 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
                 storage_crs_srid,
                 is_primary,
             },
-
             geometry: geometry.0,
             properties_map: properties,
         })
@@ -119,26 +135,6 @@ impl SelectOneWithParams for ProjectFeature {
         .await?
         .map(|row| row.try_into())
         .transpose()
-    }
-}
-
-impl SelectAllParams {
-    pub fn from_query(query: &ogc::features::Query, slug: String) -> Self {
-        SelectAllParams {
-            limit: query.limit,
-            slug,
-            project_id: None,
-            srid: Some(query.crs.as_srid()),
-        }
-    }
-}
-
-impl SelectOneParams {
-    pub fn from_query(query: &ogc::features::Query) -> Self {
-        SelectOneParams {
-            project_id: None,
-            srid: Some(query.crs.as_srid()),
-        }
     }
 }
 

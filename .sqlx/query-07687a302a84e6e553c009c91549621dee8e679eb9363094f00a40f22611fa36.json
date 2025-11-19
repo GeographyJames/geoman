@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT \n                f.id,\n                f.collection_id,\n                f.project_id,\n                ST_AsGeoJSON(ST_Transform(fo.geom, $4))::jsonb as \"geometry!: Json<Geometry>\",\n                ST_SRID(geom) AS \"storage_crs_srid!\",\n                f.is_primary,\n                f.name,\n                f.properties \n            FROM app.project_features f\n            JOIN app.collections c ON c.id = f.collection_id\n            JOIN app.feature_objects fo ON fo.project_feature_id = f.id\n            WHERE c.slug = $1\n            AND status = 'ACTIVE'\n            AND f.project_id = $2\n            ORDER BY f.id\n            LIMIT $3\n            ",
+  "query": "\n            SELECT \n                f.id,\n                f.collection_id,\n                f.project_id,\n                ST_AsGeoJSON(ST_Transform(fo.geom, $1))::jsonb as \"geometry!: Json<Geometry>\",\n                ST_SRID(geom) AS \"storage_crs_srid!\",\n                f.is_primary,\n                f.name,\n                f.properties \n            FROM app.project_features f\n            JOIN app.collections c ON c.id = f.collection_id\n            JOIN app.feature_objects fo ON fo.project_feature_id = f.id\n            WHERE c.slug = $2\n            AND status = 'ACTIVE'\n            AND ($3::int IS NULL OR f.project_id = $3)\n            ORDER BY f.id\n            LIMIT $4\n            ",
   "describe": {
     "columns": [
       {
@@ -47,9 +47,9 @@
     "parameters": {
       "Left": [
         "Text",
+        "Text",
         "Int4",
-        "Int8",
-        "Text"
+        "Int8"
       ]
     },
     "nullable": [
@@ -63,5 +63,5 @@
       false
     ]
   },
-  "hash": "02e0815125d50a32d27c4c8d2468f865547e594c16e0cbfdaaba9ef4fd97d0cf"
+  "hash": "07687a302a84e6e553c009c91549621dee8e679eb9363094f00a40f22611fa36"
 }
