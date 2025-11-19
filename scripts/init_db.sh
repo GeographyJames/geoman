@@ -65,17 +65,19 @@ done
 
 >&2 echo "Postgres is up and running on port ${DB_PORT}"
 
-CREATE_USER="CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
-docker exec -it "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -q -c "${CREATE_USER}"
-
-GRANT_CREATEDB="ALTER USER ${APP_USER} CREATEDB;"
-docker exec -it "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -q -c "${GRANT_CREATEDB}"
-
+MAINTENANCE_URL=postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/postgres
 DATABASE_URL=postgres://${APP_USER}:${APP_USER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME}
+SUPERUSER_URL=postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME}
 export DATABASE_URL
+
+psql ${MAINTENANCE_URL} -q -c "CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
+psql ${MAINTENANCE_URL} -q -c "ALTER USER ${APP_USER} CREATEDB;"
+
 sqlx database create
 
-psql postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME} -q -c "CREATE EXTENSION postgis;"
+psql ${SUPERUSER_URL} -q -c "CREATE EXTENSION postgis;"
+psql ${SUPERUSER_URL} -q -c "GRANT REFERENCES ON spatial_ref_sys TO ${APP_USER};"
+# BTREE index required for checking turbines are not on top of each other
 # psql postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME} -q -c "CREATE EXTENSION btree_gist;" 
 
 sqlx migrate run
@@ -95,11 +97,22 @@ run_sql_file() {
 if [[ -z "${SKIP_SEED}" ]]
 then
     >&2 echo "Seeding data..."
-    run_sql_file "teams.sql"
-    run_sql_file "users.sql"
-    run_sql_file "projects.sql"
-    run_sql_file "collections.sql"
-    run_sql_file "features.sql"
+
+    # Array of SQL files to run in order
+    sql_files=(
+        "teams.sql"
+        "users.sql"
+        "projects.sql"
+        "collections.sql"
+        "features.sql"
+        "crs.sql"
+    )
+
+    # Iterate through the array
+    for sql_file in "${sql_files[@]}"; do
+        run_sql_file "$sql_file"
+    done
+
     >&2 echo "Data seeded successfully"
 fi
 

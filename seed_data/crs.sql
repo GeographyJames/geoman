@@ -1,0 +1,1 @@
+INSERT INTO app.supported_crs (srid) VALUES (27700);
