@@ -2,6 +2,7 @@ use crate::common::{
     auth::clerk::ClerkAuthProvider,
     configure_database,
     constants::{CLERK_USER_ID_KEY, GEOMAN_TEST_ENVIRONMENT_KEY},
+    helpers::generate_random_bng_point_ewkt,
     services::{HttpClient, HttpService, OgcService},
 };
 use app::{
@@ -12,8 +13,6 @@ use app::{
 };
 use domain::{CollectionId, FeatureId, GeometryType, ProjectId, Slug, TeamId, UserId};
 use dotenvy::dotenv;
-
-use rand::Rng;
 use secrecy::ExposeSecret;
 use serde::Serialize;
 use serde_json::json;
@@ -280,14 +279,9 @@ impl TestApp {
         user_id: UserId,
         properties: Option<P>,
     ) -> FeatureId {
-        let name = uuid::Uuid::new_v4().to_string();
-        let mut rng = rand::rng();
-        let easting: u32 = rng.random_range(..700_000);
-        let northing: u32 = rng.random_range(..1_300_000);
-        let geom_wkt = format!("SRID=27700;POINT({} {})", easting, northing);
-
+        let (_, _, geom_wkt) = generate_random_bng_point_ewkt();
         self.insert_feature(
-            &name,
+            &uuid::Uuid::new_v4().to_string(),
             collection_id,
             project_id,
             user_id,
@@ -309,5 +303,12 @@ impl TestApp {
         let user_id = self.generate_user_id(team_id).await;
         let project_id = self.generate_project_id(user_id).await;
         (team_id, user_id, project_id)
+    }
+
+    pub async fn insert_crs(&self, srid: i32) {
+        sqlx::query!("INSERT INTO app.supported_crs (srid) VALUES ($1)", srid)
+            .execute(&self.db_pool)
+            .await
+            .expect("failed to insert crs");
     }
 }

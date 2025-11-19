@@ -64,7 +64,7 @@ pub async fn get_features(
             response_builder.streaming(bytes)
         }
         enums::Collection::Other(_) => {
-            let params = SelectAllParams::from_query(query.into_inner(), collection.to_string());
+            let params = SelectAllParams::from_query(&query, collection.to_string());
             let features = project_features_stream(collection.to_string(), params, repo).await?;
             let bytes = ogc_feature_collection_byte_stream(
                 features,
@@ -99,7 +99,7 @@ pub async fn get_project_features(
         base_url, URLS.ogc_api.base, URLS.ogc_api.project, project, collection
     );
 
-    let mut params = SelectAllParams::from_query(query.into_inner(), collection.clone());
+    let mut params = SelectAllParams::from_query(&query, collection.clone());
     params.project_id = Some(ProjectId(project_row.id));
     let features = project_features_stream(collection.clone(), params, repo).await?;
 
@@ -139,7 +139,8 @@ pub async fn get_feature(
         base_url, URLS.ogc_api.base, collection
     );
     let feature =
-        retrieve_feature_from_database(repo, collection, feature_id, collection_url, None).await?;
+        retrieve_feature_from_database(&repo, collection, feature_id, collection_url, None, &query)
+            .await?;
     let mut response = HttpResponse::Ok().json(feature);
     append_crs_header(&mut response, &request_crs);
 
@@ -166,11 +167,12 @@ pub async fn get_project_feature(
         base_url, URLS.ogc_api.base, URLS.ogc_api.project, project, collection
     );
     let feature = retrieve_feature_from_database(
-        repo,
+        &repo,
         collection,
         feature_id,
         collection_url,
         Some(ProjectId(project_row.id)),
+        &query,
     )
     .await?;
     let mut response = HttpResponse::Ok().json(feature);
@@ -195,11 +197,12 @@ async fn project_features_stream(
 }
 
 async fn retrieve_feature_from_database(
-    repo: web::Data<PostgresRepo>,
+    repo: &PostgresRepo,
     collection: enums::Collection,
     feature_id: i32,
     collection_url: String,
     project_id: Option<ProjectId>,
+    query: &Query,
 ) -> Result<ogc::Feature, ApiError> {
     let feature = match collection {
         enums::Collection::Projects => {
@@ -214,7 +217,8 @@ async fn retrieve_feature_from_database(
                 collection_slug,
                 id: feature_id,
             };
-            let params = SelectOneParams { project_id };
+            let mut params = SelectOneParams::from_query(query);
+            params.project_id = project_id;
             repo.select_one_with_params::<ProjectFeature>(&id, &params)
                 .await?
                 .ok_or_else(|| ApiError::FeatureNotFound {

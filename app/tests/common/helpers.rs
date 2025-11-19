@@ -1,4 +1,5 @@
 use domain::ProjectFeature;
+use rand::Rng;
 use reqwest::Response;
 use serde::de::DeserializeOwned;
 
@@ -81,4 +82,15 @@ pub async fn check_landing_page_response(response: Response) {
     let _landing_page: ogc::LandingPage = handle_json_response(response)
         .await
         .expect("failed to retrieve landing page");
+}
+
+pub fn generate_random_bng_point_ewkt() -> (u32, u32, String) {
+    let mut rng = rand::rng();
+    let easting: u32 = rng.random_range(..700_000);
+    let northing: u32 = rng.random_range(..1_300_000);
+    (
+        easting,
+        northing,
+        format!("SRID=27700;POINT({} {})", easting, northing),
+    )
 }

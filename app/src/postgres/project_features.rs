@@ -19,11 +19,13 @@ pub struct SelectAllParams {
     pub limit: Option<usize>,
     pub slug: String,
     pub project_id: Option<ProjectId>,
+    pub srid: Option<i32>,
 }
 
 #[derive(Clone)]
 pub struct SelectOneParams {
     pub project_id: Option<ProjectId>,
+    pub srid: Option<i32>,
 }
 
 #[derive(Deserialize)]
@@ -92,7 +94,7 @@ impl SelectOneWithParams for ProjectFeature {
                 f.collection_id,
                 f.project_id,
                 f.is_primary,
-                ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as "geometry!: Json<Geometry>",
+                ST_AsGeoJSON(ST_Transform(fo.geom, $4))::jsonb as "geometry!: Json<Geometry>",
                 f.properties
             FROM app.project_features f
             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
@@ -103,7 +105,8 @@ impl SelectOneWithParams for ProjectFeature {
             "#,
                 id,
                 collection_slug,
-                project_id.0
+                project_id.0,
+                params.srid.unwrap_or(4326) as i32
             )
             .fetch_optional(executor)
             .await?
@@ -117,7 +120,7 @@ impl SelectOneWithParams for ProjectFeature {
                 f.collection_id,
                 f.project_id,
                 f.is_primary,
-                ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as "geometry!: Json<Geometry>",
+                ST_AsGeoJSON(ST_Transform(fo.geom, $3))::jsonb as "geometry!: Json<Geometry>",
                 f.properties
             FROM app.project_features f
             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
@@ -126,7 +129,8 @@ impl SelectOneWithParams for ProjectFeature {
             AND c.slug = $2
             "#,
                 id,
-                collection_slug
+                collection_slug,
+                params.srid.unwrap_or(4326) as i32
             )
             .fetch_optional(executor)
             .await?
@@ -137,11 +141,21 @@ impl SelectOneWithParams for ProjectFeature {
 }
 
 impl SelectAllParams {
-    pub fn from_query(query: ogc::features::Query, slug: String) -> Self {
+    pub fn from_query(query: &ogc::features::Query, slug: String) -> Self {
         SelectAllParams {
             limit: query.limit,
             slug,
             project_id: None,
+            srid: Some(query.crs.as_srid()),
+        }
+    }
+}
+
+impl SelectOneParams {
+    pub fn from_query(query: &ogc::features::Query) -> Self {
+        SelectOneParams {
+            project_id: None,
+            srid: Some(query.crs.as_srid()),
         }
     }
 }
@@ -161,7 +175,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
                 f.id,
                 f.collection_id,
                 f.project_id,
-                ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as "geometry!: Json<Geometry>",
+                ST_AsGeoJSON(ST_Transform(fo.geom, $4))::jsonb as "geometry!: Json<Geometry>",
                 f.is_primary,
                 f.name,
                 f.properties 
@@ -176,7 +190,8 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             "#,
                 params.slug,
                 id.0,
-                params.limit.map(|l| l as i64)
+                params.limit.map(|l| l as i64),
+                params.srid.unwrap_or(4326) as i32
             )
             .fetch(executor),
             None => sqlx::query_as!(
@@ -186,7 +201,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
                 f.id,
                 f.collection_id,
                 f.project_id,
-                ST_AsGeoJSON(ST_Transform(fo.geom, 4326))::jsonb as "geometry!: Json<Geometry>",
+                ST_AsGeoJSON(ST_Transform(fo.geom, $3))::jsonb as "geometry!: Json<Geometry>",
                 f.is_primary,
                 f.name,
                 f.properties 
@@ -198,7 +213,8 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             LIMIT $2
             "#,
                 params.slug,
-                params.limit.map(|l| l as i64)
+                params.limit.map(|l| l as i64),
+                params.srid.unwrap_or(4326) as i32
             )
             .fetch(executor),
         };
