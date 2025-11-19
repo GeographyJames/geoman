@@ -15,12 +15,13 @@ use actix_web::{
     web::{self},
 };
 use domain::{
-    AllSupportedCrs, Collection, FeatureIdWithCollectionSlug, IntoOGCFeature, Project,
-    ProjectFeature, ProjectId, SupportedCrs,
+    Collection, FeatureIdWithCollectionSlug, IntoOGCFeature, Project, ProjectFeature, ProjectId,
 };
 use futures::Stream;
 use ogc::features::Query;
 use ogcapi_types::common::{Crs, media_type::GEO_JSON};
+
+struct ValidCrs(Crs);
 
 /// The features in the collection
 #[utoipa::path(
@@ -41,8 +42,9 @@ pub async fn get_features(
     collection: web::Path<enums::Collection>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
-    check_crs(&query.crs, &repo).await?;
+    check_crs(query.crs.clone(), &repo).await?;
     let base_url = get_base_url(&req);
+    let request_crs = check_crs(query.crs.clone(), &repo).await?;
     let collection_url = format!(
         "{}{}/collections/{}",
         base_url, URLS.ogc_api.base, &collection
@@ -73,7 +75,7 @@ pub async fn get_features(
             response_builder.streaming(bytes)
         }
     };
-    append_crs_header(&mut response);
+    append_crs_header(&mut response, &request_crs);
     Ok(response)
 }
 
@@ -86,7 +88,7 @@ pub async fn get_project_features(
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let (project, collection) = path.into_inner();
-    check_crs(&query.crs, &repo).await?;
+    let request_crs = check_crs(query.crs.clone(), &repo).await?;
     let project_row = repo
         .select_one::<Project>(&project)
         .await?
@@ -96,13 +98,15 @@ pub async fn get_project_features(
         "{}{}{}/{}/collections/{}",
         base_url, URLS.ogc_api.base, URLS.ogc_api.project, project, collection
     );
+
     let mut params = SelectAllParams::from_query(query.into_inner(), collection.clone());
     params.project_id = Some(ProjectId(project_row.id));
     let features = project_features_stream(collection.clone(), params, repo).await?;
 
     let bytes = ogc_feature_collection_byte_stream(features, collection_url, collection).await?;
     let mut response = HttpResponse::Ok().content_type(GEO_JSON).streaming(bytes);
-    append_crs_header(&mut response);
+    append_crs_header(&mut response, &request_crs);
+
     Ok(response)
 }
 
@@ -127,7 +131,7 @@ pub async fn get_feature(
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let (collection, feature_id) = path.into_inner();
-    check_crs(&query.crs, &repo).await?;
+    let request_crs = check_crs(query.crs.clone(), &repo).await?;
 
     let base_url = get_base_url(&req);
     let collection_url = format!(
@@ -137,7 +141,7 @@ pub async fn get_feature(
     let feature =
         retrieve_feature_from_database(repo, collection, feature_id, collection_url, None).await?;
     let mut response = HttpResponse::Ok().json(feature);
-    append_crs_header(&mut response);
+    append_crs_header(&mut response, &request_crs);
 
     Ok(response)
 }
@@ -151,7 +155,7 @@ pub async fn get_project_feature(
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let (project, collection, feature_id) = path.into_inner();
-    check_crs(&query.crs, &repo).await?;
+    let request_crs = check_crs(query.crs.clone(), &repo).await?;
     let project_row = repo
         .select_one::<Project>(&project)
         .await?
@@ -170,7 +174,7 @@ pub async fn get_project_feature(
     )
     .await?;
     let mut response = HttpResponse::Ok().json(feature);
-    append_crs_header(&mut response);
+    append_crs_header(&mut response, &request_crs);
     Ok(response)
 }
 
@@ -223,23 +227,20 @@ async fn retrieve_feature_from_database(
     Ok(feature)
 }
 
-fn append_crs_header(response: &mut HttpResponse) {
+fn append_crs_header(response: &mut HttpResponse, crs: &ValidCrs) {
     response.headers_mut().append(
         HeaderName::from_static("content-crs"),
-        HeaderValue::from_static("<http://www.opengis.net/def/crs/OGC/1.3/CRS84>"),
+        HeaderValue::from_str(&format!("<{}>", &crs.0.to_string())).unwrap(),
     );
 }
 
-async fn check_crs(requested_crs: &Crs, repo: &PostgresRepo) -> Result<(), ApiError> {
-    let supported_crs = TryInto::<Vec<Crs>>::try_into(Into::<AllSupportedCrs>::into(
-        repo.select_all::<SupportedCrs>().await?,
-    ))?;
-    if supported_crs
+async fn check_crs(requested_crs: Crs, repo: &PostgresRepo) -> Result<ValidCrs, ApiError> {
+    let supported_crs = repo.select_all::<Crs>().await?;
+    if !supported_crs
         .iter()
-        .find(|crs| crs.as_srid() == requested_crs.as_srid())
-        .is_none()
+        .any(|crs| crs.as_srid() == requested_crs.as_srid())
     {
         return Err(ApiError::UnsupportedCrs(requested_crs.as_srid()));
     }
-    Ok(())
+    Ok(ValidCrs(requested_crs))
 }

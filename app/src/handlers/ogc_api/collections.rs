@@ -1,5 +1,5 @@
 use actix_web::{HttpRequest, get, web};
-use domain::{AllSupportedCrs, Collection, Collections, Project, ProjectId, SupportedCrs};
+use domain::{Collection, Collections, Project, ProjectId};
 use ogcapi_types::common::Crs;
 
 use crate::{
@@ -55,9 +55,7 @@ pub async fn get_collections(
 
     let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
-    let supported_crs = TryInto::<Vec<Crs>>::try_into(Into::<AllSupportedCrs>::into(
-        repo.select_all::<SupportedCrs>().await?,
-    ))?;
+    let supported_crs = repo.select_all::<Crs>().await?;
 
     let collections: Collections = repo.select_all::<Collection>().await?.into();
     let mut ogc_collections =
@@ -87,9 +85,7 @@ pub async fn get_project_collections(
         "{}{}{}/{}/collections",
         base_url, URLS.ogc_api.base, URLS.ogc_api.project, project
     );
-    let supported_crs = TryInto::<Vec<Crs>>::try_into(Into::<AllSupportedCrs>::into(
-        repo.select_all::<SupportedCrs>().await?,
-    ))?;
+    let supported_crs = repo.select_all::<Crs>().await?;
     let collections: Collections = repo
         .select_all_with_params::<Collection>(params)
         .await?
@@ -145,9 +141,7 @@ pub async fn get_collection(
 ) -> Result<web::Json<ogcapi_types::common::Collection>, ApiError> {
     let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
-    let supported_crs = TryInto::<Vec<Crs>>::try_into(Into::<AllSupportedCrs>::into(
-        repo.select_all::<SupportedCrs>().await?,
-    ))?;
+    let supported_crs = repo.select_all::<Crs>().await?;
 
     let ogc_collection = match collection.into_inner() {
         enums::Collection::Projects => project_collection(&collections_url, supported_crs.clone()),
@@ -180,10 +174,7 @@ pub async fn get_project_collection(
         "{}{}{}/{}/collections",
         base_url, URLS.ogc_api.base, URLS.ogc_api.project, project
     );
-    let supported_crs = TryInto::<Vec<Crs>>::try_into(Into::<AllSupportedCrs>::into(
-        repo.select_all::<SupportedCrs>().await?,
-    ))?;
-
+    let supported_crs = repo.select_all::<Crs>().await?;
     // Fetch collection from database
     let params = SelectOneParams {
         project_id: ProjectId(project_row.id),

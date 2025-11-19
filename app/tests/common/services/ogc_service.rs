@@ -1,11 +1,8 @@
+use crate::common::{constants::REQUEST_FAILED, services::HttpClient};
 use app::{URLS, enums::ProjectIdentifier};
-
 use domain::Slug;
-use ogc::features::Query;
 use reqwest::{RequestBuilder, Response};
 use serde::Serialize;
-
-use crate::common::{constants::REQUEST_FAILED, services::HttpClient};
 
 pub struct OgcService {}
 
