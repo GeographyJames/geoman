@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT srid FROM app.supported_crs",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "srid",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "777f1c0e3bde0bd90fffec2e2535eb8e32efbbd58d97507b0d5361b18e8e67bd"
+}

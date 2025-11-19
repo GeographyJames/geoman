@@ -8,6 +8,7 @@ pub struct ProjectFeature {
     pub project_id: i32,
     pub properties: Map<String, Value>,
     pub name: String,
+    pub storage_crs_srid: i32,
     pub geometry: geojson::Geometry,
     pub is_primary: bool,
 }
@@ -22,6 +23,7 @@ impl IntoOGCFeature for ProjectFeature {
             is_primary,
             collection_id,
             project_id,
+            storage_crs_srid,
             ..
         } = self;
         ogc::Feature::new(id, collection_url)
@@ -31,6 +33,7 @@ impl IntoOGCFeature for ProjectFeature {
             .insert_property("is_primary".to_string(), json!(is_primary))
             .insert_property("collection_id".to_string(), json!(collection_id))
             .insert_property("project_id".to_string(), json!(project_id))
+            .insert_property("storage_crs_srid".to_string(), json!(storage_crs_srid))
     }
 }
 
@@ -61,6 +64,11 @@ impl TryFrom<ogc::Feature> for ProjectFeature {
                 .remove("project_id")
                 .ok_or_else(|| anyhow!("No 'project_id' field in feature properties"))?,
         )?;
+        let storage_crs_srid: i32 = serde_json::from_value(
+            properties
+                .remove("storage_crs_srid")
+                .ok_or_else(|| anyhow!("No 'project_id' field in feature properties"))?,
+        )?;
         Ok(Self {
             id,
             collection_id,
@@ -69,6 +77,7 @@ impl TryFrom<ogc::Feature> for ProjectFeature {
             geometry: geometry.ok_or(anyhow!("feature has no geometry"))?,
             is_primary,
             project_id,
+            storage_crs_srid,
         })
     }
 }

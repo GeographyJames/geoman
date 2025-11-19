@@ -37,6 +37,7 @@ struct ProjectFeatureRow {
     pub name: String,
     pub geometry: Json<geojson::Geometry>,
     pub is_primary: bool,
+    pub storage_crs_srid: i32,
 }
 
 impl TryInto<ProjectFeature> for ProjectFeatureRow {
@@ -50,6 +51,7 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
             is_primary,
             collection_id,
             project_id,
+            storage_crs_srid,
         } = self;
         let properties = match properties {
             Value::Object(map) => map,
@@ -63,6 +65,7 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
             geometry: geometry.0,
             is_primary,
             project_id,
+            storage_crs_srid,
         })
     }
 }
@@ -95,6 +98,7 @@ impl SelectOneWithParams for ProjectFeature {
                 f.project_id,
                 f.is_primary,
                 ST_AsGeoJSON(ST_Transform(fo.geom, $4))::jsonb as "geometry!: Json<Geometry>",
+                ST_SRID(geom) AS "storage_crs_srid!",
                 f.properties
             FROM app.project_features f
             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
@@ -121,6 +125,7 @@ impl SelectOneWithParams for ProjectFeature {
                 f.project_id,
                 f.is_primary,
                 ST_AsGeoJSON(ST_Transform(fo.geom, $3))::jsonb as "geometry!: Json<Geometry>",
+                ST_SRID(geom) AS "storage_crs_srid!",
                 f.properties
             FROM app.project_features f
             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
@@ -176,6 +181,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
                 f.collection_id,
                 f.project_id,
                 ST_AsGeoJSON(ST_Transform(fo.geom, $4))::jsonb as "geometry!: Json<Geometry>",
+                ST_SRID(geom) AS "storage_crs_srid!",
                 f.is_primary,
                 f.name,
                 f.properties 
@@ -202,6 +208,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
                 f.collection_id,
                 f.project_id,
                 ST_AsGeoJSON(ST_Transform(fo.geom, $3))::jsonb as "geometry!: Json<Geometry>",
+                ST_SRID(geom) AS "storage_crs_srid!",
                 f.is_primary,
                 f.name,
                 f.properties 
@@ -234,6 +241,7 @@ mod tests {
     fn project_feature_row_converts_to_project_feature() {
         let row = ProjectFeatureRow {
             id: 0,
+            storage_crs_srid: 4626,
             project_id: 0,
             collection_id: 0,
             properties: json!("{}"),

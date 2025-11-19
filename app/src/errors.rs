@@ -13,7 +13,7 @@ pub enum ApiError {
     ProjectNotFound(ProjectIdentifier),
     #[error("Collection '{collection_slug}' not found")]
     CollectionNotFound { collection_slug: String },
-    #[error("Feature with id {feature_id} from collection {collection_slug} not found")]
+    #[error("Feature with id {feature_id} from collection '{collection_slug}' not found")]
     FeatureNotFound {
         feature_id: i32,
         collection_slug: String,
