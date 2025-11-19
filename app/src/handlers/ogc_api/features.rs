@@ -18,7 +18,8 @@ use domain::{
     Collection, FeatureIdWithCollectionSlug, IntoOGCFeature, Project, ProjectFeature, ProjectId,
 };
 use futures::Stream;
-use ogc::{conformance_classes::GEOJSON, features::Query};
+use ogc::features::Query;
+use ogcapi_types::common::media_type::GEO_JSON;
 
 /// The features in the collection
 #[utoipa::path(
@@ -45,7 +46,7 @@ pub async fn get_features(
         base_url, URLS.ogc_api.base, &collection
     );
     let mut response_builder = HttpResponse::Ok();
-    response_builder.content_type(GEOJSON);
+    response_builder.content_type(GEO_JSON);
     let mut response = match collection.as_ref() {
         enums::Collection::Projects => {
             let projects =
@@ -97,7 +98,7 @@ pub async fn get_project_features(
     let features = project_features_stream(collection.clone(), params, repo).await?;
 
     let bytes = ogc_feature_collection_byte_stream(features, collection_url, collection).await?;
-    let mut response = HttpResponse::Ok().content_type(GEOJSON).streaming(bytes);
+    let mut response = HttpResponse::Ok().content_type(GEO_JSON).streaming(bytes);
     append_crs_header(&mut response);
     Ok(response)
 }

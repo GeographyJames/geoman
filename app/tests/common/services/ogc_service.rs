@@ -2,7 +2,8 @@ use app::{URLS, enums::ProjectIdentifier};
 
 use domain::Slug;
 use ogc::features::Query;
-use reqwest::Response;
+use reqwest::{RequestBuilder, Response};
+use serde::Serialize;
 
 use crate::common::{constants::REQUEST_FAILED, services::HttpClient};
 
@@ -142,14 +143,35 @@ impl OgcService {
         collection_slug: &Slug,
         id: i32,
     ) -> Response {
-        let req = client.get(format!(
+        let req = self.get_feature_req(client, collection_slug, id);
+        req.send().await.expect(REQUEST_FAILED)
+    }
+
+    fn get_feature_req(
+        &self,
+        client: &HttpClient,
+        collection_slug: &Slug,
+        id: i32,
+    ) -> RequestBuilder {
+        client.get(format!(
             "{}{}/{}/items/{}",
             &URLS.ogc_api.base,
             &URLS.ogc_api.collections,
             collection_slug.as_ref(),
             id
-        ));
+        ))
+    }
 
+    pub async fn get_feature_with_params<T: Serialize>(
+        &self,
+        client: &HttpClient,
+        collection_slug: &Slug,
+        id: i32,
+        params: &T,
+    ) -> Response {
+        let req = self
+            .get_feature_req(client, collection_slug, id)
+            .query(params);
         req.send().await.expect(REQUEST_FAILED)
     }
 

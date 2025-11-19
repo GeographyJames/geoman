@@ -1,5 +1,5 @@
-use crate::types::{Feature, common::MediaType};
-use ogcapi_types::common::{Link, link_rel::SELF};
+use crate::types::Feature;
+use ogcapi_types::common::{Link, link_rel::SELF, media_type::GEO_JSON};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Default, Deserialize)]
@@ -23,9 +23,7 @@ impl FeatureCollection {
             id: slug,
             r#type: Type::default(),
             features: Default::default(),
-            links: [
-                Link::new(format!("{}/items", collection_url), SELF).mediatype(MediaType::GeoJson)
-            ],
+            links: [Link::new(format!("{}/items", collection_url), SELF).mediatype(GEO_JSON)],
         }
     }
     pub fn append_features(mut self, mut features: Vec<Feature>) -> Self {

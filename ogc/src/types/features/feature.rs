@@ -1,7 +1,7 @@
-use crate::types::common::MediaType;
 use ogcapi_types::common::{
     Link,
     link_rel::{COLLECTION, SELF},
+    media_type::{GEO_JSON, JSON},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -27,9 +27,8 @@ impl Feature {
         Self {
             id,
             links: [
-                Link::new(format!("{collection_url}/items/{id}"), SELF)
-                    .mediatype(MediaType::GeoJson),
-                Link::new(collection_url, COLLECTION).mediatype(MediaType::Json),
+                Link::new(format!("{collection_url}/items/{id}"), SELF).mediatype(GEO_JSON),
+                Link::new(collection_url, COLLECTION).mediatype(JSON),
             ],
             r#type: Default::default(),
             properties: Default::default(),

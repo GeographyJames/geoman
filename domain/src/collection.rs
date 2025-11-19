@@ -1,7 +1,7 @@
-use ogc::MediaType;
 use ogcapi_types::common::{
     Crs, Link,
     link_rel::{ITEMS, SELF},
+    media_type::{GEO_JSON, JSON},
 };
 use serde::Deserialize;
 
@@ -26,15 +26,15 @@ impl Collection {
             ..
         } = self;
         let links = vec![
-            Link::new(format!("{}/{}", collections_url, slug), SELF).mediatype(MediaType::Json),
+            Link::new(format!("{}/{}", collections_url, slug), SELF).mediatype(JSON),
             Link::new(format!("{}/{}/items", collections_url, slug), ITEMS)
-                .mediatype(MediaType::GeoJson)
+                .mediatype(GEO_JSON)
                 .title("Items"),
         ];
         ogcapi_types::common::Collection {
             id: slug,
             title: Some(title),
-            description: description,
+            description,
             crs,
             links,
             ..Default::default()

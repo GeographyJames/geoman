@@ -1,17 +1,17 @@
 use actix_web::{get, web};
 use domain::Project;
-use ogc::{ConformanceDeclaration, conformance_classes};
+use ogcapi_types::common::Conformance;
 use std::sync::LazyLock;
 
 use crate::{enums::ProjectIdentifier, errors::ApiError, postgres::PostgresRepo};
 
-static CONFORMANCE_DECLARATION: LazyLock<ConformanceDeclaration> = LazyLock::new(|| {
-    let mut declaration = ConformanceDeclaration::default();
+static CONFORMANCE_DECLARATION: LazyLock<Conformance> = LazyLock::new(|| {
+    let mut declaration = Conformance::default();
     declaration.extend(&[
-        conformance_classes::CORE,
-        conformance_classes::GEOJSON,
-        conformance_classes::OAS30,
-        conformance_classes::CRS,
+        "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core",
+        "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/geojson",
+        "http://www.opengis.net/spec/ogcapi-features-2/1.0/conf/crs",
+        "http://www.opengis.net/spec/ogcapi-features-1/1.0/req/oas30",
     ]);
     declaration
 });
@@ -36,7 +36,7 @@ static CONFORMANCE_DECLARATION: LazyLock<ConformanceDeclaration> = LazyLock::new
 )]
 #[get("")]
 #[tracing::instrument]
-pub async fn get_conformance_declaration() -> web::Json<&'static ConformanceDeclaration> {
+pub async fn get_conformance_declaration() -> web::Json<&'static Conformance> {
     web::Json(&CONFORMANCE_DECLARATION)
 }
 
@@ -45,7 +45,7 @@ pub async fn get_conformance_declaration() -> web::Json<&'static ConformanceDecl
 pub async fn get_project_conformance_declaration(
     repo: web::Data<PostgresRepo>,
     project: web::Path<ProjectIdentifier>,
-) -> Result<web::Json<&'static ConformanceDeclaration>, ApiError> {
+) -> Result<web::Json<&'static Conformance>, ApiError> {
     let _project = repo
         .select_one::<Project>(&project)
         .await?

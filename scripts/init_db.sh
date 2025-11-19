@@ -9,10 +9,7 @@ remove_docker_container() {
 
 # Cleanup function to remove container on failure
 cleanup() {
-    if  docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-        echo >&2 "Error detected - cleaning up Docker container"
-        remove_docker_container
-    fi
+    echo >&2 "Error detected - aborting"
 }
 
 # Set trap to call cleanup on error
@@ -70,17 +67,40 @@ DATABASE_URL=postgres://${APP_USER}:${APP_USER_PWD}@localhost:${DB_PORT}/${APP_D
 SUPERUSER_URL=postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME}
 export DATABASE_URL
 
-psql ${MAINTENANCE_URL} -q -c "CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
-psql ${MAINTENANCE_URL} -q -c "ALTER USER ${APP_USER} CREATEDB;"
+run_psql_query() {
+    local connection_url=$1
+    local query=$2
+    # Extract first two words
+    read -r word1 word2 rest <<< "$query"
+    >&2 echo "Executing query: ${word1} ${word2}..."
+    psql "${connection_url}" -q -c "${query}" 2>&1 | sed 's/^/  [psql]  /' || {
+        >&2 echo "Error executing query"
+        return 1
+    }
+}
 
-sqlx database create
+run_sqlx_command() {
+    local command=$1
+    # Extract first two words
+    read -r word1 word2 rest <<< "$command"
+    >&2 echo "Executing sqlx: ${word1} ${word2}..."
+    sqlx ${command} || {
+        >&2 echo "Error executing sqlx command"
+        return 1
+    }
+}
 
-psql ${SUPERUSER_URL} -q -c "CREATE EXTENSION postgis;"
-psql ${SUPERUSER_URL} -q -c "GRANT REFERENCES ON spatial_ref_sys TO ${APP_USER};"
+run_psql_query "${MAINTENANCE_URL}" "CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
+run_psql_query "${MAINTENANCE_URL}" "ALTER USER ${APP_USER} CREATEDB;"
+
+run_sqlx_command "database create"
+
+run_psql_query "${SUPERUSER_URL}" "CREATE EXTENSION postgis;"
+run_psql_query "${SUPERUSER_URL}" "GRANT REFERENCES ON spatial_ref_sys TO ${APP_USER};"
 # BTREE index required for checking turbines are not on top of each other
 # psql postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME} -q -c "CREATE EXTENSION btree_gist;" 
 
-sqlx migrate run
+run_sqlx_command "migrate run"
 
 # Seed data
 SEED_DATA_DIRECTORY="seed_data/"

@@ -1,15 +1,9 @@
 mod landing_page;
 pub use landing_page::LandingPage;
-// mod link;
-// pub use link::Link;
+
 mod conformance;
-// pub mod link_relations;
-mod media_types;
 pub use conformance::ConformanceDeclaration;
-pub use media_types::MediaType;
-pub mod conformance_classes;
-// mod links;
-// pub use links::*;
+
 mod collections;
 pub use collections::Collections;
 mod collection;

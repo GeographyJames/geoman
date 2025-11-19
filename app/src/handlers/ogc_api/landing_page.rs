@@ -1,13 +1,14 @@
 use crate::{
-    AppState, URLS, enums::ProjectIdentifier, errors::ApiError, helpers::get_base_url,
-    postgres::PostgresRepo,
+    AppState, URLS, constants::OPEN_API_JSON, enums::ProjectIdentifier, errors::ApiError,
+    helpers::get_base_url, postgres::PostgresRepo,
 };
 use actix_web::{HttpRequest, get, web};
 use domain::Project;
-use ogc::{LandingPage, MediaType};
+
 use ogcapi_types::common::{
-    Link, Linked,
+    LandingPage, Link, Linked,
     link_rel::{CONFORMANCE, DATA, ROOT, SELF, SERVICE_DESC},
+    media_type::JSON,
 };
 
 #[utoipa::path(
@@ -57,17 +58,17 @@ pub async fn get_project_landing_page(
 
 fn landing_page(app_state: &AppState, api_url: &str) -> web::Json<LandingPage> {
     let links = [
-        Link::new(api_url, SELF).mediatype(MediaType::Json),
-        Link::new(api_url, ROOT).mediatype(MediaType::Json),
+        Link::new(api_url, SELF).mediatype(JSON),
+        Link::new(api_url, ROOT).mediatype(JSON),
         Link::new(
             format!("{}{}", api_url, &URLS.ogc_api.conformance_declaration),
             CONFORMANCE,
         )
-        .mediatype(MediaType::Json)
+        .mediatype(JSON)
         .title("Conformance declaration"),
-        Link::new(format!("{}/collections", api_url), DATA).mediatype(MediaType::Json),
+        Link::new(format!("{}/collections", api_url), DATA).mediatype(JSON),
         Link::new(format!("{}{}", api_url, URLS.ogc_api.openapi), SERVICE_DESC)
-            .mediatype(MediaType::OpenApi)
+            .mediatype(OPEN_API_JSON)
             .title("API definition"),
     ];
 

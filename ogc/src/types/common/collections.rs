@@ -1,8 +1,6 @@
-use ogcapi_types::common::{Collection, Link, Links, link_rel::SELF};
+use ogcapi_types::common::{Collection, Link, Links, link_rel::SELF, media_type::JSON};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-
-use crate::types::common::media_types::MediaType;
 
 #[derive(Serialize, Deserialize, ToSchema, Debug, Clone)]
 pub struct Collections {
@@ -13,7 +11,7 @@ pub struct Collections {
 impl Collections {
     pub fn new(collections_url: &str) -> Self {
         Collections {
-            links: vec![Link::new(collections_url, SELF).mediatype(MediaType::Json)],
+            links: vec![Link::new(collections_url, SELF).mediatype(JSON)],
             collections: Vec::new(),
         }
     }
