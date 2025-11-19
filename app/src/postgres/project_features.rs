@@ -92,37 +92,9 @@ impl SelectOneWithParams for ProjectFeature {
             collection_slug,
             id,
         } = feature_id;
-        match params.project_id {
-            Some(project_id) => sqlx::query_as!(
-                ProjectFeatureRow,
-                r#"
-            SELECT f.id,
-                f.name,
-                f.collection_id,
-                f.project_id,
-                f.is_primary,
-                ST_AsGeoJSON(ST_Transform(fo.geom, $4))::jsonb as "geometry!: Json<Geometry>",
-                ST_SRID(geom) AS "storage_crs_srid!",
-                f.properties
-            FROM app.project_features f
-            JOIN app.feature_objects fo ON fo.project_feature_id = f.id
-            JOIN app.collections c ON f.collection_id = c.id
-            WHERE f.id = $1
-            AND c.slug = $2
-            AND f.project_id = $3
-            "#,
-                id,
-                collection_slug,
-                project_id.0,
-                params.srid.unwrap_or(4326) as i32
-            )
-            .fetch_optional(executor)
-            .await?
-            .map(|row| row.try_into())
-            .transpose(),
-            None => sqlx::query_as!(
-                ProjectFeatureRow,
-                r#"
+        sqlx::query_as!(
+            ProjectFeatureRow,
+            r#"
             SELECT f.id,
                 f.name,
                 f.collection_id,
@@ -136,16 +108,17 @@ impl SelectOneWithParams for ProjectFeature {
             JOIN app.collections c ON f.collection_id = c.id
             WHERE f.id = $1
             AND c.slug = $2
+            AND ($4::int IS NULL OR f.project_id = $4)
             "#,
-                id,
-                collection_slug,
-                params.srid.unwrap_or(4326) as i32
-            )
-            .fetch_optional(executor)
-            .await?
-            .map(|row| row.try_into())
-            .transpose(),
-        }
+            id,
+            collection_slug,
+            params.srid.unwrap_or(4326) as i32,
+            params.project_id.map(|id| id.0)
+        )
+        .fetch_optional(executor)
+        .await?
+        .map(|row| row.try_into())
+        .transpose()
     }
 }
 
@@ -176,15 +149,20 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
         executor: PoolWrapper,
         params: Self::Params,
     ) -> impl Stream<Item = Result<Self, RepositoryError>> + use<> {
-        let query = match params.project_id {
-            Some(id) => sqlx::query_as!(
-                ProjectFeatureRow,
-                r#"
+        let SelectAllParams {
+            limit,
+            slug,
+            project_id,
+            srid,
+        } = params;
+        sqlx::query_as!(
+            ProjectFeatureRow,
+            r#"
             SELECT 
                 f.id,
                 f.collection_id,
                 f.project_id,
-                ST_AsGeoJSON(ST_Transform(fo.geom, $4))::jsonb as "geometry!: Json<Geometry>",
+                ST_AsGeoJSON(ST_Transform(fo.geom, $1))::jsonb as "geometry!: Json<Geometry>",
                 ST_SRID(geom) AS "storage_crs_srid!",
                 f.is_primary,
                 f.name,
@@ -192,45 +170,19 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             FROM app.project_features f
             JOIN app.collections c ON c.id = f.collection_id
             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
-            WHERE c.slug = $1
+            WHERE c.slug = $2
             AND status = 'ACTIVE'
-            AND f.project_id = $2
+            AND ($3::int IS NULL OR f.project_id = $3)
             ORDER BY f.id
-            LIMIT $3
+            LIMIT $4
             "#,
-                params.slug,
-                id.0,
-                params.limit.map(|l| l as i64),
-                params.srid.unwrap_or(4326) as i32
-            )
-            .fetch(executor),
-            None => sqlx::query_as!(
-                ProjectFeatureRow,
-                r#"
-            SELECT 
-                f.id,
-                f.collection_id,
-                f.project_id,
-                ST_AsGeoJSON(ST_Transform(fo.geom, $3))::jsonb as "geometry!: Json<Geometry>",
-                ST_SRID(geom) AS "storage_crs_srid!",
-                f.is_primary,
-                f.name,
-                f.properties 
-            FROM app.project_features f
-            JOIN app.collections c ON c.id = f.collection_id
-            JOIN app.feature_objects fo ON fo.project_feature_id = f.id
-            WHERE c.slug = $1 AND status = 'ACTIVE'
-            ORDER BY f.id
-            LIMIT $2
-            "#,
-                params.slug,
-                params.limit.map(|l| l as i64),
-                params.srid.unwrap_or(4326) as i32
-            )
-            .fetch(executor),
-        };
-
-        query.map(|res| res?.try_into())
+            srid.unwrap_or(4326) as i32,
+            slug,
+            project_id.map(|id| id.0),
+            limit.map(|l| l as i64),
+        )
+        .fetch(executor)
+        .map(|res| res?.try_into())
     }
 }
 
