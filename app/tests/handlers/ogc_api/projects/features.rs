@@ -19,7 +19,7 @@ async fn get_features_works_for_project() {
         .await;
     let response = app
         .ogc_service
-        .get_project_features(&app.api_client, &slug, &project_id.into(), None)
+        .get_project_features(&app.api_client, &slug, &project_id.into())
         .await;
     assert_ok(&response);
     let ogc_features: ogc::FeatureCollection = handle_json_response(response)
@@ -92,7 +92,7 @@ async fn get_features_returns_404_for_project_not_found() {
         .await;
     let response = app
         .ogc_service
-        .get_project_features(&app.api_client, &slug, &ProjectIdentifier::default(), None)
+        .get_project_features(&app.api_client, &slug, &ProjectIdentifier::default())
         .await;
     assert_status(&response, 404);
 }
@@ -114,11 +114,11 @@ async fn get_project_features_works_with_limit() {
     };
     let response = app
         .ogc_service
-        .get_project_features(
+        .get_project_features_with_params(
             &app.api_client,
             &collection_slug,
             &project_id.into(),
-            Some(&params),
+            &params,
         )
         .await;
     let features: ogc::FeatureCollection = handle_json_response(response)

@@ -1,12 +1,12 @@
 use actix_web::{HttpRequest, get, web};
-use domain::{Collection, Project, ProjectId};
+use domain::{AllSupportedCrs, Collection, Collections, Project, ProjectId, SupportedCrs};
 use ogcapi_types::common::Crs;
 
 use crate::{
     URLS,
     enums::{self, ProjectIdentifier},
     errors::ApiError,
-    helpers::{get_base_url, supported_crs},
+    helpers::get_base_url,
     postgres::{
         PostgresRepo,
         collections::{SelectAllParams, SelectOneParams},
@@ -50,23 +50,21 @@ use crate::{
 pub async fn get_collections(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-) -> Result<web::Json<ogc::Collections>, ApiError> {
+) -> Result<web::Json<ogcapi_types::common::Collections>, ApiError> {
     // Build base URL from request
 
     let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
-    let supported_crs = supported_crs(&repo).await?;
+    let supported_crs = TryInto::<Vec<Crs>>::try_into(Into::<AllSupportedCrs>::into(
+        repo.select_all::<SupportedCrs>().await?,
+    ))?;
 
-    let collections: Vec<Collection> = repo.select_all().await?;
-    let ogc_collections = collections
-        .into_iter()
-        .map(|c| c.into_ogc_collection(&collections_url, supported_crs.clone()))
-        .collect();
-
-    let ogc_collections = ogc::Collections::new(&collections_url)
-        .append_collections(ogc_collections)
-        .add_collection(project_collection(&collections_url, supported_crs));
-
+    let collections: Collections = repo.select_all::<Collection>().await?.into();
+    let mut ogc_collections =
+        collections.into_ogc_collections(&collections_url, supported_crs.clone());
+    ogc_collections
+        .collections
+        .push(project_collection(&collections_url, supported_crs));
     Ok(web::Json(ogc_collections))
 }
 
@@ -76,7 +74,7 @@ pub async fn get_project_collections(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
     project: web::Path<ProjectIdentifier>,
-) -> Result<web::Json<ogc::Collections>, ApiError> {
+) -> Result<web::Json<ogcapi_types::common::Collections>, ApiError> {
     let project_row = repo
         .select_one::<Project>(&project)
         .await?
@@ -89,14 +87,15 @@ pub async fn get_project_collections(
         "{}{}{}/{}/collections",
         base_url, URLS.ogc_api.base, URLS.ogc_api.project, project
     );
-    let supported_crs = supported_crs(&repo).await?;
-    let collections: Vec<Collection> = repo.select_all_with_params(params).await?;
-    let ogc_collections = collections
-        .into_iter()
-        .map(|c| c.into_ogc_collection(&collections_url, supported_crs.clone()))
-        .collect();
-    let ogc_collections =
-        ogc::Collections::new(&collections_url).append_collections(ogc_collections);
+    let supported_crs = TryInto::<Vec<Crs>>::try_into(Into::<AllSupportedCrs>::into(
+        repo.select_all::<SupportedCrs>().await?,
+    ))?;
+    let collections: Collections = repo
+        .select_all_with_params::<Collection>(params)
+        .await?
+        .into();
+    let ogc_collections = collections.into_ogc_collections(&collections_url, supported_crs);
+
     Ok(web::Json(ogc_collections))
 }
 
@@ -146,10 +145,12 @@ pub async fn get_collection(
 ) -> Result<web::Json<ogcapi_types::common::Collection>, ApiError> {
     let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
-    let supported_crs = supported_crs(&repo).await?;
+    let supported_crs = TryInto::<Vec<Crs>>::try_into(Into::<AllSupportedCrs>::into(
+        repo.select_all::<SupportedCrs>().await?,
+    ))?;
 
     let ogc_collection = match collection.into_inner() {
-        enums::Collection::Projects => project_collection(&collections_url, supported_crs),
+        enums::Collection::Projects => project_collection(&collections_url, supported_crs.clone()),
 
         enums::Collection::Other(slug) => repo
             .select_one::<Collection>(&slug)
@@ -179,6 +180,9 @@ pub async fn get_project_collection(
         "{}{}{}/{}/collections",
         base_url, URLS.ogc_api.base, URLS.ogc_api.project, project
     );
+    let supported_crs = TryInto::<Vec<Crs>>::try_into(Into::<AllSupportedCrs>::into(
+        repo.select_all::<SupportedCrs>().await?,
+    ))?;
 
     // Fetch collection from database
     let params = SelectOneParams {
@@ -190,7 +194,7 @@ pub async fn get_project_collection(
         .ok_or_else(|| ApiError::CollectionNotFound {
             collection_slug: collection,
         })?;
-    let supported_crs = supported_crs(&repo).await?;
+
     // Map database row to OGC Collection with links
     let ogc_collection = collection.into_ogc_collection(&collections_url, supported_crs);
 

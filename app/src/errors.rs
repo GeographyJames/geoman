@@ -18,6 +18,8 @@ pub enum ApiError {
         feature_id: i32,
         collection_slug: String,
     },
+    #[error("Unsupported CRS: {0}")]
+    UnsupportedCrs(i32),
 }
 
 impl ResponseError for ApiError {
@@ -28,6 +30,7 @@ impl ResponseError for ApiError {
             ApiError::ProjectNotFound(_) => StatusCode::NOT_FOUND,
             ApiError::CollectionNotFound { .. } => StatusCode::NOT_FOUND,
             ApiError::FeatureNotFound { .. } => StatusCode::NOT_FOUND,
+            ApiError::UnsupportedCrs(_) => StatusCode::BAD_REQUEST,
         }
     }
 }

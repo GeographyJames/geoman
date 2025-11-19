@@ -97,22 +97,28 @@ impl OgcService {
         req.send().await.expect(REQUEST_FAILED)
     }
 
-    pub async fn get_features(
+    pub async fn get_features(&self, client: &HttpClient, collection_slug: &Slug) -> Response {
+        let req = self.get_features_req(client, collection_slug);
+        req.send().await.expect(REQUEST_FAILED)
+    }
+
+    pub async fn get_features_with_params<T: Serialize>(
         &self,
         client: &HttpClient,
         collection_slug: &Slug,
-        params: Option<&Query>,
+        params: &T,
     ) -> Response {
-        let mut req = client.get(format!(
+        let req = self.get_features_req(client, collection_slug).query(params);
+        req.send().await.expect(REQUEST_FAILED)
+    }
+
+    fn get_features_req(&self, client: &HttpClient, collection_slug: &Slug) -> RequestBuilder {
+        client.get(format!(
             "{}{}/{}/items",
             &URLS.ogc_api.base,
             &URLS.ogc_api.collections,
             collection_slug.as_ref()
-        ));
-        if let Some(query) = params {
-            req = req.query(query)
-        }
-        req.send().await.expect(REQUEST_FAILED)
+        ))
     }
 
     pub async fn get_project_features(
@@ -120,20 +126,37 @@ impl OgcService {
         client: &HttpClient,
         collection_slug: &Slug,
         project: &ProjectIdentifier,
-        params: Option<&Query>,
     ) -> Response {
-        let endopint = format!(
+        let req = self.get_project_features_req(client, collection_slug, project);
+        req.send().await.expect(REQUEST_FAILED)
+    }
+
+    fn get_project_features_req(
+        &self,
+        client: &HttpClient,
+        collection_slug: &Slug,
+        project: &ProjectIdentifier,
+    ) -> RequestBuilder {
+        client.get(format!(
             "{}{}/{}{}/{}/items",
             URLS.ogc_api.base,
             URLS.ogc_api.project,
             project,
             URLS.ogc_api.collections,
             collection_slug.as_ref()
-        );
-        let mut req = client.get(endopint);
-        if let Some(query) = params {
-            req = req.query(query)
-        }
+        ))
+    }
+
+    pub async fn get_project_features_with_params<T: Serialize>(
+        &self,
+        client: &HttpClient,
+        collection_slug: &Slug,
+        project: &ProjectIdentifier,
+        params: &T,
+    ) -> Response {
+        let req = self
+            .get_project_features_req(client, collection_slug, project)
+            .query(params);
         req.send().await.expect(REQUEST_FAILED)
     }
 
@@ -192,14 +215,14 @@ impl OgcService {
         req.send().await.expect(REQUEST_FAILED)
     }
 
-    pub async fn get_project_feature(
+    fn get_project_feature_req(
         &self,
         client: &HttpClient,
         project: &ProjectIdentifier,
         collection_slug: &Slug,
         id: i32,
-    ) -> Response {
-        let req = client.get(format!(
+    ) -> RequestBuilder {
+        client.get(format!(
             "{}{}/{}{}/{}/items/{}",
             URLS.ogc_api.base,
             URLS.ogc_api.project,
@@ -207,7 +230,31 @@ impl OgcService {
             URLS.ogc_api.collections,
             collection_slug.as_ref(),
             id
-        ));
+        ))
+    }
+
+    pub async fn get_project_feature_with_params<T: Serialize>(
+        &self,
+        client: &HttpClient,
+        project: &ProjectIdentifier,
+        collection_slug: &Slug,
+        id: i32,
+        params: &T,
+    ) -> Response {
+        let req = self
+            .get_project_feature_req(client, project, collection_slug, id)
+            .query(params);
+        req.send().await.expect(REQUEST_FAILED)
+    }
+
+    pub async fn get_project_feature(
+        &self,
+        client: &HttpClient,
+        project: &ProjectIdentifier,
+        collection_slug: &Slug,
+        id: i32,
+    ) -> Response {
+        let req = self.get_project_feature_req(client, project, collection_slug, id);
         req.send().await.expect(REQUEST_FAILED)
     }
 }

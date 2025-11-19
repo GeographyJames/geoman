@@ -32,10 +32,7 @@ async fn get_features_works() {
             Some(Properties::default()),
         )
         .await;
-    let response = app
-        .ogc_service
-        .get_features(&app.api_client, &slug, None)
-        .await;
+    let response = app.ogc_service.get_features(&app.api_client, &slug).await;
 
     assert_ok(&response);
 
@@ -69,7 +66,7 @@ async fn get_features_works_with_limit() {
     };
     let response = app
         .ogc_service
-        .get_features(&app.api_client, &slug, Some(&params))
+        .get_features_with_params(&app.api_client, &slug, &params)
         .await;
     assert_ok(&response);
     let feature_collection: ogc::FeatureCollection = handle_json_response(response)
@@ -143,10 +140,7 @@ async fn get_features_returns_empty_vec_for_no_features_in_collection() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, _) = app.generate_ids().await;
     let (slug, _) = app.generate_collection_slug_and_id(user_id).await;
-    let response = app
-        .ogc_service
-        .get_features(&app.api_client, &slug, None)
-        .await;
+    let response = app.ogc_service.get_features(&app.api_client, &slug).await;
     assert_ok(&response);
 
     let feature_collection: ogc::FeatureCollection = handle_json_response(response)

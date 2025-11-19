@@ -32,7 +32,7 @@ impl Endpoint {
             Endpoint::GetCollections => app.ogc_service.get_collections(&app.api_client).await,
             Endpoint::GetFeatures => {
                 app.ogc_service
-                    .get_features(&app.api_client, &Slug::default(), None)
+                    .get_features(&app.api_client, &Slug::default())
                     .await
             }
             Endpoint::GetFeature => {
@@ -67,11 +67,7 @@ impl Endpoint {
             }
             Endpoint::GetProjects => {
                 app.ogc_service
-                    .get_features(
-                        &app.api_client,
-                        &Collection::Projects.try_into().unwrap(),
-                        None,
-                    )
+                    .get_features(&app.api_client, &Collection::Projects.try_into().unwrap())
                     .await
             }
             Endpoint::GetProjectCollections => {
@@ -88,7 +84,6 @@ impl Endpoint {
                         &app.api_client,
                         &Slug::default(),
                         &ProjectIdentifier::default(),
-                        None,
                     )
                     .await
             }

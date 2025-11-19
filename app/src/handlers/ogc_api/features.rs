@@ -15,11 +15,12 @@ use actix_web::{
     web::{self},
 };
 use domain::{
-    Collection, FeatureIdWithCollectionSlug, IntoOGCFeature, Project, ProjectFeature, ProjectId,
+    AllSupportedCrs, Collection, FeatureIdWithCollectionSlug, IntoOGCFeature, Project,
+    ProjectFeature, ProjectId, SupportedCrs,
 };
 use futures::Stream;
 use ogc::features::Query;
-use ogcapi_types::common::media_type::GEO_JSON;
+use ogcapi_types::common::{Crs, media_type::GEO_JSON};
 
 /// The features in the collection
 #[utoipa::path(
@@ -40,6 +41,7 @@ pub async fn get_features(
     collection: web::Path<enums::Collection>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
+    check_crs(&query.crs, &repo).await?;
     let base_url = get_base_url(&req);
     let collection_url = format!(
         "{}{}/collections/{}",
@@ -84,6 +86,7 @@ pub async fn get_project_features(
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let (project, collection) = path.into_inner();
+    check_crs(&query.crs, &repo).await?;
     let project_row = repo
         .select_one::<Project>(&project)
         .await?
@@ -116,13 +119,15 @@ pub async fn get_project_features(
     )
 )]
 #[get("/{collectionId}/items/{featureId}")]
-#[tracing::instrument(skip(repo, req, path))]
+#[tracing::instrument(skip(repo, req, path, query))]
 pub async fn get_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
     path: web::Path<(enums::Collection, i32)>,
+    query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let (collection, feature_id) = path.into_inner();
+    check_crs(&query.crs, &repo).await?;
 
     let base_url = get_base_url(&req);
     let collection_url = format!(
@@ -138,13 +143,15 @@ pub async fn get_feature(
 }
 
 #[get("/{collectionId}/items/{featureId}")]
-#[tracing::instrument(skip(repo, req, path))]
+#[tracing::instrument(skip(repo, req, path, query))]
 pub async fn get_project_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
     path: web::Path<(ProjectIdentifier, enums::Collection, i32)>,
+    query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let (project, collection, feature_id) = path.into_inner();
+    check_crs(&query.crs, &repo).await?;
     let project_row = repo
         .select_one::<Project>(&project)
         .await?
@@ -221,4 +228,18 @@ fn append_crs_header(response: &mut HttpResponse) {
         HeaderName::from_static("content-crs"),
         HeaderValue::from_static("<http://www.opengis.net/def/crs/OGC/1.3/CRS84>"),
     );
+}
+
+async fn check_crs(requested_crs: &Crs, repo: &PostgresRepo) -> Result<(), ApiError> {
+    let supported_crs = TryInto::<Vec<Crs>>::try_into(Into::<AllSupportedCrs>::into(
+        repo.select_all::<SupportedCrs>().await?,
+    ))?;
+    if supported_crs
+        .iter()
+        .find(|crs| crs.as_srid() == requested_crs.as_srid())
+        .is_none()
+    {
+        return Err(ApiError::UnsupportedCrs(requested_crs.as_srid()));
+    }
+    Ok(())
 }

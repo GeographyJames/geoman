@@ -1,3 +1,5 @@
+use std::{fs, path::PathBuf};
+
 use app::{DatabaseSettings, Password};
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 
@@ -62,4 +64,17 @@ pub async fn configure_database(db_settings: &DatabaseSettings) {
         .run(&connection_pool)
         .await
         .expect("Failed to migrate the database");
+
+    // Seed data
+    let seed_data_directory = PathBuf::from("../seed_data");
+    let sql_files = ["crs.sql"];
+    for file in sql_files {
+        let mut path = seed_data_directory.clone();
+        path.push(file);
+        let query_string = fs::read_to_string(&path).expect("failed to read SQL file");
+        connection_pool
+            .execute(query_string.as_str())
+            .await
+            .expect("failed to execute sql file");
+    }
 }
