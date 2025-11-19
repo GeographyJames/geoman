@@ -1,16 +1,30 @@
 use crate::IntoOGCFeature;
 use anyhow::{Context, anyhow};
-use serde_json::{Map, Value, json};
+use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value, from_value, json};
 
 pub struct ProjectFeature {
     pub id: i32,
+    pub properties_map: Map<String, Value>,
+    pub properties: Properties,
+    pub geometry: geojson::Geometry,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct Properties {
     pub collection_id: i32,
     pub project_id: i32,
-    pub properties: Map<String, Value>,
     pub name: String,
     pub storage_crs_srid: i32,
-    pub geometry: geojson::Geometry,
     pub is_primary: bool,
+}
+
+#[derive(Deserialize)]
+struct PropertiesHelper {
+    #[serde(flatten)]
+    properties: Properties,
+    #[serde(flatten)]
+    extra: Map<String, Value>,
 }
 
 impl IntoOGCFeature for ProjectFeature {
@@ -19,65 +33,56 @@ impl IntoOGCFeature for ProjectFeature {
             id,
             properties,
             geometry,
-            name,
-            is_primary,
-            collection_id,
-            project_id,
-            storage_crs_srid,
+            mut properties_map,
             ..
         } = self;
+        let mut additional: Map<String, Value> = from_value(json!(properties)).unwrap();
+        properties_map.append(&mut additional);
         ogc::Feature::new(id, collection_url)
             .set_geometry(geometry)
-            .set_properties(properties)
-            .insert_property("name".to_string(), json!(name))
-            .insert_property("is_primary".to_string(), json!(is_primary))
-            .insert_property("collection_id".to_string(), json!(collection_id))
-            .insert_property("project_id".to_string(), json!(project_id))
-            .insert_property("storage_crs_srid".to_string(), json!(storage_crs_srid))
+            .set_properties(properties_map)
     }
 }
 
 impl TryFrom<ogc::Feature> for ProjectFeature {
     type Error = anyhow::Error;
-    fn try_from(mut ogc_feature: ogc::Feature) -> Result<Self, Self::Error> {
-        let name = ogc_feature
-            .remove_string_property("name")
-            .context("No 'name' field in feature properties")??;
+    fn try_from(ogc_feature: ogc::Feature) -> Result<Self, Self::Error> {
         let ogc::Feature {
             id,
-            mut properties,
+            properties,
             geometry,
             ..
         } = ogc_feature;
-        let is_primary: bool = serde_json::from_value(
-            properties
-                .remove("is_primary")
-                .ok_or_else(|| anyhow!("No 'is_primary' field in feature properties"))?,
-        )?;
-        let collection_id: i32 = serde_json::from_value(
-            properties
-                .remove("collection_id")
-                .ok_or_else(|| anyhow!("No 'collection_id' field in feature properties"))?,
-        )?;
-        let project_id: i32 = serde_json::from_value(
-            properties
-                .remove("project_id")
-                .ok_or_else(|| anyhow!("No 'project_id' field in feature properties"))?,
-        )?;
-        let storage_crs_srid: i32 = serde_json::from_value(
-            properties
-                .remove("storage_crs_srid")
-                .ok_or_else(|| anyhow!("No 'project_id' field in feature properties"))?,
-        )?;
+
+        let helper: PropertiesHelper = serde_json::from_value(Value::Object(properties))
+            .context("Failed to deserialize properties")?;
         Ok(Self {
             id,
-            collection_id,
-            properties,
-            name,
+            properties: helper.properties,
+            properties_map: helper.extra,
             geometry: geometry.ok_or(anyhow!("feature has no geometry"))?,
-            is_primary,
-            project_id,
-            storage_crs_srid,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{IntoOGCFeature, ProjectFeature};
+    use serde_json::{Map, json};
+
+    #[test]
+    fn feature_converts_to_and_from_ogc_feature() {
+        let mut map = Map::new();
+        let key = uuid::Uuid::new_v4().to_string();
+        map.insert(key.clone(), json!(uuid::Uuid::new_v4().to_string()));
+        let ft = ProjectFeature {
+            id: 1,
+            properties_map: map,
+            properties: Default::default(),
+            geometry: geojson::Geometry::new(geojson::Value::Point(vec![1., 1.])),
+        };
+        let ogc = ft.into_ogc_feature(uuid::Uuid::new_v4().to_string());
+        let ft = ProjectFeature::try_from(ogc).unwrap();
+        assert!(ft.properties_map.contains_key(&key));
     }
 }

@@ -6,7 +6,7 @@ mod project;
 pub use project::*;
 mod types;
 pub use types::*;
-mod poject_feature;
+pub mod poject_feature;
 pub use poject_feature::ProjectFeature;
 mod traits;
 pub use traits::IntoOGCFeature;

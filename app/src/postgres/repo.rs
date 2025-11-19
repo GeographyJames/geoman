@@ -1,3 +1,4 @@
+/// Appplication repository
 use futures::Stream;
 use sqlx::PgPool;
 
@@ -11,7 +12,7 @@ use crate::{
         },
     },
 };
-/// Appplication repository
+
 pub struct PostgresRepo {
     pub db_pool: PgPool,
 }

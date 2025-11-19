@@ -131,8 +131,14 @@ async fn get_feature_works() {
     let feature_2: domain::ProjectFeature = ogc_feature_2.try_into().unwrap();
     assert_eq!(feature_1.id, feature_1_id.id);
     assert_eq!(feature_2.id, feature_2_id.id);
-    assert_eq!(feature_1.collection_id, feature_1_id.collection_id.0);
-    assert_eq!(feature_2.collection_id, feature_2_id.collection_id.0);
+    assert_eq!(
+        feature_1.properties.collection_id,
+        feature_1_id.collection_id.0
+    );
+    assert_eq!(
+        feature_2.properties.collection_id,
+        feature_2_id.collection_id.0
+    );
 }
 
 #[actix_web::test]

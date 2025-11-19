@@ -66,8 +66,9 @@ pub async fn handle_json_response<T: DeserializeOwned>(
 pub fn check_ogc_feature<P: DeserializeOwned>(ogc_feature: ogc::Feature) {
     let project_feature = ProjectFeature::try_from(ogc_feature)
         .expect("failed to convert ogc featuer to project feature");
-    let _props: P = serde_json::from_value(serde_json::Value::Object(project_feature.properties))
-        .expect("failed to deserialise feature properties to properties struct");
+    let _props: P =
+        serde_json::from_value(serde_json::Value::Object(project_feature.properties_map))
+            .expect("failed to deserialise feature properties to properties struct");
 }
 
 pub async fn check_conformance_declaration_response(response: Response) {

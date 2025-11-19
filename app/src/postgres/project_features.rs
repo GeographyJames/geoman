@@ -1,4 +1,4 @@
-use domain::{FeatureIdWithCollectionSlug, ProjectFeature, ProjectId};
+use domain::{FeatureIdWithCollectionSlug, ProjectFeature, ProjectId, poject_feature::Properties};
 use futures::{Stream, StreamExt};
 use geojson::Geometry;
 use serde::Deserialize;
@@ -59,13 +59,17 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
         };
         Ok(ProjectFeature {
             id,
-            collection_id,
-            properties,
-            name,
+
+            properties: Properties {
+                collection_id,
+                project_id,
+                name,
+                storage_crs_srid,
+                is_primary,
+            },
+
             geometry: geometry.0,
-            is_primary,
-            project_id,
-            storage_crs_srid,
+            properties_map: properties,
         })
     }
 }
