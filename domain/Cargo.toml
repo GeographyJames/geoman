@@ -12,3 +12,4 @@ geojson = { workspace = true }
 serde_json = { workspace = true }
 ogc = { path = "../ogc" }
 anyhow = { workspace = true }
+ogcapi-types = { workspace = true }

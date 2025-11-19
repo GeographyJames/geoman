@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::constants::OPEN_API_JSON;
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -23,6 +25,12 @@ impl MediaType {
             MediaType::OpenApi => OPEN_API_JSON,
             MediaType::Other(s) => s,
         }
+    }
+}
+
+impl Display for MediaType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
     }
 }
 

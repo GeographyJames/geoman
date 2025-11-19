@@ -1,9 +1,8 @@
+use ogcapi_types::common::{Collection, Link, Links, link_rel::SELF};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::types::common::{Link, Links, link_relations::SELF, media_types::MediaType};
-
-use super::Collection;
+use crate::types::common::media_types::MediaType;
 
 #[derive(Serialize, Deserialize, ToSchema, Debug, Clone)]
 pub struct Collections {

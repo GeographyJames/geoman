@@ -11,7 +11,7 @@ name = "geoman"
 ogc = { path = "../ogc" }
 actix-web = "4.11"
 clerk-rs = { version = "0.4", features = ["actix"] }
-anyhow = "1.0"
+anyhow = { workspace = true }
 config = "0.15"
 serde = { workspace = true }
 dotenvy = "0.15"
@@ -30,6 +30,7 @@ log = "0.4"
 serde_json = { workspace = true }
 domain = { path = "../domain" }
 geojson = { workspace = true }
+ogcapi-types = { workspace = true }
 
 [dev-dependencies]
 rand = "0.9"

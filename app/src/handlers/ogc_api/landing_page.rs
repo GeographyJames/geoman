@@ -4,9 +4,10 @@ use crate::{
 };
 use actix_web::{HttpRequest, get, web};
 use domain::Project;
-use ogc::{
-    LandingPage, Link, Linked, MediaType,
-    link_relations::{CONFORMANCE, DATA, ROOT, SELF, SERVICE_DESC},
+use ogc::{LandingPage, MediaType};
+use ogcapi_types::common::{
+    Link, Linked,
+    link_rel::{CONFORMANCE, DATA, ROOT, SELF, SERVICE_DESC},
 };
 
 #[utoipa::path(

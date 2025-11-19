@@ -1,7 +1,6 @@
+use ogcapi_types::common::Links;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-
-use crate::types::common::Links;
 
 /// OGC API - Features Landing Page
 ///

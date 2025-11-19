@@ -40,6 +40,19 @@ pub async fn configure_database(db_settings: &DatabaseSettings) {
         .await
         .expect("Failed to create PostGIS extension");
 
+    superuser_connection
+        .execute(
+            format!(
+                "GRANT REFERENCES ON spatial_ref_sys TO {};",
+                app_user_settings.username
+            )
+            .as_str(),
+        )
+        .await
+        .expect(&format!(
+            "Failed to grant REFERENCES on spatial_ref_sys to {}",
+            app_user_settings.username
+        ));
     // Migrate database
     let connection_pool = PgPool::connect_with(db_settings.connect_options())
         .await

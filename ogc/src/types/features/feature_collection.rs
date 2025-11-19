@@ -1,7 +1,5 @@
-use crate::types::{
-    Feature,
-    common::{Link, MediaType, link_relations::SELF},
-};
+use crate::types::{Feature, common::MediaType};
+use ogcapi_types::common::{Link, link_rel::SELF};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Default, Deserialize)]

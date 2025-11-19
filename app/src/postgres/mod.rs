@@ -6,3 +6,4 @@ pub use pool_wrapper::PoolWrapper;
 pub mod collections;
 pub mod project_features;
 mod projects;
+mod supported_crs;

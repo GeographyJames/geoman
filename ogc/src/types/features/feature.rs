@@ -1,6 +1,7 @@
-use crate::types::common::{
-    Link, MediaType,
-    link_relations::{COLLECTION, SELF},
+use crate::types::common::MediaType;
+use ogcapi_types::common::{
+    Link,
+    link_rel::{COLLECTION, SELF},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};

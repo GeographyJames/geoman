@@ -5,10 +5,10 @@ edition = "2024"
 
 [dependencies]
 serde = { workspace = true }
-geojson = "0.24"
+geojson = { workspace = true }
 chrono = { version = "0.4", features = ["serde"] }
 serde_json = { workspace = true }
 utoipa = { workspace = true }
 uuid = { workspace = true }
-ogcapi-types = "0.3"
+ogcapi-types = { workspace = true }
 serde_with = "3.16"

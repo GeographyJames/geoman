@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use crate::{
     URLS,
     enums::{self, ProjectIdentifier},
@@ -10,7 +8,6 @@ use crate::{
         project_features::{SelectAllParams, SelectOneParams},
     },
     streaming::ogc_feature_collection_byte_stream,
-    urls::Api,
 };
 use actix_web::{
     HttpRequest, HttpResponse, get,

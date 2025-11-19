@@ -1,58 +1,66 @@
-use ogcapi_types::common::Crs;
+// This is a copy of ogcapi-types collection purely for openapi docs
+
+use ogcapi_types::common::{Crs, Extent, Link};
 use serde::{Deserialize, Serialize};
+
 use serde_with::DisplayFromStr;
 use utoipa::ToSchema;
 
-use crate::types::common::{
-    Link, Links,
-    link_relations::{ITEMS, SELF},
-    media_types::MediaType,
-};
+// const CRS_REF: &str = "#/crs";
 
-/// A single collection in the OGC API
+fn collection() -> String {
+    "Collection".to_string()
+}
+
+/// A body of resources that belong or are used together. An aggregate, set, or group of related resources.
 #[serde_with::serde_as]
-#[derive(Serialize, Deserialize, ToSchema, Debug, Clone)]
-#[non_exhaustive]
+#[serde_with::skip_serializing_none]
+#[derive(Serialize, Deserialize, ToSchema, Debug, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Collection {
-    /// Unique identifier for the collection (slug)
     pub id: String,
-
-    /// Human-readable title
-    pub title: String,
-
-    /// Description of the collection
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Must be set to `Collection` to be a valid Collection.
+    #[serde(default = "collection")]
+    pub r#type: String,
+    pub title: Option<String>,
     pub description: Option<String>,
-
-    /// Links related to this collection
-    pub links: Links,
-
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub keywords: Vec<String>,
+    /// Attribution for the collection.
+    pub attribution: Option<String>,
+    pub extent: Option<Extent>,
+    /// An indicator about the type of the items in the collection.
+    pub item_type: Option<String>,
     /// The list of coordinate reference systems supported by the API; the first item is the default coordinate reference system.
     #[serde(default)]
     #[serde_as(as = "Vec<DisplayFromStr>")]
     #[schema(value_type = Vec<String>)]
     pub crs: Vec<Crs>,
+    #[serde(default)]
+    #[serde_as(as = "Option<DisplayFromStr>")]
+    #[schema(value_type = String)]
+    pub storage_crs: Option<Crs>,
+    pub storage_crs_coordinate_epoch: Option<f32>,
+    #[serde(default)]
+    pub links: Vec<Link>,
 }
 
-impl Collection {
-    pub fn new(
-        id: String,
-        title: String,
-        description: Option<String>,
-        collections_url: &str,
-    ) -> Self {
-        let links = vec![
-            Link::new(format!("{}/{}", collections_url, id), SELF).mediatype(MediaType::Json),
-            Link::new(format!("{}/{}/items", collections_url, id), ITEMS)
-                .mediatype(MediaType::GeoJson)
-                .title("Items"),
-        ];
+#[allow(clippy::derivable_impls)]
+impl Default for Collection {
+    fn default() -> Self {
         Self {
-            id,
-            title,
-            description,
-            links,
+            r#type: "Collection".to_string(),
+            id: Default::default(),
+            title: Default::default(),
+            description: Default::default(),
+            keywords: Default::default(),
+            attribution: Default::default(),
+            extent: Default::default(),
+            item_type: Default::default(),
             crs: vec![Crs::default()],
+            storage_crs: Default::default(),
+            storage_crs_coordinate_epoch: Default::default(),
+            links: Default::default(),
         }
     }
 }
