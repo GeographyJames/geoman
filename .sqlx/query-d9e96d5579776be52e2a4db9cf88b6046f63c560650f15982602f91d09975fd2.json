@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT \n                f.id,\n                f.collection_id,\n                f.project_id,\n                ST_AsGeoJSON(ST_Transform(fo.geom, $3))::jsonb as \"geometry!: Json<Geometry>\",\n                f.is_primary,\n                f.name,\n                f.properties \n            FROM app.project_features f\n            JOIN app.collections c ON c.id = f.collection_id\n            JOIN app.feature_objects fo ON fo.project_feature_id = f.id\n            WHERE c.slug = $1 AND status = 'ACTIVE'\n            ORDER BY f.id\n            LIMIT $2\n            ",
+  "query": "\n            SELECT \n                f.id,\n                f.collection_id,\n                f.project_id,\n                ST_AsGeoJSON(ST_Transform(fo.geom, $3))::jsonb as \"geometry!: Json<Geometry>\",\n                ST_SRID(geom) AS \"storage_crs_srid!\",\n                f.is_primary,\n                f.name,\n                f.properties \n            FROM app.project_features f\n            JOIN app.collections c ON c.id = f.collection_id\n            JOIN app.feature_objects fo ON fo.project_feature_id = f.id\n            WHERE c.slug = $1 AND status = 'ACTIVE'\n            ORDER BY f.id\n            LIMIT $2\n            ",
   "describe": {
     "columns": [
       {
@@ -25,16 +25,21 @@
       },
       {
         "ordinal": 4,
+        "name": "storage_crs_srid!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
         "name": "is_primary",
         "type_info": "Bool"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "name",
         "type_info": "Text"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "properties",
         "type_info": "Jsonb"
       }
@@ -51,10 +56,11 @@
       false,
       false,
       null,
+      null,
       false,
       false,
       false
     ]
   },
-  "hash": "226268b21f694ae8ba202856b649bd54fe440d393f874a250fb37fd101d9879d"
+  "hash": "d9e96d5579776be52e2a4db9cf88b6046f63c560650f15982602f91d09975fd2"
 }
