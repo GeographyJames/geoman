@@ -56,8 +56,8 @@ pub async fn get_project_features(
         slug: collection.clone(),
         project_id: Some(ProjectId(project_row.id)),
         crs: request_crs.clone(),
-        bbox: bbox,
-        bbox_crs: bbox_crs,
+        bbox,
+        bbox_crs,
     };
     params.project_id = Some(ProjectId(project_row.id));
     let features = project_features_stream(collection.to_string(), params, repo).await?;

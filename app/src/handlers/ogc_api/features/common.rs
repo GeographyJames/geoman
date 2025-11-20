@@ -39,7 +39,7 @@ pub async fn retrieve_feature_from_database<'a>(
                 id: feature_id,
             };
 
-            repo.select_one_with_params::<ProjectFeature>(&id, &params)
+            repo.select_one_with_params::<ProjectFeature>(&id, params)
                 .await?
                 .ok_or_else(|| ApiError::FeatureNotFound {
                     feature_id,

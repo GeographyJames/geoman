@@ -78,8 +78,8 @@ pub async fn get_features(
                 slug: collection.clone(),
                 project_id: None,
                 crs: request_crs.clone(),
-                bbox: bbox,
-                bbox_crs: bbox_crs,
+                bbox,
+                bbox_crs,
             };
             let features = project_features_stream(collection.to_string(), params, repo).await?;
             let bytes = ogc_feature_collection_byte_stream(

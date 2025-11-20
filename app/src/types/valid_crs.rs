@@ -5,7 +5,7 @@ use ogcapi_types::common::Crs;
 pub struct ValidCrs(Crs);
 
 impl ValidCrs {
-    pub fn new(valid: &Vec<Crs>, crs: Crs) -> Result<Self, Crs> {
+    pub fn new(valid: &[Crs], crs: Crs) -> Result<Self, Crs> {
         if valid
             .iter()
             .any(|supported| supported.as_srid() == crs.as_srid())
