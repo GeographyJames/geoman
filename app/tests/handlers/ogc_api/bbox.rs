@@ -1,3 +1,5 @@
+use ogcapi_types::common::Crs;
+
 use crate::common::{
     TestApp,
     helpers::{generate_point_bng, handle_json_response},
@@ -6,6 +8,7 @@ use crate::common::{
 #[actix_web::test]
 pub async fn bbox_works() {
     let app = TestApp::spawn_with_db().await;
+    app.insert_crs(27700).await;
     let (_, user_id, project_id) = app.generate_ids().await;
     let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
     let feature_1 = generate_point_bng(1., 1.);
@@ -30,14 +33,17 @@ pub async fn bbox_works() {
             Some({}),
         )
         .await;
-    let bbox = ogcapi_types::common::Bbox::Bbox2D([0., 0., 1., 2.]).to_string();
+    let bbox = ogcapi_types::common::Bbox::Bbox2D([0., 0., 2., 2.]).to_string();
     let response = app
         .ogc_service
         .get_project_features_with_params(
             &app.api_client,
             &slug,
             &project_id.into(),
-            &[("bbox", bbox)],
+            &[
+                ("bbox", bbox),
+                ("bbox-crs", Crs::from_epsg(27700).to_string()),
+            ],
         )
         .await;
     let features: ogc::FeatureCollection = handle_json_response(response)

@@ -137,8 +137,14 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             slug,
             project_id,
             crs,
+            bbox,
+            bbox_crs,
             ..
         } = params;
+        let bbox = bbox.map(|bbox| match bbox {
+            ogcapi_types::common::Bbox::Bbox2D(bbox) => bbox,
+            ogcapi_types::common::Bbox::Bbox3D(bbox) => [bbox[0], bbox[1], bbox[3], bbox[4]],
+        });
 
         sqlx::query_as!(
             ProjectFeatureRow,
@@ -158,6 +164,9 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             WHERE c.slug = $2
             AND status = 'ACTIVE'
             AND ($3::int IS NULL OR f.project_id = $3)
+            AND ($5::float IS NULL OR (
+                fo.geom && ST_Transform(ST_MakeEnvelope($5, $6, $7, $8, $9), ST_SRID(fo.geom))
+                ))
             ORDER BY f.id
             LIMIT $4
             "#,
@@ -165,6 +174,11 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             slug.to_string(),
             project_id.map(|id| id.0),
             limit.map(|l| l as i64),
+            bbox.map(|bbox| bbox[0]),
+            bbox.map(|bbox| bbox[1]),
+            bbox.map(|bbox| bbox[2]),
+            bbox.map(|bbox| bbox[3]),
+            bbox_crs.as_ref().unwrap_or(&crs).as_ref().as_srid() as i32
         )
         .fetch(executor)
         .map(|res| res?.try_into())
