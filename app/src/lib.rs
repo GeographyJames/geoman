@@ -1,5 +1,4 @@
 mod config;
-pub mod enums;
 mod errors;
 mod helpers;
 mod startup;
@@ -16,3 +15,5 @@ pub use state::AppState;
 mod constants;
 mod postgres;
 mod streaming;
+mod types;
+pub use types::enums;

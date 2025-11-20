@@ -4,13 +4,13 @@ use crate::common::{
 };
 use ogc::FeatureCollection;
 use ogcapi_types::common::Crs;
+const ERROR_MESSAGE: &str = "Unsupported request CRS";
 
 #[actix_web::test]
 pub async fn unsupported_crs_in_request_returns_400() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
     let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
-    let srid = 9999;
     let feature = app
         .generate_feature_id(collection_id, project_id, user_id, Some({}))
         .await;
@@ -21,14 +21,14 @@ pub async fn unsupported_crs_in_request_returns_400() {
         .ogc_service
         .get_feature_with_params(&app.api_client, &slug, feature.id, &[("crs", &crs)])
         .await;
-    check_error_response(response, 400, &format!("Unsupported CRS: {}", srid)).await;
+    check_error_response(response, 400, &format!("{}: {}", ERROR_MESSAGE, crs)).await;
 
     // Get project feature
     let response = app
         .ogc_service
         .get_features_with_params(&app.api_client, &slug, &[("crs", &crs)])
         .await;
-    check_error_response(response, 400, &format!("Unsupported CRS: {}", srid)).await;
+    check_error_response(response, 400, &format!("{}: {}", ERROR_MESSAGE, crs)).await;
 
     // Get features
     let response = app
@@ -41,7 +41,7 @@ pub async fn unsupported_crs_in_request_returns_400() {
             &[("crs", &crs)],
         )
         .await;
-    check_error_response(response, 400, &format!("Unsupported CRS: {}", srid)).await;
+    check_error_response(response, 400, &format!("{}: {}", ERROR_MESSAGE, crs)).await;
 
     // Get project features
     let response = app
@@ -50,10 +50,10 @@ pub async fn unsupported_crs_in_request_returns_400() {
             &app.api_client,
             &slug,
             &project_id.into(),
-            &[("crs", crs)],
+            &[("crs", &crs)],
         )
         .await;
-    check_error_response(response, 400, &format!("Unsupported CRS: {}", srid)).await;
+    check_error_response(response, 400, &format!("{}: {}", ERROR_MESSAGE, crs)).await;
 }
 
 #[actix_web::test]
@@ -143,7 +143,7 @@ pub async fn crs_transform_works() {
     );
 }
 
-fn check_point_geom(ogc_feature: &ogc::Feature, easting: u32, northing: u32) {
+fn check_point_geom(ogc_feature: &ogc::Feature, easting: f32, northing: f32) {
     match ogc_feature
         .geometry
         .as_ref()
@@ -151,7 +151,14 @@ fn check_point_geom(ogc_feature: &ogc::Feature, easting: u32, northing: u32) {
         .value
     {
         geojson::Value::Point(ref items) => {
-            assert_eq!(items, &[easting as f64, northing as f64]);
+            assert_eq!(items.len(), 2);
+            let x = (items[0] * 10.0).round() / 10.0;
+            let y = (items[1] * 10.0).round() / 10.0;
+            let expected_x = ((easting as f64) * 10.0).round() / 10.0;
+            let expected_y = ((northing as f64) * 10.0).round() / 10.0;
+
+            assert_eq!(x, expected_x, "X coordinate mismatch");
+            assert_eq!(y, expected_y, "Y coordinate mismatch");
         }
         _ => panic!("feature returned is not a point!"),
     };

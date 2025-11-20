@@ -53,16 +53,13 @@ async fn get_projects_works_with_limit() {
         app.generate_project_id(user_id).await;
     }
     let limit = 5;
-    let params = ogc::features::Query {
-        limit: Some(limit),
-        ..Default::default()
-    };
+
     let response = app
         .ogc_service
         .get_features_with_params(
             &app.api_client,
             &Collection::Projects.try_into().unwrap(),
-            &params,
+            &&[("limit", limit)],
         )
         .await;
     assert_ok(&response);

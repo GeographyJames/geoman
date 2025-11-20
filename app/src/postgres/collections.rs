@@ -81,10 +81,10 @@ impl SelectOneWithParams for Collection {
 }
 
 impl SelectAllWithParams for Collection {
-    type Params = SelectAllParams;
-    async fn select_all_with_params<'e, E>(
+    type Params<'a> = &'a SelectAllParams;
+    async fn select_all_with_params<'a, 'e, E>(
         executor: E,
-        params: Self::Params,
+        params: Self::Params<'a>,
     ) -> Result<Vec<Self>, RepositoryError>
     where
         E: sqlx::PgExecutor<'e>,

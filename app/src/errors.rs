@@ -1,4 +1,5 @@
 use actix_web::{ResponseError, http::StatusCode};
+use ogcapi_types::common::Crs;
 use thiserror::Error;
 
 use crate::enums::ProjectIdentifier;
@@ -18,8 +19,10 @@ pub enum ApiError {
         feature_id: i32,
         collection_slug: String,
     },
-    #[error("Unsupported CRS: {0}")]
-    UnsupportedCrs(i32),
+    #[error("Unsupported request CRS: {0}")]
+    UnsupportedRequestCrs(Crs),
+    #[error("Unsupported BBOX CRS: {0}")]
+    UnsupportedBboxCrs(Crs),
 }
 
 impl ResponseError for ApiError {
@@ -30,7 +33,8 @@ impl ResponseError for ApiError {
             ApiError::ProjectNotFound(_) => StatusCode::NOT_FOUND,
             ApiError::CollectionNotFound { .. } => StatusCode::NOT_FOUND,
             ApiError::FeatureNotFound { .. } => StatusCode::NOT_FOUND,
-            ApiError::UnsupportedCrs(_) => StatusCode::BAD_REQUEST,
+            ApiError::UnsupportedRequestCrs(_) => StatusCode::BAD_REQUEST,
+            ApiError::UnsupportedBboxCrs(_) => StatusCode::BAD_REQUEST,
         }
     }
 }

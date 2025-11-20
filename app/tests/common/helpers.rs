@@ -85,13 +85,13 @@ pub async fn check_landing_page_response(response: Response) {
         .expect("failed to retrieve landing page");
 }
 
-pub fn generate_random_bng_point_ewkt() -> (u32, u32, String) {
+pub fn generate_random_bng_point_ewkt() -> (f32, f32, String) {
     let mut rng = rand::rng();
-    let easting: u32 = rng.random_range(..700_000);
-    let northing: u32 = rng.random_range(..1_300_000);
-    (
-        easting,
-        northing,
-        format!("SRID=27700;POINT({} {})", easting, northing),
-    )
+    let easting: f32 = rng.random_range(0.0..700_000.);
+    let northing: f32 = rng.random_range(0.0..1_300_000.);
+    (easting, northing, generate_point_bng(easting, northing))
+}
+
+pub fn generate_point_bng(easting: f32, northing: f32) -> String {
+    format!("SRID=27700;POINT({} {})", easting, northing)
 }

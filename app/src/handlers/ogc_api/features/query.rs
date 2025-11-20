@@ -7,6 +7,7 @@ use utoipa::{IntoParams, ToSchema};
 #[serde_with::serde_as]
 #[derive(Deserialize, Serialize, IntoParams, ToSchema, Default)]
 #[into_params(parameter_in = Query)]
+#[non_exhaustive]
 #[serde(deny_unknown_fields, default, rename_all = "kebab-case")]
 pub struct Query {
     /// The optional limit parameter limits the number of items that are

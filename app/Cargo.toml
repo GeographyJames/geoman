@@ -31,6 +31,8 @@ serde_json = { workspace = true }
 domain = { path = "../domain" }
 geojson = { workspace = true }
 ogcapi-types = { workspace = true }
+chrono = { workspace = true }
+serde_with = "3.16"
 
 [dev-dependencies]
 rand = "0.9"

@@ -1,10 +1,10 @@
 use domain::Project;
 use futures::{Stream, StreamExt};
-use ogc::features::Query;
 
 use crate::{
     enums::ProjectIdentifier,
     errors::RepositoryError,
+    handlers::ogc_api::features::Query,
     postgres::{
         PoolWrapper,
         traits::{SelectAllWithParamsStreaming, SelectOne},
@@ -13,7 +13,7 @@ use crate::{
 
 #[derive(Default)]
 pub struct SelectAllParams {
-    limit: Option<usize>,
+    pub limit: Option<usize>,
 }
 
 impl From<Query> for SelectAllParams {
@@ -24,10 +24,10 @@ impl From<Query> for SelectAllParams {
 }
 
 impl SelectAllWithParamsStreaming for Project {
-    type Params = SelectAllParams;
-    fn select_all_with_params_streaming(
+    type Params<'a> = SelectAllParams;
+    fn select_all_with_params_streaming<'a>(
         executor: PoolWrapper,
-        params: Self::Params,
+        params: Self::Params<'a>,
     ) -> impl Stream<Item = Result<Self, RepositoryError>> + use<> {
         sqlx::query_as!(
             Project,

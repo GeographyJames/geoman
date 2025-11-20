@@ -39,9 +39,9 @@ impl PostgresRepo {
     }
 
     #[tracing::instrument(skip(self, params))]
-    pub fn select_all_with_params_streaming<T>(
+    pub fn select_all_with_params_streaming<'a, T>(
         &self,
-        params: T::Params,
+        params: T::Params<'a>,
     ) -> impl Stream<Item = Result<T, RepositoryError>> + use<T>
     where
         T: SelectAllWithParamsStreaming,
@@ -51,9 +51,9 @@ impl PostgresRepo {
     }
 
     #[tracing::instrument(skip(self, params))]
-    pub async fn select_all_with_params<T>(
+    pub async fn select_all_with_params<'a, T>(
         &self,
-        params: T::Params,
+        params: T::Params<'a>,
     ) -> Result<Vec<T>, RepositoryError>
     where
         T: SelectAllWithParams,

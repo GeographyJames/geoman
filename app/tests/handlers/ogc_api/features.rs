@@ -60,13 +60,10 @@ async fn get_features_works_with_limit() {
         .await;
     }
     let limit = 5;
-    let params = ogc::features::Query {
-        limit: Some(limit),
-        ..Default::default()
-    };
+
     let response = app
         .ogc_service
-        .get_features_with_params(&app.api_client, &slug, &params)
+        .get_features_with_params(&app.api_client, &slug, &[("limit", limit)])
         .await;
     assert_ok(&response);
     let feature_collection: ogc::FeatureCollection = handle_json_response(response)

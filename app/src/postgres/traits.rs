@@ -25,22 +25,22 @@ pub trait SelectOne {
 }
 
 pub trait SelectAllWithParamsStreaming {
-    type Params;
+    type Params<'a>;
 
-    fn select_all_with_params_streaming(
+    fn select_all_with_params_streaming<'a>(
         executor: PoolWrapper,
-        params: Self::Params,
+        params: Self::Params<'a>,
     ) -> impl Stream<Item = Result<Self, RepositoryError>> + use<Self>
     where
         Self: Sized;
 }
 
 pub trait SelectAllWithParams {
-    type Params;
+    type Params<'a>;
 
-    async fn select_all_with_params<'e, E>(
+    async fn select_all_with_params<'a, 'e, E>(
         executor: E,
-        params: Self::Params,
+        params: Self::Params<'a>,
     ) -> Result<Vec<Self>, RepositoryError>
     where
         Self: Sized,

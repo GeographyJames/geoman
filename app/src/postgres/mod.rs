@@ -6,4 +6,4 @@ pub use pool_wrapper::PoolWrapper;
 pub mod collections;
 mod crs;
 pub mod project_features;
-mod projects;
+pub mod projects;

@@ -7,6 +7,9 @@ pub use collections::{
     get_collection, get_collections, get_project_collection, get_project_collections,
 };
 pub mod features;
-pub use features::{get_feature, get_features, get_project_feature, get_project_features};
+pub use features::{
+    get_feature::get_feature, get_features::get_features, get_project_feature::get_project_feature,
+    get_project_features::get_project_features,
+};
 mod openapi;
 pub use openapi::get_openapi;

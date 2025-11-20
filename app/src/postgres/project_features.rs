@@ -6,46 +6,31 @@ use serde_json::Value;
 use sqlx::types::Json;
 
 use crate::{
+    enums::{self},
     errors::RepositoryError,
     postgres::{
         PoolWrapper,
         traits::{SelectAllWithParamsStreaming, SelectOneWithParams},
     },
+    types::ValidCrs,
 };
 
 #[derive(Clone)]
 pub struct SelectAllParams {
     pub limit: Option<usize>,
-    pub slug: String,
+    pub slug: enums::Collection,
     pub project_id: Option<ProjectId>,
-    pub srid: Option<i32>,
+    pub crs: ValidCrs,
+    pub bbox: Option<ogcapi_types::common::Bbox>,
+    pub bbox_crs: Option<ValidCrs>,
 }
 
 #[derive(Clone)]
-pub struct SelectOneParams {
+pub struct SelectOneParams<'a> {
     pub project_id: Option<ProjectId>,
-    pub srid: Option<i32>,
+    pub crs: &'a ValidCrs,
 }
 
-impl SelectAllParams {
-    pub fn from_query(query: &ogc::features::Query, slug: String) -> Self {
-        SelectAllParams {
-            limit: query.limit,
-            slug,
-            project_id: None,
-            srid: Some(query.crs.as_srid()),
-        }
-    }
-}
-
-impl SelectOneParams {
-    pub fn from_query(query: &ogc::features::Query) -> Self {
-        SelectOneParams {
-            project_id: None,
-            srid: Some(query.crs.as_srid()),
-        }
-    }
-}
 #[derive(Deserialize)]
 struct ProjectFeatureRow {
     pub id: i32,
@@ -91,7 +76,7 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
 }
 
 impl SelectOneWithParams for ProjectFeature {
-    type Params<'a> = &'a SelectOneParams;
+    type Params<'a> = &'a SelectOneParams<'a>;
 
     type Id<'a> = &'a FeatureIdWithCollectionSlug;
 
@@ -108,6 +93,8 @@ impl SelectOneWithParams for ProjectFeature {
             collection_slug,
             id,
         } = feature_id;
+        let SelectOneParams { project_id, crs } = params;
+
         sqlx::query_as!(
             ProjectFeatureRow,
             r#"
@@ -128,8 +115,8 @@ impl SelectOneWithParams for ProjectFeature {
             "#,
             id,
             collection_slug,
-            params.srid.unwrap_or(4326) as i32,
-            params.project_id.map(|id| id.0)
+            crs.as_ref().as_srid() as i32,
+            project_id.map(|id| id.0)
         )
         .fetch_optional(executor)
         .await?
@@ -139,18 +126,20 @@ impl SelectOneWithParams for ProjectFeature {
 }
 
 impl SelectAllWithParamsStreaming for ProjectFeature {
-    type Params = SelectAllParams;
+    type Params<'a> = SelectAllParams;
 
-    fn select_all_with_params_streaming(
+    fn select_all_with_params_streaming<'a>(
         executor: PoolWrapper,
-        params: Self::Params,
+        params: Self::Params<'a>,
     ) -> impl Stream<Item = Result<Self, RepositoryError>> + use<> {
         let SelectAllParams {
             limit,
             slug,
             project_id,
-            srid,
+            crs,
+            ..
         } = params;
+
         sqlx::query_as!(
             ProjectFeatureRow,
             r#"
@@ -172,8 +161,8 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             ORDER BY f.id
             LIMIT $4
             "#,
-            srid.unwrap_or(4326) as i32,
-            slug,
+            crs.as_ref().as_srid() as i32,
+            slug.to_string(),
             project_id.map(|id| id.0),
             limit.map(|l| l as i64),
         )
