@@ -89,9 +89,16 @@ pub fn generate_random_bng_point_ewkt() -> (f32, f32, String) {
     let mut rng = rand::rng();
     let easting: f32 = rng.random_range(0.0..700_000.);
     let northing: f32 = rng.random_range(0.0..1_300_000.);
-    (easting, northing, generate_point_bng(easting, northing))
+    (easting, northing, generate_point(easting, northing, 27700))
 }
 
-pub fn generate_point_bng(easting: f32, northing: f32) -> String {
-    format!("SRID=27700;POINT({} {})", easting, northing)
+pub fn generate_point(x: f32, y: f32, srid: u32) -> String {
+    format!("SRID={};POINT({} {})", srid, x, y)
+}
+
+pub fn generate_random_wgs84_point_ewkt() -> (f32, f32, String) {
+    let mut rng = rand::rng();
+    let lat: f32 = rng.random_range(-90.0..90.);
+    let long: f32 = rng.random_range(-180.0..180.);
+    (lat, long, generate_point(lat, long, 4326))
 }

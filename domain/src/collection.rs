@@ -11,6 +11,7 @@ pub struct Collection {
     pub title: String,
     pub slug: String,
     pub description: Option<String>,
+    // pub storage_crs: Option<Crs>,
 }
 
 impl Collection {
@@ -23,7 +24,8 @@ impl Collection {
             title,
             slug,
             description,
-            ..
+            // storage_crs,
+            id: _,
         } = self;
         let links = vec![
             Link::new(format!("{}/{}", collections_url, slug), SELF).mediatype(JSON),
@@ -37,6 +39,7 @@ impl Collection {
             description,
             crs,
             links,
+            storage_crs: None,
             ..Default::default()
         }
     }

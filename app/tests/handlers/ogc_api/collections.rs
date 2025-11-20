@@ -1,9 +1,11 @@
-use domain::enums::Collection;
-
 use crate::common::{
     TestApp,
-    helpers::{assert_ok, handle_json_response},
+    helpers::{
+        assert_ok, generate_random_bng_point_ewkt, generate_random_wgs84_point_ewkt,
+        handle_json_response,
+    },
 };
+use domain::enums::Collection;
 
 #[actix_web::test]
 async fn get_collections_works() {
@@ -63,4 +65,43 @@ async fn get_collection_includes_projects() {
         .iter()
         .find(|c| c.id == Collection::Projects.to_string())
         .expect("no projects collection");
+}
+
+#[actix_web::test]
+async fn get_collection_has_correct_storage_crs() {
+    let app = TestApp::spawn_with_db().await;
+    let (_, user_id, project_id) = app.generate_ids().await;
+    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let (_, _, bng_ewkt) = generate_random_bng_point_ewkt();
+    let (_, _, wges84_ewkt) = generate_random_wgs84_point_ewkt();
+    let _ = app
+        .insert_feature(
+            &uuid::Uuid::new_v4().to_string(),
+            collection_id,
+            project_id,
+            user_id,
+            &bng_ewkt,
+            Some({}),
+        )
+        .await;
+    let response = app.ogc_service.get_collection(&app.api_client, &slug).await;
+    let collection: ogcapi_types::common::Collection = handle_json_response(response)
+        .await
+        .expect("failed to retrieve collection");
+    assert!(collection.storage_crs.is_some());
+    let _ = app
+        .insert_feature(
+            &uuid::Uuid::new_v4().to_string(),
+            collection_id,
+            project_id,
+            user_id,
+            &wges84_ewkt,
+            Some({}),
+        )
+        .await;
+    let response = app.ogc_service.get_collection(&app.api_client, &slug).await;
+    let collection: ogcapi_types::common::Collection = handle_json_response(response)
+        .await
+        .expect("failed to retrieve collection");
+    assert!(collection.storage_crs.is_none())
 }

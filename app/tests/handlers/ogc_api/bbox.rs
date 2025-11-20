@@ -2,7 +2,7 @@ use ogcapi_types::common::Crs;
 
 use crate::common::{
     TestApp,
-    helpers::{generate_point_bng, handle_json_response},
+    helpers::{generate_point, handle_json_response},
 };
 
 #[actix_web::test]
@@ -11,8 +11,8 @@ pub async fn bbox_works() {
     app.insert_crs(27700).await;
     let (_, user_id, project_id) = app.generate_ids().await;
     let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
-    let feature_1 = generate_point_bng(1., 1.);
-    let feature_2 = generate_point_bng(3., 1.);
+    let feature_1 = generate_point(1., 1., 27700);
+    let feature_2 = generate_point(3., 1., 27700);
     let _feature_1_id = app
         .insert_feature(
             &uuid::Uuid::new_v4().to_string(),
