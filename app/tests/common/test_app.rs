@@ -11,7 +11,7 @@ use app::{
     get_config,
     telemetry::{get_subscriber, init_subscriber},
 };
-use domain::{CollectionId, FeatureId, GeometryType, ProjectId, Slug, TeamId, UserId};
+use domain::{CollectionId, FeatureId, ProjectId, Slug, TeamId, UserId, enums::GeometryType};
 use dotenvy::dotenv;
 use secrecy::ExposeSecret;
 use serde::Serialize;

@@ -2,7 +2,8 @@ use crate::common::{
     TestApp,
     helpers::{assert_status, check_error_response},
 };
-use app::enums::{Collection, ProjectIdentifier};
+use app::enums::ProjectIdentifier;
+use domain::enums::Collection;
 use domain::{ProjectId, Slug};
 use rstest::rstest;
 

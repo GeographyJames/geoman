@@ -1,5 +1,5 @@
-use app::enums::Collection;
 use domain::Project;
+use domain::enums::Collection;
 
 use crate::common::{
     TestApp,

@@ -1,9 +1,9 @@
 //! Domain objects
 
-mod enums;
-pub use enums::*;
-mod project;
-pub use project::*;
+pub mod enums;
+pub mod project;
+pub use project::Project;
+
 mod types;
 pub use types::*;
 pub mod poject_feature;

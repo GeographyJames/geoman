@@ -1,4 +1,4 @@
-use app::enums::{self, Collection};
+use domain::enums::Collection;
 
 use crate::common::{
     TestApp,
@@ -44,7 +44,7 @@ async fn get_project_collection_works() {
         .ogc_service
         .get_collection(
             &app.api_client,
-            &enums::Collection::Projects.try_into().unwrap(),
+            &domain::enums::Collection::Projects.try_into().unwrap(),
         )
         .await;
     assert_ok(&response);

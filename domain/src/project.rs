@@ -1,37 +1,50 @@
 use crate::IntoOGCFeature;
-use anyhow::Context;
-use serde::Deserialize;
-use serde_json::json;
+
+use ogcapi_types::common::{
+    Link,
+    link_rel::{COLLECTION, SELF},
+    media_type::{GEO_JSON, JSON},
+};
+use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value, from_value, json};
+
+#[derive(Serialize, Deserialize)]
+pub struct Properties {
+    pub slug: String,
+    pub name: String,
+}
 
 #[derive(Deserialize)]
 pub struct Project {
     pub id: i32,
-    pub name: String,
-    pub slug: String,
+    pub properties: Properties,
 }
 
 impl IntoOGCFeature for Project {
     fn into_ogc_feature(self, collection_url: String) -> ogc::Feature {
-        let Project { id, name, slug, .. } = self;
-        let mut project = ogc::Feature::new(id, collection_url);
-        project.properties.insert("name".to_string(), json!(name));
-        project.properties.insert("slug".to_string(), json!(slug));
-        project
+        let Project { id, properties } = self;
+        let properties: Map<String, Value> = from_value(json!(properties)).unwrap();
+        let links = [
+            Link::new(format!("{collection_url}/items/{id}"), SELF).mediatype(GEO_JSON),
+            Link::new(&collection_url, COLLECTION).mediatype(JSON),
+        ];
+        ogc::Feature {
+            id,
+            r#type: Default::default(),
+            properties,
+            geometry: None,
+            links,
+        }
     }
 }
 
 impl TryFrom<ogc::Feature> for Project {
     type Error = anyhow::Error;
 
-    fn try_from(mut ogc_feature: ogc::Feature) -> Result<Self, Self::Error> {
-        let ogc::Feature { id, .. } = ogc_feature;
-        let name = ogc_feature
-            .remove_string_property("name")
-            .context("feature has no name field")??;
-        let slug = ogc_feature
-            .remove_string_property("slug")
-            .context("feature has no slug feild")??;
+    fn try_from(ogc_feature: ogc::Feature) -> Result<Self, Self::Error> {
+        let ogc::Feature { id, properties, .. } = ogc_feature;
+        let properties = serde_json::from_value(Value::Object(properties))?;
 
-        Ok(Project { id, name, slug })
+        Ok(Project { id, properties })
     }
 }

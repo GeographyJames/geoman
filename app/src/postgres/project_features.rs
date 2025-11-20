@@ -6,7 +6,6 @@ use serde_json::Value;
 use sqlx::types::Json;
 
 use crate::{
-    enums::{self},
     errors::RepositoryError,
     postgres::{
         PoolWrapper,
@@ -18,7 +17,7 @@ use crate::{
 #[derive(Clone)]
 pub struct SelectAllParams {
     pub limit: Option<usize>,
-    pub slug: enums::Collection,
+    pub slug: domain::enums::Collection,
     pub project_id: Option<ProjectId>,
     pub crs: ValidCrs,
     pub bbox: Option<ogcapi_types::common::Bbox>,
@@ -41,6 +40,7 @@ struct ProjectFeatureRow {
     pub geometry: Json<geojson::Geometry>,
     pub is_primary: bool,
     pub storage_crs_srid: i32,
+    pub slug: String,
 }
 
 impl TryInto<ProjectFeature> for ProjectFeatureRow {
@@ -55,6 +55,7 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
             collection_id,
             project_id,
             storage_crs_srid,
+            slug,
         } = self;
         let properties = match properties {
             Value::Object(map) => map,
@@ -68,6 +69,7 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
                 name,
                 storage_crs_srid,
                 is_primary,
+                collection_slug: slug,
             },
             geometry: geometry.0,
             properties_map: properties,
@@ -105,7 +107,8 @@ impl SelectOneWithParams for ProjectFeature {
                 f.is_primary,
                 ST_AsGeoJSON(ST_Transform(fo.geom, $3))::jsonb as "geometry!: Json<Geometry>",
                 ST_SRID(geom) AS "storage_crs_srid!",
-                f.properties
+                f.properties,
+                c.slug
             FROM app.project_features f
             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
             JOIN app.collections c ON f.collection_id = c.id
@@ -157,7 +160,8 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
                 ST_SRID(geom) AS "storage_crs_srid!",
                 f.is_primary,
                 f.name,
-                f.properties 
+                f.properties,
+                c.slug 
             FROM app.project_features f
             JOIN app.collections c ON c.id = f.collection_id
             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
@@ -197,6 +201,7 @@ mod tests {
         let row = ProjectFeatureRow {
             id: 0,
             storage_crs_srid: 4626,
+            slug: uuid::Uuid::new_v4().to_string(),
             project_id: 0,
             collection_id: 0,
             properties: json!("{}"),

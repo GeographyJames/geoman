@@ -1,8 +1,4 @@
-use ogcapi_types::common::{
-    Link,
-    link_rel::{COLLECTION, SELF},
-    media_type::{GEO_JSON, JSON},
-};
+use ogcapi_types::common::Link;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
@@ -12,7 +8,6 @@ pub enum Type {
     Feature,
 }
 
-#[non_exhaustive]
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Feature {
     pub id: i32,
@@ -22,49 +17,6 @@ pub struct Feature {
     pub links: [Link; 2],
 }
 
-impl Feature {
-    pub fn new(id: i32, collection_url: String) -> Self {
-        Self {
-            id,
-            links: [
-                Link::new(format!("{collection_url}/items/{id}"), SELF).mediatype(GEO_JSON),
-                Link::new(collection_url, COLLECTION).mediatype(JSON),
-            ],
-            r#type: Default::default(),
-            properties: Default::default(),
-            geometry: Default::default(),
-        }
-    }
-
-    pub fn set_properties(mut self, properties: Map<String, Value>) -> Self {
-        self.properties = properties;
-        self
-    }
-
-    pub fn append_properties(mut self, properties: &mut Map<String, Value>) -> Self {
-        self.properties.append(properties);
-        self
-    }
-
-    pub fn set_geometry(mut self, geometry: geojson::Geometry) -> Self {
-        self.geometry = Some(geometry);
-        self
-    }
-    pub fn insert_property(mut self, key: String, value: serde_json::Value) -> Self {
-        self.properties.insert(key, value);
-        self
-    }
-
-    /// Removes the key from the feature properties and returns the value if the key
-    /// is in the feature properties. Fails is the value is not a string.
-    pub fn remove_string_property(
-        &mut self,
-        key: &str,
-    ) -> Option<Result<String, serde_json::Error>> {
-        self.properties.remove(key).map(serde_json::from_value)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -72,7 +24,13 @@ mod tests {
 
     #[test]
     fn feature_serialises_and_deserialises_to_and_from_geojson() {
-        let feature = Feature::new(Default::default(), uuid::Uuid::new_v4().to_string());
+        let feature = Feature {
+            id: 0,
+            r#type: Default::default(),
+            properties: Default::default(),
+            geometry: None,
+            links: [Link::new("href", "rel"), Link::new("href", "rel")],
+        };
         let json = json!(feature);
         let geojson: geojson::Feature =
             serde_json::from_value(json).expect("failed to deserialise to geojson feature");

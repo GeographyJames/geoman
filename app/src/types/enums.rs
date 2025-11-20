@@ -1,4 +1,4 @@
-use domain::{ProjectId, Slug};
+use domain::ProjectId;
 use serde::{Deserialize, Deserializer};
 use strum::EnumString;
 
@@ -12,12 +12,6 @@ pub enum GeoManEnvironment {
     Staging,
     Production,
     CiPipeline,
-}
-
-#[derive(Clone, Debug)]
-pub enum Collection {
-    Projects,
-    Other(String),
 }
 
 #[derive(Clone, Debug)]
@@ -35,14 +29,6 @@ impl Default for ProjectIdentifier {
 impl From<ProjectId> for ProjectIdentifier {
     fn from(value: ProjectId) -> Self {
         ProjectIdentifier::Id(value)
-    }
-}
-
-impl TryInto<Slug> for Collection {
-    type Error = String;
-
-    fn try_into(self) -> Result<Slug, Self::Error> {
-        Slug::parse(self.to_string())
     }
 }
 
@@ -66,28 +52,5 @@ impl std::fmt::Display for ProjectIdentifier {
             ProjectIdentifier::Id(id) => write!(f, "{}", id.0),
             ProjectIdentifier::Slug(slug) => write!(f, "{}", slug),
         }
-    }
-}
-
-impl<'de> Deserialize<'de> for Collection {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let s = String::deserialize(deserializer)?;
-        match s.to_lowercase().as_str() {
-            "projects" => Ok(Collection::Projects),
-            _ => Ok(Collection::Other(s)),
-        }
-    }
-}
-
-impl std::fmt::Display for Collection {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            Collection::Projects => "projects".to_string(),
-            Collection::Other(s) => s.clone(),
-        };
-        write!(f, "{}", s)
     }
 }

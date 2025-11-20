@@ -1,6 +1,6 @@
 use crate::{
     URLS,
-    enums::{self, ProjectIdentifier},
+    enums::ProjectIdentifier,
     errors::ApiError,
     handlers::ogc_api::features::{
         Query,
@@ -23,7 +23,7 @@ use ogcapi_types::common::Crs;
 pub async fn get_project_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-    path: web::Path<(ProjectIdentifier, enums::Collection, i32)>,
+    path: web::Path<(ProjectIdentifier, domain::enums::Collection, i32)>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let valid_crs: Vec<Crs> = repo.select_all().await?;

@@ -4,7 +4,7 @@ use ogcapi_types::common::Crs;
 
 use crate::{
     URLS,
-    enums::{self, ProjectIdentifier},
+    enums::ProjectIdentifier,
     errors::ApiError,
     helpers::get_base_url,
     postgres::{
@@ -136,7 +136,7 @@ pub async fn get_project_collections(
 #[tracing::instrument(skip(repo, req, collection))]
 pub async fn get_collection(
     req: HttpRequest,
-    collection: web::Path<enums::Collection>,
+    collection: web::Path<domain::enums::Collection>,
     repo: web::Data<PostgresRepo>,
 ) -> Result<web::Json<ogcapi_types::common::Collection>, ApiError> {
     let base_url = get_base_url(&req);
@@ -144,9 +144,11 @@ pub async fn get_collection(
     let supported_crs = repo.select_all::<Crs>().await?;
 
     let ogc_collection = match collection.into_inner() {
-        enums::Collection::Projects => project_collection(&collections_url, supported_crs.clone()),
+        domain::enums::Collection::Projects => {
+            project_collection(&collections_url, supported_crs.clone())
+        }
 
-        enums::Collection::Other(slug) => repo
+        domain::enums::Collection::Other(slug) => repo
             .select_one::<Collection>(&slug)
             .await?
             .ok_or_else(|| ApiError::CollectionNotFound {
@@ -196,7 +198,7 @@ fn project_collection(collections_url: &str, crs: Vec<Crs>) -> ogcapi_types::com
     Collection {
         id: 0,
         title: "Projects".to_string(),
-        slug: enums::Collection::Projects.to_string(),
+        slug: domain::enums::Collection::Projects.to_string(),
         description: None,
     }
     .into_ogc_collection(collections_url, crs)
