@@ -1,10 +1,5 @@
 use crate::IntoOGCFeature;
 use anyhow::{Context, anyhow};
-use ogcapi_types::common::{
-    Link,
-    link_rel::{COLLECTION, SELF},
-    media_type::{GEO_JSON, JSON},
-};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, from_value, json};
 
@@ -43,19 +38,8 @@ impl IntoOGCFeature for ProjectFeature {
             ..
         } = self;
         let mut additional: Map<String, Value> = from_value(json!(properties)).unwrap();
-
-        let links = [
-            Link::new(format!("{collection_url}/items/{id}"), SELF).mediatype(GEO_JSON),
-            Link::new(collection_url, COLLECTION).mediatype(JSON),
-        ];
         properties_map.append(&mut additional);
-        ogc::Feature {
-            id,
-            r#type: Default::default(),
-            properties: properties_map,
-            geometry: Some(geometry),
-            links,
-        }
+        ogc::Feature::new(id, properties_map, Some(geometry), collection_url)
     }
 }
 

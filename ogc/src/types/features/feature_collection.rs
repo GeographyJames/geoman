@@ -26,10 +26,6 @@ impl FeatureCollection {
             links: [Link::new(format!("{}/items", collection_url), SELF).mediatype(GEO_JSON)],
         }
     }
-    pub fn append_features(mut self, mut features: Vec<Feature>) -> Self {
-        self.features.append(&mut features);
-        self
-    }
 
     pub fn opening_json(&self) -> Result<String, serde_json::Error> {
         Ok(format!(

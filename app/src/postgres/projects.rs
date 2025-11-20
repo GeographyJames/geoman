@@ -16,6 +16,7 @@ pub struct SelectAllParams {
     pub limit: Option<usize>,
 }
 
+#[allow(clippy::from_over_into)]
 impl Into<Project> for ProjectRow {
     fn into(self) -> Project {
         let ProjectRow { id, name, slug } = self;

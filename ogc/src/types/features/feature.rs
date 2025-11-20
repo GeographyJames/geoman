@@ -1,13 +1,16 @@
-use ogcapi_types::common::Link;
+use ogcapi_types::common::{
+    Link,
+    link_rel::{COLLECTION, SELF},
+    media_type::{GEO_JSON, JSON},
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
-
 #[derive(Serialize, Default, Deserialize, Clone)]
 pub enum Type {
     #[default]
     Feature,
 }
-
+#[non_exhaustive]
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Feature {
     pub id: i32,
@@ -15,6 +18,27 @@ pub struct Feature {
     pub properties: Map<String, Value>,
     pub geometry: Option<geojson::Geometry>,
     pub links: [Link; 2],
+}
+
+impl Feature {
+    pub fn new(
+        id: i32,
+        properties: Map<String, Value>,
+        geometry: Option<geojson::Geometry>,
+        collection_url: String,
+    ) -> Self {
+        let links = [
+            Link::new(format!("{collection_url}/items/{id}"), SELF).mediatype(GEO_JSON),
+            Link::new(collection_url, COLLECTION).mediatype(JSON),
+        ];
+        Self {
+            id,
+            r#type: Default::default(),
+            properties,
+            geometry,
+            links,
+        }
+    }
 }
 
 #[cfg(test)]
