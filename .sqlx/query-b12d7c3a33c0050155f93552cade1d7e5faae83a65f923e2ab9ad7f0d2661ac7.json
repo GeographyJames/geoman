@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT \n                f.id,\n                f.collection_id,\n                f.project_id,\n                ST_AsGeoJSON(ST_Transform(fo.geom, $1))::jsonb as \"geometry!: Json<Geometry>\",\n                ST_SRID(geom) AS \"storage_crs_srid!\",\n                f.is_primary,\n                f.name,\n                f.properties \n            FROM app.project_features f\n            JOIN app.collections c ON c.id = f.collection_id\n            JOIN app.feature_objects fo ON fo.project_feature_id = f.id\n            WHERE c.slug = $2\n            AND status = 'ACTIVE'\n            AND ($3::int IS NULL OR f.project_id = $3)\n            ORDER BY f.id\n            LIMIT $4\n            ",
+  "query": "\n            SELECT \n                f.id,\n                f.collection_id,\n                f.project_id,\n                ST_AsGeoJSON(ST_Transform(fo.geom, $1))::jsonb as \"geometry!: Json<Geometry>\",\n                ST_SRID(geom) AS \"storage_crs_srid!\",\n                f.is_primary,\n                f.name,\n                f.properties \n            FROM app.project_features f\n            JOIN app.collections c ON c.id = f.collection_id\n            JOIN app.feature_objects fo ON fo.project_feature_id = f.id\n            WHERE c.slug = $2\n            AND status = 'ACTIVE'\n            AND ($3::int IS NULL OR f.project_id = $3)\n            AND ($5::float IS NULL OR (\n                fo.geom && ST_Transform(ST_MakeEnvelope($5, $6, $7, $8, $9), ST_SRID(fo.geom))\n                ))\n            ORDER BY f.id\n            LIMIT $4\n            ",
   "describe": {
     "columns": [
       {
@@ -49,7 +49,12 @@
         "Text",
         "Text",
         "Int4",
-        "Int8"
+        "Int8",
+        "Float8",
+        "Float8",
+        "Float8",
+        "Float8",
+        "Int4"
       ]
     },
     "nullable": [
@@ -63,5 +68,5 @@
       false
     ]
   },
-  "hash": "07687a302a84e6e553c009c91549621dee8e679eb9363094f00a40f22611fa36"
+  "hash": "b12d7c3a33c0050155f93552cade1d7e5faae83a65f923e2ab9ad7f0d2661ac7"
 }
