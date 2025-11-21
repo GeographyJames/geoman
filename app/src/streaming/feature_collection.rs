@@ -24,7 +24,7 @@ where
 }
 
 pub async fn ogc_feature_collection_byte_stream<T, S>(
-    mut database_stream: S,
+    database_stream: S,
     collection_url: String,
     collection_id: String,
 ) -> Result<impl Stream<Item = Result<Bytes, ApiError>>, ApiError>
@@ -32,11 +32,18 @@ where
     S: Stream<Item = Result<T, RepositoryError>> + Unpin,
     T: IntoOGCFeature,
 {
-    // Check first item for database error and return early if it fails
-    let first_item = database_stream.next().await.transpose()?;
-    let items = stream::iter(first_item.into_iter().map(Ok)).chain(database_stream);
+    // Collect all features to count them (required for OGC API Features compliance)
+    let features: Vec<T> = database_stream
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
 
-    let feature_collection = ogc::FeatureCollection::new(collection_url.clone(), collection_id);
+    let count = features.len();
+    let items = stream::iter(features.into_iter().map(Ok));
+
+    let feature_collection = ogc::FeatureCollection::new(collection_url.clone(), collection_id)
+        .with_counts(count, count);
 
     let opening_json = feature_collection
         .opening_json()

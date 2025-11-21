@@ -16,7 +16,8 @@ use actix_web::{
     web::{self},
 };
 
-use domain::{Project, enums::CollectionId};
+use domain::{IntoOGCFeature, Project, enums::CollectionId};
+use ogc::{Feature, FeatureCollection};
 use ogcapi_types::common::{Crs, media_type::GEO_JSON};
 
 #[utoipa::path(
@@ -30,11 +31,11 @@ use ogcapi_types::common::{Crs, media_type::GEO_JSON};
         (status = 404, description = "Collection not found"))
 )]
 #[get("/{collectionId}/items")]
-#[tracing::instrument(skip(repo, req, collection, query))]
+#[tracing::instrument(skip(repo, req, collection_id, query))]
 pub async fn get_features(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-    collection: web::Path<CollectionId>,
+    collection_id: web::Path<CollectionId>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let valid_crs: Vec<Crs> = repo.select_all().await?;
@@ -55,36 +56,36 @@ pub async fn get_features(
 
     let collection_url = format!(
         "{}{}/collections/{}",
-        base_url, URLS.ogc_api.base, &collection
+        base_url, URLS.ogc_api.base, collection_id
     );
     let mut response_builder = HttpResponse::Ok();
     response_builder.content_type(GEO_JSON);
-    let mut response = match collection.as_ref() {
+    let mut response = match *collection_id {
         CollectionId::Projects => {
             let params = projects::SelectAllParams { limit };
-            let projects = repo.select_all_with_params_streaming::<Project>(params);
-            let bytes = ogc_feature_collection_byte_stream(
-                projects,
-                collection_url,
-                collection.to_string(),
-            )
-            .await?;
-            response_builder.streaming(bytes)
+            let projects = repo.select_all_with_params::<Project>(params).await?;
+            let mut features: Vec<Feature> = projects
+                .into_iter()
+                .map(|p| p.into_ogc_feature(collection_url.clone()))
+                .collect();
+            let mut collection = FeatureCollection::new(collection_url, collection_id.to_string());
+            collection.features.append(&mut features);
+            HttpResponse::Ok().json(collection)
         }
-        CollectionId::ProjectCollection(collection_id) => {
+        CollectionId::ProjectCollection(project_collection_id) => {
             let params = SelectAllParams {
                 limit,
-                collection_id: *collection_id,
+                collection_id: project_collection_id,
                 project_id: None,
                 crs: request_crs.clone(),
                 bbox,
                 bbox_crs,
             };
-            let features = project_features_stream(*collection_id, params, repo).await?;
+            let features = project_features_stream(project_collection_id, params, repo).await?;
             let bytes = ogc_feature_collection_byte_stream(
                 features,
                 collection_url,
-                collection.to_string(),
+                collection_id.to_string(),
             )
             .await?;
             response_builder.streaming(bytes)

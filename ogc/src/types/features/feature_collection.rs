@@ -17,6 +17,10 @@ pub struct FeatureCollection {
     pub features: Vec<Feature>,
     pub links: [Link; 1],
     pub time_stamp: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub number_returned: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub number_matched: Option<usize>,
 }
 
 impl FeatureCollection {
@@ -28,17 +32,36 @@ impl FeatureCollection {
             links: [Link::new(format!("{}/items", collection_url), SELF).mediatype(GEO_JSON)],
             //todo set timestamp from database
             time_stamp: chrono::Utc::now().to_rfc3339().to_string(),
+            number_returned: None,
+            number_matched: None,
         }
     }
 
+    pub fn with_counts(mut self, number_returned: usize, number_matched: usize) -> Self {
+        self.number_returned = Some(number_returned);
+        self.number_matched = Some(number_matched);
+        self
+    }
+
     pub fn opening_json(&self) -> Result<String, serde_json::Error> {
-        Ok(format!(
-            r#"{{"type":{},"id":{},"links":{},"timeStamp":{},"features":["#,
+        let mut json = format!(
+            r#"{{"type":{},"id":{},"links":{},"timeStamp":{}"#,
             serde_json::to_string(&self.r#type)?,
             serde_json::to_string(&self.id)?,
             serde_json::to_string(&self.links)?,
             serde_json::to_string(&self.time_stamp)?
-        ))
+        );
+
+        if let Some(number_returned) = self.number_returned {
+            json.push_str(&format!(r#","numberReturned":{}"#, number_returned));
+        }
+
+        if let Some(number_matched) = self.number_matched {
+            json.push_str(&format!(r#","numberMatched":{}"#, number_matched));
+        }
+
+        json.push_str(r#","features":["#);
+        Ok(json)
     }
     pub fn closing_json(&self) -> String {
         "]}".to_string()

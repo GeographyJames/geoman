@@ -1,13 +1,9 @@
 use domain::{Project, ProjectId, project::Properties};
-use futures::{Stream, StreamExt};
 
 use crate::{
     errors::RepositoryError,
     handlers::ogc_api::features::Query,
-    postgres::{
-        PoolWrapper,
-        traits::{SelectAllWithParamsStreaming, SelectOne},
-    },
+    postgres::traits::{SelectAllWithParams, SelectOne},
 };
 
 #[derive(Default)]
@@ -36,19 +32,25 @@ impl From<Query> for SelectAllParams {
     }
 }
 
-impl SelectAllWithParamsStreaming for Project {
+impl SelectAllWithParams for Project {
     type Params<'a> = SelectAllParams;
-    fn select_all_with_params_streaming<'a>(
-        executor: PoolWrapper,
+    async fn select_all_with_params<'a, 'e, E>(
+        executor: E,
         params: Self::Params<'a>,
-    ) -> impl Stream<Item = Result<Self, RepositoryError>> + use<> {
-        sqlx::query_as!(
+    ) -> Result<Vec<Self>, RepositoryError>
+    where
+        E: sqlx::PgExecutor<'e>,
+    {
+        Ok(sqlx::query_as!(
             ProjectRow,
             "SELECT id, name FROM app.projects ORDER BY id LIMIT $1",
             params.limit.map(|l| l as i64)
         )
-        .fetch(executor)
-        .map(|res| res.map(|row| row.into()).map_err(RepositoryError::from))
+        .fetch_all(executor)
+        .await?
+        .into_iter()
+        .map(|row| row.into())
+        .collect())
     }
 }
 
