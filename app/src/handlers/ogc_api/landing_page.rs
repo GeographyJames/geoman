@@ -36,21 +36,21 @@ pub async fn get_landing_page(
 }
 
 #[get("")]
-#[tracing::instrument(skip(repo, project, state, req))]
+#[tracing::instrument(skip(repo, project_id, state, req))]
 pub async fn get_project_landing_page(
     repo: web::Data<PostgresRepo>,
-    project: web::Path<ProjectId>,
+    project_id: web::Path<ProjectId>,
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<web::Json<LandingPage>, ApiError> {
     let _project = repo
-        .select_one::<Project>(*project)
+        .select_one::<Project>(*project_id)
         .await?
-        .ok_or(ApiError::ProjectNotFound(project.clone()))?;
+        .ok_or(ApiError::ProjectNotFound(*project_id))?;
     let base_url = get_base_url(&req);
     let api_url = format!(
         "{}{}{}/{}",
-        base_url, URLS.ogc_api.base, URLS.ogc_api.project, &project
+        base_url, URLS.ogc_api.base, URLS.ogc_api.project, project_id
     );
     let landing_page = landing_page(&state, &api_url);
     Ok(landing_page)
