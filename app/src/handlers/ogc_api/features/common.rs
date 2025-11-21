@@ -45,7 +45,7 @@ pub async fn retrieve_feature_from_database<'a>(
                 .ok_or_else(|| ApiError::ProjectFeatureNotFound(id))?
                 .into_ogc_feature(collection_url)
         }
-        domain::enums::Collection::Other(collection_slug) => todo!(),
+        domain::enums::Collection::Other(_collection) => todo!(),
     };
     Ok(feature)
 }

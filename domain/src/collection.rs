@@ -41,7 +41,7 @@ impl Collection {
             description,
             crs,
             links,
-            storage_crs: storage_crs_srid.map(|srid| Crs::from_srid(srid)),
+            storage_crs: storage_crs_srid.map(Crs::from_srid),
 
             extent: extent.map(|spatial| Extent {
                 spatial: Some(spatial),
