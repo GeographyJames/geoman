@@ -1,47 +1,12 @@
-use std::fmt::Display;
-
 use serde::Deserialize;
-use sqlx::prelude::Type;
-
-#[derive(Type, Clone)]
-#[sqlx(transparent)]
-#[sqlx(type_name = "slug")]
-pub struct Slug(String);
-impl Slug {
-    pub fn slugify(value: &str) -> Self {
-        Slug(slug::slugify(value))
-    }
-    pub fn parse(value: String) -> Result<Self, String> {
-        let slug = slug::slugify(&value);
-        if slug == value {
-            Ok(Self(value))
-        } else {
-            Err("value is not a slug".to_string())
-        }
-    }
-    pub fn into_inner(self) -> String {
-        self.0
-    }
-}
-
-impl Default for Slug {
-    fn default() -> Self {
-        Self(uuid::Uuid::new_v4().to_string())
-    }
-}
-
-impl AsRef<str> for Slug {
-    fn as_ref(&self) -> &str {
-        self.0.as_ref()
-    }
-}
+use std::fmt::Display;
 
 #[derive(Clone, Copy, Default, Debug)]
 pub struct ProjectFeatureId {
     pub collection_id: ProjectCollectionId,
     pub id: i32,
 }
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default, Debug, Deserialize)]
 pub struct ProjectId(pub i32);
 #[derive(Clone, Copy, Default, Debug)]
 pub struct UserId(pub i32);
@@ -64,5 +29,11 @@ impl Display for ProjectFeatureId {
             "collection id: {}, feature id: {}",
             self.collection_id, self.id
         )
+    }
+}
+
+impl Display for ProjectId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }

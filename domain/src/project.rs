@@ -4,7 +4,6 @@ use serde_json::{Map, Value, from_value, json};
 
 #[derive(Serialize, Deserialize)]
 pub struct Properties {
-    pub slug: String,
     pub name: String,
 }
 

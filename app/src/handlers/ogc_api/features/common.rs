@@ -1,5 +1,4 @@
 use crate::{
-    enums::ProjectIdentifier,
     errors::{ApiError, RepositoryError},
     postgres::{
         PostgresRepo,
@@ -28,10 +27,10 @@ pub async fn retrieve_feature_from_database<'a>(
 ) -> Result<ogc::Feature, ApiError> {
     let feature = match collection {
         CollectionId::Projects => {
-            let identifier = ProjectIdentifier::Id(ProjectId(feature_id));
-            repo.select_one::<Project>(&identifier)
+            let project_id = ProjectId(feature_id);
+            repo.select_one::<Project>(project_id)
                 .await?
-                .ok_or_else(|| ApiError::ProjectNotFound(identifier))?
+                .ok_or_else(|| ApiError::ProjectNotFound(project_id))?
                 .into_ogc_feature(collection_url)
         }
         CollectionId::ProjectCollection(collection_id) => {

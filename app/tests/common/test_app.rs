@@ -12,7 +12,7 @@ use app::{
     telemetry::{get_subscriber, init_subscriber},
 };
 use domain::{
-    ProjectCollectionId, ProjectFeatureId, ProjectId, Slug, TeamId, UserId, enums::GeometryType,
+    ProjectCollectionId, ProjectFeatureId, ProjectId, TeamId, UserId, enums::GeometryType,
 };
 use dotenvy::dotenv;
 use secrecy::ExposeSecret;
@@ -165,20 +165,20 @@ impl TestApp {
         collection_id
     }
 
-    pub async fn insert_project(&self, name: &str, slug: &Slug, user_id: UserId) -> i32 {
+    pub async fn insert_project(&self, name: &str, user_id: UserId) -> ProjectId {
         let record = sqlx::query!(
-            "INSERT INTO app.projects (name, slug, owner, added_by, last_updated_by) VALUES ($1, $2, $3, $3, $3) RETURNING id",
+            "INSERT INTO app.projects (name, owner, added_by, last_updated_by) VALUES ($1, $2, $2, $2) RETURNING id",
             name,
-            slug as &Slug,
+
             user_id.0
         ).fetch_one(&self.db_pool).await.expect("Failed to save project in database");
-        record.id
+        ProjectId(record.id)
     }
 
     pub async fn generate_project_id(&self, user_id: UserId) -> ProjectId {
         let name = uuid::Uuid::new_v4().to_string();
-        let slug = Slug::parse(name.clone()).expect("failed po create slug");
-        ProjectId(self.insert_project(&name, &slug, user_id).await)
+
+        self.insert_project(&name, user_id).await
     }
 
     pub async fn insert_feature_with_id<P: Serialize>(

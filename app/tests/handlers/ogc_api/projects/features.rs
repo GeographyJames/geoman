@@ -1,8 +1,9 @@
+use domain::ProjectId;
+
 use crate::common::{
     TestApp,
     helpers::{assert_ok, assert_status, handle_json_response},
 };
-use app::enums::ProjectIdentifier;
 
 // Als ensures only features relating to the relevant project are returned
 #[actix_web::test]
@@ -19,7 +20,7 @@ async fn get_features_works_for_project() {
         .await;
     let response = app
         .ogc_service
-        .get_project_features(&app.api_client, collection_id, &project_id.into())
+        .get_project_features(&app.api_client, collection_id, project_id)
         .await;
     assert_ok(&response);
     let ogc_features: ogc::FeatureCollection = handle_json_response(response)
@@ -41,7 +42,7 @@ async fn get_feature_works_for_project() {
         .ogc_service
         .get_project_feature(
             &app.api_client,
-            &project_id.into(),
+            project_id.into(),
             collection_id,
             feature_id.id,
         )
@@ -62,7 +63,7 @@ async fn get_feature_returns_404_for_project_not_found() {
         .ogc_service
         .get_project_feature(
             &app.api_client,
-            &ProjectIdentifier::default(),
+            ProjectId::default(),
             collection_id,
             feature_id.id,
         )
@@ -84,7 +85,7 @@ async fn get_feature_returns_404_for_feature_belonging_to_different_project() {
         .ogc_service
         .get_project_feature(
             &app.api_client,
-            &project_id.into(),
+            project_id.into(),
             collection_id,
             feature_id.id,
         )
@@ -102,11 +103,7 @@ async fn get_features_returns_404_for_project_not_found() {
         .await;
     let response = app
         .ogc_service
-        .get_project_features(
-            &app.api_client,
-            collection_id,
-            &ProjectIdentifier::default(),
-        )
+        .get_project_features(&app.api_client, collection_id, ProjectId::default())
         .await;
     assert_status(&response, 404);
 }
@@ -128,7 +125,7 @@ async fn get_project_features_works_with_limit() {
         .get_project_features_with_params(
             &app.api_client,
             collection_id,
-            &project_id.into(),
+            project_id.into(),
             &&[("limit", limit)],
         )
         .await;

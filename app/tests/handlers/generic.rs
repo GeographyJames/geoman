@@ -2,12 +2,7 @@ use crate::common::{
     TestApp,
     helpers::{assert_status, check_error_response},
 };
-use app::enums::ProjectIdentifier;
-use domain::ProjectId;
-use domain::{
-    ProjectCollectionId,
-    enums::CollectionId,
-};
+use domain::{ProjectCollectionId, ProjectId, enums::CollectionId};
 use rstest::rstest;
 
 enum Endpoint {
@@ -65,18 +60,12 @@ impl Endpoint {
             }
             Endpoint::GetProjectLandingPage => {
                 app.ogc_service
-                    .get_project_landing_page(
-                        &app.api_client,
-                        &ProjectIdentifier::Id(ProjectId::default()),
-                    )
+                    .get_project_landing_page(&app.api_client, ProjectId::default())
                     .await
             }
             Endpoint::GetProjectConformanceDeclaration => {
                 app.ogc_service
-                    .get_project_conformance_declaration(
-                        &app.api_client,
-                        &ProjectIdentifier::Id(ProjectId::default()),
-                    )
+                    .get_project_conformance_declaration(&app.api_client, ProjectId::default())
                     .await
             }
             Endpoint::GetProjects => {
@@ -86,10 +75,7 @@ impl Endpoint {
             }
             Endpoint::GetProjectCollections => {
                 app.ogc_service
-                    .get_project_collections(
-                        &app.api_client,
-                        &ProjectIdentifier::Id(ProjectId::default()),
-                    )
+                    .get_project_collections(&app.api_client, ProjectId::default())
                     .await
             }
             Endpoint::GetProjectFeatures => {
@@ -97,7 +83,7 @@ impl Endpoint {
                     .get_project_features(
                         &app.api_client,
                         ProjectCollectionId::default(),
-                        &ProjectIdentifier::default(),
+                        ProjectId::default(),
                     )
                     .await
             }
@@ -105,7 +91,7 @@ impl Endpoint {
                 app.ogc_service
                     .get_project_collection(
                         &app.api_client,
-                        &ProjectIdentifier::default(),
+                        ProjectId::default(),
                         ProjectCollectionId::default(),
                     )
                     .await
@@ -114,7 +100,7 @@ impl Endpoint {
                 app.ogc_service
                     .get_project_feature(
                         &app.api_client,
-                        &ProjectIdentifier::default(),
+                        ProjectId::default(),
                         ProjectCollectionId::default(),
                         0,
                     )

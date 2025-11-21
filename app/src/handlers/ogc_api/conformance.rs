@@ -1,9 +1,9 @@
 use actix_web::{get, web};
-use domain::Project;
+use domain::{Project, ProjectId};
 use ogcapi_types::common::Conformance;
 use std::sync::LazyLock;
 
-use crate::{enums::ProjectIdentifier, errors::ApiError, postgres::PostgresRepo};
+use crate::{errors::ApiError, postgres::PostgresRepo};
 
 static CONFORMANCE_DECLARATION: LazyLock<Conformance> = LazyLock::new(|| {
     let mut declaration = Conformance::default();
@@ -41,14 +41,14 @@ pub async fn get_conformance_declaration() -> web::Json<&'static Conformance> {
 }
 
 #[get("")]
-#[tracing::instrument(skip(repo, project))]
+#[tracing::instrument(skip(repo, project_id))]
 pub async fn get_project_conformance_declaration(
     repo: web::Data<PostgresRepo>,
-    project: web::Path<ProjectIdentifier>,
+    project_id: web::Path<ProjectId>,
 ) -> Result<web::Json<&'static Conformance>, ApiError> {
-    let _project = repo
-        .select_one::<Project>(&project)
+    let _project_row = repo
+        .select_one::<Project>(*project_id)
         .await?
-        .ok_or(ApiError::ProjectNotFound(project.into_inner()))?;
+        .ok_or(ApiError::ProjectNotFound(*project_id))?;
     Ok(web::Json(&CONFORMANCE_DECLARATION))
 }

@@ -1,10 +1,8 @@
 use actix_web::{ResponseError, http::StatusCode};
 
-use domain::{ProjectCollectionId, ProjectFeatureId};
+use domain::{ProjectCollectionId, ProjectFeatureId, ProjectId};
 use ogcapi_types::common::Crs;
 use thiserror::Error;
-
-use crate::enums::ProjectIdentifier;
 
 #[derive(Debug, Error)]
 pub enum ApiError {
@@ -13,7 +11,7 @@ pub enum ApiError {
     #[error("database error")]
     Database(#[from] RepositoryError),
     #[error("Project '{0}' not found")]
-    ProjectNotFound(ProjectIdentifier),
+    ProjectNotFound(ProjectId),
     #[error("Collection '{0}' not found")]
     ProjectCollectionNotFound(ProjectCollectionId),
     #[error("Project feature not found: {0}")]

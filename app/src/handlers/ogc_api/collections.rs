@@ -6,7 +6,6 @@ use ogcapi_types::common::Crs;
 
 use crate::{
     URLS,
-    enums::ProjectIdentifier,
     errors::ApiError,
     helpers::get_base_url,
     postgres::{
@@ -69,23 +68,23 @@ pub async fn get_collections(
 }
 
 #[get("")]
-#[tracing::instrument(skip(repo, req, project))]
+#[tracing::instrument(skip(repo, req, project_id))]
 pub async fn get_project_collections(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-    project: web::Path<ProjectIdentifier>,
+    project_id: web::Path<ProjectId>,
 ) -> Result<web::Json<ogcapi_types::common::Collections>, ApiError> {
-    let project_row = repo
-        .select_one::<Project>(&project)
+    let _project_row = repo
+        .select_one::<Project>(*project_id)
         .await?
-        .ok_or(ApiError::ProjectNotFound(project.clone()))?;
+        .ok_or(ApiError::ProjectNotFound(*project_id))?;
     let params = SelectAllParams {
-        project_id: ProjectId(project_row.id),
+        project_id: *project_id,
     };
     let base_url = get_base_url(&req);
     let collections_url = format!(
         "{}{}{}/{}/collections",
-        base_url, URLS.ogc_api.base, URLS.ogc_api.project, project
+        base_url, URLS.ogc_api.base, URLS.ogc_api.project, project_id
     );
     let supported_crs = repo.select_all::<Crs>().await?;
     let collections: Collections = repo
@@ -97,7 +96,7 @@ pub async fn get_project_collections(
     Ok(web::Json(ogc_collections))
 }
 
-/// Get a single collection by ID (slug)
+/// Get a single collection by ID
 #[utoipa::path(
     get,
     path = "/collections/{collectionId}",
@@ -135,17 +134,17 @@ pub async fn get_project_collections(
     )
 )]
 #[get("/{collectionId}")]
-#[tracing::instrument(skip(repo, req, collection))]
+#[tracing::instrument(skip(repo, req, collection_id))]
 pub async fn get_collection(
     req: HttpRequest,
-    collection: web::Path<CollectionId>,
+    collection_id: web::Path<CollectionId>,
     repo: web::Data<PostgresRepo>,
 ) -> Result<web::Json<ogcapi_types::common::Collection>, ApiError> {
     let base_url = get_base_url(&req);
     let collections_url = format!("{}{}/collections", base_url, URLS.ogc_api.base);
     let supported_crs = repo.select_all::<Crs>().await?;
 
-    let ogc_collection = match collection.into_inner() {
+    let ogc_collection = match collection_id.into_inner() {
         CollectionId::Projects => project_collection(&collections_url, supported_crs.clone()),
         CollectionId::ProjectCollection(id) => repo
             .select_one::<Collection>(id)
@@ -162,23 +161,23 @@ pub async fn get_collection(
 #[tracing::instrument(skip(repo, req, path))]
 pub async fn get_project_collection(
     req: HttpRequest,
-    path: web::Path<(ProjectIdentifier, ProjectCollectionId)>,
+    path: web::Path<(ProjectId, ProjectCollectionId)>,
     repo: web::Data<PostgresRepo>,
 ) -> Result<web::Json<ogcapi_types::common::Collection>, ApiError> {
-    let (project, collection_id) = path.into_inner();
-    let project_row = repo
-        .select_one::<Project>(&project)
+    let (project_id, collection_id) = path.into_inner();
+    let _project_row = repo
+        .select_one::<Project>(project_id)
         .await?
-        .ok_or_else(|| ApiError::ProjectNotFound(project.clone()))?;
+        .ok_or_else(|| ApiError::ProjectNotFound(project_id))?;
     let base_url = get_base_url(&req);
     let collections_url = format!(
         "{}{}{}/{}/collections",
-        base_url, URLS.ogc_api.base, URLS.ogc_api.project, project
+        base_url, URLS.ogc_api.base, URLS.ogc_api.project, project_id
     );
     let supported_crs = repo.select_all::<Crs>().await?;
     // Fetch collection from database
     let params = SelectOneParams {
-        project_id: ProjectId(project_row.id),
+        project_id: project_id,
     };
     let collection = repo
         .select_one_with_params::<Collection>(collection_id, &params)

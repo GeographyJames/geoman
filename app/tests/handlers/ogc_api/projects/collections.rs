@@ -1,8 +1,9 @@
+use domain::ProjectId;
+
 use crate::common::{
     TestApp,
     helpers::{assert_ok, assert_status, handle_json_response},
 };
-use app::enums::ProjectIdentifier;
 
 #[actix_web::test]
 async fn get_collections_works_for_project() {
@@ -14,7 +15,7 @@ async fn get_collections_works_for_project() {
         .await;
     let response = app
         .ogc_service
-        .get_project_collections(&app.api_client, &ProjectIdentifier::Id(project_id))
+        .get_project_collections(&app.api_client, project_id)
         .await;
     assert_ok(&response);
     let collections: ogc::Collections = handle_json_response(response)
@@ -34,7 +35,7 @@ async fn get_collections_only_returns_collectinos_that_contain_items_for_the_pro
         .await;
     let response = app
         .ogc_service
-        .get_project_collections(&app.api_client, &ProjectIdentifier::Id(project_id))
+        .get_project_collections(&app.api_client, project_id)
         .await;
     let ogc_collections: ogc::Collections = handle_json_response(response)
         .await
@@ -52,7 +53,7 @@ async fn get_project_collection_works() {
         .await;
     let response = app
         .ogc_service
-        .get_project_collection(&app.api_client, &project_id.into(), collection_id)
+        .get_project_collection(&app.api_client, project_id, collection_id)
         .await;
     assert_ok(&response);
 }
@@ -64,11 +65,7 @@ async fn get_project_collection_returns_404_for_project_not_found() {
     let collection_id = app.generate_collection_id(user_id).await;
     let response = app
         .ogc_service
-        .get_project_collection(
-            &app.api_client,
-            &ProjectIdentifier::default(),
-            collection_id,
-        )
+        .get_project_collection(&app.api_client, ProjectId::default(), collection_id)
         .await;
     assert_status(&response, 404);
 }
@@ -84,7 +81,7 @@ async fn get_project_collection_returns_404_for_collection_with_no_features() {
         .await;
     let response = app
         .ogc_service
-        .get_project_collection(&app.api_client, &project_id.into(), collection_id)
+        .get_project_collection(&app.api_client, project_id, collection_id)
         .await;
     assert_status(&response, 404);
 }

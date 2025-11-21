@@ -39,7 +39,7 @@ pub async fn bbox_works() {
         .get_project_features_with_params(
             &app.api_client,
             collection_id,
-            &project_id.into(),
+            project_id,
             &[
                 ("bbox", bbox),
                 ("bbox-crs", Crs::from_epsg(27700).to_string()),

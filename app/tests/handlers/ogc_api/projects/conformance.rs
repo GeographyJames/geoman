@@ -1,5 +1,3 @@
-use app::enums::ProjectIdentifier;
-
 use crate::common::{TestApp, helpers::check_conformance_declaration_response};
 
 #[actix_web::test]
@@ -8,7 +6,7 @@ async fn get_project_conformance_declaration_works() {
     let (_, _, project_id) = app.generate_ids().await;
     let response = app
         .ogc_service
-        .get_project_conformance_declaration(&app.api_client, &ProjectIdentifier::Id(project_id))
+        .get_project_conformance_declaration(&app.api_client, project_id)
         .await;
     check_conformance_declaration_response(response).await;
 }

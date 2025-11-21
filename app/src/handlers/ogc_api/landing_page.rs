@@ -1,9 +1,9 @@
 use crate::{
-    AppState, URLS, constants::OPEN_API_JSON, enums::ProjectIdentifier, errors::ApiError,
-    helpers::get_base_url, postgres::PostgresRepo,
+    AppState, URLS, constants::OPEN_API_JSON, errors::ApiError, helpers::get_base_url,
+    postgres::PostgresRepo,
 };
 use actix_web::{HttpRequest, get, web};
-use domain::Project;
+use domain::{Project, ProjectId};
 
 use ogcapi_types::common::{
     LandingPage, Link, Linked,
@@ -39,12 +39,12 @@ pub async fn get_landing_page(
 #[tracing::instrument(skip(repo, project, state, req))]
 pub async fn get_project_landing_page(
     repo: web::Data<PostgresRepo>,
-    project: web::Path<ProjectIdentifier>,
+    project: web::Path<ProjectId>,
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<web::Json<LandingPage>, ApiError> {
     let _project = repo
-        .select_one::<Project>(&project)
+        .select_one::<Project>(*project)
         .await?
         .ok_or(ApiError::ProjectNotFound(project.clone()))?;
     let base_url = get_base_url(&req);

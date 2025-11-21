@@ -1,6 +1,5 @@
 use crate::{
     URLS,
-    enums::ProjectIdentifier,
     errors::ApiError,
     handlers::ogc_api::features::{
         Query,
@@ -23,28 +22,29 @@ use ogcapi_types::common::Crs;
 pub async fn get_project_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-    path: web::Path<(ProjectIdentifier, CollectionId, i32)>,
+    path: web::Path<(ProjectId, CollectionId, i32)>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
+    let (project_id, collection_id, feature_id) = path.into_inner();
+    let _project_row = repo
+        .select_one::<Project>(project_id)
+        .await?
+        .ok_or_else(|| ApiError::ProjectNotFound(project_id))?;
     let valid_crs: Vec<Crs> = repo.select_all().await?;
-    let (project, collection, feature_id) = path.into_inner();
     let Query { crs, .. } = query.into_inner();
     let request_crs = ValidCrs::new(&valid_crs, crs).map_err(ApiError::UnsupportedRequestCrs)?;
-    let project_row = repo
-        .select_one::<Project>(&project)
-        .await?
-        .ok_or_else(|| ApiError::ProjectNotFound(project.clone()))?;
+
     let base_url = get_base_url(&req);
     let collection_url = format!(
         "{}{}{}/{}/collections/{}",
-        base_url, URLS.ogc_api.base, URLS.ogc_api.project, project, collection
+        base_url, URLS.ogc_api.base, URLS.ogc_api.project, project_id, collection_id
     );
     let params = SelectOneParams {
-        project_id: Some(ProjectId(project_row.id)),
+        project_id: Some(project_id),
         crs: &request_crs,
     };
     let feature =
-        retrieve_feature_from_database(&repo, collection, feature_id, collection_url, &params)
+        retrieve_feature_from_database(&repo, collection_id, feature_id, collection_url, &params)
             .await?;
     let mut response = HttpResponse::Ok().json(feature);
     append_crs_header(&mut response, &request_crs);

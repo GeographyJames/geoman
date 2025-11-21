@@ -1,6 +1,6 @@
 use crate::common::{constants::REQUEST_FAILED, services::HttpClient};
-use app::{URLS, enums::ProjectIdentifier};
-use domain::{ProjectCollectionId, enums::CollectionId};
+use app::URLS;
+use domain::{ProjectCollectionId, ProjectId, enums::CollectionId};
 use reqwest::{RequestBuilder, Response};
 use serde::Serialize;
 
@@ -15,11 +15,11 @@ impl OgcService {
     pub async fn get_project_landing_page(
         &self,
         client: &HttpClient,
-        project: &ProjectIdentifier,
+        project: ProjectId,
     ) -> Response {
         let req = client.get(format!(
             "{}{}/{}",
-            &URLS.ogc_api.base, &URLS.ogc_api.project, project
+            &URLS.ogc_api.base, &URLS.ogc_api.project, project.0
         ));
         req.send().await.expect(REQUEST_FAILED)
     }
@@ -35,13 +35,13 @@ impl OgcService {
     pub async fn get_project_conformance_declaration(
         &self,
         client: &HttpClient,
-        project: &ProjectIdentifier,
+        project: ProjectId,
     ) -> Response {
         let req = client.get(format!(
             "{}{}/{}{}",
             &URLS.ogc_api.base,
             &URLS.ogc_api.project,
-            project,
+            project.0,
             &URLS.ogc_api.conformance_declaration
         ));
         req.send().await.expect(REQUEST_FAILED)
@@ -58,11 +58,11 @@ impl OgcService {
     pub async fn get_project_collections(
         &self,
         client: &HttpClient,
-        project: &ProjectIdentifier,
+        project: ProjectId,
     ) -> Response {
         let req = client.get(format!(
             "{}{}/{}{}",
-            &URLS.ogc_api.base, &URLS.ogc_api.project, project, &URLS.ogc_api.collections
+            &URLS.ogc_api.base, &URLS.ogc_api.project, project.0, &URLS.ogc_api.collections
         ));
         req.send().await.expect(REQUEST_FAILED)
     }
@@ -82,14 +82,14 @@ impl OgcService {
     pub async fn get_project_collection(
         &self,
         client: &HttpClient,
-        project: &ProjectIdentifier,
+        project: ProjectId,
         collection_id: ProjectCollectionId,
     ) -> Response {
         let req = client.get(format!(
             "{}{}/{}{}/{}",
             URLS.ogc_api.base,
             &URLS.ogc_api.project,
-            project,
+            project.0,
             URLS.ogc_api.collections,
             collection_id
         ));
@@ -122,7 +122,7 @@ impl OgcService {
         &self,
         client: &HttpClient,
         collection_id: ProjectCollectionId,
-        project: &ProjectIdentifier,
+        project: ProjectId,
     ) -> Response {
         let req = self.get_project_features_req(client, collection_id, project);
         req.send().await.expect(REQUEST_FAILED)
@@ -132,13 +132,13 @@ impl OgcService {
         &self,
         client: &HttpClient,
         collection_id: ProjectCollectionId,
-        project: &ProjectIdentifier,
+        project: ProjectId,
     ) -> RequestBuilder {
         client.get(format!(
             "{}{}/{}{}/{}/items",
             URLS.ogc_api.base,
             URLS.ogc_api.project,
-            project,
+            project.0,
             URLS.ogc_api.collections,
             collection_id
         ))
@@ -148,7 +148,7 @@ impl OgcService {
         &self,
         client: &HttpClient,
         collection_id: ProjectCollectionId,
-        project: &ProjectIdentifier,
+        project: ProjectId,
         params: &T,
     ) -> Response {
         let req = self
@@ -195,14 +195,10 @@ impl OgcService {
         req.send().await.expect(REQUEST_FAILED)
     }
 
-    pub async fn get_project_openapi(
-        &self,
-        client: &HttpClient,
-        project: &ProjectIdentifier,
-    ) -> Response {
+    pub async fn get_project_openapi(&self, client: &HttpClient, project: ProjectId) -> Response {
         let req = client.get(format!(
             "{}{}/{}{}",
-            URLS.ogc_api.base, URLS.ogc_api.project, project, URLS.ogc_api.openapi
+            URLS.ogc_api.base, URLS.ogc_api.project, project.0, URLS.ogc_api.openapi
         ));
         req.send().await.expect(REQUEST_FAILED)
     }
@@ -210,7 +206,7 @@ impl OgcService {
     fn get_project_feature_req(
         &self,
         client: &HttpClient,
-        project: &ProjectIdentifier,
+        project: ProjectId,
         collection_id: ProjectCollectionId,
         id: i32,
     ) -> RequestBuilder {
@@ -218,7 +214,7 @@ impl OgcService {
             "{}{}/{}{}/{}/items/{}",
             URLS.ogc_api.base,
             URLS.ogc_api.project,
-            project,
+            project.0,
             URLS.ogc_api.collections,
             collection_id,
             id
@@ -228,7 +224,7 @@ impl OgcService {
     pub async fn get_project_feature_with_params<T: Serialize>(
         &self,
         client: &HttpClient,
-        project: &ProjectIdentifier,
+        project: ProjectId,
         collection_id: ProjectCollectionId,
         id: i32,
         params: &T,
@@ -242,7 +238,7 @@ impl OgcService {
     pub async fn get_project_feature(
         &self,
         client: &HttpClient,
-        project: &ProjectIdentifier,
+        project: ProjectId,
         collection_id: ProjectCollectionId,
         id: i32,
     ) -> Response {

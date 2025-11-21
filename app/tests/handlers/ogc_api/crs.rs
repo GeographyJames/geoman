@@ -40,7 +40,7 @@ pub async fn unsupported_crs_in_request_returns_400() {
         .ogc_service
         .get_project_feature_with_params(
             &app.api_client,
-            &project_id.into(),
+            project_id.into(),
             collection_id,
             feature.id,
             &[("crs", &crs)],
@@ -54,7 +54,7 @@ pub async fn unsupported_crs_in_request_returns_400() {
         .get_project_features_with_params(
             &app.api_client,
             collection_id,
-            &project_id.into(),
+            project_id.into(),
             &[("crs", &crs)],
         )
         .await;
@@ -117,7 +117,7 @@ pub async fn crs_transform_works() {
         .ogc_service
         .get_project_feature_with_params(
             &app.api_client,
-            &project_id.try_into().unwrap(),
+            project_id.try_into().unwrap(),
             collection_id,
             feature_id.id,
             &[("crs", &crs)],
@@ -134,7 +134,7 @@ pub async fn crs_transform_works() {
         .get_project_features_with_params(
             &app.api_client,
             collection_id,
-            &project_id.try_into().unwrap(),
+            project_id.try_into().unwrap(),
             &[("crs", &crs)],
         )
         .await;

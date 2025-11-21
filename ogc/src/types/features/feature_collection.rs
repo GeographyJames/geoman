@@ -20,9 +20,9 @@ pub struct FeatureCollection {
 }
 
 impl FeatureCollection {
-    pub fn new(collection_url: String, slug: String) -> Self {
+    pub fn new(collection_url: String, collection_id: String) -> Self {
         Self {
-            id: slug,
+            id: collection_id,
             r#type: Type::default(),
             features: Default::default(),
             links: [Link::new(format!("{}/items", collection_url), SELF).mediatype(GEO_JSON)],

@@ -1,6 +1,5 @@
 use crate::{
     URLS,
-    enums::ProjectIdentifier,
     errors::ApiError,
     handlers::ogc_api::features::{
         Query,
@@ -25,11 +24,16 @@ use ogcapi_types::common::{Crs, media_type::GEO_JSON};
 pub async fn get_project_features(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-    path: web::Path<(ProjectIdentifier, ProjectCollectionId)>,
+    path: web::Path<(ProjectId, ProjectCollectionId)>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
+    let (project_id, collection_id) = path.into_inner();
+    let _project_row = repo
+        .select_one::<Project>(project_id)
+        .await?
+        .ok_or_else(|| ApiError::ProjectNotFound(project_id))?;
     let valid_crs: Vec<Crs> = repo.select_all().await?;
-    let (project, collection_id) = path.into_inner();
+
     let Query {
         limit,
         bbox,
@@ -41,25 +45,22 @@ pub async fn get_project_features(
     let bbox_crs = bbox_crs
         .map(|c| ValidCrs::new(&valid_crs, c).map_err(ApiError::UnsupportedBboxCrs))
         .transpose()?;
-    let project_row = repo
-        .select_one::<Project>(&project)
-        .await?
-        .ok_or_else(|| ApiError::ProjectNotFound(project.clone()))?;
+
     let base_url = get_base_url(&req);
     let collection_url = format!(
         "{}{}{}/{}/collections/{}",
-        base_url, URLS.ogc_api.base, URLS.ogc_api.project, project, collection_id
+        base_url, URLS.ogc_api.base, URLS.ogc_api.project, project_id, collection_id
     );
 
     let mut params = SelectAllParams {
         limit,
         collection_id,
-        project_id: Some(ProjectId(project_row.id)),
+        project_id: Some(project_id),
         crs: request_crs.clone(),
         bbox,
         bbox_crs,
     };
-    params.project_id = Some(ProjectId(project_row.id));
+    params.project_id = Some(project_id);
     let features = project_features_stream(collection_id, params, repo).await?;
 
     let bytes =

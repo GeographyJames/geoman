@@ -100,7 +100,7 @@ async fn get_collection_has_correct_storage_crs() {
 
     let response = app
         .ogc_service
-        .get_project_collection(&app.api_client, &project_id.into(), collection_id)
+        .get_project_collection(&app.api_client, project_id, collection_id)
         .await;
     let collection: ogcapi_types::common::Collection = handle_json_response(response)
         .await
@@ -131,7 +131,7 @@ async fn get_collection_has_correct_storage_crs() {
     assert!(collection.storage_crs.is_none());
     let response = app
         .ogc_service
-        .get_project_collection(&app.api_client, &project_id.into(), collection_id.into())
+        .get_project_collection(&app.api_client, project_id, collection_id.into())
         .await;
     let collection: ogcapi_types::common::Collection = handle_json_response(response)
         .await
@@ -152,7 +152,7 @@ async fn get_collection_has_correct_storage_crs() {
         .await;
     let response = app
         .ogc_service
-        .get_project_collection(&app.api_client, &project_id.into(), collection_id.into())
+        .get_project_collection(&app.api_client, project_id, collection_id.into())
         .await;
     let collection: ogcapi_types::common::Collection = handle_json_response(response)
         .await

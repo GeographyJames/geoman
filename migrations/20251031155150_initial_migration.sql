@@ -33,11 +33,3 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
-CREATE DOMAIN slug AS TEXT
-    CHECK (
-        VALUE ~ '^[a-z0-9]+(-[a-z0-9]+)*$'
-        AND length(VALUE) BETWEEN 1 AND 100
-    );
-
-COMMENT ON DOMAIN slug IS 'URL-friendly slug: lowercase alphanumeric with hyphens as separators';
