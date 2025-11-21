@@ -11,7 +11,7 @@ use crate::{
     errors::RepositoryError,
     postgres::{
         PoolWrapper,
-        traits::{SelectAllWithParamsStreaming, SelectOneWithParams},
+        traits::{SelectAllWithParamsStreaming, SelectOneWithParams, StreamItem},
     },
     types::ValidCrs,
 };
@@ -132,7 +132,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
     fn select_all_with_params_streaming<'a>(
         executor: PoolWrapper,
         params: Self::Params<'a>,
-    ) -> impl Stream<Item = Result<Self, RepositoryError>> + use<> {
+    ) -> impl Stream<Item = Result<StreamItem<Self>, RepositoryError>> + use<> {
         let SelectAllParams {
             limit,
             project_id,
@@ -184,7 +184,12 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             bbox_crs.as_ref().unwrap_or(&crs).as_ref().as_srid() as i32
         )
         .fetch(executor)
-        .map(|res| res?.try_into())
+        .map(|res| {
+            let row = res?;
+            let total_count = row.total_count;
+            let item: ProjectFeature = row.try_into()?;
+            Ok(StreamItem { item, total_count })
+        })
     }
 }
 

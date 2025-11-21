@@ -24,13 +24,18 @@ pub trait SelectOne {
         E: PgExecutor<'e>;
 }
 
+pub struct StreamItem<T> {
+    pub item: T,
+    pub total_count: i64,
+}
+
 pub trait SelectAllWithParamsStreaming {
     type Params<'a>;
 
     fn select_all_with_params_streaming<'a>(
         executor: PoolWrapper,
         params: Self::Params<'a>,
-    ) -> impl Stream<Item = Result<Self, RepositoryError>> + use<Self>
+    ) -> impl Stream<Item = Result<StreamItem<Self>, RepositoryError>> + use<Self>
     where
         Self: Sized;
 }

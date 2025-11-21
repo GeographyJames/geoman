@@ -17,10 +17,6 @@ pub struct FeatureCollection {
     pub features: Vec<Feature>,
     pub links: [Link; 1],
     pub time_stamp: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub number_returned: Option<usize>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub number_matched: Option<usize>,
 }
 
 impl FeatureCollection {
@@ -32,39 +28,27 @@ impl FeatureCollection {
             links: [Link::new(format!("{}/items", collection_url), SELF).mediatype(GEO_JSON)],
             //todo set timestamp from database
             time_stamp: chrono::Utc::now().to_rfc3339().to_string(),
-            number_returned: None,
-            number_matched: None,
         }
     }
 
-    pub fn with_counts(mut self, number_returned: usize, number_matched: usize) -> Self {
-        self.number_returned = Some(number_returned);
-        self.number_matched = Some(number_matched);
-        self
-    }
-
-    pub fn opening_json(&self) -> Result<String, serde_json::Error> {
+    pub fn opening_json(&self, number_matched: i64) -> Result<String, serde_json::Error> {
         let mut json = format!(
-            r#"{{"type":{},"id":{},"links":{},"timeStamp":{}"#,
+            r#"{{"type":{},"id":{},"links":{},"timeStamp":{},"numberMatched":{}"#,
             serde_json::to_string(&self.r#type)?,
             serde_json::to_string(&self.id)?,
             serde_json::to_string(&self.links)?,
-            serde_json::to_string(&self.time_stamp)?
+            serde_json::to_string(&self.time_stamp)?,
+            serde_json::to_string(&number_matched)?
         );
-
-        if let Some(number_returned) = self.number_returned {
-            json.push_str(&format!(r#","numberReturned":{}"#, number_returned));
-        }
-
-        if let Some(number_matched) = self.number_matched {
-            json.push_str(&format!(r#","numberMatched":{}"#, number_matched));
-        }
 
         json.push_str(r#","features":["#);
         Ok(json)
     }
-    pub fn closing_json(&self) -> String {
-        "]}".to_string()
+    pub fn closing_json(&self, number_returned: usize) -> Result<String, serde_json::Error> {
+        Ok(format!(
+            r#"],"numberReturned":{}}}"#,
+            serde_json::to_string(&number_returned)?
+        ))
     }
 }
 
@@ -99,8 +83,10 @@ mod tests {
         let fc = FeatureCollection::default();
         let json_string = format!(
             "{}{}",
-            fc.opening_json().expect("failed to serialise opening json"),
-            fc.closing_json()
+            fc.opening_json(0)
+                .expect("failed to serialise opening json"),
+            fc.closing_json(0)
+                .expect("failed to serialise closing json")
         );
         let _: FeatureCollection = serde_json::from_str(&json_string)
             .expect("failed to deserialise to feature collection");

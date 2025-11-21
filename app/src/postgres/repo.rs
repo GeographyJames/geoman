@@ -8,7 +8,7 @@ use crate::{
         PoolWrapper,
         traits::{
             SelectAll, SelectAllWithParams, SelectAllWithParamsStreaming, SelectOne,
-            SelectOneWithParams,
+            SelectOneWithParams, StreamItem,
         },
     },
 };
@@ -42,7 +42,7 @@ impl PostgresRepo {
     pub fn select_all_with_params_streaming<'a, T>(
         &self,
         params: T::Params<'a>,
-    ) -> impl Stream<Item = Result<T, RepositoryError>> + use<T>
+    ) -> impl Stream<Item = Result<StreamItem<T>, RepositoryError>> + use<T>
     where
         T: SelectAllWithParamsStreaming,
     {

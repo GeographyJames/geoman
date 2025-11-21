@@ -7,3 +7,4 @@ pub mod collections;
 mod crs;
 pub mod project_features;
 pub mod projects;
+pub use traits::StreamItem;

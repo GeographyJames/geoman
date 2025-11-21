@@ -1,7 +1,7 @@
 use crate::{
     errors::{ApiError, RepositoryError},
     postgres::{
-        PostgresRepo,
+        PostgresRepo, StreamItem,
         project_features::{SelectAllParams, SelectOneParams},
     },
     types::ValidCrs,
@@ -60,7 +60,7 @@ pub async fn project_features_stream(
     collection_id: ProjectCollectionId,
     params: SelectAllParams,
     repo: web::Data<PostgresRepo>,
-) -> Result<impl Stream<Item = Result<ProjectFeature, RepositoryError>>, ApiError> {
+) -> Result<impl Stream<Item = Result<StreamItem<ProjectFeature>, RepositoryError>>, ApiError> {
     repo.select_one::<Collection>(collection_id)
         .await?
         .ok_or_else(|| ApiError::ProjectCollectionNotFound(collection_id))?;
