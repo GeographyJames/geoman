@@ -10,11 +10,13 @@ pub enum Type {
 
 #[non_exhaustive]
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FeatureCollection {
     pub id: String,
     pub r#type: Type,
     pub features: Vec<Feature>,
     pub links: [Link; 1],
+    pub time_stamp: String,
 }
 
 impl FeatureCollection {
@@ -24,15 +26,18 @@ impl FeatureCollection {
             r#type: Type::default(),
             features: Default::default(),
             links: [Link::new(format!("{}/items", collection_url), SELF).mediatype(GEO_JSON)],
+            //todo set timestamp from database
+            time_stamp: chrono::Utc::now().to_rfc3339().to_string(),
         }
     }
 
     pub fn opening_json(&self) -> Result<String, serde_json::Error> {
         Ok(format!(
-            r#"{{"type":{},"id":{},"links":{},"features":["#,
+            r#"{{"type":{},"id":{},"links":{},"timeStamp":{},"features":["#,
             serde_json::to_string(&self.r#type)?,
             serde_json::to_string(&self.id)?,
-            serde_json::to_string(&self.links)?
+            serde_json::to_string(&self.links)?,
+            serde_json::to_string(&self.time_stamp)?
         ))
     }
     pub fn closing_json(&self) -> String {

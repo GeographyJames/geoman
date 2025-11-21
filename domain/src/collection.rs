@@ -4,6 +4,7 @@ use ogcapi_types::common::{
     media_type::{GEO_JSON, JSON},
 };
 use serde::Deserialize;
+use serde_json::Map;
 
 #[derive(Deserialize)]
 pub struct Collection {
@@ -35,6 +36,8 @@ impl Collection {
                 .mediatype(GEO_JSON)
                 .title("Items"),
         ];
+        let mut additional_properties = Map::new();
+
         ogcapi_types::common::Collection {
             id: slug,
             title: Some(title),
@@ -42,10 +45,13 @@ impl Collection {
             crs,
             links,
             storage_crs: storage_crs_srid.map(|srid| Crs::from_srid(srid)),
+
             extent: extent.map(|spatial| Extent {
                 spatial: Some(spatial),
                 temporal: None,
             }),
+            additional_properties,
+
             ..Default::default()
         }
     }
