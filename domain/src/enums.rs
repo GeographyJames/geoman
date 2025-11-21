@@ -52,13 +52,19 @@ impl<'de> Deserialize<'de> for CollectionId {
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
+        Ok(s.into())
+    }
+}
+
+impl From<String> for CollectionId {
+    fn from(s: String) -> Self {
         if let Ok(id) = s.parse::<i32>() {
-            return Ok(CollectionId::ProjectCollection(ProjectCollectionId(id)));
+            return CollectionId::ProjectCollection(ProjectCollectionId(id));
         }
 
         match s.to_lowercase().as_str() {
-            "projects" => Ok(CollectionId::Projects),
-            _ => Ok(CollectionId::Other(s)),
+            "projects" => CollectionId::Projects,
+            _ => CollectionId::Other(s),
         }
     }
 }
