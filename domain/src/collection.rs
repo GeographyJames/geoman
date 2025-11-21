@@ -1,5 +1,5 @@
 use ogcapi_types::common::{
-    Crs, Link,
+    Crs, Extent, Link, SpatialExtent,
     link_rel::{ITEMS, SELF},
     media_type::{GEO_JSON, JSON},
 };
@@ -11,7 +11,8 @@ pub struct Collection {
     pub title: String,
     pub slug: String,
     pub description: Option<String>,
-    // pub storage_crs: Option<Crs>,
+    pub storage_crs_srid: Option<i32>,
+    pub extent: Option<SpatialExtent>,
 }
 
 impl Collection {
@@ -24,8 +25,9 @@ impl Collection {
             title,
             slug,
             description,
-            // storage_crs,
+            storage_crs_srid,
             id: _,
+            extent,
         } = self;
         let links = vec![
             Link::new(format!("{}/{}", collections_url, slug), SELF).mediatype(JSON),
@@ -39,7 +41,11 @@ impl Collection {
             description,
             crs,
             links,
-            storage_crs: None,
+            storage_crs: storage_crs_srid.map(|srid| Crs::from_srid(srid)),
+            extent: extent.map(|spatial| Extent {
+                spatial: Some(spatial),
+                temporal: None,
+            }),
             ..Default::default()
         }
     }

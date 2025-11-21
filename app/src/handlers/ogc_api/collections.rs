@@ -197,7 +197,9 @@ pub async fn get_project_collection(
 fn project_collection(collections_url: &str, crs: Vec<Crs>) -> ogcapi_types::common::Collection {
     Collection {
         id: 0,
+        storage_crs_srid: None,
         title: "Projects".to_string(),
+        extent: None,
         slug: domain::enums::Collection::Projects.to_string(),
         description: None,
     }

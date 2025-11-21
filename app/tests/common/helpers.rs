@@ -100,5 +100,5 @@ pub fn generate_random_wgs84_point_ewkt() -> (f32, f32, String) {
     let mut rng = rand::rng();
     let lat: f32 = rng.random_range(-90.0..90.);
     let long: f32 = rng.random_range(-180.0..180.);
-    (lat, long, generate_point(lat, long, 4326))
+    (long, lat, generate_point(long, lat, 4326))
 }
