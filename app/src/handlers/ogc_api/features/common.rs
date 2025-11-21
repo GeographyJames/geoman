@@ -15,26 +15,26 @@ use actix_web::{
 
 use domain::{
     Collection, IntoOGCFeature, Project, ProjectCollectionId, ProjectFeature, ProjectFeatureId,
-    ProjectId,
+    ProjectId, enums::CollectionId,
 };
 use futures::Stream;
 
 pub async fn retrieve_feature_from_database<'a>(
     repo: &PostgresRepo,
-    collection: domain::enums::Collection,
+    collection: CollectionId,
     feature_id: i32,
     collection_url: String,
     params: &SelectOneParams<'a>,
 ) -> Result<ogc::Feature, ApiError> {
     let feature = match collection {
-        domain::enums::Collection::Projects => {
+        CollectionId::Projects => {
             let identifier = ProjectIdentifier::Id(ProjectId(feature_id));
             repo.select_one::<Project>(&identifier)
                 .await?
                 .ok_or_else(|| ApiError::ProjectNotFound(identifier))?
                 .into_ogc_feature(collection_url)
         }
-        domain::enums::Collection::ProjectCollection(collection_id) => {
+        CollectionId::ProjectCollection(collection_id) => {
             let id = ProjectFeatureId {
                 collection_id,
                 id: feature_id,
@@ -45,7 +45,7 @@ pub async fn retrieve_feature_from_database<'a>(
                 .ok_or_else(|| ApiError::ProjectFeatureNotFound(id))?
                 .into_ogc_feature(collection_url)
         }
-        domain::enums::Collection::Other(_collection) => todo!(),
+        CollectionId::Other(_collection) => todo!(),
     };
     Ok(feature)
 }

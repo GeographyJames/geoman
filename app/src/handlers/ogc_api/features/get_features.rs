@@ -16,7 +16,7 @@ use actix_web::{
     web::{self},
 };
 
-use domain::Project;
+use domain::{Project, enums::CollectionId};
 use ogcapi_types::common::{Crs, media_type::GEO_JSON};
 
 #[utoipa::path(
@@ -34,7 +34,7 @@ use ogcapi_types::common::{Crs, media_type::GEO_JSON};
 pub async fn get_features(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-    collection: web::Path<domain::enums::Collection>,
+    collection: web::Path<CollectionId>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let valid_crs: Vec<Crs> = repo.select_all().await?;
@@ -60,7 +60,7 @@ pub async fn get_features(
     let mut response_builder = HttpResponse::Ok();
     response_builder.content_type(GEO_JSON);
     let mut response = match collection.as_ref() {
-        domain::enums::Collection::Projects => {
+        CollectionId::Projects => {
             let params = projects::SelectAllParams { limit };
             let projects = repo.select_all_with_params_streaming::<Project>(params);
             let bytes = ogc_feature_collection_byte_stream(
@@ -71,7 +71,7 @@ pub async fn get_features(
             .await?;
             response_builder.streaming(bytes)
         }
-        domain::enums::Collection::ProjectCollection(collection_id) => {
+        CollectionId::ProjectCollection(collection_id) => {
             let params = SelectAllParams {
                 limit,
                 collection_id: *collection_id,
@@ -89,7 +89,7 @@ pub async fn get_features(
             .await?;
             response_builder.streaming(bytes)
         }
-        domain::enums::Collection::Other(_) => todo!(),
+        CollectionId::Other(_) => todo!(),
     };
     append_crs_header(&mut response, &request_crs);
     Ok(response)

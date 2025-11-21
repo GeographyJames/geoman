@@ -5,9 +5,11 @@ use ogcapi_types::common::{
 };
 use serde::Deserialize;
 
+use crate::enums::CollectionId;
+
 #[derive(Deserialize)]
 pub struct Collection {
-    pub id: i32,
+    pub id: CollectionId,
     pub title: String,
     pub description: Option<String>,
     pub storage_crs_srid: Option<i32>,

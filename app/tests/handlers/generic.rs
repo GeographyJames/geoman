@@ -6,7 +6,7 @@ use app::enums::ProjectIdentifier;
 use domain::ProjectId;
 use domain::{
     ProjectCollectionId,
-    enums::{self, Collection},
+    enums::CollectionId,
 };
 use rstest::rstest;
 
@@ -32,7 +32,7 @@ impl Endpoint {
                 app.ogc_service
                     .get_collection(
                         &app.api_client,
-                        enums::Collection::ProjectCollection(ProjectCollectionId::default()),
+                        CollectionId::ProjectCollection(ProjectCollectionId::default()),
                     )
                     .await
             }
@@ -41,7 +41,7 @@ impl Endpoint {
                 app.ogc_service
                     .get_features(
                         &app.api_client,
-                        enums::Collection::ProjectCollection(ProjectCollectionId::default()),
+                        CollectionId::ProjectCollection(ProjectCollectionId::default()),
                     )
                     .await
             }
@@ -49,7 +49,7 @@ impl Endpoint {
                 app.ogc_service
                     .get_feature(
                         &app.api_client,
-                        &Collection::ProjectCollection(ProjectCollectionId(0)),
+                        &CollectionId::ProjectCollection(ProjectCollectionId(0)),
                         0,
                     )
                     .await
@@ -58,7 +58,7 @@ impl Endpoint {
                 app.ogc_service
                     .get_feature(
                         &app.api_client,
-                        &Collection::Projects.try_into().unwrap(),
+                        &CollectionId::Projects.try_into().unwrap(),
                         0,
                     )
                     .await
@@ -81,7 +81,7 @@ impl Endpoint {
             }
             Endpoint::GetProjects => {
                 app.ogc_service
-                    .get_features(&app.api_client, Collection::Projects)
+                    .get_features(&app.api_client, CollectionId::Projects)
                     .await
             }
             Endpoint::GetProjectCollections => {

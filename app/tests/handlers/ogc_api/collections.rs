@@ -5,7 +5,7 @@ use crate::common::{
         handle_json_response,
     },
 };
-use domain::enums::Collection;
+use domain::enums::CollectionId;
 
 #[actix_web::test]
 async fn get_collections_works() {
@@ -47,7 +47,7 @@ async fn get_project_collection_works() {
     let app = TestApp::spawn_with_db().await;
     let response = app
         .ogc_service
-        .get_collection(&app.api_client, domain::enums::Collection::Projects)
+        .get_collection(&app.api_client, CollectionId::Projects)
         .await;
     assert_ok(&response);
 }
@@ -63,7 +63,7 @@ async fn get_collection_includes_projects() {
     let _projects_collection = collections
         .collections
         .iter()
-        .find(|c| c.id == Collection::Projects.to_string())
+        .find(|c| c.id == CollectionId::Projects.to_string())
         .expect("no projects collection");
 }
 

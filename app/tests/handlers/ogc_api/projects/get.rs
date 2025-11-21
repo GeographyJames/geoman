@@ -1,5 +1,5 @@
 use domain::Project;
-use domain::enums::Collection;
+use domain::enums::CollectionId;
 
 use crate::common::{
     TestApp,
@@ -12,7 +12,7 @@ async fn get_projects_works() {
     let _ids = app.generate_ids().await;
     let response = app
         .ogc_service
-        .get_features(&app.api_client, Collection::Projects)
+        .get_features(&app.api_client, CollectionId::Projects)
         .await;
     assert_ok(&response);
     let ogc_feature_collection: ogc::FeatureCollection = handle_json_response(response)
@@ -31,11 +31,7 @@ async fn get_project_works() {
     let (_, _, project_id) = app.generate_ids().await;
     let response = app
         .ogc_service
-        .get_feature(
-            &app.api_client,
-            &Collection::Projects.try_into().unwrap(),
-            project_id.0,
-        )
+        .get_feature(&app.api_client, &CollectionId::Projects, project_id.0)
         .await;
     assert_ok(&response);
     let ogc_feature: ogc::Feature = handle_json_response(response)
@@ -56,7 +52,11 @@ async fn get_projects_works_with_limit() {
 
     let response = app
         .ogc_service
-        .get_features_with_params(&app.api_client, Collection::Projects, &&[("limit", limit)])
+        .get_features_with_params(
+            &app.api_client,
+            CollectionId::Projects,
+            &&[("limit", limit)],
+        )
         .await;
     assert_ok(&response);
     let feature_collection: ogc::FeatureCollection = handle_json_response(response)

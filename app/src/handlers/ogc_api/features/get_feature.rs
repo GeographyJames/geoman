@@ -14,6 +14,7 @@ use actix_web::{
     HttpRequest, HttpResponse, get,
     web::{self},
 };
+use domain::enums::CollectionId;
 use ogcapi_types::common::Crs;
 
 #[utoipa::path(
@@ -32,7 +33,7 @@ use ogcapi_types::common::Crs;
 pub async fn get_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-    path: web::Path<(domain::enums::Collection, i32)>,
+    path: web::Path<(CollectionId, i32)>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let valid_crs: Vec<Crs> = repo.select_all().await?;

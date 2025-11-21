@@ -1,6 +1,6 @@
 use crate::common::{constants::REQUEST_FAILED, services::HttpClient};
 use app::{URLS, enums::ProjectIdentifier};
-use domain::{ProjectCollectionId, enums};
+use domain::{ProjectCollectionId, enums::CollectionId};
 use reqwest::{RequestBuilder, Response};
 use serde::Serialize;
 
@@ -70,7 +70,7 @@ impl OgcService {
     pub async fn get_collection(
         &self,
         client: &HttpClient,
-        collection_id: enums::Collection,
+        collection_id: CollectionId,
     ) -> Response {
         let req = client.get(format!(
             "{}{}/{}",
@@ -96,11 +96,7 @@ impl OgcService {
         req.send().await.expect(REQUEST_FAILED)
     }
 
-    pub async fn get_features(
-        &self,
-        client: &HttpClient,
-        collection_id: enums::Collection,
-    ) -> Response {
+    pub async fn get_features(&self, client: &HttpClient, collection_id: CollectionId) -> Response {
         let req = self.get_features_req(client, collection_id);
         req.send().await.expect(REQUEST_FAILED)
     }
@@ -108,18 +104,14 @@ impl OgcService {
     pub async fn get_features_with_params<T: Serialize>(
         &self,
         client: &HttpClient,
-        collection_id: enums::Collection,
+        collection_id: CollectionId,
         params: &T,
     ) -> Response {
         let req = self.get_features_req(client, collection_id).query(params);
         req.send().await.expect(REQUEST_FAILED)
     }
 
-    fn get_features_req(
-        &self,
-        client: &HttpClient,
-        collection_id: enums::Collection,
-    ) -> RequestBuilder {
+    fn get_features_req(&self, client: &HttpClient, collection_id: CollectionId) -> RequestBuilder {
         client.get(format!(
             "{}{}/{}/items",
             &URLS.ogc_api.base, &URLS.ogc_api.collections, collection_id
@@ -168,7 +160,7 @@ impl OgcService {
     pub async fn get_feature(
         &self,
         client: &HttpClient,
-        collection: &domain::enums::Collection,
+        collection: &CollectionId,
         id: i32,
     ) -> Response {
         let req = self.get_feature_req(client, collection, id);
@@ -178,7 +170,7 @@ impl OgcService {
     fn get_feature_req(
         &self,
         client: &HttpClient,
-        collection: &domain::enums::Collection,
+        collection: &CollectionId,
         id: i32,
     ) -> RequestBuilder {
         client.get(format!(
@@ -190,7 +182,7 @@ impl OgcService {
     pub async fn get_feature_with_params<T: Serialize>(
         &self,
         client: &HttpClient,
-        collection: &domain::enums::Collection,
+        collection: &CollectionId,
         id: i32,
         params: &T,
     ) -> Response {

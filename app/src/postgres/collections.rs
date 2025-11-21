@@ -1,4 +1,4 @@
-use domain::{Collection, ProjectCollectionId, ProjectId};
+use domain::{Collection, ProjectCollectionId, ProjectId, enums::CollectionId};
 use ogcapi_types::common::{Bbox, Crs, SpatialExtent};
 
 use crate::{
@@ -42,7 +42,7 @@ impl CollectionRow {
             })?;
 
         Ok(Collection {
-            id,
+            id: CollectionId::ProjectCollection(ProjectCollectionId(id)),
             title,
             description,
             storage_crs_srid,

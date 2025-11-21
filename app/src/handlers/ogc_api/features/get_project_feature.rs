@@ -15,7 +15,7 @@ use actix_web::{
     web::{self},
 };
 
-use domain::{Project, ProjectId};
+use domain::{Project, ProjectId, enums::CollectionId};
 use ogcapi_types::common::Crs;
 
 #[get("/{collectionId}/items/{featureId}")]
@@ -23,7 +23,7 @@ use ogcapi_types::common::Crs;
 pub async fn get_project_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-    path: web::Path<(ProjectIdentifier, domain::enums::Collection, i32)>,
+    path: web::Path<(ProjectIdentifier, CollectionId, i32)>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let valid_crs: Vec<Crs> = repo.select_all().await?;

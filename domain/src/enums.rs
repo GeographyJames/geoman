@@ -1,7 +1,7 @@
 use serde::{Deserialize, Deserializer, Serialize};
 use sqlx::prelude::Type;
 
-use crate::{ProjectCollectionId, Slug};
+use crate::ProjectCollectionId;
 
 #[derive(Serialize, Deserialize)]
 pub enum Status {
@@ -23,50 +23,42 @@ pub enum GeometryType {
 }
 
 #[derive(Clone, Debug)]
-pub enum Collection {
+pub enum CollectionId {
     Projects,
     ProjectCollection(ProjectCollectionId),
     Other(String),
 }
 
-impl From<ProjectCollectionId> for Collection {
+impl From<ProjectCollectionId> for CollectionId {
     fn from(value: ProjectCollectionId) -> Self {
         Self::ProjectCollection(value)
     }
 }
 
-impl std::fmt::Display for Collection {
+impl std::fmt::Display for CollectionId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
-            Collection::Projects => "projects".to_string(),
-            Collection::ProjectCollection(id) => id.to_string(),
-            Collection::Other(s) => s.clone(),
+            CollectionId::Projects => "projects".to_string(),
+            CollectionId::ProjectCollection(id) => id.to_string(),
+            CollectionId::Other(s) => s.clone(),
         };
         write!(f, "{}", s)
     }
 }
 
-impl<'de> Deserialize<'de> for Collection {
+impl<'de> Deserialize<'de> for CollectionId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
         if let Ok(id) = s.parse::<i32>() {
-            return Ok(Collection::ProjectCollection(ProjectCollectionId(id)));
+            return Ok(CollectionId::ProjectCollection(ProjectCollectionId(id)));
         }
 
         match s.to_lowercase().as_str() {
-            "projects" => Ok(Collection::Projects),
-            _ => Ok(Collection::Other(s)),
+            "projects" => Ok(CollectionId::Projects),
+            _ => Ok(CollectionId::Other(s)),
         }
-    }
-}
-
-impl TryInto<Slug> for Collection {
-    type Error = String;
-
-    fn try_into(self) -> Result<Slug, Self::Error> {
-        Slug::parse(self.to_string())
     }
 }

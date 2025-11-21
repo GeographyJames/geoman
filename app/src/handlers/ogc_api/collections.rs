@@ -1,5 +1,7 @@
 use actix_web::{HttpRequest, get, web};
-use domain::{Collection, Collections, Project, ProjectCollectionId, ProjectId};
+use domain::{
+    Collection, Collections, Project, ProjectCollectionId, ProjectId, enums::CollectionId,
+};
 use ogcapi_types::common::Crs;
 
 use crate::{
@@ -136,7 +138,7 @@ pub async fn get_project_collections(
 #[tracing::instrument(skip(repo, req, collection))]
 pub async fn get_collection(
     req: HttpRequest,
-    collection: web::Path<domain::enums::Collection>,
+    collection: web::Path<CollectionId>,
     repo: web::Data<PostgresRepo>,
 ) -> Result<web::Json<ogcapi_types::common::Collection>, ApiError> {
     let base_url = get_base_url(&req);
@@ -144,16 +146,14 @@ pub async fn get_collection(
     let supported_crs = repo.select_all::<Crs>().await?;
 
     let ogc_collection = match collection.into_inner() {
-        domain::enums::Collection::Projects => {
-            project_collection(&collections_url, supported_crs.clone())
-        }
-        domain::enums::Collection::ProjectCollection(id) => repo
+        CollectionId::Projects => project_collection(&collections_url, supported_crs.clone()),
+        CollectionId::ProjectCollection(id) => repo
             .select_one::<Collection>(id)
             .await?
             .ok_or_else(|| ApiError::ProjectCollectionNotFound(id))?
             .into_ogc_collection(&collections_url, supported_crs),
 
-        domain::enums::Collection::Other(_) => todo!(),
+        CollectionId::Other(_) => todo!(),
     };
     Ok(web::Json(ogc_collection))
 }
@@ -193,7 +193,7 @@ pub async fn get_project_collection(
 
 fn project_collection(collections_url: &str, crs: Vec<Crs>) -> ogcapi_types::common::Collection {
     Collection {
-        id: 0,
+        id: CollectionId::Projects,
         storage_crs_srid: None,
         title: "Projects".to_string(),
         extent: None,
