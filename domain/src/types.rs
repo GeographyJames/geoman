@@ -1,3 +1,6 @@
+use std::fmt::Display;
+
+use serde::Deserialize;
 use sqlx::prelude::Type;
 
 #[derive(Type, Clone)]
@@ -33,21 +36,33 @@ impl AsRef<str> for Slug {
     }
 }
 
-pub struct FeatureIdWithCollectionSlug {
-    pub collection_slug: String,
-    pub id: i32,
-}
-
-pub struct FeatureId {
-    pub collection_id: CollectionId,
+#[derive(Clone, Copy, Default, Debug)]
+pub struct ProjectFeatureId {
+    pub collection_id: ProjectCollectionId,
     pub id: i32,
 }
 #[derive(Clone, Copy, Default, Debug)]
 pub struct ProjectId(pub i32);
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 pub struct UserId(pub i32);
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 pub struct TeamId(pub i32);
 
-#[derive(Clone, Copy, Default)]
-pub struct CollectionId(pub i32);
+#[derive(Clone, Copy, Default, Debug, Deserialize)]
+pub struct ProjectCollectionId(pub i32);
+
+impl Display for ProjectCollectionId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl Display for ProjectFeatureId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "collection id: {}, feature id: {}",
+            self.collection_id, self.id
+        )
+    }
+}

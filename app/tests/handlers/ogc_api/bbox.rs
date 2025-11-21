@@ -10,7 +10,7 @@ pub async fn bbox_works() {
     let app = TestApp::spawn_with_db().await;
     app.insert_crs(27700).await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let collection_id = app.generate_collection_id(user_id).await;
     let feature_1 = generate_point(1., 1., 27700);
     let feature_2 = generate_point(3., 1., 27700);
     let _feature_1_id = app
@@ -38,7 +38,7 @@ pub async fn bbox_works() {
         .ogc_service
         .get_project_features_with_params(
             &app.api_client,
-            &slug,
+            collection_id,
             &project_id.into(),
             &[
                 ("bbox", bbox),

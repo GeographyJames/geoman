@@ -1,7 +1,7 @@
 use serde::{Deserialize, Deserializer, Serialize};
 use sqlx::prelude::Type;
 
-use crate::Slug;
+use crate::{ProjectCollectionId, Slug};
 
 #[derive(Serialize, Deserialize)]
 pub enum Status {
@@ -25,13 +25,21 @@ pub enum GeometryType {
 #[derive(Clone, Debug)]
 pub enum Collection {
     Projects,
+    ProjectCollection(ProjectCollectionId),
     Other(String),
+}
+
+impl From<ProjectCollectionId> for Collection {
+    fn from(value: ProjectCollectionId) -> Self {
+        Self::ProjectCollection(value)
+    }
 }
 
 impl std::fmt::Display for Collection {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
             Collection::Projects => "projects".to_string(),
+            Collection::ProjectCollection(id) => id.to_string(),
             Collection::Other(s) => s.clone(),
         };
         write!(f, "{}", s)
@@ -44,6 +52,10 @@ impl<'de> Deserialize<'de> for Collection {
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
+        if let Ok(id) = s.parse::<i32>() {
+            return Ok(Collection::ProjectCollection(ProjectCollectionId(id)));
+        }
+
         match s.to_lowercase().as_str() {
             "projects" => Ok(Collection::Projects),
             _ => Ok(Collection::Other(s)),

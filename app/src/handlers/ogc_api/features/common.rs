@@ -14,7 +14,8 @@ use actix_web::{
 };
 
 use domain::{
-    Collection, FeatureIdWithCollectionSlug, IntoOGCFeature, Project, ProjectFeature, ProjectId,
+    Collection, IntoOGCFeature, Project, ProjectCollectionId, ProjectFeature, ProjectFeatureId,
+    ProjectId,
 };
 use futures::Stream;
 
@@ -33,20 +34,18 @@ pub async fn retrieve_feature_from_database<'a>(
                 .ok_or_else(|| ApiError::ProjectNotFound(identifier))?
                 .into_ogc_feature(collection_url)
         }
-        domain::enums::Collection::Other(collection_slug) => {
-            let id = FeatureIdWithCollectionSlug {
-                collection_slug,
+        domain::enums::Collection::ProjectCollection(collection_id) => {
+            let id = ProjectFeatureId {
+                collection_id,
                 id: feature_id,
             };
 
             repo.select_one_with_params::<ProjectFeature>(&id, params)
                 .await?
-                .ok_or_else(|| ApiError::FeatureNotFound {
-                    feature_id,
-                    collection_slug: id.collection_slug,
-                })?
+                .ok_or_else(|| ApiError::ProjectFeatureNotFound(id))?
                 .into_ogc_feature(collection_url)
         }
+        domain::enums::Collection::Other(collection_slug) => todo!(),
     };
     Ok(feature)
 }
@@ -59,15 +58,13 @@ pub fn append_crs_header(response: &mut HttpResponse, crs: &ValidCrs) {
 }
 
 pub async fn project_features_stream(
-    collection: String,
+    collection_id: ProjectCollectionId,
     params: SelectAllParams,
     repo: web::Data<PostgresRepo>,
 ) -> Result<impl Stream<Item = Result<ProjectFeature, RepositoryError>>, ApiError> {
-    repo.select_one::<Collection>(&collection)
+    repo.select_one::<Collection>(collection_id)
         .await?
-        .ok_or_else(|| ApiError::CollectionNotFound {
-            collection_slug: collection,
-        })?;
+        .ok_or_else(|| ApiError::ProjectCollectionNotFound(collection_id))?;
 
     Ok(repo
         .as_ref()

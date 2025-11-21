@@ -1,5 +1,5 @@
 use actix_web::{HttpRequest, get, web};
-use domain::{Collection, Collections, Project, ProjectId};
+use domain::{Collection, Collections, Project, ProjectCollectionId, ProjectId};
 use ogcapi_types::common::Crs;
 
 use crate::{
@@ -147,14 +147,13 @@ pub async fn get_collection(
         domain::enums::Collection::Projects => {
             project_collection(&collections_url, supported_crs.clone())
         }
-
-        domain::enums::Collection::Other(slug) => repo
-            .select_one::<Collection>(&slug)
+        domain::enums::Collection::ProjectCollection(id) => repo
+            .select_one::<Collection>(id)
             .await?
-            .ok_or_else(|| ApiError::CollectionNotFound {
-                collection_slug: slug,
-            })?
+            .ok_or_else(|| ApiError::ProjectCollectionNotFound(id))?
             .into_ogc_collection(&collections_url, supported_crs),
+
+        domain::enums::Collection::Other(_) => todo!(),
     };
     Ok(web::Json(ogc_collection))
 }
@@ -163,10 +162,10 @@ pub async fn get_collection(
 #[tracing::instrument(skip(repo, req, path))]
 pub async fn get_project_collection(
     req: HttpRequest,
-    path: web::Path<(ProjectIdentifier, String)>,
+    path: web::Path<(ProjectIdentifier, ProjectCollectionId)>,
     repo: web::Data<PostgresRepo>,
 ) -> Result<web::Json<ogcapi_types::common::Collection>, ApiError> {
-    let (project, collection) = path.into_inner();
+    let (project, collection_id) = path.into_inner();
     let project_row = repo
         .select_one::<Project>(&project)
         .await?
@@ -182,11 +181,9 @@ pub async fn get_project_collection(
         project_id: ProjectId(project_row.id),
     };
     let collection = repo
-        .select_one_with_params::<Collection>(&collection, &params)
+        .select_one_with_params::<Collection>(collection_id, &params)
         .await?
-        .ok_or_else(|| ApiError::CollectionNotFound {
-            collection_slug: collection,
-        })?;
+        .ok_or_else(|| ApiError::ProjectCollectionNotFound(collection_id))?;
 
     // Map database row to OGC Collection with links
     let ogc_collection = collection.into_ogc_collection(&collections_url, supported_crs);
@@ -200,7 +197,6 @@ fn project_collection(collections_url: &str, crs: Vec<Crs>) -> ogcapi_types::com
         storage_crs_srid: None,
         title: "Projects".to_string(),
         extent: None,
-        slug: domain::enums::Collection::Projects.to_string(),
         description: None,
     }
     .into_ogc_collection(collections_url, crs)

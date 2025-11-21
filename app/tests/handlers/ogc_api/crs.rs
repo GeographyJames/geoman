@@ -10,7 +10,7 @@ const ERROR_MESSAGE: &str = "Unsupported request CRS";
 pub async fn unsupported_crs_in_request_returns_400() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let collection_id = app.generate_collection_id(user_id).await;
     let feature = app
         .generate_feature_id(collection_id, project_id, user_id, Some({}))
         .await;
@@ -19,14 +19,19 @@ pub async fn unsupported_crs_in_request_returns_400() {
     // Get feature
     let response = app
         .ogc_service
-        .get_feature_with_params(&app.api_client, &slug, feature.id, &[("crs", &crs)])
+        .get_feature_with_params(
+            &app.api_client,
+            &collection_id.into(),
+            feature.id,
+            &[("crs", &crs)],
+        )
         .await;
     check_error_response(response, 400, &format!("{}: {}", ERROR_MESSAGE, crs)).await;
 
     // Get project feature
     let response = app
         .ogc_service
-        .get_features_with_params(&app.api_client, &slug, &[("crs", &crs)])
+        .get_features_with_params(&app.api_client, collection_id.into(), &[("crs", &crs)])
         .await;
     check_error_response(response, 400, &format!("{}: {}", ERROR_MESSAGE, crs)).await;
 
@@ -36,7 +41,7 @@ pub async fn unsupported_crs_in_request_returns_400() {
         .get_project_feature_with_params(
             &app.api_client,
             &project_id.into(),
-            &slug,
+            collection_id,
             feature.id,
             &[("crs", &crs)],
         )
@@ -48,7 +53,7 @@ pub async fn unsupported_crs_in_request_returns_400() {
         .ogc_service
         .get_project_features_with_params(
             &app.api_client,
-            &slug,
+            collection_id,
             &project_id.into(),
             &[("crs", &crs)],
         )
@@ -60,7 +65,7 @@ pub async fn unsupported_crs_in_request_returns_400() {
 pub async fn crs_transform_works() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let collection_id = app.generate_collection_id(user_id).await;
     let (easting, northing, ewkt) = generate_random_bng_point_ewkt();
     let feature_id = app
         .insert_feature(
@@ -78,7 +83,12 @@ pub async fn crs_transform_works() {
 
     let response = app
         .ogc_service
-        .get_feature_with_params(&app.api_client, &slug, feature_id.id, &[("crs", &crs)])
+        .get_feature_with_params(
+            &app.api_client,
+            &collection_id.into(),
+            feature_id.id,
+            &[("crs", &crs)],
+        )
         .await;
     let ogc_feature: ogc::Feature = handle_json_response(response)
         .await
@@ -87,7 +97,7 @@ pub async fn crs_transform_works() {
 
     let response = app
         .ogc_service
-        .get_features_with_params(&app.api_client, &slug, &[("crs", &crs)])
+        .get_features_with_params(&app.api_client, collection_id.into(), &[("crs", &crs)])
         .await;
     let ogc_features: FeatureCollection = handle_json_response(response)
         .await
@@ -108,7 +118,7 @@ pub async fn crs_transform_works() {
         .get_project_feature_with_params(
             &app.api_client,
             &project_id.try_into().unwrap(),
-            &slug,
+            collection_id,
             feature_id.id,
             &[("crs", &crs)],
         )
@@ -123,7 +133,7 @@ pub async fn crs_transform_works() {
         .ogc_service
         .get_project_features_with_params(
             &app.api_client,
-            &slug,
+            collection_id,
             &project_id.try_into().unwrap(),
             &[("crs", &crs)],
         )

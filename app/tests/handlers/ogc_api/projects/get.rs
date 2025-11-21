@@ -12,7 +12,7 @@ async fn get_projects_works() {
     let _ids = app.generate_ids().await;
     let response = app
         .ogc_service
-        .get_features(&app.api_client, &Collection::Projects.try_into().unwrap())
+        .get_features(&app.api_client, Collection::Projects)
         .await;
     assert_ok(&response);
     let ogc_feature_collection: ogc::FeatureCollection = handle_json_response(response)
@@ -56,11 +56,7 @@ async fn get_projects_works_with_limit() {
 
     let response = app
         .ogc_service
-        .get_features_with_params(
-            &app.api_client,
-            &Collection::Projects.try_into().unwrap(),
-            &&[("limit", limit)],
-        )
+        .get_features_with_params(&app.api_client, Collection::Projects, &&[("limit", limit)])
         .await;
     assert_ok(&response);
     let feature_collection: ogc::FeatureCollection = handle_json_response(response)

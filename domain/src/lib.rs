@@ -1,5 +1,4 @@
-//! Domain objects
-
+/// Domain objects
 pub mod enums;
 pub mod project;
 pub use project::Project;

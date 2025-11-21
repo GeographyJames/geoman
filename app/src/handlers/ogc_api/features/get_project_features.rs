@@ -16,7 +16,7 @@ use actix_web::{
     web::{self},
 };
 
-use domain::{Project, ProjectId};
+use domain::{Project, ProjectCollectionId, ProjectId};
 
 use ogcapi_types::common::{Crs, media_type::GEO_JSON};
 
@@ -25,11 +25,11 @@ use ogcapi_types::common::{Crs, media_type::GEO_JSON};
 pub async fn get_project_features(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-    path: web::Path<(ProjectIdentifier, domain::enums::Collection)>,
+    path: web::Path<(ProjectIdentifier, ProjectCollectionId)>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let valid_crs: Vec<Crs> = repo.select_all().await?;
-    let (project, collection) = path.into_inner();
+    let (project, collection_id) = path.into_inner();
     let Query {
         limit,
         bbox,
@@ -48,22 +48,22 @@ pub async fn get_project_features(
     let base_url = get_base_url(&req);
     let collection_url = format!(
         "{}{}{}/{}/collections/{}",
-        base_url, URLS.ogc_api.base, URLS.ogc_api.project, project, collection
+        base_url, URLS.ogc_api.base, URLS.ogc_api.project, project, collection_id
     );
 
     let mut params = SelectAllParams {
         limit,
-        slug: collection.clone(),
+        collection_id,
         project_id: Some(ProjectId(project_row.id)),
         crs: request_crs.clone(),
         bbox,
         bbox_crs,
     };
     params.project_id = Some(ProjectId(project_row.id));
-    let features = project_features_stream(collection.to_string(), params, repo).await?;
+    let features = project_features_stream(collection_id, params, repo).await?;
 
     let bytes =
-        ogc_feature_collection_byte_stream(features, collection_url, collection.to_string())
+        ogc_feature_collection_byte_stream(features, collection_url, collection_id.to_string())
             .await?;
     let mut response = HttpResponse::Ok().content_type(GEO_JSON).streaming(bytes);
     append_crs_header(&mut response, &request_crs);

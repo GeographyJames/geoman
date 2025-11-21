@@ -11,7 +11,9 @@ use app::{
     get_config,
     telemetry::{get_subscriber, init_subscriber},
 };
-use domain::{CollectionId, FeatureId, ProjectId, Slug, TeamId, UserId, enums::GeometryType};
+use domain::{
+    ProjectCollectionId, ProjectFeatureId, ProjectId, Slug, TeamId, UserId, enums::GeometryType,
+};
 use dotenvy::dotenv;
 use secrecy::ExposeSecret;
 use serde::Serialize;
@@ -142,28 +144,25 @@ impl TestApp {
     pub async fn insert_collection(
         &self,
         title: &str,
-        slug: &Slug,
         geometry_type: GeometryType,
         user_id: UserId,
     ) -> i32 {
         let record = sqlx::query!(
-            "INSERT INTO app.collections (title, slug, geometry_type, added_by, last_updated_by) VALUES ($1, $2, $3, $4, $4) RETURNING id",
+            "INSERT INTO app.collections (title, geometry_type, added_by, last_updated_by) VALUES ($1, $2, $3, $3) RETURNING id",
             title,
-            slug as &Slug,
             geometry_type as GeometryType,
             user_id.0
         ).fetch_one(&self.db_pool).await.expect("Failed to save collection in database");
         record.id
     }
 
-    pub async fn generate_collection_slug_and_id(&self, user_id: UserId) -> (Slug, CollectionId) {
+    pub async fn generate_collection_id(&self, user_id: UserId) -> ProjectCollectionId {
         let title = uuid::Uuid::new_v4().to_string();
-        let slug = Slug::parse(title.clone()).expect("Failed to create slug");
-        let collection_id = CollectionId(
-            self.insert_collection(&title, &slug, GeometryType::MultiPolygon, user_id)
+        let collection_id = ProjectCollectionId(
+            self.insert_collection(&title, GeometryType::MultiPolygon, user_id)
                 .await,
         );
-        (slug, collection_id)
+        collection_id
     }
 
     pub async fn insert_project(&self, name: &str, slug: &Slug, user_id: UserId) -> i32 {
@@ -186,10 +185,10 @@ impl TestApp {
         &self,
         id: i32,
         project_id: ProjectId,
-        collection_id: CollectionId,
+        collection_id: ProjectCollectionId,
         user_id: UserId,
         properties: Option<P>,
-    ) -> FeatureId {
+    ) -> ProjectFeatureId {
         let record = sqlx::query!(
             "WITH inserted_feature AS (
                 INSERT INTO app.project_features (
@@ -221,8 +220,8 @@ impl TestApp {
         .fetch_one(&self.db_pool)
         .await
         .expect("failed to save feature to database");
-        FeatureId {
-            collection_id: CollectionId(record.collection_id),
+        ProjectFeatureId {
+            collection_id: ProjectCollectionId(record.collection_id),
             id: record.project_feature_id,
         }
     }
@@ -230,12 +229,12 @@ impl TestApp {
     pub async fn insert_feature<P: Serialize>(
         &self,
         name: &str,
-        collection_id: CollectionId,
+        collection_id: ProjectCollectionId,
         project_id: ProjectId,
         user_id: UserId,
         geom_ewkt: &str,
         properties: Option<P>,
-    ) -> FeatureId {
+    ) -> ProjectFeatureId {
         let record = sqlx::query!(
             "WITH inserted_feature AS (
                 INSERT INTO app.project_features (
@@ -266,19 +265,19 @@ impl TestApp {
         .fetch_one(&self.db_pool)
         .await
         .expect("Failed to save feature in database");
-        FeatureId {
-            collection_id: CollectionId(record.collection_id),
+        ProjectFeatureId {
+            collection_id: ProjectCollectionId(record.collection_id),
             id: record.project_feature_id,
         }
     }
 
     pub async fn generate_feature_id<P: Serialize>(
         &self,
-        collection_id: CollectionId,
+        collection_id: ProjectCollectionId,
         project_id: ProjectId,
         user_id: UserId,
         properties: Option<P>,
-    ) -> FeatureId {
+    ) -> ProjectFeatureId {
         let (_, _, geom_wkt) = generate_random_bng_point_ewkt();
         self.insert_feature(
             &uuid::Uuid::new_v4().to_string(),

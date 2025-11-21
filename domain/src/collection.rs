@@ -4,13 +4,11 @@ use ogcapi_types::common::{
     media_type::{GEO_JSON, JSON},
 };
 use serde::Deserialize;
-use serde_json::Map;
 
 #[derive(Deserialize)]
 pub struct Collection {
     pub id: i32,
     pub title: String,
-    pub slug: String,
     pub description: Option<String>,
     pub storage_crs_srid: Option<i32>,
     pub extent: Option<SpatialExtent>,
@@ -24,22 +22,21 @@ impl Collection {
     ) -> ogcapi_types::common::Collection {
         let Self {
             title,
-            slug,
+
             description,
             storage_crs_srid,
-            id: _,
+            id,
             extent,
         } = self;
         let links = vec![
-            Link::new(format!("{}/{}", collections_url, slug), SELF).mediatype(JSON),
-            Link::new(format!("{}/{}/items", collections_url, slug), ITEMS)
+            Link::new(format!("{}/{}", collections_url, id), SELF).mediatype(JSON),
+            Link::new(format!("{}/{}/items", collections_url, id), ITEMS)
                 .mediatype(GEO_JSON)
                 .title("Items"),
         ];
-        let mut additional_properties = Map::new();
 
         ogcapi_types::common::Collection {
-            id: slug,
+            id: id.to_string(),
             title: Some(title),
             description,
             crs,
@@ -50,7 +47,6 @@ impl Collection {
                 spatial: Some(spatial),
                 temporal: None,
             }),
-            additional_properties,
 
             ..Default::default()
         }

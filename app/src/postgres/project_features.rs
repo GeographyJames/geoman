@@ -1,4 +1,6 @@
-use domain::{FeatureIdWithCollectionSlug, ProjectFeature, ProjectId, poject_feature::Properties};
+use domain::{
+    ProjectCollectionId, ProjectFeature, ProjectFeatureId, ProjectId, poject_feature::Properties,
+};
 use futures::{Stream, StreamExt};
 use geojson::Geometry;
 use serde::Deserialize;
@@ -17,7 +19,7 @@ use crate::{
 #[derive(Clone)]
 pub struct SelectAllParams {
     pub limit: Option<usize>,
-    pub slug: domain::enums::Collection,
+    pub collection_id: ProjectCollectionId,
     pub project_id: Option<ProjectId>,
     pub crs: ValidCrs,
     pub bbox: Option<ogcapi_types::common::Bbox>,
@@ -40,7 +42,6 @@ struct ProjectFeatureRow {
     pub geometry: Json<geojson::Geometry>,
     pub is_primary: bool,
     pub storage_crs_srid: i32,
-    pub slug: String,
 }
 
 impl TryInto<ProjectFeature> for ProjectFeatureRow {
@@ -55,7 +56,6 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
             collection_id,
             project_id,
             storage_crs_srid,
-            slug,
         } = self;
         let properties = match properties {
             Value::Object(map) => map,
@@ -69,7 +69,6 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
                 name,
                 storage_crs_srid,
                 is_primary,
-                collection_slug: slug,
             },
             geometry: geometry.0,
             properties_map: properties,
@@ -80,7 +79,7 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
 impl SelectOneWithParams for ProjectFeature {
     type Params<'a> = &'a SelectOneParams<'a>;
 
-    type Id<'a> = &'a FeatureIdWithCollectionSlug;
+    type Id<'a> = &'a ProjectFeatureId;
 
     async fn select_one_with_params<'a, 'e, E>(
         executor: E,
@@ -91,10 +90,7 @@ impl SelectOneWithParams for ProjectFeature {
         Self: Sized,
         E: sqlx::PgExecutor<'e>,
     {
-        let FeatureIdWithCollectionSlug {
-            collection_slug,
-            id,
-        } = feature_id;
+        let ProjectFeatureId { collection_id, id } = feature_id;
         let SelectOneParams { project_id, crs } = params;
 
         sqlx::query_as!(
@@ -107,17 +103,16 @@ impl SelectOneWithParams for ProjectFeature {
                 f.is_primary,
                 ST_AsGeoJSON(ST_Transform(fo.geom, $3))::jsonb as "geometry!: Json<Geometry>",
                 ST_SRID(geom) AS "storage_crs_srid!",
-                f.properties,
-                c.slug
+                f.properties
             FROM app.project_features f
             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
             JOIN app.collections c ON f.collection_id = c.id
             WHERE f.id = $1
-            AND c.slug = $2
+            AND c.id = $2
             AND ($4::int IS NULL OR f.project_id = $4)
             "#,
             id,
-            collection_slug,
+            collection_id.0,
             crs.as_ref().as_srid() as i32,
             project_id.map(|id| id.0)
         )
@@ -137,11 +132,11 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
     ) -> impl Stream<Item = Result<Self, RepositoryError>> + use<> {
         let SelectAllParams {
             limit,
-            slug,
             project_id,
             crs,
             bbox,
             bbox_crs,
+            collection_id,
             ..
         } = params;
         let bbox = bbox.map(|bbox| match bbox {
@@ -160,12 +155,12 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
                 ST_SRID(geom) AS "storage_crs_srid!",
                 f.is_primary,
                 f.name,
-                f.properties,
-                c.slug 
+                f.properties
+
             FROM app.project_features f
             JOIN app.collections c ON c.id = f.collection_id
             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
-            WHERE c.slug = $2
+            WHERE c.id = $2
             AND status = 'ACTIVE'
             AND ($3::int IS NULL OR f.project_id = $3)
             AND ($5::float IS NULL OR (
@@ -175,7 +170,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             LIMIT $4
             "#,
             crs.as_ref().as_srid() as i32,
-            slug.to_string(),
+            collection_id.0,
             project_id.map(|id| id.0),
             limit.map(|l| l as i64),
             bbox.map(|bbox| bbox[0]),
@@ -201,7 +196,7 @@ mod tests {
         let row = ProjectFeatureRow {
             id: 0,
             storage_crs_srid: 4626,
-            slug: uuid::Uuid::new_v4().to_string(),
+
             project_id: 0,
             collection_id: 0,
             properties: json!("{}"),

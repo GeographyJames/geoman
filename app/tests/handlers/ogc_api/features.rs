@@ -23,7 +23,7 @@ impl Default for Properties {
 async fn get_features_works() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let collection_id = app.generate_collection_id(user_id).await;
     let _feature_id = app
         .generate_feature_id(
             collection_id,
@@ -32,7 +32,10 @@ async fn get_features_works() {
             Some(Properties::default()),
         )
         .await;
-    let response = app.ogc_service.get_features(&app.api_client, &slug).await;
+    let response = app
+        .ogc_service
+        .get_features(&app.api_client, collection_id.into())
+        .await;
 
     assert_ok(&response);
 
@@ -49,7 +52,7 @@ async fn get_features_works() {
 async fn get_features_works_with_limit() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let collection_id = app.generate_collection_id(user_id).await;
     for _ in 0..10 {
         app.generate_feature_id(
             collection_id,
@@ -63,7 +66,7 @@ async fn get_features_works_with_limit() {
 
     let response = app
         .ogc_service
-        .get_features_with_params(&app.api_client, &slug, &[("limit", limit)])
+        .get_features_with_params(&app.api_client, collection_id.into(), &[("limit", limit)])
         .await;
     assert_ok(&response);
     let feature_collection: ogc::FeatureCollection = handle_json_response(response)
@@ -80,8 +83,8 @@ async fn get_features_works_with_limit() {
 async fn get_feature_works() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let (slug_1, collection_1_id) = app.generate_collection_slug_and_id(user_id).await;
-    let (slug_2, collection_2_id) = app.generate_collection_slug_and_id(user_id).await;
+    let collection_1_id = app.generate_collection_id(user_id).await;
+    let collection_2_id = app.generate_collection_id(user_id).await;
 
     let feature_1_id = app
         .insert_feature_with_id(
@@ -103,12 +106,12 @@ async fn get_feature_works() {
         .await;
     let response_1 = app
         .ogc_service
-        .get_feature(&app.api_client, &slug_1, 1)
+        .get_feature(&app.api_client, &collection_1_id.into(), 1)
         .await;
 
     let response_2 = app
         .ogc_service
-        .get_feature(&app.api_client, &slug_2, 1)
+        .get_feature(&app.api_client, &collection_2_id.into(), 1)
         .await;
 
     assert_ok(&response_1);
@@ -142,8 +145,11 @@ async fn get_feature_works() {
 async fn get_features_returns_empty_vec_for_no_features_in_collection() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, _) = app.generate_ids().await;
-    let (slug, _) = app.generate_collection_slug_and_id(user_id).await;
-    let response = app.ogc_service.get_features(&app.api_client, &slug).await;
+    let collection_id = app.generate_collection_id(user_id).await;
+    let response = app
+        .ogc_service
+        .get_features(&app.api_client, collection_id.into())
+        .await;
     assert_ok(&response);
 
     let feature_collection: ogc::FeatureCollection = handle_json_response(response)
@@ -156,7 +162,10 @@ async fn get_features_returns_empty_vec_for_no_features_in_collection() {
 async fn get_feature_returns_404_for_non_existent_feature() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, _) = app.generate_ids().await;
-    let (slug, _) = app.generate_collection_slug_and_id(user_id).await;
-    let response = app.ogc_service.get_feature(&app.api_client, &slug, 0).await;
+    let collection_id = app.generate_collection_id(user_id).await;
+    let response = app
+        .ogc_service
+        .get_feature(&app.api_client, &collection_id.into(), 0)
+        .await;
     assert_status(&response, 404);
 }

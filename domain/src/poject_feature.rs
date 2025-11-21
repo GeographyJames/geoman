@@ -17,7 +17,6 @@ pub struct Properties {
     pub name: String,
     pub storage_crs_srid: i32,
     pub is_primary: bool,
-    pub collection_slug: String,
 }
 
 #[derive(Deserialize)]

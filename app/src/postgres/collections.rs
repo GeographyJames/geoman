@@ -1,4 +1,4 @@
-use domain::{Collection, ProjectId};
+use domain::{Collection, ProjectCollectionId, ProjectId};
 use ogcapi_types::common::{Bbox, Crs, SpatialExtent};
 
 use crate::{
@@ -17,7 +17,6 @@ pub struct SelectAllParams {
 pub struct CollectionRow {
     pub id: i32,
     pub title: String,
-    pub slug: String,
     pub description: Option<String>,
     pub storage_crs_srid: Option<i32>,
     pub extent: Option<Vec<f64>>,
@@ -28,7 +27,6 @@ impl CollectionRow {
         let Self {
             id,
             title,
-            slug,
             description,
             storage_crs_srid,
             extent,
@@ -46,7 +44,6 @@ impl CollectionRow {
         Ok(Collection {
             id,
             title,
-            slug,
             description,
             storage_crs_srid,
             extent: bbox.map(|bbox| SpatialExtent {
@@ -67,7 +64,6 @@ impl SelectAll for Collection {
             CollectionRow,
             "SELECT id,
                     title,
-                    slug,
                     description,
                     (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(fo.geom)) = 1
                             THEN MIN(ST_SRID(fo.geom))::int
@@ -105,10 +101,10 @@ impl SelectAll for Collection {
 }
 
 impl SelectOne for Collection {
-    type Id<'a> = &'a str;
+    type Id<'a> = ProjectCollectionId;
     async fn select_one<'a, 'e, E>(
         executor: E,
-        slug: Self::Id<'a>,
+        id: Self::Id<'a>,
     ) -> Result<Option<Self>, RepositoryError>
     where
         E: sqlx::PgExecutor<'e>,
@@ -119,7 +115,6 @@ impl SelectOne for Collection {
             "
             SELECT id,
                    title,
-                   slug,
                    description,
                    (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(fo.geom)) = 1
                            THEN MIN(ST_SRID(fo.geom))::int
@@ -145,8 +140,8 @@ impl SelectOne for Collection {
              JOIN app.feature_objects fo ON fo.project_feature_id = f.id
              WHERE f.collection_id = c.id
          ) extent_sub) as extent 
-              FROM app.collections c WHERE slug = $1",
-            slug,
+              FROM app.collections c WHERE c.id = $1",
+            id.0,
             extent_crs.as_srid() as i32
         )
         .fetch_optional(executor)
@@ -158,10 +153,10 @@ impl SelectOne for Collection {
 
 impl SelectOneWithParams for Collection {
     type Params<'a> = &'a SelectOneParams;
-    type Id<'a> = &'a str;
+    type Id<'a> = ProjectCollectionId;
     async fn select_one_with_params<'a, 'e, E>(
         executor: E,
-        slug: Self::Id<'a>,
+        id: Self::Id<'a>,
         params: Self::Params<'a>,
     ) -> Result<Option<Self>, RepositoryError>
     where
@@ -174,7 +169,6 @@ impl SelectOneWithParams for Collection {
             r#"
             SELECT id,
                    title,
-                   slug,
                    description,
                    (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(fo.geom)) = 1
                            THEN MIN(ST_SRID(fo.geom))::int
@@ -211,9 +205,9 @@ impl SelectOneWithParams for Collection {
       WHERE f.collection_id = c.id 
       AND f.project_id =  $1
   )
-  AND slug = $2"#,
+  AND c.id = $2"#,
             params.project_id.0,
-            slug,
+            id.0,
             extent_crs.as_srid() as i32
         )
         .fetch_optional(executor)
@@ -238,7 +232,6 @@ impl SelectAllWithParams for Collection {
             r#"
             SELECT id,
                    title,
-                   slug,
                    description,
                    (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(fo.geom)) = 1
                            THEN MIN(ST_SRID(fo.geom))::int

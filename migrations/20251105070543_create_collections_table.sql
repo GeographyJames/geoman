@@ -1,7 +1,6 @@
 CREATE TABLE app.collections (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     title text NOT NULL UNIQUE,
-    slug slug NOT NULL UNIQUE,
     description TEXT,
     geometry_type geometry_type NOT NULL,
     added_by integer NOT NULL REFERENCES app.users(id),

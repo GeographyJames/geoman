@@ -9,7 +9,7 @@ use app::enums::ProjectIdentifier;
 async fn get_features_works_for_project() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let collection_id = app.generate_collection_id(user_id).await;
     let another_project = app.generate_project_id(user_id).await;
     let _feature_id = app
         .generate_feature_id(collection_id, project_id, user_id, Some({}))
@@ -19,7 +19,7 @@ async fn get_features_works_for_project() {
         .await;
     let response = app
         .ogc_service
-        .get_project_features(&app.api_client, &slug, &project_id.into())
+        .get_project_features(&app.api_client, collection_id, &project_id.into())
         .await;
     assert_ok(&response);
     let ogc_features: ogc::FeatureCollection = handle_json_response(response)
@@ -32,14 +32,19 @@ async fn get_features_works_for_project() {
 async fn get_feature_works_for_project() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let collection_id = app.generate_collection_id(user_id).await;
     let feature_id = app
         .generate_feature_id(collection_id, project_id, user_id, Some({}))
         .await;
 
     let response = app
         .ogc_service
-        .get_project_feature(&app.api_client, &project_id.into(), &slug, feature_id.id)
+        .get_project_feature(
+            &app.api_client,
+            &project_id.into(),
+            collection_id,
+            feature_id.id,
+        )
         .await;
     assert_ok(&response)
 }
@@ -48,7 +53,7 @@ async fn get_feature_works_for_project() {
 async fn get_feature_returns_404_for_project_not_found() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let collection_id = app.generate_collection_id(user_id).await;
     let feature_id = app
         .generate_feature_id(collection_id, project_id, user_id, Some({}))
         .await;
@@ -58,7 +63,7 @@ async fn get_feature_returns_404_for_project_not_found() {
         .get_project_feature(
             &app.api_client,
             &ProjectIdentifier::default(),
-            &slug,
+            collection_id,
             feature_id.id,
         )
         .await;
@@ -69,7 +74,7 @@ async fn get_feature_returns_404_for_project_not_found() {
 async fn get_feature_returns_404_for_feature_belonging_to_different_project() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let collection_id = app.generate_collection_id(user_id).await;
     let another_project = app.generate_project_id(user_id).await;
     let feature_id = app
         .generate_feature_id(collection_id, another_project, user_id, Some({}))
@@ -77,7 +82,12 @@ async fn get_feature_returns_404_for_feature_belonging_to_different_project() {
 
     let response = app
         .ogc_service
-        .get_project_feature(&app.api_client, &project_id.into(), &slug, feature_id.id)
+        .get_project_feature(
+            &app.api_client,
+            &project_id.into(),
+            collection_id,
+            feature_id.id,
+        )
         .await;
     assert_status(&response, 404);
 }
@@ -86,13 +96,17 @@ async fn get_feature_returns_404_for_feature_belonging_to_different_project() {
 async fn get_features_returns_404_for_project_not_found() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let (slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let collection_id = app.generate_collection_id(user_id).await;
     let _feature_id = app
         .generate_feature_id(collection_id, project_id, user_id, Some({}))
         .await;
     let response = app
         .ogc_service
-        .get_project_features(&app.api_client, &slug, &ProjectIdentifier::default())
+        .get_project_features(
+            &app.api_client,
+            collection_id,
+            &ProjectIdentifier::default(),
+        )
         .await;
     assert_status(&response, 404);
 }
@@ -101,7 +115,7 @@ async fn get_features_returns_404_for_project_not_found() {
 async fn get_project_features_works_with_limit() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let (collection_slug, collection_id) = app.generate_collection_slug_and_id(user_id).await;
+    let collection_id = app.generate_collection_id(user_id).await;
     for _ in 0..10 {
         let _f = app
             .generate_feature_id(collection_id, project_id, user_id, Some({}))
@@ -113,7 +127,7 @@ async fn get_project_features_works_with_limit() {
         .ogc_service
         .get_project_features_with_params(
             &app.api_client,
-            &collection_slug,
+            collection_id,
             &project_id.into(),
             &&[("limit", limit)],
         )

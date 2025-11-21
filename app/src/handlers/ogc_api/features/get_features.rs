@@ -71,16 +71,16 @@ pub async fn get_features(
             .await?;
             response_builder.streaming(bytes)
         }
-        domain::enums::Collection::Other(_) => {
+        domain::enums::Collection::ProjectCollection(collection_id) => {
             let params = SelectAllParams {
                 limit,
-                slug: collection.clone(),
+                collection_id: *collection_id,
                 project_id: None,
                 crs: request_crs.clone(),
                 bbox,
                 bbox_crs,
             };
-            let features = project_features_stream(collection.to_string(), params, repo).await?;
+            let features = project_features_stream(*collection_id, params, repo).await?;
             let bytes = ogc_feature_collection_byte_stream(
                 features,
                 collection_url,
@@ -89,6 +89,7 @@ pub async fn get_features(
             .await?;
             response_builder.streaming(bytes)
         }
+        domain::enums::Collection::Other(_) => todo!(),
     };
     append_crs_header(&mut response, &request_crs);
     Ok(response)
