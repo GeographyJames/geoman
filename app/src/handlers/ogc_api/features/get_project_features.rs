@@ -1,9 +1,11 @@
 use crate::{
     URLS,
-    errors::ApiError,
-    handlers::ogc_api::features::{
-        Query,
-        common::{append_crs_header, project_features_stream},
+    handlers::{
+        ApiError,
+        ogc_api::features::{
+            Query,
+            common::{append_crs_header, project_features_stream},
+        },
     },
     helpers::get_base_url,
     postgres::{PostgresRepo, project_features::SelectAllParams},

@@ -8,3 +8,5 @@ mod crs;
 pub mod project_features;
 pub mod projects;
 pub use traits::StreamItem;
+mod error;
+pub use error::RepositoryError;

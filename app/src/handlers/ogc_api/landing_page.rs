@@ -1,5 +1,5 @@
 use crate::{
-    AppState, URLS, constants::OPEN_API_JSON, errors::ApiError, helpers::get_base_url,
+    AppState, URLS, constants::OPEN_API_JSON, handlers::ApiError, helpers::get_base_url,
     postgres::PostgresRepo,
 };
 use actix_web::{HttpRequest, get, web};

@@ -1,9 +1,11 @@
 use domain::{Project, ProjectId, project::Properties};
 
 use crate::{
-    errors::RepositoryError,
     handlers::ogc_api::features::Query,
-    postgres::traits::{SelectAllWithParams, SelectOne},
+    postgres::{
+        RepositoryError,
+        traits::{SelectAllWithParams, SelectOne},
+    },
 };
 
 #[derive(Default)]

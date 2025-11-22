@@ -6,7 +6,7 @@ use ogcapi_types::common::Crs;
 
 use crate::{
     URLS,
-    errors::ApiError,
+    handlers::ApiError,
     helpers::get_base_url,
     postgres::{
         PostgresRepo,

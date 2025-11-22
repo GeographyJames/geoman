@@ -8,9 +8,8 @@ use serde_json::Value;
 use sqlx::types::Json;
 
 use crate::{
-    errors::RepositoryError,
     postgres::{
-        PoolWrapper,
+        PoolWrapper, RepositoryError,
         traits::{SelectAllWithParamsStreaming, SelectOneWithParams, StreamItem},
     },
     types::ValidCrs,

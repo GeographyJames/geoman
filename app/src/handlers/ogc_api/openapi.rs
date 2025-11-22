@@ -1,4 +1,4 @@
-use crate::{AppState, errors::ApiError};
+use crate::{AppState, handlers::ApiError};
 use actix_web::{HttpRequest, get, web};
 use anyhow::anyhow;
 use utoipa::openapi::{self, Server};

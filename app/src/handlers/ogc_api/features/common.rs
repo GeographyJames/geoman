@@ -1,7 +1,7 @@
 use crate::{
-    errors::{ApiError, RepositoryError},
+    handlers::ApiError,
     postgres::{
-        PostgresRepo, StreamItem,
+        PostgresRepo, RepositoryError, StreamItem,
         project_features::{SelectAllParams, SelectOneParams},
     },
     types::ValidCrs,

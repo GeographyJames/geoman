@@ -1,4 +1,4 @@
-use app::errors::ErrorResponse;
+use app::ErrorResponse;
 use domain::ProjectFeature;
 use rand::Rng;
 use reqwest::Response;

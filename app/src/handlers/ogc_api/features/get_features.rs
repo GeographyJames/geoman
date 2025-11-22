@@ -1,10 +1,12 @@
 /// The features in the collection
 use crate::{
     URLS,
-    errors::ApiError,
-    handlers::ogc_api::features::{
-        Query,
-        common::{append_crs_header, project_features_stream},
+    handlers::{
+        ApiError,
+        ogc_api::features::{
+            Query,
+            common::{append_crs_header, project_features_stream},
+        },
     },
     helpers::get_base_url,
     postgres::{PostgresRepo, project_features::SelectAllParams, projects},
@@ -16,6 +18,7 @@ use actix_web::{
     web::{self},
 };
 
+use anyhow::Context;
 use domain::{IntoOGCFeature, Project, enums::CollectionId};
 use ogc::{Feature, FeatureCollection};
 use ogcapi_types::common::{Crs, media_type::GEO_JSON};
@@ -87,7 +90,8 @@ pub async fn get_features(
                 collection_url,
                 collection_id.to_string(),
             )
-            .await?;
+            .await
+            .context("failed to create byte stream")?;
             response_builder.streaming(bytes)
         }
         CollectionId::Other(_) => todo!(),

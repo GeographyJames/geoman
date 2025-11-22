@@ -1,9 +1,9 @@
 use domain::{Collection, ProjectCollectionId, ProjectId, enums::CollectionId};
 use ogcapi_types::common::{Bbox, Crs, SpatialExtent};
 
-use crate::{
-    errors::RepositoryError,
-    postgres::traits::{SelectAll, SelectAllWithParams, SelectOne, SelectOneWithParams},
+use crate::postgres::{
+    RepositoryError,
+    traits::{SelectAll, SelectAllWithParams, SelectOne, SelectOneWithParams},
 };
 
 pub struct SelectOneParams {

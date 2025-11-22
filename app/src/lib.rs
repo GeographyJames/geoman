@@ -1,5 +1,4 @@
 mod config;
-pub mod errors;
 mod helpers;
 mod startup;
 mod urls;
@@ -8,6 +7,7 @@ pub use config::{DatabaseSettings, Password, get_config};
 pub use startup::Application;
 pub use urls::URLS;
 mod handlers;
+
 mod routes;
 mod state;
 pub mod telemetry;
@@ -16,4 +16,5 @@ mod constants;
 mod postgres;
 mod streaming;
 mod types;
+pub use handlers::ErrorResponse;
 pub use types::enums;

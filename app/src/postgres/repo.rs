@@ -2,14 +2,11 @@
 use futures::Stream;
 use sqlx::PgPool;
 
-use crate::{
-    errors::RepositoryError,
-    postgres::{
-        PoolWrapper,
-        traits::{
-            SelectAll, SelectAllWithParams, SelectAllWithParamsStreaming, SelectOne,
-            SelectOneWithParams, StreamItem,
-        },
+use crate::postgres::{
+    PoolWrapper, RepositoryError,
+    traits::{
+        SelectAll, SelectAllWithParams, SelectAllWithParamsStreaming, SelectOne,
+        SelectOneWithParams, StreamItem,
     },
 };
 

@@ -3,7 +3,7 @@ use domain::{Project, ProjectId};
 use ogcapi_types::common::Conformance;
 use std::sync::LazyLock;
 
-use crate::{errors::ApiError, postgres::PostgresRepo};
+use crate::{handlers::ApiError, postgres::PostgresRepo};
 
 static CONFORMANCE_DECLARATION: LazyLock<Conformance> = LazyLock::new(|| {
     let mut declaration = Conformance::default();
