@@ -8,12 +8,6 @@ pub struct AppState {
     pub openapi: openapi::OpenApi,
 }
 
-impl Default for AppState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl AppState {
     pub fn new() -> Self {
         let landing_page = LandingPage {

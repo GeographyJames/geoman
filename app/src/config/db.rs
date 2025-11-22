@@ -27,16 +27,7 @@ impl DatabaseSettings {
             .application_name("Geodata Manager")
             .log_statements(log::LevelFilter::Trace)
     }
-    pub fn connection_string(&self) -> String {
-        format!(
-            "postgresql://{}:{}@{}:{}/{}",
-            self.username,
-            self.password.expose_secret(),
-            self.host,
-            self.port,
-            self.database_name
-        )
-    }
+
     pub fn get_connection_pool(&self) -> PgPool {
         PgPoolOptions::new().connect_lazy_with(self.connect_options())
     }

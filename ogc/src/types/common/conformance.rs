@@ -10,17 +10,3 @@ pub struct ConformanceDeclaration {
     #[serde(rename = "conformsTo")]
     pub conforms_to: Vec<String>,
 }
-
-impl ConformanceDeclaration {
-    pub fn new(classes: &[impl ToString]) -> Self {
-        Self {
-            conforms_to: classes.iter().map(|c| c.to_string()).collect(),
-        }
-    }
-
-    /// Extend conformance from other classes
-    pub fn extend(&mut self, classes: &[impl ToString]) {
-        self.conforms_to
-            .extend(classes.iter().map(|c| c.to_string()))
-    }
-}

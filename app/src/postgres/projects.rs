@@ -1,13 +1,10 @@
 use domain::{Project, ProjectId, project::Properties};
 
-use crate::{
-    handlers::ogc_api::features::Query,
-    repo::{
-        RepositoryError,
-        metadata::NumberMatched,
-        project::SelectAllParams,
-        traits::{SelectAllWithParams, SelectOne},
-    },
+use crate::repo::{
+    RepositoryError,
+    metadata::NumberMatched,
+    project::SelectAllParams,
+    traits::{SelectAllWithParams, SelectOne},
 };
 
 pub struct ProjectRow {
@@ -22,13 +19,6 @@ impl Into<Project> for ProjectRow {
         let ProjectRow { id, name, .. } = self;
         let properties = Properties { name };
         Project { id, properties }
-    }
-}
-
-impl From<Query> for SelectAllParams {
-    fn from(value: Query) -> Self {
-        let Query { limit, .. } = value;
-        Self { limit }
     }
 }
 

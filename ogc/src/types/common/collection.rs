@@ -8,8 +8,10 @@ use utoipa::ToSchema;
 
 // const CRS_REF: &str = "#/crs";
 
-fn collection() -> String {
-    "Collection".to_string()
+#[derive(Serialize, Default, Deserialize, Clone, Debug, PartialEq)]
+pub enum Type {
+    #[default]
+    Collection,
 }
 
 /// A body of resources that belong or are used together. An aggregate, set, or group of related resources.
@@ -19,9 +21,7 @@ fn collection() -> String {
 #[serde(rename_all = "camelCase")]
 pub struct Collection {
     pub id: String,
-    /// Must be set to `Collection` to be a valid Collection.
-    #[serde(default = "collection")]
-    pub r#type: String,
+    pub r#type: Type,
     pub title: Option<String>,
     pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -43,24 +43,4 @@ pub struct Collection {
     pub storage_crs_coordinate_epoch: Option<f32>,
     #[serde(default)]
     pub links: Vec<Link>,
-}
-
-#[allow(clippy::derivable_impls)]
-impl Default for Collection {
-    fn default() -> Self {
-        Self {
-            r#type: "Collection".to_string(),
-            id: Default::default(),
-            title: Default::default(),
-            description: Default::default(),
-            keywords: Default::default(),
-            attribution: Default::default(),
-            extent: Default::default(),
-            item_type: Default::default(),
-            crs: vec![Crs::default()],
-            storage_crs: Default::default(),
-            storage_crs_coordinate_epoch: Default::default(),
-            links: Default::default(),
-        }
-    }
 }
