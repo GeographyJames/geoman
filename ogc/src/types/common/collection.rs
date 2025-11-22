@@ -1,14 +1,14 @@
 // This is a copy of ogcapi-types collection purely for openapi docs
 
 use ogcapi_types::common::{Crs, Extent, Link};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use serde_with::DisplayFromStr;
 use utoipa::ToSchema;
 
 // const CRS_REF: &str = "#/crs";
 
-#[derive(Serialize, Default, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Default)]
 pub enum Type {
     #[default]
     Collection,
@@ -17,7 +17,7 @@ pub enum Type {
 /// A body of resources that belong or are used together. An aggregate, set, or group of related resources.
 #[serde_with::serde_as]
 #[serde_with::skip_serializing_none]
-#[derive(Serialize, Deserialize, ToSchema, Debug, PartialEq, Clone)]
+#[derive(Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Collection {
     pub id: String,

@@ -1,8 +1,8 @@
 use ogcapi_types::common::{Collection, Links};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use utoipa::ToSchema;
 
-#[derive(Serialize, Deserialize, ToSchema, Debug, Clone)]
+#[derive(Serialize, ToSchema)]
 pub struct Collections {
     pub links: Links,
     pub collections: Vec<Collection>,

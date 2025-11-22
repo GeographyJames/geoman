@@ -40,3 +40,8 @@ reqwest = "0.12"
 rstest = "0.26"
 tokio = { version = "1.48", features = ["sync"] }
 uuid = { workspace = true }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(coverage,coverage_nightly)',
+] }

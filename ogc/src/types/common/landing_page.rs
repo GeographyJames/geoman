@@ -1,12 +1,12 @@
 use ogcapi_types::common::Links;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use utoipa::ToSchema;
 
 /// OGC API - Features Landing Page
 ///
 /// The landing page provides links to the API definition, conformance
 /// declaration, and data collections.
-#[derive(Serialize, Deserialize, ToSchema, Debug, Clone)]
+#[derive(Serialize, ToSchema)]
 pub struct LandingPage {
     /// Title of the API
     pub title: String,

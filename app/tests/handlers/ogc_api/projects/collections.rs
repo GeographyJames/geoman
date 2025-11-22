@@ -18,7 +18,7 @@ async fn get_collections_works_for_project() {
         .get_project_collections(&app.api_client, project_id)
         .await;
     assert_ok(&response);
-    let collections: ogc::Collections = handle_json_response(response)
+    let collections: ogcapi_types::common::Collections = handle_json_response(response)
         .await
         .expect("failed to extract ogc collections");
     assert_eq!(collections.collections.len(), 1);
@@ -37,7 +37,7 @@ async fn get_collections_only_returns_collectinos_that_contain_items_for_the_pro
         .ogc_service
         .get_project_collections(&app.api_client, project_id)
         .await;
-    let ogc_collections: ogc::Collections = handle_json_response(response)
+    let ogc_collections: ogcapi_types::common::Collections = handle_json_response(response)
         .await
         .expect("failed to extract ogc collections");
     assert!(ogc_collections.collections.is_empty())
