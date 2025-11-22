@@ -1,5 +1,5 @@
 mod config;
-mod errors;
+pub mod errors;
 mod helpers;
 mod startup;
 mod urls;

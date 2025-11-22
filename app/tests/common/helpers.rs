@@ -1,3 +1,4 @@
+use app::errors::ErrorResponse;
 use domain::ProjectFeature;
 use rand::Rng;
 use reqwest::Response;
@@ -25,13 +26,20 @@ pub fn assert_status(response: &reqwest::Response, expected_status: u16) {
 pub async fn check_error_response(
     response: reqwest::Response,
     expected_status: u16,
-    message: &str,
+    message: Option<&str>,
+    long_message: Option<&str>,
 ) {
     assert_status(&response, expected_status);
-    assert_eq!(
-        response.text().await.expect("response has no body"),
-        message
-    )
+    let err: ErrorResponse = response
+        .json()
+        .await
+        .expect("failed to deserialise response");
+    if let Some(message) = message {
+        assert_eq!(err.message, message)
+    }
+    if let Some(long_message) = long_message {
+        assert!(err.long_message.contains(long_message))
+    }
 }
 
 /// Handles a response by returning the specified Json for successful responses or elegantly handling error cases or cases where the response body is not as expected
@@ -69,20 +77,6 @@ pub fn check_ogc_feature<P: DeserializeOwned>(ogc_feature: ogc::Feature) {
     let _props: P =
         serde_json::from_value(serde_json::Value::Object(project_feature.properties_map))
             .expect("failed to deserialise feature properties to properties struct");
-}
-
-pub async fn check_conformance_declaration_response(response: Response) {
-    assert_ok(&response);
-    let _conformance: ogc::ConformanceDeclaration = handle_json_response(response)
-        .await
-        .expect("failed to retrieve conformance");
-}
-
-pub async fn check_landing_page_response(response: Response) {
-    assert_ok(&response);
-    let _landing_page: ogc::LandingPage = handle_json_response(response)
-        .await
-        .expect("failed to retrieve landing page");
 }
 
 pub fn generate_random_bng_point_ewkt() -> (f32, f32, String) {

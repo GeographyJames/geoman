@@ -132,7 +132,7 @@ async fn handler_returns_500_for_fatal_database_error(
     let app = TestApp::spawn_with_db().await;
     app.drop_app_schema().await;
     let response = endpoint.call(&app).await;
-    check_error_response(response, 500, "database error").await
+    check_error_response(response, 500, Some("database error"), None).await
 }
 
 #[rstest]

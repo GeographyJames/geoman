@@ -1,4 +1,9 @@
-use crate::common::{TestApp, helpers::check_conformance_declaration_response};
+use ogcapi_types::common::Conformance;
+
+use crate::common::{
+    TestApp,
+    helpers::{assert_ok, handle_json_response},
+};
 
 #[actix_web::test]
 async fn get_conformance_declaration_works() {
@@ -9,5 +14,8 @@ async fn get_conformance_declaration_works() {
         .get_conformance_declaration(&app.api_client)
         .await;
 
-    check_conformance_declaration_response(response).await
+    assert_ok(&response);
+    handle_json_response::<Conformance>(response)
+        .await
+        .expect("failed to retrieve conformance");
 }

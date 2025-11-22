@@ -1,4 +1,9 @@
-use crate::common::{TestApp, helpers::check_landing_page_response};
+use ogcapi_types::common::LandingPage;
+
+use crate::common::{
+    TestApp,
+    helpers::{assert_ok, handle_json_response},
+};
 
 #[actix_web::test]
 async fn get_project_landing_page_works() {
@@ -9,5 +14,8 @@ async fn get_project_landing_page_works() {
         .ogc_service
         .get_project_landing_page(&app.api_client, project_id)
         .await;
-    check_landing_page_response(response).await;
+    assert_ok(&response);
+    handle_json_response::<LandingPage>(response)
+        .await
+        .expect("failed to retrieve landing page");
 }
