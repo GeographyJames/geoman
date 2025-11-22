@@ -9,7 +9,8 @@ use crate::{
         },
     },
     helpers::get_base_url,
-    postgres::{PostgresRepo, project_features::SelectAllParams, projects},
+    postgres::PostgresRepo,
+    repo::{project, project_features},
     streaming::ogc_feature_collection_byte_stream,
     types::ValidCrs,
 };
@@ -65,7 +66,7 @@ pub async fn get_features(
     response_builder.content_type(GEO_JSON);
     let mut response = match *collection_id {
         CollectionId::Projects => {
-            let params = projects::SelectAllParams { limit };
+            let params = project::SelectAllParams { limit };
             let projects = repo.select_all_with_params::<Project>(params).await?;
             let mut features: Vec<Feature> = projects
                 .into_iter()
@@ -76,7 +77,7 @@ pub async fn get_features(
             HttpResponse::Ok().json(collection)
         }
         CollectionId::ProjectCollection(project_collection_id) => {
-            let params = SelectAllParams {
+            let params = project_features::SelectAllParams {
                 limit,
                 collection_id: project_collection_id,
                 project_id: None,

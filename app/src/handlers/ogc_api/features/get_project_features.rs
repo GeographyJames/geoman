@@ -8,7 +8,8 @@ use crate::{
         },
     },
     helpers::get_base_url,
-    postgres::{PostgresRepo, project_features::SelectAllParams},
+    postgres::PostgresRepo,
+    repo::project_features::SelectAllParams,
     streaming::ogc_feature_collection_byte_stream,
     types::ValidCrs,
 };

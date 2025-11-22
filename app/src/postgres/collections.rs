@@ -1,18 +1,11 @@
-use domain::{Collection, ProjectCollectionId, ProjectId, enums::CollectionId};
+use domain::{Collection, ProjectCollectionId, enums::CollectionId};
 use ogcapi_types::common::{Bbox, Crs, SpatialExtent};
 
 use crate::repo::{
     RepositoryError,
+    collections::{SelectAllParams, SelectOneParams},
     traits::{SelectAll, SelectAllWithParams, SelectOne, SelectOneWithParams},
 };
-
-pub struct SelectOneParams {
-    pub project_id: ProjectId,
-}
-
-pub struct SelectAllParams {
-    pub project_id: ProjectId,
-}
 
 pub struct CollectionRow {
     pub id: i32,

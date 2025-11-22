@@ -4,14 +4,10 @@ use crate::{
     handlers::ogc_api::features::Query,
     repo::{
         RepositoryError,
+        project::SelectAllParams,
         traits::{SelectAllWithParams, SelectOne},
     },
 };
-
-#[derive(Default)]
-pub struct SelectAllParams {
-    pub limit: Option<usize>,
-}
 
 pub struct ProjectRow {
     id: i32,

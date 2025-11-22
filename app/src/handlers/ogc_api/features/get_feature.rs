@@ -9,7 +9,8 @@ use crate::{
         },
     },
     helpers::get_base_url,
-    postgres::{PostgresRepo, project_features::SelectOneParams},
+    postgres::PostgresRepo,
+    repo::project_features::SelectOneParams,
     types::ValidCrs,
 };
 use actix_web::{

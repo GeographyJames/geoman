@@ -8,10 +8,8 @@ use crate::{
     URLS,
     handlers::ApiError,
     helpers::get_base_url,
-    postgres::{
-        PostgresRepo,
-        collections::{SelectAllParams, SelectOneParams},
-    },
+    postgres::PostgresRepo,
+    repo::collections::{SelectAllParams, SelectOneParams},
 };
 
 /// The feature collections in the dataset.

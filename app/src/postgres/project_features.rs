@@ -1,35 +1,15 @@
-use domain::{
-    ProjectCollectionId, ProjectFeature, ProjectFeatureId, ProjectId, poject_feature::Properties,
-};
+use domain::{ProjectFeature, ProjectFeatureId, poject_feature::Properties};
 use futures::{Stream, StreamExt};
 use geojson::Geometry;
 use serde::Deserialize;
 use serde_json::Value;
 use sqlx::types::Json;
 
-use crate::{
-    repo::{
-        PoolWrapper, RepositoryError,
-        traits::{SelectAllWithParamsStreaming, SelectOneWithParams, StreamItem},
-    },
-    types::ValidCrs,
+use crate::repo::{
+    PoolWrapper, RepositoryError,
+    project_features::{SelectAllParams, SelectOneParams},
+    traits::{SelectAllWithParamsStreaming, SelectOneWithParams, StreamItem},
 };
-
-#[derive(Clone)]
-pub struct SelectAllParams {
-    pub limit: Option<usize>,
-    pub collection_id: ProjectCollectionId,
-    pub project_id: Option<ProjectId>,
-    pub crs: ValidCrs,
-    pub bbox: Option<ogcapi_types::common::Bbox>,
-    pub bbox_crs: Option<ValidCrs>,
-}
-
-#[derive(Clone)]
-pub struct SelectOneParams<'a> {
-    pub project_id: Option<ProjectId>,
-    pub crs: &'a ValidCrs,
-}
 
 #[derive(Deserialize)]
 struct ProjectFeatureRow {
