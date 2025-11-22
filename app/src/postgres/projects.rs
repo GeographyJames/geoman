@@ -42,20 +42,20 @@ impl SelectAllWithParams for Project {
     where
         E: sqlx::PgExecutor<'e>,
     {
-        let rows = 
-            sqlx::query_as!(
+        let rows = sqlx::query_as!(
                 ProjectRow,
                 r#"SELECT id, name, COUNT(*) OVER() as "number_matched!" FROM app.projects ORDER BY id LIMIT $1"#,
                 params.limit.map(|l| l as i64)
             )
             .fetch_all(executor)
             .await?;
-        let number_matched = rows.iter().next().map(|item | item.number_matched).unwrap_or(0);
+        let number_matched = rows.first().map(|item| item.number_matched).unwrap_or(0);
 
-        let items =   rows .into_iter()
+        let items = rows
+            .into_iter()
             .map(|row| row.into())
             .collect::<Vec<Project>>();
-           Ok((items, NumberMatched(number_matched)))
+        Ok((items, NumberMatched(number_matched)))
     }
 }
 

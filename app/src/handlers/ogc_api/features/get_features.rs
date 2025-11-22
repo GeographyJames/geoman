@@ -93,7 +93,7 @@ pub async fn get_features(
             let bytes = ogc_feature_collection_byte_stream(
                 features,
                 collection_url,
-                collection_id.into_inner().into(),
+                collection_id.into_inner(),
             )
             .await
             .context("failed to create byte stream")?;

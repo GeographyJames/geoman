@@ -173,9 +173,7 @@ pub async fn get_project_collection(
     );
     let supported_crs = repo.select_all::<Crs>().await?;
     // Fetch collection from database
-    let params = SelectOneParams {
-        project_id: project_id,
-    };
+    let params = SelectOneParams { project_id };
     let collection = repo
         .select_one_with_params::<Collection>(collection_id, &params)
         .await?

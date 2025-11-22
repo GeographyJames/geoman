@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, name, slug FROM app.projects WHERE slug = $1",
+  "query": "SELECT id, name, 1 as \"number_matched!\" FROM app.projects WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -15,20 +15,20 @@
       },
       {
         "ordinal": 2,
-        "name": "slug",
-        "type_info": "Text"
+        "name": "number_matched!",
+        "type_info": "Int4"
       }
     ],
     "parameters": {
       "Left": [
-        "Text"
+        "Int4"
       ]
     },
     "nullable": [
       false,
       false,
-      false
+      null
     ]
   },
-  "hash": "15ccf121afba00a9f9eaff1f7cd93e451e8cc561b8db8d019457beccbd45994c"
+  "hash": "8e44fa6c595bb04e111ecfcdb501a2884906f8a2c9651fc5e404eef272452fc5"
 }

@@ -39,7 +39,13 @@ pub async fn unsupported_crs_in_request_returns_400() {
         .ogc_service
         .get_features_with_params(&app.api_client, collection_id.into(), &[("crs", &crs)])
         .await;
-    check_error_response(response, 400, Some(&format!("{}: {}", ERROR_MESSAGE, crs)), None).await;
+    check_error_response(
+        response,
+        400,
+        Some(&format!("{}: {}", ERROR_MESSAGE, crs)),
+        None,
+    )
+    .await;
 
     // Get features
     let response = app
@@ -52,7 +58,13 @@ pub async fn unsupported_crs_in_request_returns_400() {
             &[("crs", &crs)],
         )
         .await;
-    check_error_response(response, 400, Some(&format!("{}: {}", ERROR_MESSAGE, crs)), None).await;
+    check_error_response(
+        response,
+        400,
+        Some(&format!("{}: {}", ERROR_MESSAGE, crs)),
+        None,
+    )
+    .await;
 
     // Get project features
     let response = app
@@ -64,7 +76,13 @@ pub async fn unsupported_crs_in_request_returns_400() {
             &[("crs", &crs)],
         )
         .await;
-    check_error_response(response, 400, Some(&format!("{}: {}", ERROR_MESSAGE, crs)), None).await;
+    check_error_response(
+        response,
+        400,
+        Some(&format!("{}: {}", ERROR_MESSAGE, crs)),
+        None,
+    )
+    .await;
 }
 
 #[actix_web::test]

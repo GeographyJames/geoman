@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, name, slug FROM app.projects ORDER BY id LIMIT $1",
+  "query": "SELECT id, name, COUNT(*) OVER() as \"number_matched!\" FROM app.projects ORDER BY id LIMIT $1",
   "describe": {
     "columns": [
       {
@@ -15,8 +15,8 @@
       },
       {
         "ordinal": 2,
-        "name": "slug",
-        "type_info": "Text"
+        "name": "number_matched!",
+        "type_info": "Int8"
       }
     ],
     "parameters": {
@@ -27,8 +27,8 @@
     "nullable": [
       false,
       false,
-      false
+      null
     ]
   },
-  "hash": "e70177e7de0d82c474f957e1c65ee90d468d0a90830868c46b9221f238be4537"
+  "hash": "d353db1ff2df110e4d5cec3072c3e3d1fde876f97673e921cedc3595f2734886"
 }

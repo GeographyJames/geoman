@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO app.collections (title, slug, geometry_type, added_by, last_updated_by) VALUES ($1, $2, $3, $4, $4) RETURNING id",
+  "query": "INSERT INTO app.collections (title, geometry_type, added_by, last_updated_by) VALUES ($1, $2, $3, $3) RETURNING id",
   "describe": {
     "columns": [
       {
@@ -12,14 +12,6 @@
     "parameters": {
       "Left": [
         "Text",
-        {
-          "Custom": {
-            "name": "slug",
-            "kind": {
-              "Domain": "Text"
-            }
-          }
-        },
         {
           "Custom": {
             "name": "geometry_type",
@@ -43,5 +35,5 @@
       false
     ]
   },
-  "hash": "a401904de3cc0a98f095dcbfe858b9d6237ae49c18bbbe5fabaca2ca691bbc84"
+  "hash": "794cbf788bad759e8102151108d509829c07627ffba433ac50cba4b6d9393319"
 }
