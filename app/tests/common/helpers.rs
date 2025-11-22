@@ -26,20 +26,12 @@ pub fn assert_status(response: &reqwest::Response, expected_status: u16) {
 pub async fn check_error_response(
     response: reqwest::Response,
     expected_status: u16,
-    message: Option<&str>,
-    long_message: Option<&str>,
-) {
+) -> ErrorResponse {
     assert_status(&response, expected_status);
-    let err: ErrorResponse = response
+    response
         .json()
         .await
-        .expect("failed to deserialise response");
-    if let Some(message) = message {
-        assert_eq!(err.message, message)
-    }
-    if let Some(long_message) = long_message {
-        assert!(err.long_message.contains(long_message))
-    }
+        .expect("failed to deserialise response")
 }
 
 /// Handles a response by returning the specified Json for successful responses or elegantly handling error cases or cases where the response body is not as expected

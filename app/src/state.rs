@@ -9,6 +9,7 @@ pub struct AppState {
 }
 
 impl AppState {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         let landing_page = LandingPage {
             title: Some("GeoMan OGC API".to_string()),

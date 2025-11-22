@@ -1,10 +1,9 @@
 use actix_web::{ResponseError, http::StatusCode};
 use domain::{ProjectCollectionId, ProjectFeatureId, ProjectId};
 use ogcapi_types::common::Crs;
-use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::{helpers::error_chain_fmt, repo::RepositoryError};
+use crate::{helpers::error_chain_fmt, repo::RepositoryError, types::ErrorResponse};
 
 #[derive(Error)]
 pub enum ApiError {
@@ -39,7 +38,6 @@ impl ResponseError for ApiError {
 
     fn error_response(&self) -> actix_web::HttpResponse {
         let error_response = ErrorResponse {
-            status: self.status_code().as_u16(),
             message: self.to_string(),
             long_message: format!("{:?}", self),
         };
@@ -51,10 +49,4 @@ impl std::fmt::Debug for ApiError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         error_chain_fmt(self, f)
     }
-}
-#[derive(Serialize, Deserialize)]
-pub struct ErrorResponse {
-    pub status: u16,
-    pub message: String,
-    pub long_message: String,
 }

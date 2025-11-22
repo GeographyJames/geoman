@@ -2,7 +2,7 @@ use ogcapi_types::common::Crs;
 
 use crate::common::{
     TestApp,
-    helpers::{generate_point, handle_json_response},
+    helpers::{check_error_response, generate_point, handle_json_response},
 };
 
 #[actix_web::test]
@@ -50,4 +50,25 @@ pub async fn bbox_works() {
         .await
         .expect("failed to extract features");
     assert_eq!(features.features.len(), 1);
+}
+
+#[actix_web::test]
+pub async fn bbox_with_unsuported_crs_parameter_returns_400() {
+    let app = TestApp::spawn_with_db().await;
+    let (_, user_id, project_id) = app.generate_ids().await;
+    let collection_id = app.generate_collection_id(user_id).await;
+    let bbox = ogcapi_types::common::Bbox::Bbox2D([0., 0., 2., 2.]).to_string();
+    let response = app
+        .ogc_service
+        .get_project_features_with_params(
+            &app.api_client,
+            collection_id,
+            project_id,
+            &[
+                ("bbox", bbox.to_string()),
+                ("bbox-crs", Crs::from_srid(27700).to_string()),
+            ],
+        )
+        .await;
+    let _err = check_error_response(response, 400).await;
 }

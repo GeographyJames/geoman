@@ -18,6 +18,5 @@ mod constants;
 mod postgres;
 mod streaming;
 mod types;
-pub use handlers::ErrorResponse;
-pub use types::enums;
+pub use types::{ErrorResponse, enums};
 mod repo;

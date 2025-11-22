@@ -15,6 +15,7 @@ pub async fn unsupported_crs_in_request_returns_400() {
         .generate_feature_id(collection_id, project_id, user_id, Some({}))
         .await;
     let crs = Crs::from_epsg(9999).to_string();
+    let error_message = format!("{}: {}", ERROR_MESSAGE, crs);
 
     // Get feature
     let response = app
@@ -26,26 +27,16 @@ pub async fn unsupported_crs_in_request_returns_400() {
             &[("crs", &crs)],
         )
         .await;
-    check_error_response(
-        response,
-        400,
-        Some(&format!("{}: {}", ERROR_MESSAGE, crs)),
-        None,
-    )
-    .await;
+    let err = check_error_response(response, 400).await;
+    assert_eq!(error_message, err.message);
 
     // Get project feature
     let response = app
         .ogc_service
         .get_features_with_params(&app.api_client, collection_id.into(), &[("crs", &crs)])
         .await;
-    check_error_response(
-        response,
-        400,
-        Some(&format!("{}: {}", ERROR_MESSAGE, crs)),
-        None,
-    )
-    .await;
+    let err = check_error_response(response, 400).await;
+    assert_eq!(error_message, err.message);
 
     // Get features
     let response = app
@@ -58,13 +49,8 @@ pub async fn unsupported_crs_in_request_returns_400() {
             &[("crs", &crs)],
         )
         .await;
-    check_error_response(
-        response,
-        400,
-        Some(&format!("{}: {}", ERROR_MESSAGE, crs)),
-        None,
-    )
-    .await;
+    let err = check_error_response(response, 400).await;
+    assert_eq!(error_message, err.message);
 
     // Get project features
     let response = app
@@ -76,13 +62,8 @@ pub async fn unsupported_crs_in_request_returns_400() {
             &[("crs", &crs)],
         )
         .await;
-    check_error_response(
-        response,
-        400,
-        Some(&format!("{}: {}", ERROR_MESSAGE, crs)),
-        None,
-    )
-    .await;
+    let err = check_error_response(response, 400).await;
+    assert_eq!(error_message, err.message);
 }
 
 #[actix_web::test]
