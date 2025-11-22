@@ -67,8 +67,7 @@ pub async fn get_project_features(
     let features = project_features_stream(collection_id, params, repo).await?;
 
     let bytes =
-        ogc_feature_collection_byte_stream(features, collection_url, collection_id.to_string())
-            .await?;
+        ogc_feature_collection_byte_stream(features, collection_url, collection_id.into()).await?;
     let mut response = HttpResponse::Ok().content_type(GEO_JSON).streaming(bytes);
     append_crs_header(&mut response, &request_crs);
 

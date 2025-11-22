@@ -68,12 +68,16 @@ pub async fn get_features(
         CollectionId::Projects => {
             let params = project::SelectAllParams { limit };
             let projects = repo.select_all_with_params::<Project>(params).await?;
-            let mut features: Vec<Feature> = projects
+            let features: Vec<Feature> = projects
                 .into_iter()
                 .map(|p| p.into_ogc_feature(collection_url.clone()))
                 .collect();
-            let mut collection = FeatureCollection::new(collection_url, collection_id.to_string());
-            collection.features.append(&mut features);
+            let collection = FeatureCollection::new(
+                &collection_url,
+                collection_id.to_string(),
+                features,
+                todo!(),
+            );
             HttpResponse::Ok().json(collection)
         }
         CollectionId::ProjectCollection(project_collection_id) => {
@@ -89,7 +93,7 @@ pub async fn get_features(
             let bytes = ogc_feature_collection_byte_stream(
                 features,
                 collection_url,
-                collection_id.to_string(),
+                collection_id.into_inner().into(),
             )
             .await
             .context("failed to create byte stream")?;

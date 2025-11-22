@@ -20,31 +20,43 @@ pub struct FeatureCollection {
 }
 
 impl FeatureCollection {
-    pub fn new(collection_url: String, collection_id: String) -> Self {
+    pub fn new(
+        collection_url: &str,
+        collection_id: String,
+        features: Vec<Feature>,
+        number_matched: i64,
+    ) -> Self {
         Self {
             id: collection_id,
             r#type: Type::default(),
-            features: Default::default(),
-            links: [Link::new(format!("{}/items", collection_url), SELF).mediatype(GEO_JSON)],
+            features,
+            links: Self::links(collection_url),
             //todo set timestamp from database
-            time_stamp: chrono::Utc::now().to_rfc3339().to_string(),
+            time_stamp: chrono::Utc::now().to_rfc3339(),
         }
     }
+    fn links(collection_url: &str) -> [Link; 1] {
+        [Link::new(format!("{}/items", collection_url), SELF).mediatype(GEO_JSON)]
+    }
 
-    pub fn opening_json(&self, number_matched: i64) -> Result<String, serde_json::Error> {
+    pub fn opening_json(
+        collection_id: &str,
+        collection_url: &str,
+        number_matched: i64,
+    ) -> Result<String, serde_json::Error> {
         let mut json = format!(
             r#"{{"type":{},"id":{},"links":{},"timeStamp":{},"numberMatched":{}"#,
-            serde_json::to_string(&self.r#type)?,
-            serde_json::to_string(&self.id)?,
-            serde_json::to_string(&self.links)?,
-            serde_json::to_string(&self.time_stamp)?,
+            serde_json::to_string(&Type::default())?,
+            serde_json::to_string(collection_id)?,
+            serde_json::to_string(&Self::links(collection_url))?,
+            serde_json::to_string(&chrono::Utc::now().to_rfc3339())?,
             serde_json::to_string(&number_matched)?
         );
 
         json.push_str(r#","features":["#);
         Ok(json)
     }
-    pub fn closing_json(&self, number_returned: usize) -> Result<String, serde_json::Error> {
+    pub fn closing_json(number_returned: usize) -> Result<String, serde_json::Error> {
         Ok(format!(
             r#"],"numberReturned":{}}}"#,
             serde_json::to_string(&number_returned)?
@@ -59,8 +71,10 @@ mod tests {
     impl Default for FeatureCollection {
         fn default() -> Self {
             Self::new(
+                &uuid::Uuid::new_v4().to_string(),
                 uuid::Uuid::new_v4().to_string(),
-                uuid::Uuid::new_v4().to_string(),
+                Vec::new(),
+                0,
             )
         }
     }
@@ -80,13 +94,10 @@ mod tests {
     #[test]
     fn feature_collection_opening_and_closing_json_serialises_to_geojson_and_deserialises_to_feature_collection()
      {
-        let fc = FeatureCollection::default();
         let json_string = format!(
             "{}{}",
-            fc.opening_json(0)
-                .expect("failed to serialise opening json"),
-            fc.closing_json(0)
-                .expect("failed to serialise closing json")
+            FeatureCollection::opening_json("0", "0", 0).expect("failed to serialise opening json"),
+            FeatureCollection::closing_json(0).expect("failed to serialise closing json")
         );
         let _: FeatureCollection = serde_json::from_str(&json_string)
             .expect("failed to deserialise to feature collection");

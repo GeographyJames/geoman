@@ -21,7 +21,7 @@ struct ProjectFeatureRow {
     pub geometry: Json<geojson::Geometry>,
     pub is_primary: bool,
     pub storage_crs_srid: i32,
-    pub total_count: i64,
+    pub number_matched: i64,
 }
 
 impl TryInto<ProjectFeature> for ProjectFeatureRow {
@@ -85,7 +85,7 @@ impl SelectOneWithParams for ProjectFeature {
                 ST_AsGeoJSON(ST_Transform(fo.geom, $3))::jsonb as "geometry!: Json<Geometry>",
                 ST_SRID(geom) AS "storage_crs_srid!",
                 f.properties,
-                1 as "total_count!"
+                1 as "number_matched!"
             FROM app.project_features f
             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
             JOIN app.collections c ON f.collection_id = c.id
@@ -138,7 +138,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
                 f.is_primary,
                 f.name,
                 f.properties,
-                COUNT(*) OVER() as "total_count!"
+                COUNT(*) OVER() as "number_matched!"
 
             FROM app.project_features f
             JOIN app.collections c ON c.id = f.collection_id
@@ -165,9 +165,12 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
         .fetch(executor)
         .map(|res| {
             let row = res?;
-            let total_count = row.total_count;
+            let number_matched = row.number_matched;
             let item: ProjectFeature = row.try_into()?;
-            Ok(StreamItem { item, total_count })
+            Ok(StreamItem {
+                item,
+                number_matched,
+            })
         })
     }
 }
@@ -184,7 +187,7 @@ mod tests {
         let row = ProjectFeatureRow {
             id: 0,
             storage_crs_srid: 4626,
-            total_count: 1,
+            number_matched: 1,
 
             project_id: 0,
             collection_id: 0,

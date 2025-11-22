@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use actix_web::web::Bytes;
 use anyhow::Context;
-use domain::IntoOGCFeature;
+use domain::{IntoOGCFeature, enums::CollectionId};
 use futures::{Stream, StreamExt, stream};
 
 use crate::repo::{RepositoryError, StreamItem};
@@ -29,7 +29,7 @@ where
 pub async fn ogc_feature_collection_byte_stream<T, S>(
     mut database_stream: S,
     collection_url: String,
-    collection_id: String,
+    collection_id: CollectionId,
 ) -> Result<impl Stream<Item = Result<Bytes, anyhow::Error>>, anyhow::Error>
 where
     S: Stream<Item = Result<StreamItem<T>, RepositoryError>> + Unpin,
@@ -39,17 +39,18 @@ where
     let first_item = database_stream.next().await.transpose()?;
     let number_matched = first_item
         .as_ref()
-        .map(|item: &StreamItem<T>| item.total_count)
+        .map(|item: &StreamItem<T>| item.number_matched)
         .unwrap_or(0);
     let feature_items = stream::iter(first_item.into_iter().map(Ok))
         .chain(database_stream)
         .map(|res| res.map(|stream_item| stream_item.item));
 
-    let feature_collection = ogc::FeatureCollection::new(collection_url.clone(), collection_id);
-
-    let opening_json = feature_collection
-        .opening_json(number_matched)
-        .context("failed to deserialise feature collection opening json")?;
+    let opening_json = ogc::FeatureCollection::opening_json(
+        &collection_id.to_string(),
+        &collection_url,
+        number_matched,
+    )
+    .context("failed to deserialise feature collection opening json")?;
     let opening_stream = futures::stream::once(async move { Bytes::from(opening_json) });
 
     let feature_stream_with_index = ogc_feature_byte_stream(feature_items, collection_url);
@@ -72,8 +73,7 @@ where
             .map(|idx| idx + 1)
             .unwrap_or(0);
 
-        let closing_json = feature_collection
-            .closing_json(number_returned)
+        let closing_json = ogc::FeatureCollection::closing_json(number_returned)
             .context("failed to serialise feature closing json")?;
         Ok(Bytes::from(closing_json))
     });

@@ -1,6 +1,6 @@
-pub mod collections;
+mod collections;
 mod crs;
 mod pg_repo;
-pub mod project_features;
-pub mod projects;
+mod project_features;
+mod projects;
 pub use pg_repo::PostgresRepo;

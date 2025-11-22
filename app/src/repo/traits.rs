@@ -26,7 +26,7 @@ pub trait SelectOne {
 
 pub struct StreamItem<T> {
     pub item: T,
-    pub total_count: i64,
+    pub number_matched: i64,
 }
 
 pub trait SelectAllWithParamsStreaming {
