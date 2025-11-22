@@ -32,35 +32,41 @@ APP_DB_NAME="${APP_DB_NAME:=geoman_local}"
 
 CONTAINER_NAME="postgres"
 
-# Destroy existing docker container if one exists
-if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-    echo >&2 "Found existing '${CONTAINER_NAME}' docker container"
-    remove_docker_container
+# Skip Docker setup if SKIP_DOCKER is set (useful for CI where Postgres is already running)
+if [[ -z "${SKIP_DOCKER}" ]]; then
+    # Destroy existing docker container if one exists
+    if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+        echo >&2 "Found existing '${CONTAINER_NAME}' docker container"
+        remove_docker_container
+    fi
+    echo >&2 "Starting '${CONTAINER_NAME}' docker container..."
+    docker run \
+        --restart unless-stopped \
+        --env POSTGRES_USER=${SUPERUSER} \
+        --env POSTGRES_PASSWORD=${SUPERUSER_PWD} \
+        --health-cmd="pg_isready -U ${SUPERUSER} || exit 1" \
+        --health-interval=1s \
+        --health-timeout=5s \
+        --health-retries=5 \
+        --publish "${DB_PORT}":5432 \
+        --detach \
+        --name "${CONTAINER_NAME}" \
+        postgis/postgis:18-3.6 -N 500 | sed 's/^/  [docker]  /'
+        # ^ x-x.x = Postgres Version-PostGIS Version
+
+    until [ \
+        "$(docker inspect -f "{{.State.Health.Status}}" ${CONTAINER_NAME})" == \
+        "healthy" \
+    ]; do
+        >&2 echo "Postgers is still unavailable - sleeping"
+        sleep 1
+    done
+
+    >&2 echo "Postgres is up and running on port ${DB_PORT}"
+else
+    >&2 echo "Skipping Docker setup (SKIP_DOCKER is set)"
+    >&2 echo "Assuming Postgres is already running on port ${DB_PORT}"
 fi
-echo >&2 "Starting '${CONTAINER_NAME}' docker container..."
-docker run \
-    --restart unless-stopped \
-    --env POSTGRES_USER=${SUPERUSER} \
-    --env POSTGRES_PASSWORD=${SUPERUSER_PWD} \
-    --health-cmd="pg_isready -U ${SUPERUSER} || exit 1" \
-    --health-interval=1s \
-    --health-timeout=5s \
-    --health-retries=5 \
-    --publish "${DB_PORT}":5432 \
-    --detach \
-    --name "${CONTAINER_NAME}" \
-    postgis/postgis:18-3.6 -N 500 | sed 's/^/  [docker]  /' 
-    # ^ x-x.x = Postgres Version-PostGIS Version
-
-until [ \
-    "$(docker inspect -f "{{.State.Health.Status}}" ${CONTAINER_NAME})" == \
-    "healthy" \
-]; do
-    >&2 echo "Postgers is still unavailable - sleeping"
-    sleep 1
-done
-
->&2 echo "Postgres is up and running on port ${DB_PORT}"
 
 MAINTENANCE_URL=postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/postgres
 DATABASE_URL=postgres://${APP_USER}:${APP_USER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME}
