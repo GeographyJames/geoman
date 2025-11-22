@@ -2,7 +2,7 @@ use domain::{Project, ProjectId, project::Properties};
 
 use crate::{
     handlers::ogc_api::features::Query,
-    postgres::{
+    repo::{
         RepositoryError,
         traits::{SelectAllWithParams, SelectOne},
     },
@@ -13,6 +13,11 @@ pub struct SelectAllParams {
     pub limit: Option<usize>,
 }
 
+pub struct ProjectRow {
+    id: i32,
+    name: String,
+}
+
 #[allow(clippy::from_over_into)]
 impl Into<Project> for ProjectRow {
     fn into(self) -> Project {
@@ -20,11 +25,6 @@ impl Into<Project> for ProjectRow {
         let properties = Properties { name };
         Project { id, properties }
     }
-}
-
-pub struct ProjectRow {
-    id: i32,
-    name: String,
 }
 
 impl From<Query> for SelectAllParams {

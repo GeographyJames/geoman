@@ -1,6 +1,6 @@
 use ogcapi_types::common::Crs;
 
-use crate::postgres::{RepositoryError, traits::SelectAll};
+use crate::repo::{RepositoryError, traits::SelectAll};
 
 impl SelectAll for Crs {
     async fn select_all<'e, E>(executor: E) -> Result<Vec<Self>, RepositoryError>

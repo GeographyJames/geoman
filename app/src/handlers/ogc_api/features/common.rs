@@ -1,9 +1,10 @@
 use crate::{
     handlers::ApiError,
     postgres::{
-        PostgresRepo, RepositoryError, StreamItem,
+        PostgresRepo,
         project_features::{SelectAllParams, SelectOneParams},
     },
+    repo::{RepositoryError, StreamItem},
     types::ValidCrs,
 };
 use actix_web::{

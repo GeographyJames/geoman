@@ -1,10 +1,11 @@
 use std::sync::{Arc, Mutex};
 
-use crate::postgres::{RepositoryError, StreamItem};
 use actix_web::web::Bytes;
 use anyhow::Context;
 use domain::IntoOGCFeature;
 use futures::{Stream, StreamExt, stream};
+
+use crate::repo::{RepositoryError, StreamItem};
 
 fn ogc_feature_byte_stream<T, F>(
     stream: T,

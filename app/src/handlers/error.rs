@@ -4,7 +4,7 @@ use ogcapi_types::common::Crs;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::{helpers::error_chain_fmt, postgres::RepositoryError};
+use crate::{helpers::error_chain_fmt, repo::RepositoryError};
 
 #[derive(Error)]
 pub enum ApiError {

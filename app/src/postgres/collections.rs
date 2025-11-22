@@ -1,7 +1,7 @@
 use domain::{Collection, ProjectCollectionId, ProjectId, enums::CollectionId};
 use ogcapi_types::common::{Bbox, Crs, SpatialExtent};
 
-use crate::postgres::{
+use crate::repo::{
     RepositoryError,
     traits::{SelectAll, SelectAllWithParams, SelectOne, SelectOneWithParams},
 };

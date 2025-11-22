@@ -1,7 +1,7 @@
 use futures::Stream;
 use sqlx::PgExecutor;
 
-use crate::postgres::{RepositoryError, pool_wrapper::PoolWrapper};
+use crate::repo::{PoolWrapper, RepositoryError};
 
 pub trait SelectAll {
     #[allow(async_fn_in_trait)]
