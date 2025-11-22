@@ -4,6 +4,7 @@ use crate::{
     handlers::ogc_api::features::Query,
     repo::{
         RepositoryError,
+        metadata::NumberMatched,
         project::SelectAllParams,
         traits::{SelectAllWithParams, SelectOne},
     },
@@ -12,12 +13,13 @@ use crate::{
 pub struct ProjectRow {
     id: i32,
     name: String,
+    number_matched: i64,
 }
 
 #[allow(clippy::from_over_into)]
 impl Into<Project> for ProjectRow {
     fn into(self) -> Project {
-        let ProjectRow { id, name } = self;
+        let ProjectRow { id, name, .. } = self;
         let properties = Properties { name };
         Project { id, properties }
     }
@@ -32,23 +34,28 @@ impl From<Query> for SelectAllParams {
 
 impl SelectAllWithParams for Project {
     type Params<'a> = SelectAllParams;
+    type MetaData<'a> = NumberMatched;
     async fn select_all_with_params<'a, 'e, E>(
         executor: E,
         params: Self::Params<'a>,
-    ) -> Result<Vec<Self>, RepositoryError>
+    ) -> Result<(Vec<Self>, Self::MetaData<'a>), RepositoryError>
     where
         E: sqlx::PgExecutor<'e>,
     {
-        Ok(sqlx::query_as!(
-            ProjectRow,
-            "SELECT id, name FROM app.projects ORDER BY id LIMIT $1",
-            params.limit.map(|l| l as i64)
-        )
-        .fetch_all(executor)
-        .await?
-        .into_iter()
-        .map(|row| row.into())
-        .collect())
+        let rows = 
+            sqlx::query_as!(
+                ProjectRow,
+                r#"SELECT id, name, COUNT(*) OVER() as "number_matched!" FROM app.projects ORDER BY id LIMIT $1"#,
+                params.limit.map(|l| l as i64)
+            )
+            .fetch_all(executor)
+            .await?;
+        let number_matched = rows.iter().next().map(|item | item.number_matched).unwrap_or(0);
+
+        let items =   rows .into_iter()
+            .map(|row| row.into())
+            .collect::<Vec<Project>>();
+           Ok((items, NumberMatched(number_matched)))
     }
 }
 
@@ -63,7 +70,7 @@ impl SelectOne for Project {
     {
         let project_row = sqlx::query_as!(
             ProjectRow,
-            "SELECT id, name FROM app.projects WHERE id = $1",
+            r#"SELECT id, name, 1 as "number_matched!" FROM app.projects WHERE id = $1"#,
             id.0
         )
         .fetch_optional(executor)

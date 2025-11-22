@@ -51,7 +51,7 @@ impl PostgresRepo {
     pub async fn select_all_with_params<'a, T>(
         &self,
         params: T::Params<'a>,
-    ) -> Result<Vec<T>, RepositoryError>
+    ) -> Result<(Vec<T>, T::MetaData<'a>), RepositoryError>
     where
         T: SelectAllWithParams,
     {

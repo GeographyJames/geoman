@@ -212,15 +212,17 @@ impl SelectOneWithParams for Collection {
 
 impl SelectAllWithParams for Collection {
     type Params<'a> = &'a SelectAllParams;
+    type MetaData<'a> = ();
     async fn select_all_with_params<'a, 'e, E>(
         executor: E,
         params: Self::Params<'a>,
-    ) -> Result<Vec<Self>, RepositoryError>
+    ) -> Result<(Vec<Self>, ()), RepositoryError>
     where
         E: sqlx::PgExecutor<'e>,
     {
         let extent_crs = Crs::default();
-        sqlx::query_as!(
+
+        let rows = sqlx::query_as!(
             CollectionRow,
             r#"
             SELECT id,
@@ -264,9 +266,12 @@ impl SelectAllWithParams for Collection {
             extent_crs.as_srid() as i32
         )
         .fetch_all(executor)
-        .await?
-        .into_iter()
-        .map(|row| row.try_into_collection(extent_crs.clone()))
-        .collect()
+        .await?;
+
+        let items = rows
+            .into_iter()
+            .map(|row| row.try_into_collection(extent_crs.clone()))
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok((items, ()))
     }
 }

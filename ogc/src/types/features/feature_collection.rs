@@ -17,6 +17,8 @@ pub struct FeatureCollection {
     pub features: Vec<Feature>,
     pub links: [Link; 1],
     pub time_stamp: String,
+    pub number_matched: i64,
+    pub number_returned: usize,
 }
 
 impl FeatureCollection {
@@ -29,10 +31,12 @@ impl FeatureCollection {
         Self {
             id: collection_id,
             r#type: Type::default(),
+            number_returned: features.len(),
             features,
             links: Self::links(collection_url),
             //todo set timestamp from database
             time_stamp: chrono::Utc::now().to_rfc3339(),
+            number_matched,
         }
     }
     fn links(collection_url: &str) -> [Link; 1] {

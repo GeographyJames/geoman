@@ -42,11 +42,12 @@ pub trait SelectAllWithParamsStreaming {
 
 pub trait SelectAllWithParams {
     type Params<'a>;
+    type MetaData<'a>;
 
     async fn select_all_with_params<'a, 'e, E>(
         executor: E,
         params: Self::Params<'a>,
-    ) -> Result<Vec<Self>, RepositoryError>
+    ) -> Result<(Vec<Self>, Self::MetaData<'a>), RepositoryError>
     where
         Self: Sized,
         E: PgExecutor<'e>;

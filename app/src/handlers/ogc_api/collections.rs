@@ -85,10 +85,9 @@ pub async fn get_project_collections(
         base_url, URLS.ogc_api.base, URLS.ogc_api.project, project_id
     );
     let supported_crs = repo.select_all::<Crs>().await?;
-    let collections: Collections = repo
-        .select_all_with_params::<Collection>(&params)
-        .await?
-        .into();
+    let (collection_vec, _) = repo.select_all_with_params::<Collection>(&params).await?;
+    let collections: Collections = collection_vec.into();
+
     let ogc_collections = collections.into_ogc_collections(&collections_url, supported_crs);
 
     Ok(web::Json(ogc_collections))

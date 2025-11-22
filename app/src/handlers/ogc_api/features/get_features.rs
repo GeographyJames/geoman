@@ -67,7 +67,7 @@ pub async fn get_features(
     let mut response = match *collection_id {
         CollectionId::Projects => {
             let params = project::SelectAllParams { limit };
-            let projects = repo.select_all_with_params::<Project>(params).await?;
+            let (projects, number_matched) = repo.select_all_with_params::<Project>(params).await?;
             let features: Vec<Feature> = projects
                 .into_iter()
                 .map(|p| p.into_ogc_feature(collection_url.clone()))
@@ -76,7 +76,7 @@ pub async fn get_features(
                 &collection_url,
                 collection_id.to_string(),
                 features,
-                todo!(),
+                number_matched.0,
             );
             HttpResponse::Ok().json(collection)
         }
