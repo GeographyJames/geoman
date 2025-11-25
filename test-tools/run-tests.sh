@@ -1,13 +1,15 @@
 #!/bin/bash
 # Run OGC API Features test suite and show quick summary
-# Usage: ./run-tests.sh [-q|--quiet] [-o|--open]
+# Usage: ./run-tests.sh [-q|--quiet] [-o|--open] [-c|--config <config-file>] [-n|--name <test-name>]
 
 QUIET=false
 OPEN_BROWSER=false
+CONFIG_FILE="test-tools/test-run-props.xml"
+TEST_NAME="root"
 
 # Parse arguments
-for arg in "$@"; do
-    case $arg in
+while [[ $# -gt 0 ]]; do
+    case $1 in
         -q|--quiet)
             QUIET=true
             shift
@@ -16,16 +18,29 @@ for arg in "$@"; do
             OPEN_BROWSER=true
             shift
             ;;
+        -c|--config)
+            CONFIG_FILE="$2"
+            shift 2
+            ;;
+        -n|--name)
+            TEST_NAME="$2"
+            shift 2
+            ;;
         *)
+            shift
             ;;
     esac
 done
 
-echo "🧪 Running OGC API Features tests..."
+OUTPUT_DIR="test-tools/testng-${TEST_NAME}"
+
+echo "🧪 Running OGC API Features tests: $TEST_NAME"
+echo "📋 Config: $CONFIG_FILE"
+echo "📁 Output: $OUTPUT_DIR"
 echo ""
 
 # Remove previous test output
-rm -rf test-tools/testng
+rm -rf "$OUTPUT_DIR"
 
 # Run the test suite
 SEVERE_DETECTED=false
@@ -43,8 +58,8 @@ if [ "$QUIET" = true ]; then
         fi
     done < <(java -jar test-tools/ets-ogcapi-features10-1.10-SNAPSHOT-aio.jar \
       -h true \
-      -o test-tools/ \
-      test-tools/test-run-props.xml 2>&1)
+      -o "$OUTPUT_DIR" \
+      "$CONFIG_FILE" 2>&1)
 else
     while IFS= read -r line; do
         echo "$line"
@@ -56,8 +71,8 @@ else
         fi
     done < <(java -jar test-tools/ets-ogcapi-features10-1.10-SNAPSHOT-aio.jar \
       -h true \
-      -o test-tools/ \
-      test-tools/test-run-props.xml 2>&1)
+      -o "$OUTPUT_DIR" \
+      "$CONFIG_FILE" 2>&1)
 fi
 
 # Exit early if SEVERE error was detected
@@ -69,11 +84,11 @@ echo ""
 echo "Testing completed."
 echo ""
 # Find the results file
-RESULTS=$(find test-tools/testng -name "testng-results.xml" 2>/dev/null | head -1)
+RESULTS=$(find "$OUTPUT_DIR" -name "testng-results.xml" 2>/dev/null | head -1)
 
 if [ -f "$RESULTS" ]; then
     echo ""
-    echo "📊 Test Results Summary"
+    echo "📊 Test Results Summary ($TEST_NAME)"
     echo "======================="
 
     # Parse the XML for summary stats
@@ -103,7 +118,7 @@ if [ -f "$RESULTS" ]; then
     fi
 
     # Show report location
-    HTML_REPORT=$(find test-tools/testng -name "index.html" 2>/dev/null | head -1)
+    HTML_REPORT=$(find "$OUTPUT_DIR" -name "index.html" 2>/dev/null | head -1)
     echo "📄 Full report: $HTML_REPORT"
 
     # Open in browser if requested

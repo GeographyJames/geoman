@@ -93,17 +93,28 @@ jobs:
           echo "Server failed to start within timeout"
           exit 1
 
-      - name: Run OGC test suite
+      - name: Run OGC test suite for root endpoint
         run: |
           chmod +x test-tools/run-tests.sh
-          ./test-tools/run-tests.sh -q
+          ./test-tools/run-tests.sh -q -c test-tools/test-run-props.xml -n root
 
-      - name: Upload OGC test results
+      - name: Run OGC test suite for project endpoint
+        run: |
+          ./test-tools/run-tests.sh -q -c test-tools/test-run-props-project.xml -n project
+
+      - name: Upload root endpoint test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: "OGC-Test-Results"
-          path: test-tools/testng/
+          name: "OGC-Test-Results-Root"
+          path: test-tools/testng-root/
+
+      - name: Upload project endpoint test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: "OGC-Test-Results-Project"
+          path: test-tools/testng-project/
 
       - name: Stop application server
         if: always()
