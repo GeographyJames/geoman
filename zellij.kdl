@@ -11,7 +11,7 @@ layout {
                 }
             }
             pane command="cargo" {
-                    args "run"
+                    args "run | bunyan"
                 }
 
             

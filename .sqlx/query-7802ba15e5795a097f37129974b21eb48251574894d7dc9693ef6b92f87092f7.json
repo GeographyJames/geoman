@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id,\n                   title,\n                   description,\n                   (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(fo.geom)) = 1\n                           THEN MIN(ST_SRID(fo.geom))::int\n                           ELSE NULL\n                       END\n                      FROM app.project_features f\n                      JOIN app.feature_objects fo ON fo.project_feature_id = f.id\n                     WHERE f.collection_id = c.id\n                     AND f.project_id = $1\n                      ) as storage_crs_srid,\n                        (SELECT CASE\n                                    WHEN bbox IS NOT NULL THEN\n                 ARRAY[\n                     ST_XMin(bbox),\n                     ST_YMin(bbox),\n                     ST_XMax(bbox),\n                     ST_YMax(bbox)\n                 ]\n             ELSE NULL\n         END\n         FROM (\n             SELECT ST_Extent(ST_Transform(fo.geom, $3))::geometry as bbox\n             FROM app.project_features f\n             JOIN app.feature_objects fo ON fo.project_feature_id = f.id\n             WHERE f.collection_id = c.id\n             AND f.project_id = $1\n         ) extent_sub) as extent\n\n\n              FROM app.collections c\n  WHERE EXISTS (\n      SELECT 1\n      FROM app.project_features f\n      WHERE f.collection_id = c.id\n      AND f.project_id =  $1\n  )\n  AND c.id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "storage_crs_srid",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "extent",
+        "type_info": "Float8Array"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "7802ba15e5795a097f37129974b21eb48251574894d7dc9693ef6b92f87092f7"
+}

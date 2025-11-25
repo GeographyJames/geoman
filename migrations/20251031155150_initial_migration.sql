@@ -1,4 +1,5 @@
 CREATE SCHEMA app;
+CREATE SCHEMA gis_data;
 CREATE TYPE app.status AS ENUM ('ACTIVE', 'ARCHIVED', 'DELETED');
 CREATE TYPE app.visibility AS ENUM ('PRIVATE', 'TEAM', 'PUBLIC');
 CREATE TYPE geometry_type AS ENUM (
@@ -33,11 +34,3 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
-CREATE DOMAIN slug AS TEXT
-    CHECK (
-        VALUE ~ '^[a-z0-9]+(-[a-z0-9]+)*$'
-        AND length(VALUE) BETWEEN 1 AND 100
-    );
-
-COMMENT ON DOMAIN slug IS 'URL-friendly slug: lowercase alphanumeric with hyphens as separators';

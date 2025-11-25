@@ -1,0 +1,113 @@
+# The name of your workflow. GitHub displays the names of your workflows on your repository's "Actions" tab
+name: OGC API Features Compliance
+
+# To automatically trigger the workflow
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  CARGO_TERM_COLOR: always
+
+  GEOMAN_ENVIRONMENT: ci_pipeline
+  CLERK_TEST_USER_ID: ${{secrets.CLERK_TEST_USER_ID}}
+  GEOMAN_TEST_ENVIRONMENT: production
+  GEOMAN_AUTH_SETTINGS__CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+
+  GEOMAN_DB_SETTINGS__HOST: localhost
+  GEOMAN_DB_SETTINGS__PORT: 5432
+  GEOMAN_DB_SETTINGS__USERNAME: app_ci
+  GEOMAN_DB_SETTINGS__PASSWORD: secret
+  GEOMAN_DB_SETTINGS__DATABASE_NAME: geoman_ci
+  GEOMAN_DB_SETTINGS__REQUIRE_SSL: false
+
+# A workflow run is made up of one or more jobs, which run in parallel by default
+# Each job runs in a runner environment specified by runs-on
+jobs:
+  test:
+    name: OGC Features API Test Suite
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:18-3.6
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: postgres
+
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Check out repository code
+
+        uses: actions/checkout@v4
+
+      - name: Install the Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Install sqlx-cli
+        run: cargo install sqlx-cli --no-default-features --features postgres
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup database
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client postgis
+          chmod +x scripts/init_db.sh
+          ./scripts/init_db.sh
+        env:
+          SKIP_DOCKER: "true"
+          POSTGRES_PORT: ${{ env.GEOMAN_DB_SETTINGS__PORT }}
+          SUPERUSER: "postgres"
+          SUPERUSER_PWD: "password"
+          APP_USER: ${{ env.GEOMAN_DB_SETTINGS__USERNAME }}
+          APP_USER_PWD: ${{ env.GEOMAN_DB_SETTINGS__PASSWORD }}
+          APP_DB_NAME: ${{ env.GEOMAN_DB_SETTINGS__DATABASE_NAME }}
+
+      - name: Build application
+        run: cargo build
+
+      - name: Start application server
+        run: |
+          cargo run &
+          echo $! > server.pid
+
+      - name: Wait for server to be ready
+        run: |
+          echo "Waiting for server to start..."
+          for i in {1..30}; do
+            if curl -f http://localhost:8000/ogcapi > /dev/null 2>&1; then
+              echo "Server is ready!"
+              exit 0
+            fi
+            echo "Attempt $i: Server not ready yet, waiting..."
+            sleep 2
+          done
+          echo "Server failed to start within timeout"
+          exit 1
+
+      - name: Run OGC test suite
+        run: |
+          chmod +x test-tools/run-tests.sh
+          ./test-tools/run-tests.sh -q
+
+      - name: Upload OGC test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: "OGC-Test-Results"
+          path: test-tools/testng/
+
+      - name: Stop application server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+          fi

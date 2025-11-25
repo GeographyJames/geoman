@@ -6,9 +6,10 @@ api:
 
 docs:
   base: "/docs"
-  api: "/openapi.json"
 
 ogc_api:
   base: "/ogcapi"
   conformance_declaration: "/conformance"
   collections: "/collections"
+  project: "/project"
+  openapi: "/openapi.json"
