@@ -53,7 +53,7 @@ impl TryFrom<ogc::Feature> for Project {
         let centroid_in_storage_crs = if let Some(mut fm) = foreign_members {
             let g = fm.remove("centroid_in_storage_crs");
             let geo: Result<Option<geojson::Geometry>, _> =
-                g.map(|g| serde_json::from_value(g)).transpose();
+                g.map(serde_json::from_value).transpose();
             geo?
         } else {
             None
