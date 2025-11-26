@@ -13,6 +13,7 @@ use ogcapi_types::common::{
 
 #[utoipa::path(
     path = "/",
+    tag = "OGC API",
     responses(
         (
             status = 200,

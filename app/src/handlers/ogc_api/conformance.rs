@@ -22,6 +22,7 @@ static CONFORMANCE_DECLARATION: LazyLock<Conformance> = LazyLock::new(|| {
 /// the server conforms to.
 #[utoipa::path(
     path = "/conformance",
+    tag = "OGC API",
     responses(
         (
             status = 200,

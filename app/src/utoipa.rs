@@ -10,6 +10,11 @@ use utoipa::OpenApi;
 
 #[derive(OpenApi)]
 #[openapi(
+    info(
+        title = "GeoMan API",
+        description = "Standards-compliant OGC API Features with PostGIS integration",
+        version = "1.0.0",
+    ),
     paths(
         get_landing_page,
         get_conformance_declaration,

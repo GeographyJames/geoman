@@ -15,6 +15,7 @@ use crate::{
 /// The feature collections in the dataset.
 #[utoipa::path(
     path = "/collections",
+    tag = "OGC API",
     responses(
         (
             status = 200,
@@ -104,6 +105,7 @@ pub async fn get_project_collections(
 #[utoipa::path(
     get,
     path = "/collections/{collectionId}",
+    tag = "OGC API",
     params(
         ("collectionId" = String, Path, description = "local identifier of a collection")
     ),

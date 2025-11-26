@@ -21,6 +21,7 @@ use ogcapi_types::common::media_type::GEO_JSON;
 
 #[utoipa::path(
     path = "/collections/{collectionId}/items",
+    tag = "OGC API",
     params(
         ("collectionId" = String, Path, description = "Identifier of a collection"),
         Query

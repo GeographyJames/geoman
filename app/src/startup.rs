@@ -2,9 +2,9 @@ use crate::{
     AppState, URLS,
     config::AppConfig,
     postgres::PostgresRepo,
-    routes::{api_routes, docs_routes, ogc_routes},
+    routes::{api_routes, ogc_routes},
 };
-use actix_web::{App, HttpResponse, HttpServer, dev::Server, middleware, web};
+use actix_web::{App, HttpResponse, HttpServer, dev::Server, web};
 use anyhow::Context;
 use clerk_rs::{ClerkConfiguration, clerk::Clerk};
 use secrecy::ExposeSecret;
@@ -62,14 +62,18 @@ pub async fn run(
         App::new()
             .app_data(app_state.clone())
             .app_data(repo.clone())
-            .wrap(middleware::NormalizePath::trim())
             .wrap(TracingLogger::default())
             .route(&URLS.health_check, web::get().to(HttpResponse::Ok))
             .configure(|cfg| api_routes(cfg, clerk.clone()))
             .configure(ogc_routes)
-            .configure(|cfg| {
-                docs_routes(cfg, clerk.clone(), config.app_settings.environment.clone())
-            })
+            // .configure(|cfg| {
+            //     docs_routes(cfg, clerk.clone(), config.app_settings.environment.clone())
+            // })
+            .service(
+                actix_files::Files::new("/book", "geoman-book/book")
+                    .index_file("index.html")
+                    .redirect_to_slash_directory(), // Relative paths in book (such as CSS files) are only resolved it we have a trailing slash when we navigate to /book/ so we need this redirect.
+            )
             .service(
                 actix_web_lab::web::spa()
                     .index_file("./react-frontend/dist/index.html")

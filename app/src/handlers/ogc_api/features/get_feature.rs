@@ -21,6 +21,7 @@ use domain::{Feature, FeatureId, GisDataTable, IntoOGCFeature, ProjectId, enums:
 
 #[utoipa::path(
     path = "/collections/{collectionId}/items/{featureId}",
+    tag = "OGC API",
     params(
         ("collectionId" = String, Path, description = "Identifier of a collection"),
         ("featureId" = i32, Path, description = "Identifier of a feature"),

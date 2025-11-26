@@ -106,11 +106,18 @@ export default function LandingPage() {
               </p>
             </a>
             <a
-              href="/ogcapi/openapi.json"
+              href="/docs"
               className="block p-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg hover:from-pink-600 hover:to-purple-700 transition"
             >
-              <h4 className="font-bold mb-1">OpenAPI Spec</h4>
-              <p className="text-sm text-purple-100">View API documentation</p>
+              <h4 className="font-bold mb-1">API Documentation</h4>
+              <p className="text-sm text-purple-100">Interactive API reference</p>
+            </a>
+            <a
+              href="/book"
+              className="block p-4 bg-gradient-to-r from-indigo-500 to-blue-600 text-white rounded-lg hover:from-indigo-600 hover:to-blue-700 transition"
+            >
+              <h4 className="font-bold mb-1">Documentation</h4>
+              <p className="text-sm text-purple-100">User guide and tutorials</p>
             </a>
           </div>
         </div>
