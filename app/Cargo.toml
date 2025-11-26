@@ -33,6 +33,7 @@ geojson = { workspace = true }
 ogcapi-types = { workspace = true }
 chrono = { workspace = true }
 serde_with = "3.16"
+actix-web-lab = { version = "0.24", features = ["spa"] }
 
 [dev-dependencies]
 rand = "0.9"

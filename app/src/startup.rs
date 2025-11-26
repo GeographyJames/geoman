@@ -7,7 +7,6 @@ use crate::{
 use actix_web::{App, HttpResponse, HttpServer, dev::Server, middleware, web};
 use anyhow::Context;
 use clerk_rs::{ClerkConfiguration, clerk::Clerk};
-
 use secrecy::ExposeSecret;
 use sqlx::PgPool;
 use std::net::TcpListener;
@@ -71,6 +70,13 @@ pub async fn run(
             .configure(|cfg| {
                 docs_routes(cfg, clerk.clone(), config.app_settings.environment.clone())
             })
+            .service(
+                actix_web_lab::web::spa()
+                    .index_file("./react-frontend/dist/index.html")
+                    .static_resources_location("./react-frontend/dist")
+                    .static_resources_mount("/")
+                    .finish(),
+            )
     })
     .listen(listener)
     .context("failed to bind to listener")?
