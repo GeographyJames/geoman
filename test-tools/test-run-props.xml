@@ -4,5 +4,5 @@
   <comment>Test run arguments</comment>
   <entry key="iut">http://localhost:8000/ogcapi</entry>
   <!-- Set number of collections to test: Set -1 for all -->
-  <entry key="noofcollections">1</entry>
+  <entry key="noofcollections">-1</entry>
 </properties>

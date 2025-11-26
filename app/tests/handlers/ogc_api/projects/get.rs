@@ -38,10 +38,13 @@ async fn get_project_works() {
         )
         .await;
     assert_ok(&response);
+
     let ogc_feature: ogc::Feature = handle_json_response(response)
         .await
         .expect("failed to retrieve project");
-    let _project = Project::try_from(ogc_feature).expect("Failed to convert to project");
+    assert!(ogc_feature.foreign_members.is_none());
+    let project = Project::try_from(ogc_feature).expect("Failed to convert to project");
+    assert!(project.centroid_in_storage_crs.is_none())
 }
 
 #[actix_web::test]
@@ -85,5 +88,6 @@ async fn get_project_has_centroid() {
         .await;
     let ogc_feature: ogc::Feature = handle_json_response(response).await.unwrap();
     let project = Project::try_from(ogc_feature).expect("failed to convert to projcet");
-    assert!(project.geom.is_some());
+    assert!(project.centroid.is_some());
+    assert!(project.centroid_in_storage_crs.is_some())
 }

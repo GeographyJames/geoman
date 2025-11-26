@@ -29,14 +29,12 @@ impl Into<Project> for ProjectRow {
             number_matched: _,
             centroid_in_storage_crs,
         } = self;
-        let properties = Properties {
-            name,
-            centroid_in_storage_crs: centroid_in_storage_crs.map(|g| g.0),
-        };
+        let properties = Properties { name };
         Project {
             id,
             properties,
-            geom: geom.map(|g| g.0),
+            centroid: geom.map(|g| g.0),
+            centroid_in_storage_crs: centroid_in_storage_crs.map(|g| g.0),
         }
     }
 }

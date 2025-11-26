@@ -4,5 +4,5 @@
   <comment>Test run arguments for project endpoint</comment>
   <entry key="iut">http://localhost:8000/ogcapi/project/1</entry>
   <!-- Set number of collections to test: Set -1 for all -->
-  <entry key="noofcollections">1</entry>
+  <entry key="noofcollections">-1</entry>
 </properties>

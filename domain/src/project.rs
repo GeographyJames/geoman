@@ -5,7 +5,6 @@ use serde_json::{Map, Value, from_value, json};
 #[derive(Serialize, Deserialize)]
 pub struct Properties {
     pub name: String,
-    pub centroid_in_storage_crs: Option<geojson::Geometry>,
 }
 
 pub struct ProjectName(pub String);
@@ -14,7 +13,8 @@ pub struct ProjectName(pub String);
 pub struct Project {
     pub id: i32,
     pub properties: Properties,
-    pub geom: Option<geojson::Geometry>,
+    pub centroid: Option<geojson::Geometry>,
+    pub centroid_in_storage_crs: Option<geojson::Geometry>,
 }
 
 impl IntoOGCFeature for Project {
@@ -22,10 +22,18 @@ impl IntoOGCFeature for Project {
         let Project {
             id,
             properties,
-            geom,
+            centroid,
+            centroid_in_storage_crs,
         } = self;
         let properties: Map<String, Value> = from_value(json!(properties)).unwrap();
-        ogc::Feature::new(id, properties, geom, collection_url)
+
+        let mut ft = ogc::Feature::new(id, properties, centroid, collection_url);
+        if let Some(centroid) = centroid_in_storage_crs {
+            let mut foreign_members = Map::new();
+            foreign_members.insert("centroid_in_storage_crs".to_string(), json!(centroid));
+            ft.foreign_members = Some(foreign_members);
+        };
+        ft
     }
 }
 
@@ -37,14 +45,25 @@ impl TryFrom<ogc::Feature> for Project {
             id,
             properties,
             geometry,
+            foreign_members,
             ..
         } = ogc_feature;
         let properties = serde_json::from_value(Value::Object(properties))?;
 
+        let centroid_in_storage_crs = if let Some(mut fm) = foreign_members {
+            let g = fm.remove("centroid_in_storage_crs");
+            let geo: Result<Option<geojson::Geometry>, _> =
+                g.map(|g| serde_json::from_value(g)).transpose();
+            geo?
+        } else {
+            None
+        };
+
         Ok(Project {
             id,
             properties,
-            geom: geometry,
+            centroid: geometry,
+            centroid_in_storage_crs,
         })
     }
 }
