@@ -1,7 +1,7 @@
 use actix_web::{HttpRequest, get, web};
 use domain::{
-    Collections, GisDataTable, IntoOGCCollection, Project, ProjectCollection, ProjectCollectionId,
-    ProjectId, SupportedCrs, enums::CollectionId,
+    Collections, GisDataTable, IntoOGCCollection, ProjectCollection, ProjectCollectionId,
+    ProjectId, SupportedCrs, enums::CollectionId, project::ProjectName,
 };
 
 use crate::{
@@ -75,7 +75,7 @@ pub async fn get_project_collections(
     project_id: web::Path<ProjectId>,
 ) -> Result<web::Json<ogcapi_types::common::Collections>, ApiError> {
     let _project_row = repo
-        .select_one::<Project>(*project_id)
+        .select_one::<ProjectName>(*project_id)
         .await?
         .ok_or(ApiError::ProjectNotFound(*project_id))?;
     let params = SelectAllParams {
@@ -169,7 +169,7 @@ pub async fn get_project_collection(
 ) -> Result<web::Json<ogcapi_types::common::Collection>, ApiError> {
     let (project_id, collection_id) = path.into_inner();
     let _project_row = repo
-        .select_one::<Project>(project_id)
+        .select_one::<ProjectName>(project_id)
         .await?
         .ok_or_else(|| ApiError::ProjectNotFound(project_id))?;
     let base_url = get_base_url(&req);

@@ -1,7 +1,15 @@
 pub mod project {
-    #[derive(Default)]
-    pub struct SelectAllParams {
+    use ogcapi_types::common::Crs;
+
+    pub struct SelectOneParams<'a> {
+        pub crs: &'a Crs,
+    }
+
+    pub struct SelectAllParams<'a> {
         pub limit: Option<usize>,
+        pub crs: &'a Crs,
+        pub bbox: Option<ogcapi_types::common::Bbox>,
+        pub bbox_crs: Option<&'a Crs>,
     }
 }
 

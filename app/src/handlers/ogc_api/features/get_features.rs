@@ -59,7 +59,12 @@ pub async fn get_features(
     response_builder.content_type(GEO_JSON);
     let mut response = match collection_id {
         CollectionId::Projects => {
-            let params = project::SelectAllParams { limit };
+            let params = project::SelectAllParams {
+                limit,
+                crs: &crs,
+                bbox,
+                bbox_crs: bbox_crs.as_ref(),
+            };
             let (projects, number_matched) = repo.select_all_with_params::<Project>(params).await?;
             let features: Vec<ogc::Feature> = projects
                 .into_iter()

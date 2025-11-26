@@ -1,7 +1,7 @@
 use crate::{
     handlers::ApiError,
     postgres::PostgresRepo,
-    repo::{self},
+    repo::{self, project},
 };
 use actix_web::{
     HttpResponse,
@@ -23,7 +23,8 @@ pub async fn retrieve_feature_from_database<'a>(
     let feature = match collection {
         CollectionId::Projects => {
             let project_id = ProjectId(feature_id);
-            repo.select_one::<Project>(project_id)
+            let params = project::SelectOneParams { crs: params.crs };
+            repo.select_one_with_params::<Project>(project_id, &params)
                 .await?
                 .ok_or_else(|| ApiError::ProjectNotFound(project_id))?
                 .into_ogc_feature(collection_url)

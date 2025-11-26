@@ -16,7 +16,7 @@ use actix_web::{
     web::{self},
 };
 
-use domain::{Project, ProjectId, enums::CollectionId};
+use domain::{ProjectId, enums::CollectionId, project::ProjectName};
 
 #[get("/{collectionId}/items/{featureId}")]
 #[tracing::instrument(skip(repo, req, path, query))]
@@ -28,7 +28,7 @@ pub async fn get_project_feature(
 ) -> Result<HttpResponse, ApiError> {
     let (project_id, collection_id, feature_id) = path.into_inner();
     let _project_row = repo
-        .select_one::<Project>(project_id)
+        .select_one::<ProjectName>(project_id)
         .await?
         .ok_or_else(|| ApiError::ProjectNotFound(project_id))?;
 
@@ -43,6 +43,7 @@ pub async fn get_project_feature(
         project_id,
         crs: &crs,
     };
+
     let feature =
         retrieve_feature_from_database(&repo, collection_id, feature_id, collection_url, &params)
             .await?;

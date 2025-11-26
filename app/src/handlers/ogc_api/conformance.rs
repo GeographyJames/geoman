@@ -1,5 +1,5 @@
 use actix_web::{get, web};
-use domain::{Project, ProjectId};
+use domain::{ProjectId, project::ProjectName};
 use ogcapi_types::common::Conformance;
 use std::sync::LazyLock;
 
@@ -47,7 +47,7 @@ pub async fn get_project_conformance_declaration(
     project_id: web::Path<ProjectId>,
 ) -> Result<web::Json<&'static Conformance>, ApiError> {
     let _project_row = repo
-        .select_one::<Project>(*project_id)
+        .select_one::<ProjectName>(*project_id)
         .await?
         .ok_or(ApiError::ProjectNotFound(*project_id))?;
     Ok(web::Json(&CONFORMANCE_DECLARATION))

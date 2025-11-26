@@ -68,3 +68,22 @@ async fn get_projects_works_with_limit() {
         .expect("Failed to retrieve projects");
     assert_eq!(feature_collection.features.len(), limit)
 }
+
+#[actix_web::test]
+async fn get_project_has_centroid() {
+    let app = TestApp::spawn_with_db().await;
+    let (_, user_id, project_id) = app.generate_ids().await;
+    app.create_boundaries_collection(user_id).await;
+    let _boundary_id = app.generate_primary_boundary_id(project_id, user_id).await;
+    let response = app
+        .ogc_service
+        .get_feature(
+            &app.api_client,
+            &CollectionId::Projects.to_string(),
+            project_id.0,
+        )
+        .await;
+    let ogc_feature: ogc::Feature = handle_json_response(response).await.unwrap();
+    let project = Project::try_from(ogc_feature).expect("failed to convert to projcet");
+    assert!(project.geom.is_some());
+}

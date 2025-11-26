@@ -3,7 +3,7 @@ use crate::{
     postgres::PostgresRepo,
 };
 use actix_web::{HttpRequest, get, web};
-use domain::{Project, ProjectId};
+use domain::{ProjectId, project::ProjectName};
 
 use ogcapi_types::common::{
     LandingPage, Link, Linked,
@@ -44,7 +44,7 @@ pub async fn get_project_landing_page(
     req: HttpRequest,
 ) -> Result<web::Json<LandingPage>, ApiError> {
     let _project = repo
-        .select_one::<Project>(*project_id)
+        .select_one::<ProjectName>(*project_id)
         .await?
         .ok_or(ApiError::ProjectNotFound(*project_id))?;
     let base_url = get_base_url(&req);

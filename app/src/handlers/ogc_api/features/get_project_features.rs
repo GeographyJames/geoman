@@ -14,7 +14,9 @@ use actix_web::{
     web::{self},
 };
 
-use domain::{Project, ProjectCollection, ProjectCollectionId, ProjectFeature, ProjectId};
+use domain::{
+    ProjectCollection, ProjectCollectionId, ProjectFeature, ProjectId, project::ProjectName,
+};
 
 use ogcapi_types::common::media_type::GEO_JSON;
 
@@ -28,7 +30,7 @@ pub async fn get_project_features(
 ) -> Result<HttpResponse, ApiError> {
     let (project_id, collection_id) = path.into_inner();
     let _project_row = repo
-        .select_one::<Project>(project_id)
+        .select_one::<ProjectName>(project_id)
         .await?
         .ok_or_else(|| ApiError::ProjectNotFound(project_id))?;
 

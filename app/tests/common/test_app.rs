@@ -14,7 +14,7 @@ use app::{
 };
 use domain::{
     ProjectCollectionId, ProjectFeatureId, ProjectId, TableName, TeamId, UserId,
-    enums::GeometryType,
+    enums::{CollectionId, GeometryType},
 };
 use dotenvy::dotenv;
 use secrecy::ExposeSecret;
@@ -368,5 +368,55 @@ impl TestApp {
         .fetch_one(&self.db_pool)
         .await
         .expect("failed to insert feature")
+    }
+    pub async fn create_boundaries_collection(&self, user_id: UserId) {
+        sqlx::query!(
+            "INSERT INTO app.collections (title, geometry_type, added_by, last_updated_by) VALUES ('site boundaries', 'MULTIPOLYGON', $1, $1)",
+            user_id.0
+        ).execute(&self.db_pool).await.expect("failed to insert site boundaries collection");
+    }
+
+    pub async fn generate_primary_boundary_id(
+        &self,
+        project_id: ProjectId,
+        user_id: UserId,
+    ) -> ProjectFeatureId {
+        let mut tx = self.db_pool.begin().await.unwrap();
+        let collection_id = sqlx::query_scalar!(
+            "SELECT id FROM app.collections c WHERE c.title = 'site boundaries'"
+        )
+        .fetch_one(&mut *tx)
+        .await
+        .unwrap();
+        let feature_id = sqlx::query_scalar!(
+            "INSERT INTO app.project_features (
+                    project_id,
+                    collection_id,
+                    name,
+                    added_by,
+                    last_updated_by,
+                    is_primary
+            ) VALUES (
+                     $1, $2, $3, $4, $4, true
+                     )
+            RETURNING id",
+            project_id.0,
+            collection_id,
+            uuid::Uuid::new_v4().to_string(),
+            user_id.0
+        )
+        .fetch_one(&mut *tx)
+        .await
+        .unwrap();
+        let _object_id = sqlx::query_scalar!(
+            "INSERT INTO app.feature_objects (collection_id, project_feature_id, geom) VALUES ($1, $2, ST_GeomFromEwkt('SRID=27700;MULTIPOLYGON (((30 10, 40 40, 20 40, 10 20, 30 10)))')) RETURNING id",
+            collection_id,
+            feature_id
+        ).fetch_one(&mut *tx).await.unwrap();
+        tx.commit().await.unwrap();
+        ProjectFeatureId {
+            collection_id: ProjectCollectionId(collection_id),
+            id: feature_id,
+        }
     }
 }
