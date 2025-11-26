@@ -14,7 +14,7 @@ use app::{
 };
 use domain::{
     ProjectCollectionId, ProjectFeatureId, ProjectId, TableName, TeamId, UserId,
-    enums::{CollectionId, GeometryType},
+    enums::GeometryType,
 };
 use dotenvy::dotenv;
 use secrecy::ExposeSecret;

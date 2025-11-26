@@ -8,8 +8,8 @@ pub mod project {
     pub struct SelectAllParams<'a> {
         pub limit: Option<usize>,
         pub crs: &'a Crs,
-        pub bbox: Option<ogcapi_types::common::Bbox>,
-        pub bbox_crs: Option<&'a Crs>,
+        pub _bbox: Option<ogcapi_types::common::Bbox>,
+        pub _bbox_crs: Option<&'a Crs>,
     }
 }
 

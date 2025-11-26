@@ -17,7 +17,6 @@ use actix_web::{
 };
 
 use domain::{GisDataTable, IntoOGCFeature, Project, enums::CollectionId};
-
 use ogcapi_types::common::media_type::GEO_JSON;
 
 #[utoipa::path(
@@ -62,8 +61,8 @@ pub async fn get_features(
             let params = project::SelectAllParams {
                 limit,
                 crs: &crs,
-                bbox,
-                bbox_crs: bbox_crs.as_ref(),
+                _bbox: bbox,
+                _bbox_crs: bbox_crs.as_ref(),
             };
             let (projects, number_matched) = repo.select_all_with_params::<Project>(params).await?;
             let features: Vec<ogc::Feature> = projects

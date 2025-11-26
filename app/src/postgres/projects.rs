@@ -54,8 +54,8 @@ impl SelectAllWithParams for Project {
         let SelectAllParams {
             limit,
             crs,
-            bbox: _,
-            bbox_crs: _,
+            _bbox: _,
+            _bbox_crs: _,
         } = params;
         let rows = sqlx::query_as!(
             ProjectRow,
@@ -110,7 +110,7 @@ impl SelectOne for ProjectName {
                 .fetch_optional(executor)
                 .await?;
 
-        Ok(project_row.map(|name| ProjectName(name)))
+        Ok(project_row.map(ProjectName))
     }
 }
 

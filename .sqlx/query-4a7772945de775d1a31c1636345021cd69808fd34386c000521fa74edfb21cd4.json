@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO app.collections (title, geometry_type, added_by, last_updated_by) VALUES ('site boundaries', 'MULTIPOLYGON', $1, $1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4a7772945de775d1a31c1636345021cd69808fd34386c000521fa74edfb21cd4"
+}
