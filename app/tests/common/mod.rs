@@ -1,4 +1,3 @@
-mod auth;
 pub mod constants;
 mod db;
 pub mod helpers;

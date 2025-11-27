@@ -17,10 +17,17 @@ pub struct AppConfig {
     pub db_settings: DatabaseSettings,
 }
 
+#[derive(Deserialize, Clone)]
+pub struct Environment {
+    pub run: GeoManEnvironment,
+    pub config: GeoManEnvironment,
+}
+
 /// Application settings
 #[derive(Deserialize, Clone)]
 pub struct AppSettings {
-    pub environment: GeoManEnvironment,
+    pub environment: Environment,
+
     pub host: String,
     pub port: u16,
 }
@@ -31,11 +38,16 @@ pub fn get_config() -> Result<AppConfig, anyhow::Error> {
     let environment = get_environment().context("failed to determine app environment")?;
     let configuration_directory =
         get_configuration_directory().context("failed to determint configuration directory")?;
-    let environment_filename = format!("{}.yaml", environment);
+    let environment_filename = format!("{}.yaml", environment.config);
     let config_builder = config::Config::builder();
     let config = config_builder
-        .set_default("app_settings.environment", environment.to_string())
-        .context("failed to add environment to config builder")?
+        .set_default(
+            "app_settings.environment.config",
+            environment.config.to_string(),
+        )
+        .context("failed to add config environment to config builder")?
+        .set_default("app_settings.environment.run", environment.run.to_string())
+        .context("failed to add run environment to config builder")?
         .add_source(
             config::Environment::with_prefix(ENVIRONMENT_VARIABLE_PREFIX)
                 .prefix_separator("_")
@@ -53,14 +65,19 @@ pub fn get_config() -> Result<AppConfig, anyhow::Error> {
     Ok(app_config)
 }
 
-fn get_environment() -> anyhow::Result<GeoManEnvironment> {
-    let geoman_env_key = format!("{ENVIRONMENT_VARIABLE_PREFIX}_ENVIRONMENT");
+fn get_environment() -> anyhow::Result<Environment> {
+    let run_env_key = format!("{ENVIRONMENT_VARIABLE_PREFIX}_RUN_ENVIRONMENT");
+    let config_env_key = format!("{ENVIRONMENT_VARIABLE_PREFIX}_CONFIG_ENVIRONMENT");
+    Ok(Environment {
+        run: env_from_key(run_env_key)?,
+        config: env_from_key(config_env_key)?,
+    })
+}
+
+fn env_from_key(key: String) -> anyhow::Result<GeoManEnvironment> {
     GeoManEnvironment::from_str(
-        &std::env::var(&geoman_env_key).map_err(|e| {
-            anyhow::anyhow!("no '{geoman_env_key}' environment variable set: {}", e)
-        })?,
+        &std::env::var(&key)
+            .map_err(|e| anyhow::anyhow!("no '{key}' environment variable set: {}", e))?,
     )
-    .context(format!(
-        "failed to parse {geoman_env_key} environment variable"
-    ))
+    .context(format!("failed to parse {key} environment variable"))
 }

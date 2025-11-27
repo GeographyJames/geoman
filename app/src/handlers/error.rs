@@ -23,6 +23,8 @@ pub enum ApiError {
     CollectionNotFound,
     #[error("Feature not found: {0}")]
     FeatureNotFound(FeatureId),
+    #[error("Authentication failed")]
+    Authentication,
 }
 
 impl ResponseError for ApiError {
@@ -36,6 +38,7 @@ impl ResponseError for ApiError {
             ApiError::GisDataTableNotFound(_) => StatusCode::NOT_FOUND,
             ApiError::CollectionNotFound => StatusCode::NOT_FOUND,
             ApiError::FeatureNotFound(_) => StatusCode::NOT_FOUND,
+            ApiError::Authentication => StatusCode::UNAUTHORIZED,
         }
     }
 

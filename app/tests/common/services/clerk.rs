@@ -16,12 +16,12 @@ pub struct ClerkSessionToken {
     pub jwt: String,
 }
 
-pub struct ClerkAuthProvider {
+pub struct ClerkAuthService {
     pub secret: SecretBox<String>,
     pub test_user_id: String,
 }
 
-impl ClerkAuthProvider {
+impl ClerkAuthService {
     pub async fn get_test_session_token(&self, client: &reqwest::Client) -> String {
         let session = TEST_SESSION
             .get_or_init(|| async { self.get_session(client).await })

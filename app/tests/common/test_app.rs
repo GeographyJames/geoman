@@ -1,9 +1,8 @@
 use crate::common::{
-    auth::clerk::ClerkAuthProvider,
     configure_database,
     constants::{CLERK_USER_ID_KEY, GEOMAN_TEST_ENVIRONMENT_KEY},
     helpers::generate_random_bng_point_ewkt,
-    services::{HttpClient, HttpService, OgcService},
+    services::{ApiKeysService, ClerkAuthService, HttpClient, HttpService, OgcService},
 };
 use app::{
     Application, DatabaseSettings, Password, URLS,
@@ -41,9 +40,10 @@ pub struct TestApp {
     pub db_pool: PgPool,
     pub api_client: HttpClient,
     #[allow(unused)]
-    pub auth: ClerkAuthProvider,
+    pub auth: ClerkAuthService,
     pub health_check_service: HttpService,
     pub ogc_service: OgcService,
+    pub api_keys_service: ApiKeysService,
 }
 
 impl TestApp {
@@ -58,7 +58,7 @@ impl TestApp {
         let db_settings = config.db_settings.clone();
         let test_user_id = std::env::var(CLERK_USER_ID_KEY)
             .expect(&format!("no {CLERK_USER_ID_KEY} environment variable set"));
-        let auth = ClerkAuthProvider {
+        let auth = ClerkAuthService {
             secret: secrecy::SecretBox::new(Box::new(
                 config
                     .auth_settings
@@ -70,15 +70,16 @@ impl TestApp {
         };
         // Set environment for running the app
         if let Ok(env) = std::env::var(GEOMAN_TEST_ENVIRONMENT_KEY) {
-            config.app_settings.environment = GeoManEnvironment::from_str(&env).expect(&format!(
-                "Invalid GeoMan environment variable, '{}', set for {} environment variable",
-                env, GEOMAN_TEST_ENVIRONMENT_KEY
-            ));
+            config.app_settings.environment.run =
+                GeoManEnvironment::from_str(&env).expect(&format!(
+                    "Invalid GeoMan environment variable, '{}', set for {} environment variable",
+                    env, GEOMAN_TEST_ENVIRONMENT_KEY
+                ));
         }
 
         tracing::info!(
-            "Spawning GeoMan test app for environment '{}'",
-            config.app_settings.environment
+            "Spawning GeoMan test app for run environment '{}'",
+            config.app_settings.environment.run
         );
         let app = Application::build(config)
             .await
@@ -97,6 +98,9 @@ impl TestApp {
                 endpoint: URLS.health_check.clone(),
             },
             ogc_service: OgcService {},
+            api_keys_service: ApiKeysService {
+                endpoint: format!("{}{}", &URLS.api.base, &URLS.api.keys),
+            },
         }
     }
 
@@ -104,13 +108,6 @@ impl TestApp {
         let app = Self::spawn().await;
         configure_database(&app.db_settings).await;
         app
-    }
-
-    #[allow(unused)]
-    pub async fn get_test_session_token(&self) -> String {
-        self.auth
-            .get_test_session_token(&self.api_client.client)
-            .await
     }
 
     pub async fn insert_team(&self, name: &str) -> i32 {
@@ -128,10 +125,11 @@ impl TestApp {
         TeamId(self.insert_team(&uuid::Uuid::new_v4().to_string()).await)
     }
 
-    pub async fn insert_user(&self, team_id: TeamId) -> i32 {
+    pub async fn insert_user(&self, team_id: TeamId, clerk_id: Option<&str>) -> i32 {
         let record = sqlx::query!(
-            "INSERT INTO app.users (team_id) VALUES ($1) RETURNING id",
-            team_id.0
+            "INSERT INTO app.users (team_id, clerk_id) VALUES ($1, $2) RETURNING id",
+            team_id.0,
+            clerk_id
         )
         .fetch_one(&self.db_pool)
         .await
@@ -140,7 +138,7 @@ impl TestApp {
     }
 
     pub async fn generate_user_id(&self, team_id: TeamId) -> UserId {
-        UserId(self.insert_user(team_id).await)
+        UserId(self.insert_user(team_id, None).await)
     }
 
     pub async fn insert_project_collection(

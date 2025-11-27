@@ -13,8 +13,9 @@ async fn main() -> anyhow::Result<()> {
     );
     init_subscriber(subscriber);
     tracing::info!(
-        "Starting GeoMan for environment '{}' on port {}",
-        config.app_settings.environment,
+        "\nStarting GeoMan 🌍\nConfig environment: {}\nRun environment: {}\nPort: {}\n",
+        config.app_settings.environment.config,
+        config.app_settings.environment.run,
         config.app_settings.port
     );
     let app = Application::build(config)

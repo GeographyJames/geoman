@@ -1,4 +1,5 @@
 use reqwest::RequestBuilder;
+use std::fmt::Display;
 
 pub struct HttpClient {
     pub client: reqwest::Client,
@@ -11,11 +12,11 @@ impl HttpClient {
         Self { client, base_url }
     }
 
-    pub fn get<T>(&self, endpoint: T) -> RequestBuilder
-    where
-        T: ToString,
-    {
+    pub fn get<T: Display>(&self, endpoint: T) -> RequestBuilder {
         self.client
             .get(format!("{}{}", self.base_url, endpoint.to_string()))
+    }
+    pub fn post<T: Display>(&self, endpoint: T) -> RequestBuilder {
+        self.client.post(format!("{}{}", self.base_url, endpoint))
     }
 }
