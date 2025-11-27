@@ -121,6 +121,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             bbox,
             bbox_crs,
             collection_id,
+            offset,
             ..
         } = params;
         let bbox = bbox.map(|bbox| match bbox {
@@ -153,6 +154,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
                 ))
             ORDER BY f.id
             LIMIT $9
+            OFFSET $10
             "#,
             crs.as_srid() as i32,
             collection_id.0,
@@ -163,6 +165,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             bbox.map(|bbox| bbox[3]),
             bbox_crs.unwrap_or_default().as_srid() as i32,
             limit.map(|l| l as i64),
+            offset.unwrap_or(0) as i32
         )
         .fetch(executor)
         .map(|res| {

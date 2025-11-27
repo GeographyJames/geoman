@@ -92,6 +92,7 @@ impl SelectAllWithParamsStreaming for Feature {
             bbox,
             bbox_crs,
             crs,
+            offset,
         } = params;
         let bbox = bbox.map(|bbox| match bbox {
             ogcapi_types::common::Bbox::Bbox2D(bbox) => bbox,
@@ -116,7 +117,9 @@ impl SelectAllWithParamsStreaming for Feature {
         SELECT {ROWS}
           FROM "{}"."{}" t
           WHERE ($2::float IS NULL OR (geom && ST_Transform(ST_MakeEnvelope($2, $3, $4, $5, $6), ST_SRID(geom))))
+          ORDER BY gid
           LIMIT $7
+          OFFSET $8
         "#,
                     schema,
                     table.as_ref()
@@ -135,6 +138,7 @@ impl SelectAllWithParamsStreaming for Feature {
             .bind(bbox.map(|bbox| bbox[3]))
             .bind(bbox_crs.unwrap_or_default().as_srid())
             .bind(limit.map(|l| l as i64))
+            .bind(offset.unwrap_or_default() as i32)
             .fetch(executor)
             .map(|res| {
                 let row = res?;

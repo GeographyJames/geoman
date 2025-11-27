@@ -5,7 +5,7 @@ use serde_with::DisplayFromStr;
 use utoipa::{IntoParams, ToSchema};
 
 #[serde_with::serde_as]
-#[derive(Deserialize, Serialize, IntoParams, ToSchema, Default)]
+#[derive(Deserialize, Serialize, IntoParams, ToSchema, Default, Clone)]
 #[into_params(parameter_in = Query)]
 #[non_exhaustive]
 #[serde(deny_unknown_fields, default, rename_all = "kebab-case")]
@@ -19,8 +19,10 @@ pub struct Query {
     #[param(style = Form, required = false, maximum = 10000)]
     pub limit: Option<usize>,
 
-    /// Only features that have a geometry that intersects the bounding box are selected
+    #[param(style=Form, nullable = false)]
+    pub offset: Option<usize>,
 
+    /// Only features that have a geometry that intersects the bounding box are selected
     #[param(style = Form, explode = false, value_type = Option<Vec<f64>>, required = false, min_items = 4, max_items = 6)]
     #[serde_as(as = "Option<DisplayFromStr>")]
     pub bbox: Option<ogcapi_types::common::Bbox>,

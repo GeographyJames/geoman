@@ -8,7 +8,7 @@ pub mod project {
     pub struct SelectAllParams<'a> {
         pub limit: Option<usize>,
         pub crs: &'a Crs,
-        pub _bbox: Option<ogcapi_types::common::Bbox>,
+        pub _bbox: Option<&'a ogcapi_types::common::Bbox>,
         pub _bbox_crs: Option<&'a Crs>,
     }
 }
@@ -25,6 +25,7 @@ pub mod project_features {
         pub crs: Crs,
         pub bbox: Option<ogcapi_types::common::Bbox>,
         pub bbox_crs: Option<Crs>,
+        pub offset: Option<usize>,
     }
 
     #[derive(Clone)]
@@ -61,6 +62,7 @@ pub mod features {
         pub schema: &'static str,
         pub table: TableName,
         pub limit: Option<usize>,
+        pub offset: Option<usize>,
         pub bbox: Option<ogcapi_types::common::Bbox>,
         pub bbox_crs: Option<Crs>,
         pub crs: Crs,

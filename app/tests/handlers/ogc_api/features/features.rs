@@ -49,8 +49,18 @@ async fn get_features_works() {
         .expect("failed to retrieve feature collection");
 
     assert_eq!(feature_collection.features.len(), 10);
-    assert!(feature_collection.number_matched == 10);
-    assert!(feature_collection.number_returned == 10);
+    assert!(
+        feature_collection
+            .number_matched
+            .expect("number matched not included")
+            == 10
+    );
+    assert!(
+        feature_collection
+            .number_returned
+            .expect("number returned not included")
+            == 10
+    );
     let ogc_feature = feature_collection.features.into_iter().next().unwrap();
     let props: Properties =
         serde_json::from_value(serde_json::Value::Object(ogc_feature.properties))

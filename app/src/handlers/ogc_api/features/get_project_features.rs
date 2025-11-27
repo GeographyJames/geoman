@@ -33,6 +33,7 @@ pub async fn get_project_features(
         .select_one::<ProjectName>(project_id)
         .await?
         .ok_or_else(|| ApiError::ProjectNotFound(project_id))?;
+    let request_crs = query.crs.clone();
 
     repo.select_one_with_params::<ProjectCollection>(
         collection_id,
@@ -41,14 +42,6 @@ pub async fn get_project_features(
     .await?
     .ok_or_else(|| ApiError::ProjectCollectionNotFound(collection_id))?;
 
-    let Query {
-        limit,
-        bbox,
-        bbox_crs,
-        crs,
-        ..
-    } = query.into_inner();
-
     let base_url = get_base_url(&req);
     let collection_url = format!(
         "{}{}{}/{}/collections/{}",
@@ -56,20 +49,26 @@ pub async fn get_project_features(
     );
 
     let params = SelectAllParams {
-        limit,
+        limit: query.limit,
         collection_id,
         project_id,
-        crs: crs.clone(),
-        bbox,
-        bbox_crs,
+        crs: query.crs.clone(),
+        bbox: query.bbox.clone(),
+        bbox_crs: query.bbox_crs.clone(),
+        offset: query.offset,
     };
 
     let features = repo.select_all_with_params_streaming::<ProjectFeature>(params);
 
-    let bytes =
-        ogc_feature_collection_byte_stream(features, collection_url, collection_id.into()).await?;
+    let bytes = ogc_feature_collection_byte_stream(
+        features,
+        collection_url,
+        collection_id.into(),
+        query.into_inner(),
+    )
+    .await?;
     let mut response = HttpResponse::Ok().content_type(GEO_JSON).streaming(bytes);
-    append_crs_header(&mut response, &crs);
+    append_crs_header(&mut response, &request_crs);
 
     Ok(response)
 }

@@ -1,6 +1,5 @@
 use crate::repo::{
     RepositoryError,
-    metadata::NumberMatched,
     project::{SelectAllParams, SelectOneParams},
     traits::{SelectAllWithParams, SelectOne, SelectOneWithParams},
 };
@@ -14,7 +13,6 @@ use sqlx::types::Json;
 pub struct ProjectRow {
     id: i32,
     name: String,
-    number_matched: i64,
     centroid_in_storage_crs: Option<Json<geojson::Geometry>>,
     geom: Option<Json<geojson::Geometry>>,
 }
@@ -26,7 +24,6 @@ impl Into<Project> for ProjectRow {
             id,
             name,
             geom,
-            number_matched: _,
             centroid_in_storage_crs,
         } = self;
         let properties = Properties { name };
@@ -41,7 +38,7 @@ impl Into<Project> for ProjectRow {
 
 impl SelectAllWithParams for Project {
     type Params<'a> = SelectAllParams<'a>;
-    type MetaData<'a> = NumberMatched;
+    type MetaData<'a> = ();
     async fn select_all_with_params<'a, 'e, E>(
         executor: &'e E,
         params: Self::Params<'a>,
@@ -71,8 +68,7 @@ impl SelectAllWithParams for Project {
                 SELECT id,
                        name,
                        ST_AsGeoJson(ST_Transform(pb.centroid, $1))::json AS "geom: Json<geojson::Geometry>",
-                       ST_AsGeoJson(pb.centroid)::json AS "centroid_in_storage_crs: Json<geojson::Geometry>",
-                       COUNT(*) OVER() as "number_matched!"
+                       ST_AsGeoJson(pb.centroid)::json AS "centroid_in_storage_crs: Json<geojson::Geometry>"
                   FROM app.projects p
              LEFT JOIN primary_boundary_centroid pb
                         ON pb.project_id = p.id
@@ -84,13 +80,12 @@ impl SelectAllWithParams for Project {
         )
         .fetch_all(executor)
         .await?;
-        let number_matched = rows.first().map(|item| item.number_matched).unwrap_or(0);
 
         let items = rows
             .into_iter()
             .map(|row| row.into())
             .collect::<Vec<Project>>();
-        Ok((items, NumberMatched(number_matched)))
+        Ok((items, ()))
     }
 }
 
@@ -140,8 +135,7 @@ impl SelectOneWithParams for Project {
                 SELECT id,
                        name,
                        ST_AsGeoJson(ST_Transform(pb.centroid, $1))::json AS "geom: Json<geojson::Geometry>",
-                       ST_AsGeoJson(pb.centroid)::json AS "centroid_in_storage_crs: Json<geojson::Geometry>",
-                       COUNT(*) OVER() as "number_matched!"
+                       ST_AsGeoJson(pb.centroid)::json AS "centroid_in_storage_crs: Json<geojson::Geometry>"
                   FROM app.projects p
              LEFT JOIN primary_boundary_centroid pb
                         ON pb.project_id = p.id

@@ -15,10 +15,10 @@ pub struct FeatureCollection {
     pub id: String,
     pub r#type: Type,
     pub features: Vec<Feature>,
-    pub links: [Link; 1],
+    pub links: Vec<Link>,
     pub time_stamp: String,
-    pub number_matched: i64,
-    pub number_returned: usize,
+    pub number_matched: Option<i64>,
+    pub number_returned: Option<usize>,
 }
 
 impl FeatureCollection {
@@ -26,33 +26,36 @@ impl FeatureCollection {
         collection_url: &str,
         collection_id: String,
         features: Vec<Feature>,
-        number_matched: i64,
+        // number_matched: i64,
     ) -> Self {
         Self {
             id: collection_id,
             r#type: Type::default(),
-            number_returned: features.len(),
+            // number_returned: features.len(),
             features,
             links: Self::links(collection_url),
             //todo set timestamp from database
             time_stamp: chrono::Utc::now().to_rfc3339(),
-            number_matched,
+            // number_matched,
+            number_matched: None,
+            number_returned: None,
         }
     }
-    fn links(collection_url: &str) -> [Link; 1] {
-        [Link::new(format!("{}/items", collection_url), SELF).mediatype(GEO_JSON)]
+    fn links(collection_url: &str) -> Vec<Link> {
+        vec![Link::new(format!("{}/items", collection_url), SELF).mediatype(GEO_JSON)]
     }
 
     pub fn opening_json(
         collection_id: &str,
-        collection_url: &str,
+
         number_matched: i64,
     ) -> Result<String, serde_json::Error> {
+        // Add next link if provided
+
         let mut json = format!(
-            r#"{{"type":{},"id":{},"links":{},"timeStamp":{},"numberMatched":{}"#,
+            r#"{{"type":{},"id":{},"timeStamp":{},"numberMatched":{}"#,
             serde_json::to_string(&Type::default())?,
             serde_json::to_string(collection_id)?,
-            serde_json::to_string(&Self::links(collection_url))?,
             serde_json::to_string(&chrono::Utc::now().to_rfc3339())?,
             serde_json::to_string(&number_matched)?
         );
@@ -60,10 +63,21 @@ impl FeatureCollection {
         json.push_str(r#","features":["#);
         Ok(json)
     }
-    pub fn closing_json(number_returned: usize) -> Result<String, serde_json::Error> {
+    pub fn closing_json(
+        collection_url: &str,
+        number_returned: usize,
+        next_url: Option<&str>,
+    ) -> Result<String, serde_json::Error> {
+        let mut links = Self::links(collection_url);
+        if let Some(next) = next_url {
+            links.push(
+                Link::new(next, "next").mediatype(ogcapi_types::common::media_type::GEO_JSON),
+            );
+        }
         Ok(format!(
-            r#"],"numberReturned":{}}}"#,
-            serde_json::to_string(&number_returned)?
+            r#"],"numberReturned":{},"links":{}}}"#,
+            serde_json::to_string(&number_returned)?,
+            serde_json::to_string(&links)?,
         ))
     }
 }
@@ -78,7 +92,6 @@ mod tests {
                 &uuid::Uuid::new_v4().to_string(),
                 uuid::Uuid::new_v4().to_string(),
                 Vec::new(),
-                0,
             )
         }
     }
@@ -100,8 +113,9 @@ mod tests {
      {
         let json_string = format!(
             "{}{}",
-            FeatureCollection::opening_json("0", "0", 0).expect("failed to serialise opening json"),
-            FeatureCollection::closing_json(0).expect("failed to serialise closing json")
+            FeatureCollection::opening_json("0", 0).expect("failed to serialise opening json"),
+            FeatureCollection::closing_json("0", 0, None)
+                .expect("failed to serialise closing json")
         );
         let _: FeatureCollection = serde_json::from_str(&json_string)
             .expect("failed to deserialise to feature collection");

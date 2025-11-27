@@ -174,6 +174,7 @@ then
         "uk_countries/CTRY_DEC_2021_UK_BUC_27700.shp:gis_data.uk_countries:27700:UK country boundaries from December 2021"
         "france/france_3035.shp:gis_data.france:3035:France border"
         "republic_of_ireland/republic_of_ireland_29902.shp:gis_data.republic_of_ireland:29902:Republic of Ireland border"
+        "world_countries/world_countries_point_4326.shp:gis_data.world_countries_points:4326:World Countries Point on Surface"
     )
 
     for entry in "${shp_files[@]}"; do
