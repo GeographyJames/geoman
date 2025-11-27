@@ -105,9 +105,9 @@ fn next_url(query: &Query, collection_url: &str) -> Result<Option<String>, anyho
             let next_offset = current_offset + current_limit;
             let mut next_query = query.clone();
             next_query.offset = Some(next_offset);
-            let next_url = serde_urlencoded::to_string(next_query)
-                .map(|qs| format!("{}/items?{}", collection_url, qs));
-            next_url
+
+            serde_urlencoded::to_string(next_query)
+                .map(|qs| format!("{}/items?{}", collection_url, qs))
         })
         .transpose()
         .context("failed to generate 'next' link")?;

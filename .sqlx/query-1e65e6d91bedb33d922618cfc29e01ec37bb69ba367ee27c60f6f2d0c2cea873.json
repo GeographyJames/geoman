@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": " WITH primary_boundary_centroid AS (\n                              SELECT pf.project_id, ST_Centroid(fo.geom) AS centroid\n                                FROM app.project_features pf\n                                JOIN app.feature_objects fo\n                                        ON fo.collection_id = pf.collection_id\n                                       AND fo.project_feature_id = pf.id\n                                JOIN app.collections c\n                                        ON c.id = pf.collection_id\n                               WHERE pf.is_primary=true\n                                 AND c.title = 'site boundaries'\n                                 )\n                SELECT id,\n                       name,\n                       ST_AsGeoJson(ST_Transform(pb.centroid, $1))::json AS \"geom: Json<geojson::Geometry>\",\n                       ST_AsGeoJson(pb.centroid)::json AS \"centroid_in_storage_crs: Json<geojson::Geometry>\"\n                  FROM app.projects p\n             LEFT JOIN primary_boundary_centroid pb\n                        ON pb.project_id = p.id\n                 WHERE p.id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "geom: Json<geojson::Geometry>",
+        "type_info": "Json"
+      },
+      {
+        "ordinal": 3,
+        "name": "centroid_in_storage_crs: Json<geojson::Geometry>",
+        "type_info": "Json"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "1e65e6d91bedb33d922618cfc29e01ec37bb69ba367ee27c60f6f2d0c2cea873"
+}

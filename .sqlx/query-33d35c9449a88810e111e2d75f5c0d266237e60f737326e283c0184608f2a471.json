@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT \n                f.id,\n                f.collection_id,\n                f.project_id,\n                ST_AsGeoJSON(ST_Transform(fo.geom, $1))::jsonb as \"geometry!: Json<Geometry>\",\n                ST_SRID(geom) AS \"storage_crs_srid!\",\n                f.is_primary,\n                f.name,\n                f.properties,\n                COUNT(*) OVER() as \"number_matched!\"\n\n            FROM app.project_features f\n            JOIN app.collections c ON c.id = f.collection_id\n            JOIN app.feature_objects fo ON fo.project_feature_id = f.id\n            WHERE c.id = $2\n            AND status = 'ACTIVE'\n            AND ($3::int IS NULL OR f.project_id = $3)\n            AND ($4::float IS NULL OR (\n                fo.geom && ST_Transform(ST_MakeEnvelope($4, $5, $6, $7, $8), ST_SRID(fo.geom))\n                ))\n            ORDER BY f.id\n            LIMIT $9\n            ",
+  "query": "\n            SELECT \n                f.id,\n                f.collection_id,\n                f.project_id,\n                ST_AsGeoJSON(ST_Transform(fo.geom, $1))::jsonb as \"geometry!: Json<Geometry>\",\n                ST_SRID(geom) AS \"storage_crs_srid!\",\n                f.is_primary,\n                f.name,\n                f.properties,\n                COUNT(*) OVER() as \"number_matched!\"\n\n            FROM app.project_features f\n            JOIN app.collections c ON c.id = f.collection_id\n            JOIN app.feature_objects fo ON fo.project_feature_id = f.id\n            WHERE c.id = $2\n            AND status = 'ACTIVE'\n            AND ($3::int IS NULL OR f.project_id = $3)\n            AND ($4::float IS NULL OR (\n                fo.geom && ST_Transform(ST_MakeEnvelope($4, $5, $6, $7, $8), ST_SRID(fo.geom))\n                ))\n            ORDER BY f.id\n            LIMIT $9\n            OFFSET $10\n            ",
   "describe": {
     "columns": [
       {
@@ -59,6 +59,7 @@
         "Float8",
         "Float8",
         "Int4",
+        "Int8",
         "Int8"
       ]
     },
@@ -74,5 +75,5 @@
       null
     ]
   },
-  "hash": "8b562268589f3c83be1e2bca39105a7349c6163d2a080839cc6d37ddf87c524d"
+  "hash": "33d35c9449a88810e111e2d75f5c0d266237e60f737326e283c0184608f2a471"
 }
