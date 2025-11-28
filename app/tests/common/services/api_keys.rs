@@ -2,7 +2,8 @@ use reqwest::Response;
 
 use crate::common::{
     constants::{AUTHORISATION_HEADER, REQUEST_FAILED},
-    services::{HttpClient, clerk::ClerkSessionToken},
+    services::HttpClient,
+    types::SessionToken,
 };
 use app::handlers::api::keys::RequestPayload;
 
@@ -14,7 +15,7 @@ impl ApiKeysService {
     pub async fn generate_api_key(
         &self,
         client: &HttpClient,
-        session_token: Option<&ClerkSessionToken>,
+        session_token: Option<&SessionToken>,
     ) -> Response {
         let payload = RequestPayload {
             key_name: uuid::Uuid::new_v4().to_string(),

@@ -1,16 +1,15 @@
 use crate::common::{
     configure_database,
     constants::CLERK_USER_ID_KEY,
-    helpers::generate_random_bng_point_ewkt,
-    services::{
-        ApiKeysService, ClerkAuthService, ClerkSessionToken, HttpClient, HttpService, OgcService,
-    },
+    helpers::{generate_random_bng_point_ewkt, handle_json_response},
+    services::{ApiKeysService, ClerkAuthService, HttpClient, HttpService, OgcService},
+    types::SessionToken,
 };
 use app::{
     Application, DatabaseSettings, Password, URLS,
     constants::GIS_DATA_SCHEMA,
     enums::GeoManEnvironment,
-    get_config,
+    get_config, handlers,
     telemetry::{get_subscriber, init_subscriber},
 };
 use domain::{
@@ -72,6 +71,10 @@ impl AppBuilder {
             let _user_id = app.insert_user(team_id, Some(&app.auth.test_user_id)).await;
         }
         app
+    }
+    pub fn set_env(mut self, env: GeoManEnvironment) -> Self {
+        self.environment = Some(env);
+        self
     }
 }
 
@@ -442,9 +445,19 @@ impl TestApp {
             id: feature_id,
         }
     }
-    pub async fn generate_clerk_session_token(&self) -> ClerkSessionToken {
+    pub async fn generate_session_token(&self) -> SessionToken {
         self.auth
             .get_test_session_token(&self.api_client.client)
             .await
+    }
+    pub async fn generate_api_key(&self, token: &SessionToken) -> String {
+        let response = self
+            .api_keys_service
+            .generate_api_key(&self.api_client, Some(token))
+            .await;
+        let key: handlers::api::keys::ResponsePayload = handle_json_response(response)
+            .await
+            .expect("failed to retrieve key");
+        key.api_key
     }
 }
