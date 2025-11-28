@@ -1,10 +1,6 @@
-use reqwest::Response;
+use reqwest::{Response, header::AUTHORIZATION};
 
-use crate::common::{
-    constants::{AUTHORISATION_HEADER, REQUEST_FAILED},
-    services::HttpClient,
-    types::SessionToken,
-};
+use crate::common::{constants::REQUEST_FAILED, services::HttpClient, types::SessionToken};
 use app::handlers::api::keys::RequestPayload;
 
 pub struct ApiKeysService {
@@ -22,7 +18,7 @@ impl ApiKeysService {
         };
         let mut req = client.post(&self.endpoint).json(&payload);
         if let Some(token) = session_token {
-            req = req.header(AUTHORISATION_HEADER, &token.jwt)
+            req = req.header(AUTHORIZATION, &token.jwt)
         };
 
         req.send().await.expect(REQUEST_FAILED)

@@ -3,7 +3,7 @@ use serde::Deserialize;
 use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use sqlx::{ConnectOptions, PgPool};
 
-use crate::config::password::Password;
+use crate::types::Password;
 
 /// PostgreSQL database settings
 #[derive(Deserialize, Clone)]

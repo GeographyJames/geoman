@@ -1,12 +1,10 @@
-use crate::{handlers::ApiError, postgres::PostgresRepo};
+use crate::{handlers::ApiError, helpers::hash_api_key, postgres::PostgresRepo};
 use actix_web::{HttpResponse, post, web};
 use anyhow::Context;
-
 use clerk_rs::validators::authorizer::ClerkJwt;
 use rand::{Rng, distr::Alphanumeric};
 use secrecy::{ExposeSecret, SecretBox};
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 
 #[derive(Deserialize, Serialize)]
 pub struct RequestPayload {
@@ -55,11 +53,4 @@ fn generate_api_key_string() -> SecretBox<String> {
     let mut rng = rand::rng();
     let random_part: String = (0..32).map(|_| rng.sample(Alphanumeric) as char).collect();
     SecretBox::new(Box::new(format!("gman_{}", random_part)))
-}
-
-/// Hash an API key using SHA256 for database storage
-fn hash_api_key(api_key: &SecretBox<String>) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(api_key.expose_secret().as_bytes());
-    hex::encode(hasher.finalize())
 }

@@ -1,12 +1,11 @@
 use crate::common::{
-    constants::{AUTHORISATION_HEADER, REQUEST_FAILED},
-    helpers::handle_json_response,
-    services::HttpClient,
+    constants::REQUEST_FAILED, helpers::handle_json_response, services::HttpClient,
     types::SessionToken,
 };
+
 use app::URLS;
 use domain::{ProjectCollectionId, ProjectId};
-use reqwest::{RequestBuilder, Response};
+use reqwest::{RequestBuilder, Response, header::AUTHORIZATION};
 use serde::Serialize;
 
 pub enum OgcAuth {
@@ -22,7 +21,7 @@ impl OgcService {
         if let Some(auth) = auth {
             req = match auth {
                 OgcAuth::Key(key) => req.bearer_auth(key),
-                OgcAuth::Token(token) => req.header(AUTHORISATION_HEADER, token.jwt),
+                OgcAuth::Token(token) => req.header(AUTHORIZATION, format!("Bearer {}", token.jwt)),
             }
         };
         req.send().await.expect(REQUEST_FAILED)

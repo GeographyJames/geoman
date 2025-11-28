@@ -4,8 +4,8 @@ CREATE TABLE app.api_keys (
     user_id INTEGER NOT NULL REFERENCES app.users(id) ON DELETE CASCADE,
     key_hash TEXT NOT NULL UNIQUE, -- Hashed API key (never store plaintext)
     name TEXT NOT NULL, -- Optional user-friendly name like "My QGIS Desktop"
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    last_used_at TIMESTAMPTZ, -- Track when key was last used
+    created TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_used TIMESTAMPTZ, -- Track when key was last used
     expiry TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '6 months'),
     revoked BOOLEAN NOT NULL DEFAULT FALSE -- Soft delete for audit trail
 );

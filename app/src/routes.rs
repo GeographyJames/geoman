@@ -2,6 +2,7 @@ use crate::{
     URLS,
     enums::GeoManEnvironment,
     handlers::{api::keys::generate_api_key, ogc_api},
+    middleware::dual_auth_middleware,
 };
 use actix_web::{
     middleware,
@@ -41,7 +42,7 @@ pub fn api_key_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(scope(&URLS.api.keys).service(generate_api_key));
 }
 
-pub fn ogc_routes(cfg: &mut web::ServiceConfig, clerk: Clerk, run_environment: GeoManEnvironment) {
+pub fn ogc_routes(cfg: &mut web::ServiceConfig, run_environment: GeoManEnvironment) {
     let scp = scope(&URLS.ogc_api.base)
         .wrap(middleware::NormalizePath::trim()) // required to pass OGC Features API test suit.
         .service(scope(&URLS.ogc_api.project).configure(project_ogc_routes))
@@ -61,11 +62,7 @@ pub fn ogc_routes(cfg: &mut web::ServiceConfig, clerk: Clerk, run_environment: G
 
     match run_environment {
         GeoManEnvironment::Production => {
-            cfg.service(scp.wrap(ClerkMiddleware::new(
-                MemoryCacheJwksProvider::new(clerk),
-                None,
-                true,
-            )));
+            cfg.service(scp.wrap(middleware::from_fn(dual_auth_middleware)));
         }
         _ => {
             cfg.service(scp);

@@ -6,7 +6,11 @@ use crate::{
 };
 use actix_web::{App, HttpResponse, HttpServer, dev::Server, web};
 use anyhow::Context;
-use clerk_rs::{ClerkConfiguration, clerk::Clerk};
+use clerk_rs::{
+    ClerkConfiguration,
+    clerk::Clerk,
+    validators::{authorizer::ClerkAuthorizer, jwks::MemoryCacheJwksProvider},
+};
 use secrecy::ExposeSecret;
 use sqlx::PgPool;
 use std::net::TcpListener;
@@ -57,21 +61,20 @@ pub async fn run(
     let clerk = Clerk::new(clerk_config);
     let app_state = web::Data::new(AppState::new());
     let repo = web::Data::new(PostgresRepo::new(db_pool));
+    let clerk_authoriser = web::Data::new(ClerkAuthorizer::new(
+        MemoryCacheJwksProvider::new(clerk.clone()),
+        false,
+    ));
 
     let server = HttpServer::new(move || {
         App::new()
             .app_data(app_state.clone())
             .app_data(repo.clone())
+            .app_data(clerk_authoriser.clone())
             .wrap(TracingLogger::default())
             .route(&URLS.health_check, web::get().to(HttpResponse::Ok))
             .configure(|cfg| api_routes(cfg, clerk.clone()))
-            .configure(|cfg| {
-                ogc_routes(
-                    cfg,
-                    clerk.clone(),
-                    config.app_settings.environment.run.clone(),
-                )
-            })
+            .configure(|cfg| ogc_routes(cfg, config.app_settings.environment.run.clone()))
             // .configure(|cfg| {
             //     docs_routes(cfg, clerk.clone(), config.app_settings.environment.clone())
             // })
