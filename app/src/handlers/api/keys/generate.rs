@@ -30,7 +30,7 @@ pub async fn generate_api_key(
     .fetch_optional(&repo.db_pool)
     .await
     .context("failed to query database for user")?
-    .ok_or_else(|| ApiError::Authentication)?;
+    .ok_or_else(|| ApiError::Authentication(anyhow::anyhow!("Api key not found in database")))?;
     let api_key = generate_api_key_string();
     let api_key_hash = hash_api_key(&api_key);
 

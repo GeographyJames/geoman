@@ -1,6 +1,6 @@
 ## Cargo Watch
 
-- `cargo watch -i react-frontend -i test-tools -x run - | bunyan`
+- `cargo watch -i react-frontend -i test-tools -x run | bunyan`
 
 ## Logging
 

@@ -6,7 +6,7 @@ CREATE TABLE app.api_keys (
     name TEXT NOT NULL, -- Optional user-friendly name like "My QGIS Desktop"
     created TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_used TIMESTAMPTZ, -- Track when key was last used
-    expiry TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '6 months'),
+    expiry TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '6 months') CHECK (expiry <= now() + interval '12 months'),
     revoked BOOLEAN NOT NULL DEFAULT FALSE -- Soft delete for audit trail
 );
 
