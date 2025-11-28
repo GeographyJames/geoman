@@ -7,7 +7,7 @@ use crate::common::{
 
 #[actix_web::test]
 async fn get_conformance_declaration_works() {
-    let app = TestApp::spawn().await;
+    let app = TestApp::spawn(None).await;
 
     let response = app
         .ogc_service

@@ -8,6 +8,7 @@ path = "src/main.rs"
 name = "geoman"
 
 [dependencies]
+
 ogc = { path = "../ogc" }
 actix-web = "4.11"
 clerk-rs = { version = "0.4", features = ["actix"] }
@@ -36,9 +37,12 @@ serde_with = "3.16"
 actix-web-lab = { version = "0.24", features = ["spa"] }
 actix-files = "0.6.8"
 serde_urlencoded = "0.7.1"
+rand = "0.9"
+sha2 = "0.10.9"
+hex = "0.4.3"
 
 [dev-dependencies]
-rand = "0.9"
+
 reqwest = "0.12"
 rstest = "0.26"
 tokio = { version = "1.48", features = ["sync"] }

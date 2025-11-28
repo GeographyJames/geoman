@@ -1,2 +1,3 @@
 mod generate;
-pub use generate::generate_api_key;
+
+pub use generate::{RequestPayload, ResponsePayload, generate_api_key};

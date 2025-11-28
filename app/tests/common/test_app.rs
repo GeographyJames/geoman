@@ -1,8 +1,10 @@
 use crate::common::{
     configure_database,
-    constants::{CLERK_USER_ID_KEY, GEOMAN_TEST_ENVIRONMENT_KEY},
+    constants::CLERK_USER_ID_KEY,
     helpers::generate_random_bng_point_ewkt,
-    services::{ApiKeysService, ClerkAuthService, HttpClient, HttpService, OgcService},
+    services::{
+        ApiKeysService, ClerkAuthService, ClerkSessionToken, HttpClient, HttpService, OgcService,
+    },
 };
 use app::{
     Application, DatabaseSettings, Password, URLS,
@@ -20,7 +22,7 @@ use secrecy::ExposeSecret;
 use serde::Serialize;
 use serde_json::json;
 use sqlx::{Connection, PgConnection, PgPool};
-use std::{str::FromStr, sync::LazyLock};
+use std::sync::LazyLock;
 use uuid::Uuid;
 
 static TRACING: LazyLock<()> = LazyLock::new(|| {
@@ -46,8 +48,35 @@ pub struct TestApp {
     pub api_keys_service: ApiKeysService,
 }
 
+pub struct AppBuilder {
+    with_db: bool,
+    clerk_user: bool,
+    environment: Option<GeoManEnvironment>,
+}
+
+impl AppBuilder {
+    pub fn new() -> Self {
+        Self {
+            with_db: true,
+            clerk_user: true,
+            environment: None,
+        }
+    }
+    pub async fn build(self) -> TestApp {
+        let app = TestApp::spawn(self.environment).await;
+        if self.with_db {
+            configure_database(&app.db_settings).await
+        }
+        if self.clerk_user {
+            let team_id = app.generate_team_id().await;
+            let _user_id = app.insert_user(team_id, Some(&app.auth.test_user_id)).await;
+        }
+        app
+    }
+}
+
 impl TestApp {
-    pub async fn spawn() -> Self {
+    pub async fn spawn(run_env: Option<GeoManEnvironment>) -> Self {
         dotenv().ok();
         LazyLock::force(&TRACING);
         let db_name = Uuid::new_v4().to_string();
@@ -69,13 +98,9 @@ impl TestApp {
             test_user_id,
         };
         // Set environment for running the app
-        if let Ok(env) = std::env::var(GEOMAN_TEST_ENVIRONMENT_KEY) {
-            config.app_settings.environment.run =
-                GeoManEnvironment::from_str(&env).expect(&format!(
-                    "Invalid GeoMan environment variable, '{}', set for {} environment variable",
-                    env, GEOMAN_TEST_ENVIRONMENT_KEY
-                ));
-        }
+        if let Some(env) = run_env {
+            config.app_settings.environment.run = env
+        };
 
         tracing::info!(
             "Spawning GeoMan test app for run environment '{}'",
@@ -105,7 +130,7 @@ impl TestApp {
     }
 
     pub async fn spawn_with_db() -> Self {
-        let app = Self::spawn().await;
+        let app = Self::spawn(None).await;
         configure_database(&app.db_settings).await;
         app
     }
@@ -416,5 +441,10 @@ impl TestApp {
             collection_id: ProjectCollectionId(collection_id),
             id: feature_id,
         }
+    }
+    pub async fn generate_clerk_session_token(&self) -> ClerkSessionToken {
+        self.auth
+            .get_test_session_token(&self.api_client.client)
+            .await
     }
 }

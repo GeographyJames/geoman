@@ -22,7 +22,7 @@ pub struct ClerkAuthService {
 }
 
 impl ClerkAuthService {
-    pub async fn get_test_session_token(&self, client: &reqwest::Client) -> String {
+    pub async fn get_test_session_token(&self, client: &reqwest::Client) -> ClerkSessionToken {
         let session = TEST_SESSION
             .get_or_init(|| async { self.get_session(client).await })
             .await;
@@ -44,7 +44,7 @@ impl ClerkAuthService {
             .await
             .expect("failed to retrieve Clerk session token");
 
-        session_token.jwt
+        session_token
     }
 
     async fn get_session(&self, client: &reqwest::Client) -> ClerkSession {

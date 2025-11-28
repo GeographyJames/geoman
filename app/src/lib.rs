@@ -8,7 +8,7 @@ mod utoipa;
 pub use config::{DatabaseSettings, Password, get_config};
 pub use startup::Application;
 pub use urls::URLS;
-mod handlers;
+pub mod handlers;
 
 mod routes;
 mod state;

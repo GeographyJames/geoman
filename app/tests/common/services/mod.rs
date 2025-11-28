@@ -7,4 +7,4 @@ pub use ogc_service::OgcService;
 mod api_keys;
 pub use api_keys::ApiKeysService;
 mod clerk;
-pub use clerk::ClerkAuthService;
+pub use clerk::{ClerkAuthService, ClerkSessionToken};
