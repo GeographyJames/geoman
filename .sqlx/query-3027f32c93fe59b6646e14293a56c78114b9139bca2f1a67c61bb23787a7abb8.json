@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO app.users (team_id) VALUES ($1) RETURNING id",
+  "query": "INSERT INTO app.users (team_id, clerk_id) VALUES ($1, $2) RETURNING id",
   "describe": {
     "columns": [
       {
@@ -11,12 +11,13 @@
     ],
     "parameters": {
       "Left": [
-        "Int4"
+        "Int4",
+        "Text"
       ]
     },
     "nullable": [
       false
     ]
   },
-  "hash": "536793dfcba5304ff36983f4f4cdb2cc6440b80a6e0e7e942c5109ac36d83817"
+  "hash": "3027f32c93fe59b6646e14293a56c78114b9139bca2f1a67c61bb23787a7abb8"
 }
