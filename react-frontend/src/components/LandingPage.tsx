@@ -77,6 +77,23 @@ export default function LandingPage() {
           </div>
         </div>
 
+        <SignedIn>
+          <div className="bg-white rounded-xl p-8 shadow-2xl mb-8">
+            <h3 className="text-2xl font-bold mb-4 text-gray-800">
+              Welcome back!
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Manage your API keys and access your geospatial data.
+            </p>
+            <a
+              href="/admin"
+              className="inline-block px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:from-purple-600 hover:to-indigo-700 transition font-semibold text-lg"
+            >
+              Go to Admin Dashboard
+            </a>
+          </div>
+        </SignedIn>
+
         <div className="bg-white rounded-xl p-8 shadow-2xl">
           <h3 className="text-2xl font-bold mb-6 text-gray-800">Quick Links</h3>
           <div className="grid md:grid-cols-2 gap-4">

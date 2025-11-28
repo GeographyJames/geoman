@@ -10,9 +10,7 @@ function ApiDocs() {
   return (
     <ApiReferenceReact
       configuration={{
-        spec: {
-          url: "/ogcapi/openapi.json",
-        },
+        url: "/ogcapi/openapi.json",
       }}
     />
   );
