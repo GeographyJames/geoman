@@ -50,12 +50,11 @@ impl CollectionRow {
     }
 }
 
-impl SelectOneWithParams for ProjectCollection {
+impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
     type Params<'a> = &'a SelectOneParams;
-    type Id<'a> = ProjectCollectionId;
     async fn select_one_with_params<'a, E>(
         executor: &'a E,
-        id: Self::Id<'a>,
+        id: ProjectCollectionId,
         params: Self::Params<'a>,
     ) -> Result<Option<Self>, RepositoryError>
     where

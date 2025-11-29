@@ -183,7 +183,7 @@ pub async fn get_project_collection(
     // Fetch collection from database
     let params = SelectOneParams { project_id };
     let collection = repo
-        .select_one_with_params::<ProjectCollection>(collection_id, &params)
+        .select_one_with_params::<ProjectCollection, _>(collection_id, &params)
         .await?
         .ok_or_else(|| ApiError::ProjectCollectionNotFound(collection_id))?;
 

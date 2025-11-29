@@ -45,13 +45,12 @@ impl FeatureRow {
     }
 }
 
-impl SelectOneWithParams for Feature {
+impl SelectOneWithParams<FeatureId> for Feature {
     type Params<'a> = &'a SelectOneParams<'a>;
-    type Id<'a> = FeatureId;
 
     async fn select_one_with_params<'a, E>(
         executor: &'a E,
-        id: Self::Id<'a>,
+        id: FeatureId,
         params: Self::Params<'a>,
     ) -> Result<Option<Self>, crate::repo::RepositoryError>
     where

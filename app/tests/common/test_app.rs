@@ -1,6 +1,6 @@
 use crate::common::{
     configure_database,
-    constants::CLERK_USER_ID_KEY,
+    constants::{CLERK_USER_2_ID_KEY, CLERK_USER_ID_KEY},
     helpers::{generate_random_bng_point_ewkt, handle_json_response},
     services::{ApiKeysService, ClerkAuthService, HttpClient, HttpService, OgcService},
     types::SessionToken,
@@ -45,11 +45,14 @@ pub struct TestApp {
     pub health_check_service: HttpService,
     pub ogc_service: OgcService,
     pub api_keys_service: ApiKeysService,
+    pub test_user_clerk_id: String,
+    pub test_user_2_clerk_id: String,
 }
 
 pub struct AppBuilder {
     with_db: bool,
     clerk_user: bool,
+    clerk_user_2: bool,
     environment: Option<GeoManEnvironment>,
 }
 
@@ -58,6 +61,7 @@ impl AppBuilder {
         Self {
             with_db: true,
             clerk_user: true,
+            clerk_user_2: true,
             environment: None,
         }
     }
@@ -68,7 +72,15 @@ impl AppBuilder {
         }
         if self.clerk_user {
             let team_id = app.generate_team_id().await;
-            let _user_id = app.insert_user(team_id, Some(&app.auth.test_user_id)).await;
+            let _user_id = app
+                .insert_user(team_id, Some(&app.test_user_clerk_id))
+                .await;
+        }
+        if self.clerk_user_2 {
+            let team_id = app.generate_team_id().await;
+            let _user_id = app
+                .insert_user(team_id, Some(&app.test_user_2_clerk_id))
+                .await;
         }
         app
     }
@@ -88,8 +100,11 @@ impl TestApp {
         // Set port to 0 so TCP Listner binds to random free port for tests
         config.app_settings.port = 0;
         let db_settings = config.db_settings.clone();
-        let test_user_id = std::env::var(CLERK_USER_ID_KEY)
+        let test_user_clerk_id = std::env::var(CLERK_USER_ID_KEY)
             .expect(&format!("no {CLERK_USER_ID_KEY} environment variable set"));
+        let test_user_2_clerk_id = std::env::var(CLERK_USER_2_ID_KEY).expect(&format!(
+            "no {CLERK_USER_2_ID_KEY} environment variable set"
+        ));
         let auth = ClerkAuthService {
             secret: secrecy::SecretBox::new(Box::new(
                 config
@@ -98,7 +113,6 @@ impl TestApp {
                     .expose_secret()
                     .to_owned(),
             )),
-            test_user_id,
         };
         // Set environment for running the app
         if let Some(env) = run_env {
@@ -121,6 +135,8 @@ impl TestApp {
             db_settings,
             db_pool,
             api_client,
+            test_user_clerk_id,
+            test_user_2_clerk_id,
             auth,
             health_check_service: HttpService {
                 endpoint: URLS.health_check.clone(),
@@ -447,10 +463,19 @@ impl TestApp {
     }
     pub async fn generate_session_token(&self) -> SessionToken {
         self.auth
-            .get_test_session_token(&self.api_client.client)
+            .get_test_session_token(&self.api_client.client, &self.test_user_clerk_id)
             .await
     }
-    pub async fn generate_api_key(&self, token: &SessionToken) -> String {
+
+    pub async fn generate_user_2_session_token(&self) -> SessionToken {
+        self.auth
+            .get_test_session_token(&self.api_client.client, &self.test_user_2_clerk_id)
+            .await
+    }
+    pub async fn generate_api_key(
+        &self,
+        token: &SessionToken,
+    ) -> handlers::api::keys::ResponsePayload {
         let response = self
             .api_keys_service
             .generate_api_key(&self.api_client, Some(token))
@@ -458,6 +483,6 @@ impl TestApp {
         let key: handlers::api::keys::ResponsePayload = handle_json_response(response)
             .await
             .expect("failed to retrieve key");
-        key.api_key
+        key
     }
 }

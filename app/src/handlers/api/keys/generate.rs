@@ -2,7 +2,7 @@ use crate::{handlers::ApiError, helpers::hash_api_key, postgres::PostgresRepo};
 use actix_web::{HttpResponse, post, web};
 use anyhow::Context;
 use clerk_rs::validators::authorizer::ClerkJwt;
-use domain::{ApiKeyInputDTO, UserId};
+use domain::{ApiKeyInputDTO, KeyId, UserId};
 use rand::{Rng, distr::Alphanumeric};
 use secrecy::{ExposeSecret, SecretBox};
 use serde::{Deserialize, Serialize};
@@ -14,6 +14,7 @@ pub struct RequestPayload {
 #[derive(Serialize, Deserialize)]
 pub struct ResponsePayload {
     pub api_key: String,
+    pub id: KeyId,
 }
 
 #[post("")]
@@ -35,12 +36,13 @@ pub async fn generate_api_key(
         name: key_name,
         key_hash,
     };
-    let _key_id = repo
+    let key_id = repo
         .insert(&key)
         .await
         .context("failed to save key in database")?;
 
     Ok(HttpResponse::Ok().json(ResponsePayload {
+        id: key_id,
         api_key: api_key.expose_secret().clone(),
     }))
 }

@@ -56,7 +56,7 @@ pub async fn landing_page_requires_authentication_in_production() {
     let api_key = app.generate_api_key(&token).await;
     let response = app
         .ogc_service
-        .get_landing_page(&app.api_client, Some(OgcAuth::Key(api_key)))
+        .get_landing_page(&app.api_client, Some(OgcAuth::Key(api_key.api_key)))
         .await;
     assert_ok(&response);
 }

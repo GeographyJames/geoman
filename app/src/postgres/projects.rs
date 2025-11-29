@@ -106,12 +106,12 @@ impl SelectOne<ProjectId> for ProjectName {
     }
 }
 
-impl SelectOneWithParams for Project {
+impl SelectOneWithParams<ProjectId> for Project {
     type Params<'a> = &'a SelectOneParams<'a>;
-    type Id<'a> = ProjectId;
+
     async fn select_one_with_params<'a, E>(
         executor: &'a E,
-        id: Self::Id<'a>,
+        id: ProjectId,
         params: Self::Params<'a>,
     ) -> Result<Option<Self>, RepositoryError>
     where

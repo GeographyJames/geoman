@@ -1,3 +1,4 @@
+use domain::KeyId;
 use reqwest::{RequestBuilder, Response, header::AUTHORIZATION};
 
 use crate::common::{constants::REQUEST_FAILED, services::HttpClient, types::SessionToken};
@@ -34,5 +35,20 @@ impl ApiKeysService {
             .send()
             .await
             .expect(REQUEST_FAILED)
+    }
+
+    pub async fn revoke(
+        &self,
+        client: &HttpClient,
+        id: KeyId,
+        token: Option<&SessionToken>,
+    ) -> Response {
+        auth_request(
+            client.patch(format!("{}/{}/revoke", self.endpoint, id.0)),
+            token,
+        )
+        .send()
+        .await
+        .expect(REQUEST_FAILED)
     }
 }

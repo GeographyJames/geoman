@@ -2,7 +2,7 @@ use crate::{
     URLS,
     enums::GeoManEnvironment,
     handlers::{
-        api::keys::{generate_api_key, get_api_keys},
+        api::keys::{generate_api_key, get_api_keys, revoke_api_key},
         ogc_api,
     },
     middleware::dual_auth_middleware,
@@ -45,7 +45,8 @@ pub fn api_key_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         scope(&URLS.api.keys)
             .service(generate_api_key)
-            .service(get_api_keys),
+            .service(get_api_keys)
+            .service(revoke_api_key),
     );
 }
 

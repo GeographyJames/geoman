@@ -1,3 +1,5 @@
+use clerk_rs::validators::authorizer::ClerkJwt;
+use domain::KeyId;
 /// Appplication repository
 use futures::Stream;
 use sqlx::PgPool;
@@ -59,13 +61,13 @@ impl PostgresRepo {
     }
 
     #[tracing::instrument(skip(self, params, id))]
-    pub async fn select_one_with_params<'a, T>(
+    pub async fn select_one_with_params<'a, T, ID>(
         &'a self,
-        id: T::Id<'a>,
+        id: ID,
         params: T::Params<'a>,
     ) -> Result<Option<T>, RepositoryError>
     where
-        T: SelectOneWithParams,
+        T: SelectOneWithParams<ID>,
     {
         T::select_one_with_params(&self.db_pool, id, params).await
     }
@@ -76,5 +78,21 @@ impl PostgresRepo {
         T: Insert,
     {
         item.insert(&self.db_pool).await
+    }
+
+    #[tracing::instrument(skip(self, id))]
+    pub async fn revoke_api_key(&self, id: KeyId, user: &ClerkJwt) -> Result<(), RepositoryError> {
+        sqlx::query_scalar!(
+            "
+        UPDATE app.api_keys
+        SET revoked = true
+        WHERE id = $1
+        AND user_id = (SELECT id FROM app.users WHERE clerk_id = $2) RETURNING id",
+            id.0,
+            user.sub
+        )
+        .fetch_one(&self.db_pool)
+        .await?;
+        Ok(())
     }
 }

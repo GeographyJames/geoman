@@ -35,7 +35,7 @@ pub async fn get_project_features(
         .ok_or_else(|| ApiError::ProjectNotFound(project_id))?;
     let request_crs = query.crs.clone();
 
-    repo.select_one_with_params::<ProjectCollection>(
+    repo.select_one_with_params::<ProjectCollection, _>(
         collection_id,
         &project_collections::SelectOneParams { project_id },
     )

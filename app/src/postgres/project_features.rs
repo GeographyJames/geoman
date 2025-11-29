@@ -60,14 +60,11 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
     }
 }
 
-impl SelectOneWithParams for ProjectFeature {
+impl SelectOneWithParams<&ProjectFeatureId> for ProjectFeature {
     type Params<'a> = &'a SelectOneParams<'a>;
-
-    type Id<'a> = &'a ProjectFeatureId;
-
     async fn select_one_with_params<'a, E>(
         executor: &'a E,
-        feature_id: Self::Id<'a>,
+        feature_id: &ProjectFeatureId,
         params: Self::Params<'a>,
     ) -> Result<Option<Self>, RepositoryError>
     where

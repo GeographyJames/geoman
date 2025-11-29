@@ -42,12 +42,11 @@ pub trait SelectAllWithParams {
         &'a E: sqlx::PgExecutor<'a>;
 }
 
-pub trait SelectOneWithParams {
+pub trait SelectOneWithParams<ID> {
     type Params<'a>;
-    type Id<'a>;
     async fn select_one_with_params<'a, E>(
         executor: &'a E,
-        id: Self::Id<'a>,
+        id: ID,
         params: Self::Params<'a>,
     ) -> Result<Option<Self>, RepositoryError>
     where

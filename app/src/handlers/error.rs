@@ -31,6 +31,9 @@ impl ResponseError for ApiError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         match self {
             ApiError::Unexpected(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiError::Database(RepositoryError::Sqlx(sqlx::Error::RowNotFound)) => {
+                StatusCode::NOT_FOUND
+            }
             ApiError::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::ProjectNotFound(_) => StatusCode::NOT_FOUND,
             ApiError::ProjectCollectionNotFound { .. } => StatusCode::NOT_FOUND,

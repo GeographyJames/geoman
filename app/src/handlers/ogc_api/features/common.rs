@@ -24,7 +24,7 @@ pub async fn retrieve_feature_from_database<'a>(
         CollectionId::Projects => {
             let project_id = ProjectId(feature_id);
             let params = project::SelectOneParams { crs: params.crs };
-            repo.select_one_with_params::<Project>(project_id, &params)
+            repo.select_one_with_params::<Project, _>(project_id, &params)
                 .await?
                 .ok_or_else(|| ApiError::ProjectNotFound(project_id))?
                 .into_ogc_feature(collection_url)
@@ -35,7 +35,7 @@ pub async fn retrieve_feature_from_database<'a>(
                 id: feature_id,
             };
 
-            repo.select_one_with_params::<ProjectFeature>(&id, params)
+            repo.select_one_with_params::<ProjectFeature, _>(&id, params)
                 .await?
                 .ok_or_else(|| ApiError::ProjectFeatureNotFound(id))?
                 .into_ogc_feature(collection_url)
