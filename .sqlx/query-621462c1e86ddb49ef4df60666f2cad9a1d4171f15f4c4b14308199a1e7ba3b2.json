@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE app.api_keys\n        SET revoked = true\n        WHERE id = $1\n        AND user_id = (SELECT id FROM app.users WHERE clerk_id = $2) RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "621462c1e86ddb49ef4df60666f2cad9a1d4171f15f4c4b14308199a1e7ba3b2"
+}

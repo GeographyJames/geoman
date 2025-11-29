@@ -30,7 +30,7 @@ impl PostgresRepo {
     }
 
     #[tracing::instrument(skip(self, id))]
-    pub async fn select_one<'a, T, ID>(&'a self, id: ID) -> Result<Option<T>, RepositoryError>
+    pub async fn select_one<T, ID>(&self, id: ID) -> Result<Option<T>, RepositoryError>
     where
         T: SelectOne<ID>,
     {

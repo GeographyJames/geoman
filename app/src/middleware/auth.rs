@@ -51,7 +51,7 @@ async fn validate_api_key<B: MessageBody>(
     let user_id: UserId = repo
         .select_one(&key_hash)
         .await
-        .map_err(|e| ErrorInternalServerError(e))?
+        .map_err(ErrorInternalServerError)?
         .ok_or_else(|| ErrorUnauthorized("Invalid key"))?;
 
     req.extensions_mut().insert(user_id);
