@@ -2,6 +2,7 @@ use crate::{handlers::ApiError, helpers::hash_api_key, postgres::PostgresRepo};
 use actix_web::{HttpResponse, post, web};
 use anyhow::Context;
 use clerk_rs::validators::authorizer::ClerkJwt;
+use domain::{ApiKeyInputDTO, UserId};
 use rand::{Rng, distr::Alphanumeric};
 use secrecy::{ExposeSecret, SecretBox};
 use serde::{Deserialize, Serialize};
@@ -22,27 +23,22 @@ pub async fn generate_api_key(
     repo: web::Data<PostgresRepo>,
     payload: web::Json<RequestPayload>,
 ) -> Result<HttpResponse, ApiError> {
-    let clerk_user_id = &jwt.sub;
-    let user_id = sqlx::query_scalar!(
-        "SELECT id FROM app.users WHERE clerk_id = $1",
-        clerk_user_id
-    )
-    .fetch_optional(&repo.db_pool)
-    .await
-    .context("failed to query database for user")?
-    .ok_or_else(|| ApiError::Authentication(anyhow::anyhow!("Api key not found in database")))?;
+    let user_id: UserId = repo
+        .select_one(&*jwt)
+        .await?
+        .ok_or_else(|| ApiError::Unexpected(anyhow::anyhow!("Api key not found in database")))?;
     let api_key = generate_api_key_string();
-    let api_key_hash = hash_api_key(&api_key);
-
-    sqlx::query!(
-        "INSERT INTO app.api_keys (user_id, name, key_hash) VALUES ($1, $2, $3)",
+    let key_hash = hash_api_key(&api_key);
+    let RequestPayload { key_name } = payload.into_inner();
+    let key = ApiKeyInputDTO {
         user_id,
-        payload.key_name,
-        api_key_hash
-    )
-    .execute(&repo.db_pool)
-    .await
-    .context("failed to save key in database")?;
+        name: key_name,
+        key_hash,
+    };
+    let _key_id = repo
+        .insert(&key)
+        .await
+        .context("failed to save key in database")?;
 
     Ok(HttpResponse::Ok().json(ResponsePayload {
         api_key: api_key.expose_secret().clone(),

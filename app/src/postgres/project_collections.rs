@@ -53,13 +53,13 @@ impl CollectionRow {
 impl SelectOneWithParams for ProjectCollection {
     type Params<'a> = &'a SelectOneParams;
     type Id<'a> = ProjectCollectionId;
-    async fn select_one_with_params<'a, 'e, E>(
-        executor: &'e E,
+    async fn select_one_with_params<'a, E>(
+        executor: &'a E,
         id: Self::Id<'a>,
         params: Self::Params<'a>,
     ) -> Result<Option<Self>, RepositoryError>
     where
-        &'e E: sqlx::PgExecutor<'e>,
+        &'a E: sqlx::PgExecutor<'a>,
     {
         let extent_crs = Crs::default();
         let row_opt = sqlx::query_as!(
@@ -121,12 +121,12 @@ impl SelectOneWithParams for ProjectCollection {
 impl SelectAllWithParams for ProjectCollection {
     type Params<'a> = &'a SelectAllParams;
     type MetaData<'a> = ();
-    async fn select_all_with_params<'a, 'e, E>(
-        executor: &'e E,
+    async fn select_all_with_params<'a, E>(
+        executor: &'a E,
         params: Self::Params<'a>,
     ) -> Result<(Vec<Self>, ()), RepositoryError>
     where
-        &'e E: sqlx::PgExecutor<'e>,
+        &'a E: sqlx::PgExecutor<'a>,
     {
         let extent_crs = Crs::default();
 

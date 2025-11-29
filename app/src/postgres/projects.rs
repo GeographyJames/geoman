@@ -39,12 +39,12 @@ impl Into<Project> for ProjectRow {
 impl SelectAllWithParams for Project {
     type Params<'a> = SelectAllParams<'a>;
     type MetaData<'a> = ();
-    async fn select_all_with_params<'a, 'e, E>(
-        executor: &'e E,
+    async fn select_all_with_params<'a, E>(
+        executor: &'a E,
         params: Self::Params<'a>,
     ) -> Result<(Vec<Self>, Self::MetaData<'a>), RepositoryError>
     where
-        &'e E: sqlx::PgExecutor<'e>,
+        &'a E: sqlx::PgExecutor<'a>,
     {
         let SelectAllParams {
             limit,
@@ -89,14 +89,13 @@ impl SelectAllWithParams for Project {
     }
 }
 
-impl SelectOne for ProjectName {
-    type Id<'a> = ProjectId;
-    async fn select_one<'a, 'e, E>(
-        executor: &'e E,
-        id: Self::Id<'a>,
+impl SelectOne<ProjectId> for ProjectName {
+    async fn select_one<'a, E>(
+        executor: &'a E,
+        id: ProjectId,
     ) -> Result<Option<Self>, RepositoryError>
     where
-        &'e E: sqlx::PgExecutor<'e>,
+        &'a E: sqlx::PgExecutor<'a>,
     {
         let project_row =
             sqlx::query_scalar!(r#"SELECT name FROM app.projects WHERE id = $1"#, id.0)
@@ -110,13 +109,13 @@ impl SelectOne for ProjectName {
 impl SelectOneWithParams for Project {
     type Params<'a> = &'a SelectOneParams<'a>;
     type Id<'a> = ProjectId;
-    async fn select_one_with_params<'a, 'e, E>(
-        executor: &'e E,
+    async fn select_one_with_params<'a, E>(
+        executor: &'a E,
         id: Self::Id<'a>,
         params: Self::Params<'a>,
     ) -> Result<Option<Self>, RepositoryError>
     where
-        &'e E: sqlx::PgExecutor<'e>,
+        &'a E: sqlx::PgExecutor<'a>,
     {
         let SelectOneParams { crs } = params;
         let project_row = sqlx::query_as!(

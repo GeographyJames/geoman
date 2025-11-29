@@ -1,5 +1,6 @@
 use actix_web::HttpRequest;
 use anyhow::Context;
+use domain::KeyHash;
 use secrecy::{ExposeSecret, SecretBox};
 use sha2::{Digest, Sha256};
 
@@ -34,8 +35,8 @@ pub fn error_chain_fmt(
 }
 
 /// Hash an API key using SHA256 for database storage
-pub fn hash_api_key(api_key: &SecretBox<String>) -> String {
+pub fn hash_api_key(api_key: &SecretBox<String>) -> KeyHash {
     let mut hasher = Sha256::new();
     hasher.update(api_key.expose_secret().as_bytes());
-    hex::encode(hasher.finalize())
+    KeyHash(hex::encode(hasher.finalize()))
 }

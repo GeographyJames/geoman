@@ -4,23 +4,18 @@ use crate::repo::{PoolWrapper, RepositoryError, StreamItem};
 
 pub trait SelectAll {
     #[allow(async_fn_in_trait)]
-    async fn select_all<'e, E>(executor: &'e E) -> Result<Vec<Self>, RepositoryError>
+    async fn select_all<'a, E>(executor: &'a E) -> Result<Vec<Self>, RepositoryError>
     where
         Self: Sized,
-        &'e E: sqlx::PgExecutor<'e>;
+        &'a E: sqlx::PgExecutor<'a>;
 }
 
-pub trait SelectOne {
-    type Id<'a>;
-
+pub trait SelectOne<ID> {
     #[allow(async_fn_in_trait)]
-    async fn select_one<'a, 'e, E>(
-        executor: &'e E,
-        id: Self::Id<'a>,
-    ) -> Result<Option<Self>, RepositoryError>
+    async fn select_one<'a, E>(executor: &'a E, id: ID) -> Result<Option<Self>, RepositoryError>
     where
         Self: Sized,
-        &'e E: sqlx::PgExecutor<'e>;
+        &'a E: sqlx::PgExecutor<'a>;
 }
 
 pub trait SelectAllWithParamsStreaming {
@@ -38,24 +33,32 @@ pub trait SelectAllWithParams {
     type Params<'a>;
     type MetaData<'a>;
 
-    async fn select_all_with_params<'a, 'e, E>(
-        executor: &'e E,
+    async fn select_all_with_params<'a, E>(
+        executor: &'a E,
         params: Self::Params<'a>,
     ) -> Result<(Vec<Self>, Self::MetaData<'a>), RepositoryError>
     where
         Self: Sized,
-        &'e E: sqlx::PgExecutor<'e>;
+        &'a E: sqlx::PgExecutor<'a>;
 }
 
 pub trait SelectOneWithParams {
     type Params<'a>;
     type Id<'a>;
-    async fn select_one_with_params<'a, 'e, E>(
-        executor: &'e E,
+    async fn select_one_with_params<'a, E>(
+        executor: &'a E,
         id: Self::Id<'a>,
         params: Self::Params<'a>,
     ) -> Result<Option<Self>, RepositoryError>
     where
         Self: Sized,
-        &'e E: sqlx::PgExecutor<'e>;
+        &'a E: sqlx::PgExecutor<'a>;
+}
+
+pub trait Insert {
+    type Id;
+    async fn insert<'a, E>(&self, executor: &'a E) -> Result<Self::Id, RepositoryError>
+    where
+        Self: Sized,
+        &'a E: sqlx::PgExecutor<'a>;
 }

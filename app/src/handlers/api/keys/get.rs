@@ -1,4 +1,4 @@
-use actix_web::{HttpResponse, get, web};
+use actix_web::{get, web};
 use clerk_rs::validators::authorizer::ClerkJwt;
 use domain::ApiKey;
 

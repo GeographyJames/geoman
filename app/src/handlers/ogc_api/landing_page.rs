@@ -44,8 +44,8 @@ pub async fn get_project_landing_page(
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<web::Json<LandingPage>, ApiError> {
-    let _project = repo
-        .select_one::<ProjectName>(*project_id)
+    let _project: ProjectName = repo
+        .select_one(*project_id)
         .await?
         .ok_or(ApiError::ProjectNotFound(*project_id))?;
     let base_url = get_base_url(&req);

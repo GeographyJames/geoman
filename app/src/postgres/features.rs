@@ -49,13 +49,13 @@ impl SelectOneWithParams for Feature {
     type Params<'a> = &'a SelectOneParams<'a>;
     type Id<'a> = FeatureId;
 
-    async fn select_one_with_params<'a, 'e, E>(
-        executor: &'e E,
+    async fn select_one_with_params<'a, E>(
+        executor: &'a E,
         id: Self::Id<'a>,
         params: Self::Params<'a>,
     ) -> Result<Option<Self>, crate::repo::RepositoryError>
     where
-        &'e E: sqlx::PgExecutor<'e>,
+        &'a E: sqlx::PgExecutor<'a>,
     {
         let SelectOneParams { schema, table, crs } = params;
         sqlx::query_as::<_, FeatureRow>(&format!(

@@ -6,3 +6,4 @@ pub use pg_repo::PostgresRepo;
 mod api_key;
 mod features;
 mod gis_data_table;
+mod users;

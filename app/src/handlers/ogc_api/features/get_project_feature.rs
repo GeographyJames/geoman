@@ -27,8 +27,8 @@ pub async fn get_project_feature(
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let (project_id, collection_id, feature_id) = path.into_inner();
-    let _project_row = repo
-        .select_one::<ProjectName>(project_id)
+    let _project: ProjectName = repo
+        .select_one(project_id)
         .await?
         .ok_or_else(|| ApiError::ProjectNotFound(project_id))?;
 

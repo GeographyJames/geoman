@@ -131,16 +131,14 @@ WHERE schemaname = 'gis_data'
     }
 }
 
-impl SelectOne for GisDataTable {
-    type Id<'a> = TableName;
-
-    async fn select_one<'a, 'e, E>(
-        executor: &'e E,
-        table_name: Self::Id<'a>,
+impl SelectOne<TableName> for GisDataTable {
+    async fn select_one<'a, E>(
+        executor: &'a E,
+        table_name: TableName,
     ) -> Result<Option<Self>, RepositoryError>
     where
         Self: Sized,
-        &'e E: sqlx::PgExecutor<'e>,
+        &'a E: sqlx::PgExecutor<'a>,
     {
         let extent_crs = Crs::default();
         let row = match sqlx::query_as!(

@@ -65,13 +65,13 @@ impl SelectOneWithParams for ProjectFeature {
 
     type Id<'a> = &'a ProjectFeatureId;
 
-    async fn select_one_with_params<'a, 'e, E>(
-        executor: &'e E,
+    async fn select_one_with_params<'a, E>(
+        executor: &'a E,
         feature_id: Self::Id<'a>,
         params: Self::Params<'a>,
     ) -> Result<Option<Self>, RepositoryError>
     where
-        &'e E: sqlx::PgExecutor<'e>,
+        &'a E: sqlx::PgExecutor<'a>,
     {
         let ProjectFeatureId { collection_id, id } = feature_id;
         let SelectOneParams { project_id, crs } = params;

@@ -75,8 +75,8 @@ pub async fn get_project_collections(
     repo: web::Data<PostgresRepo>,
     project_id: web::Path<ProjectId>,
 ) -> Result<web::Json<ogcapi_types::common::Collections>, ApiError> {
-    let _project_row = repo
-        .select_one::<ProjectName>(*project_id)
+    let _project: ProjectName = repo
+        .select_one(*project_id)
         .await?
         .ok_or(ApiError::ProjectNotFound(*project_id))?;
     let params = SelectAllParams {
@@ -153,7 +153,7 @@ pub async fn get_collection(
         CollectionId::Projects => project_collection(&collections_url),
 
         CollectionId::DatabaseTable(table_name) => repo
-            .select_one::<GisDataTable>(table_name.clone())
+            .select_one::<GisDataTable, _>(table_name.clone())
             .await?
             .ok_or_else(|| ApiError::GisDataTableNotFound(table_name))?
             .into_ogc_collection(&collections_url),
@@ -170,8 +170,8 @@ pub async fn get_project_collection(
     repo: web::Data<PostgresRepo>,
 ) -> Result<web::Json<ogcapi_types::common::Collection>, ApiError> {
     let (project_id, collection_id) = path.into_inner();
-    let _project_row = repo
-        .select_one::<ProjectName>(project_id)
+    let _project: ProjectName = repo
+        .select_one(project_id)
         .await?
         .ok_or_else(|| ApiError::ProjectNotFound(project_id))?;
     let base_url = get_base_url(&req);

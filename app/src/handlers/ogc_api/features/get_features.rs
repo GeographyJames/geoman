@@ -66,8 +66,8 @@ pub async fn get_features(
             HttpResponse::Ok().json(collection)
         }
         CollectionId::DatabaseTable(table) => {
-            let _table_row = repo
-                .select_one::<GisDataTable>(table.clone())
+            let _table_row: GisDataTable = repo
+                .select_one(table.clone())
                 .await?
                 .ok_or(ApiError::CollectionNotFound)?;
 

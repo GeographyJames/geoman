@@ -5,7 +5,7 @@ use sqlx::PgPool;
 use crate::repo::{
     PoolWrapper, RepositoryError, StreamItem,
     traits::{
-        SelectAll, SelectAllWithParams, SelectAllWithParamsStreaming, SelectOne,
+        Insert, SelectAll, SelectAllWithParams, SelectAllWithParamsStreaming, SelectOne,
         SelectOneWithParams,
     },
 };
@@ -28,9 +28,9 @@ impl PostgresRepo {
     }
 
     #[tracing::instrument(skip(self, id))]
-    pub async fn select_one<'a, T>(&self, id: T::Id<'a>) -> Result<Option<T>, RepositoryError>
+    pub async fn select_one<'a, T, ID>(&'a self, id: ID) -> Result<Option<T>, RepositoryError>
     where
-        T: SelectOne,
+        T: SelectOne<ID>,
     {
         T::select_one(&self.db_pool, id).await
     }
@@ -49,7 +49,7 @@ impl PostgresRepo {
 
     #[tracing::instrument(skip(self, params))]
     pub async fn select_all_with_params<'a, T>(
-        &self,
+        &'a self,
         params: T::Params<'a>,
     ) -> Result<(Vec<T>, T::MetaData<'a>), RepositoryError>
     where
@@ -60,7 +60,7 @@ impl PostgresRepo {
 
     #[tracing::instrument(skip(self, params, id))]
     pub async fn select_one_with_params<'a, T>(
-        &self,
+        &'a self,
         id: T::Id<'a>,
         params: T::Params<'a>,
     ) -> Result<Option<T>, RepositoryError>
@@ -68,5 +68,13 @@ impl PostgresRepo {
         T: SelectOneWithParams,
     {
         T::select_one_with_params(&self.db_pool, id, params).await
+    }
+
+    #[tracing::instrument(skip(self, item))]
+    pub async fn insert<T>(&self, item: &T) -> Result<T::Id, RepositoryError>
+    where
+        T: Insert,
+    {
+        item.insert(&self.db_pool).await
     }
 }

@@ -7,11 +7,12 @@ use actix_web::{
     middleware::Next,
     web::Data,
 };
-use anyhow::Context;
+
 use clerk_rs::validators::{
     authorizer::{ClerkAuthorizer, ClerkError},
     jwks::MemoryCacheJwksProvider,
 };
+
 use domain::UserId;
 use secrecy::SecretBox;
 
@@ -47,23 +48,11 @@ async fn validate_api_key<B: MessageBody>(
         .app_data::<Data<PostgresRepo>>()
         .ok_or_else(|| ErrorInternalServerError("Database not configured"))?;
     let key_hash = hash_api_key(token);
-
-    let user_id = UserId(
-        sqlx::query_scalar!(
-            "UPDATE app.api_keys
-                SET last_used = NOW()
-              WHERE key_hash = $1
-                AND revoked = false
-                AND expiry > NOW()
-          RETURNING user_id",
-            key_hash
-        )
-        .fetch_optional(&repo.db_pool)
+    let user_id: UserId = repo
+        .select_one(&key_hash)
         .await
-        .context("failed to query database")
-        .map_err(ErrorInternalServerError)?
-        .ok_or_else(|| ErrorUnauthorized("Invalid key"))?,
-    );
+        .map_err(|e| ErrorInternalServerError(e))?
+        .ok_or_else(|| ErrorUnauthorized("Invalid key"))?;
 
     req.extensions_mut().insert(user_id);
     next.call(req).await

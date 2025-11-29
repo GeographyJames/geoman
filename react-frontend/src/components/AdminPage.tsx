@@ -34,8 +34,17 @@ export default function AdminPage() {
     console.log("Revoking key:", keyId);
   };
 
+  const handleRenewKey = async (keyId: number) => {
+    // TODO: Implement renew functionality
+    console.log("Renewing key:", keyId);
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
+  };
+
+  const isExpired = (expiryDate: string) => {
+    return new Date(expiryDate) < new Date();
   };
 
   const formatDate = (dateString: string) => {
@@ -148,16 +157,32 @@ export default function AdminPage() {
                       </td>
                       <td className="text-sm">{formatDate(key.expiry)}</td>
                       <td>
-                        <div className="badge badge-success badge-sm">Active</div>
+                        {isExpired(key.expiry) ? (
+                          <div className="badge badge-warning badge-sm">Expired</div>
+                        ) : (
+                          <div className="badge badge-success badge-sm">Active</div>
+                        )}
                       </td>
                       <td>
-                        <button
-                          onClick={() => handleRevokeKey(key.id)}
-                          className="btn btn-ghost btn-sm text-error gap-1"
-                        >
-                          <Trash2 size={14} />
-                          Revoke
-                        </button>
+                        <div className="flex gap-2">
+                          {isExpired(key.expiry) ? (
+                            <button
+                              onClick={() => handleRenewKey(key.id)}
+                              className="btn btn-ghost btn-sm text-primary gap-1"
+                            >
+                              <Plus size={14} />
+                              Renew
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleRevokeKey(key.id)}
+                              className="btn btn-ghost btn-sm text-error gap-1"
+                            >
+                              <Trash2 size={14} />
+                              Revoke
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

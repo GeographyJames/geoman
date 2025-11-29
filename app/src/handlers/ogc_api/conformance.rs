@@ -47,8 +47,8 @@ pub async fn get_project_conformance_declaration(
     repo: web::Data<PostgresRepo>,
     project_id: web::Path<ProjectId>,
 ) -> Result<web::Json<&'static Conformance>, ApiError> {
-    let _project_row = repo
-        .select_one::<ProjectName>(*project_id)
+    let _project: ProjectName = repo
+        .select_one(*project_id)
         .await?
         .ok_or(ApiError::ProjectNotFound(*project_id))?;
     Ok(web::Json(&CONFORMANCE_DECLARATION))
