@@ -68,3 +68,8 @@ pub mod features {
         pub crs: Crs,
     }
 }
+pub mod api_keys {
+    pub struct SelectAllParams<'a> {
+        pub clerk_id: &'a str,
+    }
+}

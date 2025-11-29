@@ -1,23 +1,17 @@
 import { SignedIn, UserButton } from "@clerk/clerk-react";
 import { Key, Plus, Copy, AlertCircle, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCreateApiKey } from "@/hooks/api/useCreateApiKey";
-
-interface ApiKey {
-  id: number;
-  name: string;
-  created: string;
-  last_used: string | null;
-  expiry: string;
-  revoked: boolean;
-}
+import { useApiKeys } from "@/hooks/api/useApiKeys";
 
 export default function AdminPage() {
-  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
 
+  const queryClient = useQueryClient();
+  const { data: apiKeys = [], isLoading, error } = useApiKeys();
   const createApiKeyMutation = useCreateApiKey();
 
   const handleCreateKey = async () => {
@@ -27,6 +21,8 @@ export default function AdminPage() {
       });
       setGeneratedKey(result.api_key);
       setNewKeyName("");
+      // Refresh the API keys list
+      queryClient.invalidateQueries({ queryKey: ["apiKeys"] });
     } catch (error) {
       console.error("Failed to create API key:", error);
       alert("Failed to create API key. Please try again.");
@@ -34,12 +30,8 @@ export default function AdminPage() {
   };
 
   const handleRevokeKey = async (keyId: number) => {
+    // TODO: Implement revoke functionality
     console.log("Revoking key:", keyId);
-    setApiKeys(
-      apiKeys.map((key) =>
-        key.id === keyId ? { ...key, revoked: true } : key
-      )
-    );
   };
 
   const copyToClipboard = (text: string) => {
@@ -100,7 +92,20 @@ export default function AdminPage() {
 
         {/* API Keys Table */}
         <div className="card bg-base-100 border border-base-300">
-          {apiKeys.length === 0 ? (
+          {isLoading ? (
+            <div className="card-body items-center text-center py-12">
+              <span className="loading loading-spinner loading-lg"></span>
+              <p className="mt-4 text-base-content/70">Loading API keys...</p>
+            </div>
+          ) : error ? (
+            <div className="card-body items-center text-center py-12">
+              <AlertCircle size={48} className="text-error mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Failed to load API keys</h3>
+              <p className="text-base-content/70">
+                {error instanceof Error ? error.message : "An error occurred"}
+              </p>
+            </div>
+          ) : apiKeys.length === 0 ? (
             <div className="card-body items-center text-center py-12">
               <Key size={48} className="opacity-30 mb-4" />
               <h3 className="text-lg font-semibold mb-2">No API keys</h3>
@@ -130,7 +135,7 @@ export default function AdminPage() {
                 </thead>
                 <tbody>
                   {apiKeys.map((key) => (
-                    <tr key={key.id} className={key.revoked ? "opacity-50" : ""}>
+                    <tr key={key.id}>
                       <td>
                         <div className="flex items-center gap-2">
                           <Key size={16} className="opacity-50" />
@@ -143,22 +148,16 @@ export default function AdminPage() {
                       </td>
                       <td className="text-sm">{formatDate(key.expiry)}</td>
                       <td>
-                        {key.revoked ? (
-                          <div className="badge badge-error badge-sm">Revoked</div>
-                        ) : (
-                          <div className="badge badge-success badge-sm">Active</div>
-                        )}
+                        <div className="badge badge-success badge-sm">Active</div>
                       </td>
                       <td>
-                        {!key.revoked && (
-                          <button
-                            onClick={() => handleRevokeKey(key.id)}
-                            className="btn btn-ghost btn-sm text-error gap-1"
-                          >
-                            <Trash2 size={14} />
-                            Revoke
-                          </button>
-                        )}
+                        <button
+                          onClick={() => handleRevokeKey(key.id)}
+                          className="btn btn-ghost btn-sm text-error gap-1"
+                        >
+                          <Trash2 size={14} />
+                          Revoke
+                        </button>
                       </td>
                     </tr>
                   ))}

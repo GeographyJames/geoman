@@ -1,5 +1,5 @@
 use ogcapi_types::common::Crs;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 #[derive(Clone, Copy, Default, Debug)]
@@ -16,6 +16,10 @@ pub struct TeamId(pub i32);
 
 #[derive(Clone, Copy, Default, Debug, Deserialize)]
 pub struct FeatureId(pub i32);
+
+#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type)]
+#[sqlx(transparent)]
+pub struct KeyId(pub i32);
 
 #[derive(Clone, Copy, Default, Debug, Deserialize)]
 pub struct ProjectCollectionId(pub i32);
