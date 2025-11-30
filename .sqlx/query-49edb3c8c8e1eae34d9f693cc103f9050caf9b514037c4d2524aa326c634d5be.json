@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT keys.id as \"id: KeyId\",\n               name,\n               created,\n               last_used,\n               expiry,\n               last_used_ip as \"last_used_ip:IpAddr\",\n               last_used_user_agent\n          FROM app.api_keys keys\n          JOIN app.users users ON users.id = keys.user_id\n         WHERE revoked IS NULL\n           AND users.clerk_id = $1\n         ORDER BY created DESC\n           ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: KeyId",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "created",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "last_used",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "expiry",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "last_used_ip:IpAddr",
+        "type_info": "Inet"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_used_user_agent",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "49edb3c8c8e1eae34d9f693cc103f9050caf9b514037c4d2524aa326c634d5be"
+}

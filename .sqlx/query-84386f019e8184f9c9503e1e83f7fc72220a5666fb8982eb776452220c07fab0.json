@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        UPDATE app.api_keys\n        SET revoked = true\n        WHERE id = $1\n        AND user_id = (SELECT id FROM app.users WHERE clerk_id = $2) RETURNING id",
+  "query": "\n        UPDATE app.api_keys\n        SET revoked = NOW()\n        WHERE id = $1\n        AND user_id = (SELECT id FROM app.users WHERE clerk_id = $2) RETURNING id",
   "describe": {
     "columns": [
       {
@@ -19,5 +19,5 @@
       false
     ]
   },
-  "hash": "621462c1e86ddb49ef4df60666f2cad9a1d4171f15f4c4b14308199a1e7ba3b2"
+  "hash": "84386f019e8184f9c9503e1e83f7fc72220a5666fb8982eb776452220c07fab0"
 }

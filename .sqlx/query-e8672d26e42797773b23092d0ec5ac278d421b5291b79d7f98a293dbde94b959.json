@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE app.api_keys\n        SET expiry = (NOW() + INTERVAL '6 months')\n        WHERE id = $1 AND user_id = (\n             SELECT id FROM app.users WHERE clerk_id = $2\n             )\n        RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e8672d26e42797773b23092d0ec5ac278d421b5291b79d7f98a293dbde94b959"
+}
