@@ -7,6 +7,8 @@ export interface ApiKey {
   created: string;
   last_used: string | null;
   expiry: string;
+  last_used_ip: string | null;
+  last_used_user_agent: string | null;
 }
 
 export function useApiKeys() {

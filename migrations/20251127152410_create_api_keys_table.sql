@@ -7,7 +7,10 @@ CREATE TABLE app.api_keys (
     created TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_used TIMESTAMPTZ, -- Track when key was last used
     expiry TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '6 months') CHECK (expiry <= now() + interval '12 months'),
-    revoked BOOLEAN NOT NULL DEFAULT FALSE -- Soft delete for audit trail
+    revoked TIMESTAMPTZ DEFAULT NULL,
+    last_used_ip INET,
+    last_used_user_agent TEXT
+
 );
 
 -- Critical index for fast lookup by hash during authentication
@@ -17,4 +20,4 @@ CREATE UNIQUE INDEX idx_api_keys_key_hash ON app.api_keys(key_hash);
 CREATE INDEX idx_api_keys_user_id ON app.api_keys(user_id);
 
 -- Index for finding active (non-revoked) keys
-CREATE INDEX idx_api_keys_active ON app.api_keys(user_id, revoked) WHERE revoked = FALSE;
+CREATE INDEX idx_api_keys_active ON app.api_keys(user_id, revoked) WHERE revoked = NULL;

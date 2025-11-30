@@ -1,3 +1,5 @@
+use std::net::IpAddr;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -10,6 +12,8 @@ pub struct ApiKey {
     pub created: DateTime<Utc>,
     pub last_used: Option<DateTime<Utc>>,
     pub expiry: DateTime<Utc>,
+    pub last_used_ip: Option<IpAddr>,
+    pub last_used_user_agent: Option<String>,
 }
 
 pub struct ApiKeyInputDTO {

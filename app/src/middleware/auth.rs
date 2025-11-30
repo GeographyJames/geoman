@@ -1,9 +1,11 @@
+use std::{net::IpAddr, str::FromStr};
+
 use actix_web::{
     HttpMessage,
     body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
     error::{ErrorInternalServerError, ErrorUnauthorized},
-    http::header::AUTHORIZATION,
+    http::header::{AUTHORIZATION, USER_AGENT},
     middleware::Next,
     web::Data,
 };
@@ -16,7 +18,7 @@ use clerk_rs::validators::{
 use domain::UserId;
 use secrecy::SecretBox;
 
-use crate::{helpers::hash_api_key, postgres::PostgresRepo};
+use crate::{helpers::hash_api_key, postgres::PostgresRepo, repo::user_id::SelectOneParams};
 
 pub async fn dual_auth_middleware(
     req: ServiceRequest,
@@ -48,8 +50,22 @@ async fn validate_api_key<B: MessageBody>(
         .app_data::<Data<PostgresRepo>>()
         .ok_or_else(|| ErrorInternalServerError("Database not configured"))?;
     let key_hash = hash_api_key(token);
+    let ip_address = req
+        .connection_info()
+        .realip_remote_addr()
+        .and_then(|s| IpAddr::from_str(s).ok());
+    let user_agent = req
+        .headers()
+        .get(USER_AGENT)
+        .and_then(|h| h.to_str().ok())
+        .map(|s| s.to_string());
+
+    let params = SelectOneParams {
+        ip_address,
+        user_agent,
+    };
     let user_id: UserId = repo
-        .select_one(&key_hash)
+        .select_one_with_params(&key_hash, &params)
         .await
         .map_err(ErrorInternalServerError)?
         .ok_or_else(|| ErrorUnauthorized("Invalid key"))?;

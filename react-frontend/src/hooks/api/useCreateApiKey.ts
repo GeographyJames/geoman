@@ -7,6 +7,7 @@ interface CreateApiKeyRequest {
 
 interface CreateApiKeyResponse {
   api_key: string;
+  id: number;
 }
 
 export function useCreateApiKey() {

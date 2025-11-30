@@ -73,3 +73,12 @@ pub mod api_keys {
         pub clerk_id: &'a str,
     }
 }
+
+pub mod user_id {
+    use std::net::IpAddr;
+
+    pub struct SelectOneParams {
+        pub ip_address: Option<IpAddr>,
+        pub user_agent: Option<String>,
+    }
+}

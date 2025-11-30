@@ -85,9 +85,27 @@ impl PostgresRepo {
         sqlx::query_scalar!(
             "
         UPDATE app.api_keys
-        SET revoked = true
+        SET revoked = NOW()
         WHERE id = $1
         AND user_id = (SELECT id FROM app.users WHERE clerk_id = $2) RETURNING id",
+            id.0,
+            user.sub
+        )
+        .fetch_one(&self.db_pool)
+        .await?;
+        Ok(())
+    }
+
+    #[tracing::instrument(skip(self, id))]
+    pub async fn renew_api_key(&self, id: KeyId, user: &ClerkJwt) -> Result<(), RepositoryError> {
+        sqlx::query_scalar!(
+            "
+        UPDATE app.api_keys
+        SET expiry = (NOW() + INTERVAL '6 months')
+        WHERE id = $1 AND user_id = (
+             SELECT id FROM app.users WHERE clerk_id = $2
+             )
+        RETURNING id",
             id.0,
             user.sub
         )

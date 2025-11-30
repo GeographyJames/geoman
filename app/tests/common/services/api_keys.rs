@@ -51,4 +51,19 @@ impl ApiKeysService {
         .await
         .expect(REQUEST_FAILED)
     }
+
+    pub async fn renew(
+        &self,
+        client: &HttpClient,
+        id: KeyId,
+        token: Option<&SessionToken>,
+    ) -> Response {
+        auth_request(
+            client.patch(format!("{}/{}/renew", self.endpoint, id.0)),
+            token,
+        )
+        .send()
+        .await
+        .expect(REQUEST_FAILED)
+    }
 }

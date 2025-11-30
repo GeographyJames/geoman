@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateApiKey } from "@/hooks/api/useCreateApiKey";
 import { useApiKeys } from "@/hooks/api/useApiKeys";
+import { useRevokeApiKey } from "@/hooks/api/useRevokeApiKey";
+import { useRenewApiKey } from "@/hooks/api/useRenewApiKey";
 
 export default function AdminPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -13,6 +15,8 @@ export default function AdminPage() {
   const queryClient = useQueryClient();
   const { data: apiKeys = [], isLoading, error } = useApiKeys();
   const createApiKeyMutation = useCreateApiKey();
+  const revokeApiKeyMutation = useRevokeApiKey();
+  const renewApiKeyMutation = useRenewApiKey();
 
   const handleCreateKey = async () => {
     try {
@@ -30,13 +34,27 @@ export default function AdminPage() {
   };
 
   const handleRevokeKey = async (keyId: number) => {
-    // TODO: Implement revoke functionality
-    console.log("Revoking key:", keyId);
+    if (!confirm("Are you sure you want to revoke this API key? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      await revokeApiKeyMutation.mutateAsync(keyId);
+      queryClient.invalidateQueries({ queryKey: ["apiKeys"] });
+    } catch (error) {
+      console.error("Failed to revoke API key:", error);
+      alert("Failed to revoke API key. Please try again.");
+    }
   };
 
   const handleRenewKey = async (keyId: number) => {
-    // TODO: Implement renew functionality
-    console.log("Renewing key:", keyId);
+    try {
+      await renewApiKeyMutation.mutateAsync(keyId);
+      queryClient.invalidateQueries({ queryKey: ["apiKeys"] });
+    } catch (error) {
+      console.error("Failed to renew API key:", error);
+      alert("Failed to renew API key. Please try again.");
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -137,6 +155,8 @@ export default function AdminPage() {
                     <th>Name</th>
                     <th>Created</th>
                     <th>Last Used</th>
+                    <th>Last IP</th>
+                    <th>User Agent</th>
                     <th>Expires</th>
                     <th>Status</th>
                     <th></th>
@@ -155,6 +175,20 @@ export default function AdminPage() {
                       <td className="text-sm">
                         {key.last_used ? formatDate(key.last_used) : "Never"}
                       </td>
+                      <td className="text-sm">
+                        {key.last_used_ip ? (
+                          <span className="font-mono text-xs">{key.last_used_ip}</span>
+                        ) : (
+                          <span className="opacity-50">-</span>
+                        )}
+                      </td>
+                      <td className="text-sm max-w-xs truncate" title={key.last_used_user_agent || undefined}>
+                        {key.last_used_user_agent ? (
+                          <span className="text-xs">{key.last_used_user_agent}</span>
+                        ) : (
+                          <span className="opacity-50">-</span>
+                        )}
+                      </td>
                       <td className="text-sm">{formatDate(key.expiry)}</td>
                       <td>
                         {isExpired(key.expiry) ? (
@@ -165,23 +199,30 @@ export default function AdminPage() {
                       </td>
                       <td>
                         <div className="flex gap-2">
-                          {isExpired(key.expiry) ? (
-                            <button
-                              onClick={() => handleRenewKey(key.id)}
-                              className="btn btn-ghost btn-sm text-primary gap-1"
-                            >
+                          <button
+                            onClick={() => handleRenewKey(key.id)}
+                            disabled={renewApiKeyMutation.isPending}
+                            className="btn btn-ghost btn-sm text-primary gap-1"
+                          >
+                            {renewApiKeyMutation.isPending ? (
+                              <span className="loading loading-spinner loading-xs"></span>
+                            ) : (
                               <Plus size={14} />
-                              Renew
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleRevokeKey(key.id)}
-                              className="btn btn-ghost btn-sm text-error gap-1"
-                            >
+                            )}
+                            Renew
+                          </button>
+                          <button
+                            onClick={() => handleRevokeKey(key.id)}
+                            disabled={revokeApiKeyMutation.isPending}
+                            className="btn btn-ghost btn-sm text-error gap-1"
+                          >
+                            {revokeApiKeyMutation.isPending ? (
+                              <span className="loading loading-spinner loading-xs"></span>
+                            ) : (
                               <Trash2 size={14} />
-                              Revoke
-                            </button>
-                          )}
+                            )}
+                            Revoke
+                          </button>
                         </div>
                       </td>
                     </tr>
