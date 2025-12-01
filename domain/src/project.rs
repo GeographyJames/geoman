@@ -7,7 +7,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, from_value, json};
 use sqlx::prelude::FromRow;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, FromRow)]
+
 pub struct Properties {
     pub name: String,
     pub added: DateTime<Utc>,

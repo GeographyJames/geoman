@@ -6,55 +6,20 @@ use crate::{
         traits::{SelectAllWithParams, SelectOne, SelectOneWithParams},
     },
 };
-use anyhow::Context;
-use chrono::{DateTime, Utc};
+
 use domain::{
-    Project, ProjectId, Subdivision, Technology, User, UserId,
-    enums::{Status, Visibility},
+    Project, ProjectId,
     project::{ProjectName, Properties},
 };
 use sqlx::{prelude::FromRow, types::Json};
 
-#[derive(Debug, FromRow)]
+#[derive(FromRow)]
 pub struct ProjectRow {
     id: ProjectId,
-    name: String,
-    added: DateTime<Utc>,
-    owner: User,
-    added_by: User,
-    technologies: Option<Json<Vec<Technology>>>,
-    country_code: String,
-    subdivisions: Option<Json<Vec<Subdivision>>>,
-    status: Status,
-    visibility: Visibility,
-    last_updated_by: User,
-    last_updated: DateTime<Utc>,
+    #[sqlx(flatten)]
+    properties: Properties,
     centroid_in_storage_crs: Option<Json<geojson::Geometry>>,
     geom: Option<Json<geojson::Geometry>>,
-    crs_srid: Option<i32>,
-}
-
-const ROWS: &str = r#"
-p.id,
-p.name,
-p.added,
-p.country_code,
-p.status,
-p.crs_srid,
-p.last_updated,
-p.visibility,
-subdivisions.subdivisions,
-technologies.technologies,
-ST_AsGeoJson(ST_Transform(pb.centroid, $1))::json AS geom,
-ST_AsGeoJson(pb.centroid)::json AS centroid_in_storage_crs
-"#;
-
-fn user_query(user_alias: &str, team_alias: &str) -> String {
-    format!(
-        r#"ROW({u}.id, {u}.first_name, {u}.last_name, {u}.clerk_id, ROW({t}.id, {t}.name)::app.team )::app.user AS {u}"#,
-        u = user_alias,
-        t = team_alias
-    )
 }
 
 #[allow(clippy::from_over_into)]
@@ -63,35 +28,11 @@ impl TryInto<Project> for ProjectRow {
     fn try_into(self) -> Result<Project, RepositoryError> {
         let ProjectRow {
             id,
-            name,
+            properties,
             geom,
             centroid_in_storage_crs,
-            added,
-            owner,
-            added_by,
-            technologies,
-            country_code,
-            subdivisions,
-            status,
-            visibility,
-            crs_srid,
-            last_updated_by,
-            last_updated,
         } = self;
-        let properties = Properties {
-            name,
-            added,
-            owner: owner,
-            added_by: added_by,
-            technologies: technologies.map(|t| t.0).unwrap_or_default(),
-            country_code,
-            subdivisions: subdivisions.map(|s| s.0).unwrap_or_default(),
-            status,
-            visibility,
-            crs_srid,
-            last_updated_by: last_updated_by,
-            last_updated,
-        };
+
         Ok(Project {
             id,
             properties,
@@ -102,65 +43,73 @@ impl TryInto<Project> for ProjectRow {
 }
 
 fn project_query() -> String {
-    let owner_col = "owner";
-    let added_by_col = "added_by";
-    let last_updated_by_col = "last_updated_by";
+    let user_row = |alias: &str| {
+        format!(
+            "ROW({alias}.id, {alias}.first_name, {alias}.last_name, {alias}.clerk_id, ROW(t_{alias}.id, t_{alias}.name)::app.team)::app.user AS {alias}",
+            alias = alias
+        )
+    };
+
+    let user_join = |alias: &str| {
+        format!(
+            "JOIN app.users {alias} ON {alias}.id = p.{alias} \
+             JOIN app.teams t_{alias} ON {alias}.team_id = t_{alias}.id",
+            alias = alias
+        )
+    };
+
     format!(
-        r#" WITH primary_boundary_centroid AS (
-                              SELECT pf.project_id, ST_Centroid(fo.geom) AS centroid
-                                FROM app.project_features pf
-                                JOIN app.feature_objects fo
-                                        ON fo.collection_id = pf.collection_id
-                                       AND fo.project_feature_id = pf.id
-                                JOIN app.collections c
-                                        ON c.id = pf.collection_id
-                               WHERE pf.is_primary=true
-                                 AND c.title = '{SITE_BOUNDARIES_COLLECTION_NAME}'
-                                 )
-                SELECT {ROWS},
-                    {}, {}, {}
-                  FROM app.projects p
-                  JOIN app.users {o} ON {o}.id = p.{o}
-                  JOIN app.teams ot ON owner.team_id = ot.id
-                  JOIN app.users {ab} ON {ab}.id = p.{ab}
-                  JOIN app.teams at ON at.id = added_by.team_id
-                  JOIN app.users {lb} ON {lb}.id = p.{lb}
-                  JOIN app.teams lt ON lt.id = last_updated_by.id
-             LEFT JOIN primary_boundary_centroid pb
-                        ON pb.project_id = p.id
-    
-
-
-
-
-
-     LEFT JOIN LATERAL (SELECT json_agg(json_build_object(
-                                'id', s.id,
-                                'country_code', s.country_code,
-                                'subdivision_code', s.subdivision_code,
-                                'name', s.name
-                               )) AS subdivisions
-                          FROM app.project_subdivisions ps
-                          JOIN app.subdivisions s ON s.id = ps.subdivision_id
-                         WHERE ps.project_id = p.id
-                         ) subdivisions ON true
-
-    LEFT JOIN LATERAL (SELECT json_agg(json_build_object(
-                            'id', t.id,
-                            'name', t.name
-                            )) AS technologies
-                        FROM app.project_technologies pt
-                        JOIN app.technologies t ON t.id = pt.technology_id
-                        WHERE pt.project_id = p.id
-                        ) technologies ON true
-
-                 WHERE p.status = 'ACTIVE'"#,
-        user_query(owner_col, "ot"),
-        user_query(added_by_col, "at"),
-        user_query(last_updated_by_col, "lt"),
-        o = owner_col,
-        ab = added_by_col,
-        lb = last_updated_by_col,
+        r#"WITH primary_boundary_centroid AS (
+            SELECT pf.project_id, ST_Centroid(fo.geom) AS centroid
+              FROM app.project_features pf
+              JOIN app.feature_objects fo
+                ON fo.collection_id = pf.collection_id
+               AND fo.project_feature_id = pf.id
+              JOIN app.collections c
+                ON c.id = pf.collection_id
+             WHERE pf.is_primary = true
+               AND c.title = '{SITE_BOUNDARIES_COLLECTION_NAME}'
+        )
+        SELECT
+            p.id,
+            p.name,
+            p.added,
+            p.country_code,
+            p.status,
+            p.crs_srid,
+            p.last_updated,
+            p.visibility,
+            {user_row_owner},
+            {user_row_added_by},
+            {user_row_last_updated_by},
+            COALESCE(subdivisions.subdivisions, ARRAY[]::app.subdivision[]) AS subdivisions,
+            COALESCE(technologies.technologies, ARRAY[]::app.technology[]) AS technologies,
+            ST_AsGeoJson(ST_Transform(pb.centroid, $1))::json AS geom,
+            ST_AsGeoJson(pb.centroid)::json AS centroid_in_storage_crs
+        FROM app.projects p
+        {user_join_owner}
+        {user_join_added_by}
+        {user_join_last_updated_by}
+        LEFT JOIN primary_boundary_centroid pb ON pb.project_id = p.id
+        LEFT JOIN LATERAL (
+            SELECT array_agg(ROW(s.id, s.country_code, s.subdivision_code, s.name)::app.subdivision) AS subdivisions
+              FROM app.project_subdivisions ps
+              JOIN app.subdivisions s ON s.id = ps.subdivision_id
+             WHERE ps.project_id = p.id
+        ) subdivisions ON true
+        LEFT JOIN LATERAL (
+            SELECT array_agg(ROW(t.id, t.name)::app.technology) AS technologies
+              FROM app.project_technologies pt
+              JOIN app.technologies t ON t.id = pt.technology_id
+             WHERE pt.project_id = p.id
+        ) technologies ON true
+        WHERE p.status = 'ACTIVE'"#,
+        user_row_owner = user_row("owner"),
+        user_row_added_by = user_row("added_by"),
+        user_row_last_updated_by = user_row("last_updated_by"),
+        user_join_owner = user_join("owner"),
+        user_join_added_by = user_join("added_by"),
+        user_join_last_updated_by = user_join("last_updated_by"),
     )
 }
 
