@@ -6,13 +6,23 @@ pub struct ProjectFeatureId {
     pub collection_id: ProjectCollectionId,
     pub id: i32,
 }
-#[derive(Clone, Copy, Default, Debug, Deserialize)]
+#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
+#[sqlx(transparent)]
 pub struct ProjectId(pub i32);
 
-#[derive(Clone, Copy, Default, Debug, sqlx::Type)]
+#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
+#[sqlx(transparent)]
+pub struct TechnologyId(pub i32);
+
+#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
+#[sqlx(transparent)]
+pub struct SubdivisionId(pub i32);
+
+#[derive(Clone, Copy, Default, Debug, sqlx::Type, Serialize, Deserialize)]
 #[sqlx(transparent)]
 pub struct UserId(pub i32);
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
+#[sqlx(transparent)]
 pub struct TeamId(pub i32);
 
 #[derive(Clone, Copy, Default, Debug, Deserialize)]

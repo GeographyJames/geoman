@@ -3,11 +3,20 @@ use serde::{Deserialize, Deserializer, Serialize};
 use sqlx::prelude::Type;
 use strum::Display;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Type)]
+#[sqlx(type_name = "status", rename_all = "UPPERCASE")]
 pub enum Status {
     Active,
     Archived,
     Deleted,
+}
+
+#[derive(Serialize, Deserialize, Type, Clone, Debug, Display)]
+#[sqlx(type_name = "visibility", rename_all = "UPPERCASE")]
+pub enum Visibility {
+    Private,
+    Team,
+    Public,
 }
 
 #[derive(Debug, Clone, Type, Serialize, Deserialize, Display)]

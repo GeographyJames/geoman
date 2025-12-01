@@ -1,17 +1,32 @@
-use crate::IntoOGCFeature;
+use crate::{
+    IntoOGCFeature, ProjectId, Subdivision, Technology, UserId,
+    enums::{Status, Visibility},
+};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, from_value, json};
 
 #[derive(Serialize, Deserialize)]
 pub struct Properties {
     pub name: String,
+    pub added: DateTime<Utc>,
+    pub owner: UserId,
+    pub added_by: UserId,
+    pub technologies: Vec<Technology>,
+    pub country: isocountry::CountryCode, // ISO 3166-1-ALPHA-2
+    pub subdivisions: Vec<Subdivision>,
+    pub status: Status,
+    pub visibility: Visibility,
+    pub crs_srid: Option<i32>,
+    pub last_updated_by: UserId,
+    pub last_updated: DateTime<Utc>,
 }
 
 pub struct ProjectName(pub String);
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Project {
-    pub id: i32,
+    pub id: ProjectId,
     pub properties: Properties,
     pub centroid: Option<geojson::Geometry>,
     pub centroid_in_storage_crs: Option<geojson::Geometry>,
@@ -27,7 +42,7 @@ impl IntoOGCFeature for Project {
         } = self;
         let properties: Map<String, Value> = from_value(json!(properties)).unwrap();
 
-        let mut ft = ogc::Feature::new(id, properties, centroid, collection_url);
+        let mut ft = ogc::Feature::new(id.0, properties, centroid, collection_url);
         if let Some(centroid) = centroid_in_storage_crs {
             let mut foreign_members = Map::new();
             foreign_members.insert("centroid_in_storage_crs".to_string(), json!(centroid));
@@ -60,7 +75,7 @@ impl TryFrom<ogc::Feature> for Project {
         };
 
         Ok(Project {
-            id,
+            id: ProjectId(id),
             properties,
             centroid: geometry,
             centroid_in_storage_crs,

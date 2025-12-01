@@ -1,18 +1,13 @@
 use domain::KeyId;
-use reqwest::{RequestBuilder, Response, header::AUTHORIZATION};
+use reqwest::Response;
 
-use crate::common::{constants::REQUEST_FAILED, services::HttpClient, types::SessionToken};
+use crate::common::{
+    constants::REQUEST_FAILED, helpers::auth_request, services::HttpClient, types::SessionToken,
+};
 use app::handlers::api::keys::RequestPayload;
 
 pub struct ApiKeysService {
     pub endpoint: String,
-}
-
-fn auth_request(req: RequestBuilder, token: Option<&SessionToken>) -> RequestBuilder {
-    if let Some(token) = token {
-        return req.header(AUTHORIZATION, &token.jwt);
-    }
-    req
 }
 
 impl ApiKeysService {

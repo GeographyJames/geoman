@@ -40,7 +40,10 @@ async fn revoke_api_key_returns_404_when_revoking_another_users_key() {
     let app = AppBuilder::new().build().await;
     let token = app.generate_session_token().await;
     let key = app.generate_api_key(&token).await;
-    let user_2_token = app.generate_user_2_session_token().await;
+    let user_2_token = app
+        .auth
+        .get_test_session_token(&app.api_client.client, &app.test_user_2_clerk_id)
+        .await;
     let response = app
         .api_keys_service
         .revoke(&app.api_client, key.id, Some(&user_2_token))

@@ -1,7 +1,9 @@
 use app::ErrorResponse;
 use rand::Rng;
-use reqwest::Response;
+use reqwest::{RequestBuilder, Response, header::AUTHORIZATION};
 use serde::de::DeserializeOwned;
+
+use crate::common::types::SessionToken;
 
 pub fn assert_ok(response: &reqwest::Response) {
     assert_eq!(
@@ -78,4 +80,11 @@ pub fn generate_random_wgs84_point_ewkt() -> (f32, f32, String) {
     let lat: f32 = rng.random_range(-90.0..90.);
     let long: f32 = rng.random_range(-180.0..180.);
     (long, lat, generate_point(long, lat, 4326))
+}
+
+pub fn auth_request(req: RequestBuilder, token: Option<&SessionToken>) -> RequestBuilder {
+    if let Some(token) = token {
+        return req.header(AUTHORIZATION, &token.jwt);
+    }
+    req
 }

@@ -40,7 +40,7 @@ serde_urlencoded = "0.7.1"
 rand = "0.9"
 sha2 = "0.10.9"
 hex = "0.4.3"
-
+isocountry = { workspace = true }
 [dev-dependencies]
 
 reqwest = "0.12"

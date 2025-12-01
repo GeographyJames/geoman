@@ -40,13 +40,13 @@ pub struct TestApp {
     db_settings: DatabaseSettings,
     pub db_pool: PgPool,
     pub api_client: HttpClient,
-    #[allow(unused)]
+    pub test_user_clerk_id: String,
+    pub test_user_2_clerk_id: String,
     pub auth: ClerkAuthService,
     pub health_check_service: HttpService,
     pub ogc_service: OgcService,
     pub api_keys_service: ApiKeysService,
-    pub test_user_clerk_id: String,
-    pub test_user_2_clerk_id: String,
+    pub projects_service: HttpService,
 }
 
 pub struct AppBuilder {
@@ -145,6 +145,9 @@ impl TestApp {
             api_keys_service: ApiKeysService {
                 endpoint: format!("{}{}", &URLS.api.base, &URLS.api.keys),
             },
+            projects_service: HttpService {
+                endpoint: format!("{}{}", &URLS.api.base, URLS.api.projects),
+            },
         }
     }
 
@@ -211,11 +214,19 @@ impl TestApp {
 
     pub async fn insert_project(&self, name: &str, user_id: UserId) -> ProjectId {
         let record = sqlx::query!(
-            "INSERT INTO app.projects (name, owner, added_by, last_updated_by) VALUES ($1, $2, $2, $2) RETURNING id",
+            "INSERT INTO app.projects (
             name,
-
+            country_code,
+            owner,
+            added_by,
+            last_updated_by
+            ) VALUES ($1, 'GB', $2, $2, $2) RETURNING id",
+            name,
             user_id.0
-        ).fetch_one(&self.db_pool).await.expect("Failed to save project in database");
+        )
+        .fetch_one(&self.db_pool)
+        .await
+        .expect("Failed to save project in database");
         ProjectId(record.id)
     }
 
@@ -467,11 +478,6 @@ impl TestApp {
             .await
     }
 
-    pub async fn generate_user_2_session_token(&self) -> SessionToken {
-        self.auth
-            .get_test_session_token(&self.api_client.client, &self.test_user_2_clerk_id)
-            .await
-    }
     pub async fn generate_api_key(
         &self,
         token: &SessionToken,

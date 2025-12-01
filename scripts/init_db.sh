@@ -156,8 +156,10 @@ then
     sql_files=(
         "teams.sql"
         "users.sql"
-        "projects.sql"
         "collections.sql"
+        "technologies.sql"
+        "subdivisions.sql"
+        "projects.sql"
         "features.sql"
 
     )
