@@ -4,3 +4,4 @@ pub const CONFIGURATION_DIRECTORY: &str = "config";
 pub const OPEN_API_JSON: &str = "application/vnd.oai.openapi+json;version=3.0";
 
 pub const GIS_DATA_SCHEMA: &str = "gis_data";
+pub const SITE_BOUNDARIES_COLLECTION_NAME: &str = "site boundaries";

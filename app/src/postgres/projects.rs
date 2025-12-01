@@ -1,7 +1,10 @@
-use crate::repo::{
-    RepositoryError,
-    project::{SelectAllParams, SelectOneParams},
-    traits::{SelectAllWithParams, SelectOne, SelectOneWithParams},
+use crate::{
+    constants::SITE_BOUNDARIES_COLLECTION_NAME,
+    repo::{
+        RepositoryError,
+        project::{SelectAllParams, SelectOneParams},
+        traits::{SelectAllWithParams, SelectOne, SelectOneWithParams},
+    },
 };
 use anyhow::Context;
 use chrono::{DateTime, Utc};
@@ -10,7 +13,6 @@ use domain::{
     enums::{Status, Visibility},
     project::{ProjectName, Properties},
 };
-
 use sqlx::{prelude::FromRow, types::Json};
 
 #[derive(Debug, FromRow)]
@@ -49,7 +51,7 @@ ST_AsGeoJson(pb.centroid)::json AS centroid_in_storage_crs
 
 fn user_query(user_alias: &str, team_alias: &str) -> String {
     format!(
-        r#"ROW({u}.id, {u}.first_name, {u}.last_name, {u}.clerk_id, ROW({t}.id, {t}.name)::app.team_type )::app.user_type AS {u}"#,
+        r#"ROW({u}.id, {u}.first_name, {u}.last_name, {u}.clerk_id, ROW({t}.id, {t}.name)::app.team )::app.user AS {u}"#,
         u = user_alias,
         t = team_alias
     )
@@ -113,7 +115,7 @@ fn project_query() -> String {
                                 JOIN app.collections c
                                         ON c.id = pf.collection_id
                                WHERE pf.is_primary=true
-                                 AND c.title = 'site boundaries'
+                                 AND c.title = '{SITE_BOUNDARIES_COLLECTION_NAME}'
                                  )
                 SELECT {ROWS},
                     {}, {}, {}

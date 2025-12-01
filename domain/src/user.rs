@@ -4,7 +4,7 @@ use sqlx::prelude::FromRow;
 use crate::{Team, UserId};
 
 #[derive(Serialize, Deserialize, Debug, sqlx::Type)]
-#[sqlx(type_name = "app.user_type")]
+#[sqlx(type_name = "app.user")]
 pub struct User {
     id: UserId,
     first_name: String,

@@ -5,6 +5,7 @@ use crate::{
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, from_value, json};
+use sqlx::prelude::FromRow;
 
 #[derive(Serialize, Deserialize)]
 pub struct Properties {
