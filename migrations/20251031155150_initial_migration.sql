@@ -12,6 +12,19 @@ CREATE TYPE geometry_type AS ENUM (
     'GEOMETRYCOLLECTION'
 );
 
+CREATE TYPE app.team_type AS (
+    id INTEGER,
+    name TEXT
+);
+
+CREATE TYPE app.user_type AS (
+    id INTEGER,
+    first_name TEXT,
+    last_name TEXT,
+    clerk_id TEXT,
+    team app.team_type
+    );
+
 CREATE OR REPLACE FUNCTION update_last_updated()
 RETURNS TRIGGER AS $$
 DECLARE

@@ -1,5 +1,5 @@
 use crate::{
-    IntoOGCFeature, ProjectId, Subdivision, Technology, UserId,
+    IntoOGCFeature, ProjectId, Subdivision, Technology, User, UserId,
     enums::{Status, Visibility},
 };
 use chrono::{DateTime, Utc};
@@ -10,15 +10,15 @@ use serde_json::{Map, Value, from_value, json};
 pub struct Properties {
     pub name: String,
     pub added: DateTime<Utc>,
-    pub owner: UserId,
-    pub added_by: UserId,
+    pub owner: User,
+    pub added_by: User,
     pub technologies: Vec<Technology>,
-    pub country: isocountry::CountryCode, // ISO 3166-1-ALPHA-2
+    pub country_code: String, // ISO 3166-1-ALPHA-2
     pub subdivisions: Vec<Subdivision>,
     pub status: Status,
     pub visibility: Visibility,
     pub crs_srid: Option<i32>,
-    pub last_updated_by: UserId,
+    pub last_updated_by: User,
     pub last_updated: DateTime<Utc>,
 }
 

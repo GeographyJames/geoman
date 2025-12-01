@@ -174,9 +174,11 @@ impl TestApp {
 
     pub async fn insert_user(&self, team_id: TeamId, clerk_id: Option<&str>) -> i32 {
         let record = sqlx::query!(
-            "INSERT INTO app.users (team_id, clerk_id) VALUES ($1, $2) RETURNING id",
+            "INSERT INTO app.users (team_id, clerk_id, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING id",
             team_id.0,
-            clerk_id
+            clerk_id,
+            uuid::Uuid::new_v4().to_string(),
+            uuid::Uuid::new_v4().to_string()
         )
         .fetch_one(&self.db_pool)
         .await
