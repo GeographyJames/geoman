@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO app.users (\n            clerk_id, first_name, last_name\n            ) VALUES ($1, $2, $3)\n             RETURNING id AS \"id: UserId\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: UserId",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2c7a9c9ad13c4b4525f5d9302d14f2371c0d2e00eb785fe1a1e2af0f9b2c15d3"
+}

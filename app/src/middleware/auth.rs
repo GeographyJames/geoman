@@ -113,7 +113,7 @@ async fn validate_clerk_auth<B: MessageBody>(
                         .app_data::<Data<Clerk>>()
                         .ok_or_else(|| ErrorInternalServerError("Clerk not conifigured"))?;
 
-                    provision_clerk_user(&repo, jwt, clerk)
+                    provision_clerk_user(repo, jwt, clerk)
                         .await
                         .context("failed to provision new user")
                         .map_err(ErrorInternalServerError)?
