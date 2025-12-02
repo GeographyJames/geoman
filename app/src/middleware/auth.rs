@@ -19,7 +19,7 @@ use clerk_rs::{
     },
 };
 
-use domain::UserId;
+use domain::{UserId, UserInputDto};
 use secrecy::SecretBox;
 
 use crate::{helpers::hash_api_key, postgres::PostgresRepo, repo::user_id::SelectOneParams};
@@ -139,18 +139,21 @@ async fn provision_clerk_user(
     let user = clerk_rs::apis::users_api::User::get_user(clerk_client, &jwt.sub)
         .await
         .context("failed to retrive user from Clerk")?;
-    sqlx::query_scalar!(
-        r#"INSERT INTO app.users (
-            clerk_id, first_name, last_name
-            ) VALUES ($1, $2, $3)
-             RETURNING id AS "id: UserId""#,
-        jwt.sub,
-        user.first_name
-            .ok_or_else(|| anyhow::anyhow!("User has no first name"))?,
-        user.last_name
-            .ok_or_else(|| anyhow::anyhow!("User has no last name"))?
-    )
-    .fetch_one(&repo.db_pool)
-    .await
-    .context("failed to add new user to databqase")
+
+    let first_name = user
+        .first_name
+        .flatten()
+        .ok_or_else(|| anyhow::anyhow!("User has no first name"))?;
+    let last_name = user
+        .last_name
+        .flatten()
+        .ok_or_else(|| anyhow::anyhow!("User has no last name"))?;
+    let new_user = UserInputDto {
+        auth_id: jwt.sub,
+        first_name,
+        last_name,
+    };
+    repo.insert(&new_user)
+        .await
+        .context("failed to insert now use to database")
 }

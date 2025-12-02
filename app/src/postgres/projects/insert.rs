@@ -7,7 +7,6 @@ impl Insert for (ProjectInputDto, UserId) {
 
     async fn insert<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>
     where
-        Self: Sized,
         &'a E: sqlx::PgExecutor<'a>,
     {
         let (dto, user_id) = self;

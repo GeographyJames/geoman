@@ -26,6 +26,6 @@ pub use technology::Technology;
 mod subdivision;
 pub use subdivision::Subdivision;
 mod user;
-pub use user::User;
+pub use user::*;
 mod team;
 pub use team::Team;

@@ -79,7 +79,7 @@ impl PostgresRepo {
         item.insert(&self.db_pool).await
     }
 
-    #[tracing::instrument(skip(self, id))]
+    #[tracing::instrument(skip(self, id, user_id))]
     pub async fn revoke_api_key(&self, id: KeyId, user_id: UserId) -> Result<(), RepositoryError> {
         sqlx::query_scalar!(
             "
@@ -96,7 +96,7 @@ impl PostgresRepo {
         Ok(())
     }
 
-    #[tracing::instrument(skip(self, id))]
+    #[tracing::instrument(skip(self, id, user_id))]
     pub async fn renew_api_key(&self, id: KeyId, user_id: UserId) -> Result<(), RepositoryError> {
         sqlx::query_scalar!(
             "
