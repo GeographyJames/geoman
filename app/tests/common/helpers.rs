@@ -2,9 +2,8 @@ use app::ErrorResponse;
 use rand::Rng;
 use reqwest::{RequestBuilder, Response, header::AUTHORIZATION};
 use serde::de::DeserializeOwned;
-use serde_json::json;
 
-use crate::common::types::SessionToken;
+use crate::common::services::SessionToken;
 
 /// Cheks response is 200
 pub fn assert_ok(response: &reqwest::Response) {
@@ -14,18 +13,6 @@ pub fn assert_ok(response: &reqwest::Response) {
         "Expected 200 OK but got {}",
         response.status()
     )
-}
-
-/// Checks response is 200 and prints body if not
-pub async fn check_ok(response: Response) -> Response {
-    assert_eq!(
-        response.status().as_u16(),
-        200,
-        "Expected 200 OK but got {}: {}",
-        response.status(),
-        response.text().await.unwrap_or("no body".to_string())
-    );
-    response
 }
 
 pub fn assert_status(response: &reqwest::Response, expected_status: u16) {
@@ -108,7 +95,7 @@ pub fn generate_random_wgs84_point_ewkt() -> (f32, f32, String) {
 
 pub fn auth_request(req: RequestBuilder, token: Option<&SessionToken>) -> RequestBuilder {
     if let Some(token) = token {
-        return req.header(AUTHORIZATION, &token.jwt);
+        return req.header(AUTHORIZATION, &token.0);
     }
     req
 }

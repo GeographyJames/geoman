@@ -1,9 +1,10 @@
 use crate::common::{
     configure_database,
-    constants::{CLERK_USER_2_ID_KEY, CLERK_USER_ID_KEY},
     helpers::{generate_random_bng_point_ewkt, handle_json_response},
-    services::{ApiKeysService, ClerkAuthService, HttpClient, HttpService, OgcService},
-    types::SessionToken,
+    services::{
+        ApiKeysService, AuthService, ClerkAuthService, HttpClient, HttpService, OgcService,
+        SessionToken,
+    },
 };
 use app::{
     Application, DatabaseSettings, Password, URLS,
@@ -36,13 +37,13 @@ static TRACING: LazyLock<()> = LazyLock::new(|| {
     }
 });
 
-pub struct TestApp {
+pub struct TestApp<T: AuthService> {
     db_settings: DatabaseSettings,
     pub db_pool: PgPool,
     pub api_client: HttpClient,
-    pub test_user_clerk_id: String,
-    pub test_user_2_clerk_id: String,
-    pub auth: ClerkAuthService,
+    pub test_user_id: String,
+    pub test_user_2_id: String,
+    pub auth: T,
     pub health_check_service: HttpService,
     pub ogc_service: OgcService,
     pub api_keys_service: ApiKeysService,
@@ -65,23 +66,20 @@ impl AppBuilder {
             environment: None,
         }
     }
-    pub async fn build(self) -> TestApp {
+    pub async fn build(self) -> TestApp<ClerkAuthService> {
         let app = TestApp::spawn(self.environment).await;
         if self.with_db {
             configure_database(&app.db_settings).await
         }
         if self.clerk_user {
             let team_id = app.generate_team_id().await;
-            let _user_id = app
-                .insert_user(team_id, Some(&app.test_user_clerk_id))
-                .await;
+            let _user_id = app.insert_user(team_id, Some(&app.test_user_id)).await;
         }
         if self.clerk_user_2 {
             let team_id = app.generate_team_id().await;
-            let _user_id = app
-                .insert_user(team_id, Some(&app.test_user_2_clerk_id))
-                .await;
+            let _user_id = app.insert_user(team_id, Some(&app.test_user_2_id)).await;
         }
+
         app
     }
     pub fn set_env(mut self, env: GeoManEnvironment) -> Self {
@@ -90,7 +88,7 @@ impl AppBuilder {
     }
 }
 
-impl TestApp {
+impl TestApp<ClerkAuthService> {
     pub async fn spawn(run_env: Option<GeoManEnvironment>) -> Self {
         dotenv().ok();
         LazyLock::force(&TRACING);
@@ -100,11 +98,12 @@ impl TestApp {
         // Set port to 0 so TCP Listner binds to random free port for tests
         config.app_settings.port = 0;
         let db_settings = config.db_settings.clone();
-        let test_user_clerk_id = std::env::var(CLERK_USER_ID_KEY)
-            .expect(&format!("no {CLERK_USER_ID_KEY} environment variable set"));
-        let test_user_2_clerk_id = std::env::var(CLERK_USER_2_ID_KEY).expect(&format!(
-            "no {CLERK_USER_2_ID_KEY} environment variable set"
-        ));
+        let key1 = "TEST_USER_ID";
+        let key2 = "TEST_USER_ID_2";
+        let test_user_id =
+            std::env::var(key1).expect(&format!("no {key1} environment variable set"));
+        let test_user_2_id =
+            std::env::var(key2).expect(&format!("no {key2} environment variable set"));
         let auth = ClerkAuthService {
             secret: secrecy::SecretBox::new(Box::new(
                 config
@@ -135,8 +134,8 @@ impl TestApp {
             db_settings,
             db_pool,
             api_client,
-            test_user_clerk_id,
-            test_user_2_clerk_id,
+            test_user_id,
+            test_user_2_id,
             auth,
             health_check_service: HttpService {
                 endpoint: URLS.health_check.clone(),
@@ -471,7 +470,7 @@ impl TestApp {
     }
     pub async fn generate_session_token(&self) -> SessionToken {
         self.auth
-            .get_test_session_token(&self.api_client.client, &self.test_user_clerk_id)
+            .get_test_session_token(&self.api_client.client, &self.test_user_id)
             .await
     }
 

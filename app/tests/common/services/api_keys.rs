@@ -2,7 +2,9 @@ use domain::KeyId;
 use reqwest::Response;
 
 use crate::common::{
-    constants::REQUEST_FAILED, helpers::auth_request, services::HttpClient, types::SessionToken,
+    constants::REQUEST_FAILED,
+    helpers::auth_request,
+    services::{HttpClient, auth_service::SessionToken},
 };
 use app::handlers::api::keys::ApiKeyReqPayload;
 

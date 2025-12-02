@@ -1,6 +1,7 @@
 use crate::common::{
     TestApp,
     helpers::{assert_status, check_error_response},
+    services::AuthService,
 };
 use domain::{ProjectCollectionId, ProjectId, enums::CollectionId};
 use rstest::rstest;
@@ -21,7 +22,7 @@ enum Endpoint {
 }
 
 impl Endpoint {
-    async fn call(&self, app: &TestApp) -> reqwest::Response {
+    async fn call<T: AuthService>(&self, app: &TestApp<T>) -> reqwest::Response {
         match self {
             Endpoint::GetCollection => {
                 app.ogc_service

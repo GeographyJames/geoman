@@ -1,6 +1,7 @@
 use crate::common::{
-    constants::REQUEST_FAILED, helpers::handle_json_response, services::HttpClient,
-    types::SessionToken,
+    constants::REQUEST_FAILED,
+    helpers::handle_json_response,
+    services::{HttpClient, auth_service::SessionToken},
 };
 
 use app::URLS;
@@ -21,7 +22,7 @@ impl OgcService {
         if let Some(auth) = auth {
             req = match auth {
                 OgcAuth::Key(key) => req.bearer_auth(key),
-                OgcAuth::Token(token) => req.header(AUTHORIZATION, format!("Bearer {}", token.jwt)),
+                OgcAuth::Token(token) => req.header(AUTHORIZATION, format!("Bearer {}", token.0)),
             }
         };
         req.send().await.expect(REQUEST_FAILED)

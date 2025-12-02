@@ -4,7 +4,7 @@ use domain::ApiKey;
 use crate::common::{
     AppBuilder,
     helpers::{assert_ok, assert_status, handle_json_response},
-    services::OgcAuth,
+    services::{AuthService, OgcAuth},
 };
 
 #[actix_web::test]
@@ -42,7 +42,7 @@ async fn revoke_api_key_returns_404_when_revoking_another_users_key() {
     let key = app.generate_api_key(&token).await;
     let user_2_token = app
         .auth
-        .get_test_session_token(&app.api_client.client, &app.test_user_2_clerk_id)
+        .get_test_session_token(&app.api_client.client, &app.test_user_2_id)
         .await;
     let response = app
         .api_keys_service

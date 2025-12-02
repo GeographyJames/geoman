@@ -1,5 +1,7 @@
 use crate::common::{
-    constants::REQUEST_FAILED, helpers::auth_request, services::HttpClient, types::SessionToken,
+    constants::REQUEST_FAILED,
+    helpers::auth_request,
+    services::{HttpClient, auth_service::SessionToken},
 };
 use reqwest::Response;
 use serde::Serialize;

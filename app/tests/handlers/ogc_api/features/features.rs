@@ -1,4 +1,3 @@
-use domain::TableName;
 use serde::{Deserialize, Serialize};
 
 use crate::common::{
@@ -20,22 +19,16 @@ impl Default for Properties {
     }
 }
 
-async fn test_setup(input_text: &str) -> (TestApp, TableName) {
+#[actix_web::test]
+async fn get_features_works() {
+    let text = uuid::Uuid::new_v4().to_string();
     let app = TestApp::spawn_with_db().await;
 
     let table_name = app.generate_gis_data_table_name().await;
     for _ in 0..10 {
         let (_, _, ewkt) = generate_random_wgs84_point_ewkt();
-        let _feature = app.insert_feature(&table_name, &ewkt, input_text).await;
+        let _feature = app.insert_feature(&table_name, &ewkt, &text).await;
     }
-
-    (app, table_name)
-}
-
-#[actix_web::test]
-async fn get_features_works() {
-    let text = uuid::Uuid::new_v4().to_string();
-    let (app, table_name) = test_setup(&text).await;
 
     let response = app
         .ogc_service
@@ -71,13 +64,19 @@ async fn get_features_works() {
 #[actix_web::test]
 async fn get_features_works_with_limit() {
     let text = uuid::Uuid::new_v4().to_string();
-    let (app, table) = test_setup(&text).await;
+    let app = TestApp::spawn_with_db().await;
+
+    let table_name = app.generate_gis_data_table_name().await;
+    for _ in 0..10 {
+        let (_, _, ewkt) = generate_random_wgs84_point_ewkt();
+        let _feature = app.insert_feature(&table_name, &ewkt, &text).await;
+    }
 
     let limit = 5;
 
     let response = app
         .ogc_service
-        .get_features_with_params(&app.api_client, table.as_ref(), &[("limit", limit)])
+        .get_features_with_params(&app.api_client, table_name.as_ref(), &[("limit", limit)])
         .await;
     assert_ok(&response);
     let feature_collection: ogc::FeatureCollection = handle_json_response(response)

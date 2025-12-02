@@ -8,3 +8,5 @@ mod api_keys;
 pub use api_keys::ApiKeysService;
 mod clerk;
 pub use clerk::ClerkAuthService;
+mod auth_service;
+pub use auth_service::{AuthService, SessionToken};
