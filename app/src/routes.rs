@@ -8,16 +8,13 @@ use crate::{
         },
         ogc_api,
     },
-    middleware::dual_auth_middleware,
+    middleware::{auth_middleware, dual_auth_middleware},
 };
 use actix_web::{
     middleware,
     web::{self, scope},
 };
-use clerk_rs::{
-    clerk::Clerk,
-    validators::{actix::ClerkMiddleware, jwks::MemoryCacheJwksProvider},
-};
+use clerk_rs::clerk::Clerk;
 
 // pub fn docs_routes(cfg: &mut web::ServiceConfig, clerk: Clerk, environment: GeoManEnvironment) {
 //     let scp = scope(&URLS.docs.base);
@@ -35,15 +32,11 @@ use clerk_rs::{
 //     }
 // }
 
-pub fn api_routes(cfg: &mut web::ServiceConfig, clerk: Clerk) {
+pub fn api_routes(cfg: &mut web::ServiceConfig, _clerk: Clerk) {
     let scp = scope(&URLS.api.base)
         .configure(api_key_routes)
         .configure(project_routes);
-    cfg.service(scp.wrap(ClerkMiddleware::new(
-        MemoryCacheJwksProvider::new(clerk),
-        None,
-        true,
-    )));
+    cfg.service(scp.wrap(middleware::from_fn(auth_middleware)));
 }
 
 pub fn api_key_routes(cfg: &mut web::ServiceConfig) {

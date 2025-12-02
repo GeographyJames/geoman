@@ -1,7 +1,6 @@
 use crate::{handlers::ApiError, helpers::hash_api_key, postgres::PostgresRepo};
 use actix_web::{HttpResponse, post, web};
 use anyhow::Context;
-use clerk_rs::validators::authorizer::ClerkJwt;
 use domain::{ApiKeyInputDTO, KeyId, UserId};
 use rand::{Rng, distr::Alphanumeric};
 use secrecy::{ExposeSecret, SecretBox};
@@ -18,21 +17,17 @@ pub struct ApiKeyResPayload {
 }
 
 #[post("")]
-#[tracing::instrument(skip(jwt, repo, payload))]
+#[tracing::instrument(skip(repo, payload, user_id))]
 pub async fn generate_api_key(
-    jwt: web::ReqData<ClerkJwt>,
+    user_id: web::ReqData<UserId>,
     repo: web::Data<PostgresRepo>,
     payload: web::Json<ApiKeyReqPayload>,
 ) -> Result<HttpResponse, ApiError> {
-    let user_id: UserId = repo
-        .select_one(&*jwt)
-        .await?
-        .ok_or_else(|| ApiError::Unexpected(anyhow::anyhow!("Api key not found in database")))?;
     let api_key = generate_api_key_string();
     let key_hash = hash_api_key(&api_key);
     let ApiKeyReqPayload { key_name } = payload.into_inner();
     let key = ApiKeyInputDTO {
-        user_id,
+        user_id: user_id.into_inner(),
         name: key_name,
         key_hash,
     };

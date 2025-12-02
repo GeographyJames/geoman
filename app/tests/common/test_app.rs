@@ -51,18 +51,18 @@ pub struct TestApp<T: AuthService> {
 }
 
 pub struct AppBuilder {
-    with_db: bool,
-    clerk_user: bool,
-    clerk_user_2: bool,
-    environment: Option<GeoManEnvironment>,
+    pub with_db: bool,
+    pub test_user: bool,
+    pub test_user_2: bool,
+    pub environment: Option<GeoManEnvironment>,
 }
 
 impl AppBuilder {
     pub fn new() -> Self {
         Self {
             with_db: true,
-            clerk_user: true,
-            clerk_user_2: true,
+            test_user: true,
+            test_user_2: true,
             environment: None,
         }
     }
@@ -71,11 +71,11 @@ impl AppBuilder {
         if self.with_db {
             configure_database(&app.db_settings).await
         }
-        if self.clerk_user {
+        if self.test_user {
             let team_id = app.generate_team_id().await;
             let _user_id = app.insert_user(team_id, Some(&app.test_user_id)).await;
         }
-        if self.clerk_user_2 {
+        if self.test_user_2 {
             let team_id = app.generate_team_id().await;
             let _user_id = app.insert_user(team_id, Some(&app.test_user_2_id)).await;
         }

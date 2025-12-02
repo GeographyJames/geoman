@@ -1,5 +1,4 @@
-use clerk_rs::validators::authorizer::ClerkJwt;
-use domain::KeyId;
+use domain::{KeyId, UserId};
 /// Appplication repository
 use futures::Stream;
 use sqlx::PgPool;
@@ -81,15 +80,16 @@ impl PostgresRepo {
     }
 
     #[tracing::instrument(skip(self, id))]
-    pub async fn revoke_api_key(&self, id: KeyId, user: &ClerkJwt) -> Result<(), RepositoryError> {
+    pub async fn revoke_api_key(&self, id: KeyId, user_id: UserId) -> Result<(), RepositoryError> {
         sqlx::query_scalar!(
             "
         UPDATE app.api_keys
         SET revoked = NOW()
         WHERE id = $1
-        AND user_id = (SELECT id FROM app.users WHERE clerk_id = $2) RETURNING id",
+        AND user_id = $2
+        RETURNING id",
             id.0,
-            user.sub
+            user_id.0
         )
         .fetch_one(&self.db_pool)
         .await?;
@@ -97,17 +97,16 @@ impl PostgresRepo {
     }
 
     #[tracing::instrument(skip(self, id))]
-    pub async fn renew_api_key(&self, id: KeyId, user: &ClerkJwt) -> Result<(), RepositoryError> {
+    pub async fn renew_api_key(&self, id: KeyId, user_id: UserId) -> Result<(), RepositoryError> {
         sqlx::query_scalar!(
             "
         UPDATE app.api_keys
         SET expiry = (NOW() + INTERVAL '6 months')
-        WHERE id = $1 AND user_id = (
-             SELECT id FROM app.users WHERE clerk_id = $2
-             )
+        WHERE id = $1
+        AND user_id = $2
         RETURNING id",
             id.0,
-            user.sub
+            user_id.0
         )
         .fetch_one(&self.db_pool)
         .await?;

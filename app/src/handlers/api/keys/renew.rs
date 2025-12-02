@@ -1,17 +1,16 @@
 use actix_web::{HttpResponse, http::StatusCode, patch, web};
-use clerk_rs::validators::authorizer::ClerkJwt;
-use domain::KeyId;
+use domain::{KeyId, UserId};
 
 use crate::{handlers::ApiError, postgres::PostgresRepo};
 
 #[patch("/{id}/renew")]
-#[tracing::instrument(skip(repo, id))]
+#[tracing::instrument(skip(repo, id, user_id))]
 pub async fn renew_api_key(
     repo: web::Data<PostgresRepo>,
     id: web::Path<KeyId>,
-    user: web::ReqData<ClerkJwt>,
+    user_id: web::ReqData<UserId>,
 ) -> Result<HttpResponse, ApiError> {
-    repo.renew_api_key(id.into_inner(), &user.into_inner())
+    repo.renew_api_key(id.into_inner(), user_id.into_inner())
         .await?;
     Ok(HttpResponse::new(StatusCode::NO_CONTENT))
 }

@@ -9,5 +9,5 @@ pub struct User {
     first_name: String,
     last_name: String,
     clerk_id: Option<String>,
-    team: Team,
+    team: Option<Team>,
 }

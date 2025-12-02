@@ -5,7 +5,7 @@ CREATE TABLE app.users (
     last_name text NOT NULL,
     clerk_id text UNIQUE,
     admin bool NOT NULL DEFAULT FALSE,
-    team_id integer NOT NULL REFERENCES app.teams(id),
+    team_id integer REFERENCES app.teams(id),
     added timestamptz NOT NULL DEFAULT now()
 );
 

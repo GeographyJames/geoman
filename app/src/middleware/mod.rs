@@ -1,2 +1,2 @@
 mod auth;
-pub use auth::dual_auth_middleware;
+pub use auth::{auth_middleware, dual_auth_middleware};

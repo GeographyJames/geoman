@@ -11,7 +11,7 @@ use actix_web::{
 };
 
 use clerk_rs::validators::{
-    authorizer::{ClerkAuthorizer, ClerkError},
+    authorizer::{ClerkAuthorizer, ClerkError, ClerkJwt},
     jwks::MemoryCacheJwksProvider,
 };
 
@@ -39,6 +39,13 @@ pub async fn dual_auth_middleware(
         true => validate_api_key(req, next, &SecretBox::new(Box::new(token))).await,
         false => validate_clerk_auth(req, next).await,
     }
+}
+
+pub async fn auth_middleware(
+    req: ServiceRequest,
+    next: Next<impl MessageBody>,
+) -> Result<ServiceResponse<impl MessageBody>, actix_web::Error> {
+    validate_clerk_auth(req, next).await
 }
 
 async fn validate_api_key<B: MessageBody>(
@@ -81,10 +88,25 @@ async fn validate_clerk_auth<B: MessageBody>(
     let clerk_authoriser = req
         .app_data::<Data<ClerkAuthorizer<MemoryCacheJwksProvider>>>()
         .ok_or_else(|| ErrorInternalServerError("Clerk authoriser not configured"))?;
+
+    let repo = req
+        .app_data::<Data<PostgresRepo>>()
+        .ok_or_else(|| ErrorInternalServerError("Database not configured"))?;
+
     match clerk_authoriser.authorize(&req).await {
         // We have authed request and can pass the user onto the next body
         Ok(jwt) => {
-            req.extensions_mut().insert(jwt);
+            // Look up the user in the database
+            let user_id: UserId = match repo
+                .select_one(&jwt)
+                .await
+                .map_err(ErrorInternalServerError)?
+            {
+                Some(user) => user,
+                None => todo!(),
+            };
+
+            req.extensions_mut().insert(user_id);
             next.call(req).await
         }
         // Output any other errors thrown from the Clerk authorizer
@@ -93,4 +115,8 @@ async fn validate_clerk_auth<B: MessageBody>(
             ClerkError::InternalServerError(msg) => Err(ErrorInternalServerError(msg)),
         },
     }
+}
+
+fn provision_clerk_user(repo: &PostgresRepo, jwt: ClerkJwt) -> Result<UserId, anyhow::Error> {
+    todo!()
 }

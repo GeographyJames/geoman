@@ -1,9 +1,8 @@
-use clerk_rs::validators::authorizer::ClerkJwt;
 use domain::{ProjectId, UserId, enums::Visibility, project::ProjectInputDto};
 
 use crate::repo::traits::Insert;
 
-impl Insert for (ProjectInputDto, ClerkJwt) {
+impl Insert for (ProjectInputDto, UserId) {
     type Id = ProjectId;
 
     async fn insert<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>
@@ -11,10 +10,9 @@ impl Insert for (ProjectInputDto, ClerkJwt) {
         Self: Sized,
         &'a E: sqlx::PgExecutor<'a>,
     {
-        let (dto, jwt) = self;
+        let (dto, user_id) = self;
         sqlx::query_scalar!(
             r#"
-            WITH user_cte AS (SELECT u.id AS uid FROM app.users u WHERE u.clerk_id = $1)
             INSERT INTO app.projects (
                             name,
                             visibility,
@@ -23,15 +21,14 @@ impl Insert for (ProjectInputDto, ClerkJwt) {
                             owner,
                             added_by,
                             last_updated_by
-                            )   
-                 SELECT $2, $3, $4, $5, uid, uid, uid
-                 FROM user_cte
+                            )
+                    VALUES ($1, $2, $3, $4, $5, $5, $5)
                 RETURNING id AS "id: ProjectId""#,
-            jwt.sub,
             dto.name,
             &dto.visibility as &Visibility,
             dto.country_code.alpha2(),
             dto.crs_srid,
+            user_id.0,
         )
         .fetch_one(executor)
         .await
