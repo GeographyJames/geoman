@@ -1,5 +1,5 @@
-use domain::Project;
 use domain::enums::CollectionId;
+use domain::project::Project;
 
 use crate::common::{
     TestApp,
@@ -76,7 +76,6 @@ async fn get_projects_works_with_limit() {
 async fn get_project_has_centroid() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    app.create_boundaries_collection(user_id).await;
     let _boundary_id = app.generate_primary_boundary_id(project_id, user_id).await;
     let response = app
         .ogc_service

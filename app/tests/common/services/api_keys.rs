@@ -4,7 +4,7 @@ use reqwest::Response;
 use crate::common::{
     constants::REQUEST_FAILED, helpers::auth_request, services::HttpClient, types::SessionToken,
 };
-use app::handlers::api::keys::RequestPayload;
+use app::handlers::api::keys::ApiKeyReqPayload;
 
 pub struct ApiKeysService {
     pub endpoint: String,
@@ -16,7 +16,7 @@ impl ApiKeysService {
         client: &HttpClient,
         token: Option<&SessionToken>,
     ) -> Response {
-        let payload = RequestPayload {
+        let payload = ApiKeyReqPayload {
             key_name: uuid::Uuid::new_v4().to_string(),
         };
         auth_request(client.post(&self.endpoint).json(&payload), token)

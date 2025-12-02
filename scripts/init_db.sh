@@ -154,11 +154,7 @@ then
 
     # Array of SQL files to run in order
     sql_files=(
-        "teams.sql"
-        "users.sql"
         "collections.sql"
-        "technologies.sql"
-        "subdivisions.sql"
         "projects.sql"
         "features.sql"
 

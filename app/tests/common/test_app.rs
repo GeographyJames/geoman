@@ -7,7 +7,7 @@ use crate::common::{
 };
 use app::{
     Application, DatabaseSettings, Password, URLS,
-    constants::GIS_DATA_SCHEMA,
+    constants::{GIS_DATA_SCHEMA, SITE_BOUNDARIES_COLLECTION_NAME},
     enums::GeoManEnvironment,
     get_config, handlers,
     telemetry::{get_subscriber, init_subscriber},
@@ -384,7 +384,7 @@ impl TestApp {
     ) {
         sqlx::query(&format!(
             r#"
-        CREATE TABLE gis_data."{}" (
+        CREATE TABLE {GIS_DATA_SCHEMA}."{}" (
             gid integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
             geom geometry({},{}) NOT NULL,
             some_text TEXT
@@ -396,7 +396,7 @@ impl TestApp {
         .expect("failed to insert table");
         if let Some(desc) = description {
             sqlx::query(&format!(
-                r#"COMMENT ON TABLE gis_data."{}" IS '{desc}'"#,
+                r#"COMMENT ON TABLE {GIS_DATA_SCHEMA}."{}" IS '{desc}'"#,
                 table_name
             ))
             .execute(&self.db_pool)
@@ -424,12 +424,6 @@ impl TestApp {
         .await
         .expect("failed to insert feature")
     }
-    pub async fn create_boundaries_collection(&self, user_id: UserId) {
-        sqlx::query!(
-            "INSERT INTO app.collections (title, geometry_type, added_by, last_updated_by) VALUES ('site boundaries', 'MULTIPOLYGON', $1, $1)",
-            user_id.0
-        ).execute(&self.db_pool).await.expect("failed to insert site boundaries collection");
-    }
 
     pub async fn generate_primary_boundary_id(
         &self,
@@ -438,7 +432,8 @@ impl TestApp {
     ) -> ProjectFeatureId {
         let mut tx = self.db_pool.begin().await.unwrap();
         let collection_id = sqlx::query_scalar!(
-            "SELECT id FROM app.collections c WHERE c.title = 'site boundaries'"
+            "SELECT id FROM app.collections c WHERE c.title = $1",
+            SITE_BOUNDARIES_COLLECTION_NAME
         )
         .fetch_one(&mut *tx)
         .await
@@ -483,12 +478,12 @@ impl TestApp {
     pub async fn generate_api_key(
         &self,
         token: &SessionToken,
-    ) -> handlers::api::keys::ResponsePayload {
+    ) -> handlers::api::keys::ApiKeyResPayload {
         let response = self
             .api_keys_service
             .generate_api_key(&self.api_client, Some(token))
             .await;
-        let key: handlers::api::keys::ResponsePayload = handle_json_response(response)
+        let key: handlers::api::keys::ApiKeyResPayload = handle_json_response(response)
             .await
             .expect("failed to retrieve key");
         key

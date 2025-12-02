@@ -2,7 +2,10 @@ use crate::{
     URLS,
     enums::GeoManEnvironment,
     handlers::{
-        api::keys::{generate_api_key, get_api_keys, renew_api_key, revoke_api_key},
+        api::{
+            keys::{generate_api_key, get_api_keys, renew_api_key, revoke_api_key},
+            projects::post_projcet,
+        },
         ogc_api,
     },
     middleware::dual_auth_middleware,
@@ -33,7 +36,9 @@ use clerk_rs::{
 // }
 
 pub fn api_routes(cfg: &mut web::ServiceConfig, clerk: Clerk) {
-    let scp = scope(&URLS.api.base).configure(api_key_routes);
+    let scp = scope(&URLS.api.base)
+        .configure(api_key_routes)
+        .configure(project_routes);
     cfg.service(scp.wrap(ClerkMiddleware::new(
         MemoryCacheJwksProvider::new(clerk),
         None,
@@ -49,6 +54,10 @@ pub fn api_key_routes(cfg: &mut web::ServiceConfig) {
             .service(revoke_api_key)
             .service(renew_api_key),
     );
+}
+
+pub fn project_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(scope(&URLS.api.projects).service(post_projcet));
 }
 
 pub fn ogc_routes(cfg: &mut web::ServiceConfig, run_environment: GeoManEnvironment) {

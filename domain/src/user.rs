@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use sqlx::prelude::FromRow;
 
 use crate::{Team, UserId};
 

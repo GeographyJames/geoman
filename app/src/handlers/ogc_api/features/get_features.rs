@@ -16,7 +16,7 @@ use actix_web::{
     web::{self},
 };
 
-use domain::{GisDataTable, IntoOGCFeature, Project, enums::CollectionId};
+use domain::{GisDataTable, IntoOGCFeature, enums::CollectionId, project::Project};
 use ogcapi_types::common::media_type::GEO_JSON;
 
 #[utoipa::path(

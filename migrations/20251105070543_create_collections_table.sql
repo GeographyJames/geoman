@@ -13,3 +13,15 @@ CREATE TRIGGER update_last_updated_trigger
     BEFORE UPDATE ON app.collections
     FOR EACH ROW
     EXECUTE FUNCTION update_last_updated();
+
+INSERT INTO app.collections (
+    title,
+    geometry_type,
+    added_by,
+    last_updated_by
+) VALUES (
+    'site boundaries',
+    'MULTIPOLYGON',
+    (SELECT id FROM app.users WHERE username = 'root'),
+    (SELECT id FROM app.users WHERE username = 'root')
+);

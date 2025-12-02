@@ -8,11 +8,11 @@ use secrecy::{ExposeSecret, SecretBox};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
-pub struct RequestPayload {
+pub struct ApiKeyReqPayload {
     pub key_name: String,
 }
 #[derive(Serialize, Deserialize)]
-pub struct ResponsePayload {
+pub struct ApiKeyResPayload {
     pub api_key: String,
     pub id: KeyId,
 }
@@ -22,7 +22,7 @@ pub struct ResponsePayload {
 pub async fn generate_api_key(
     jwt: web::ReqData<ClerkJwt>,
     repo: web::Data<PostgresRepo>,
-    payload: web::Json<RequestPayload>,
+    payload: web::Json<ApiKeyReqPayload>,
 ) -> Result<HttpResponse, ApiError> {
     let user_id: UserId = repo
         .select_one(&*jwt)
@@ -30,7 +30,7 @@ pub async fn generate_api_key(
         .ok_or_else(|| ApiError::Unexpected(anyhow::anyhow!("Api key not found in database")))?;
     let api_key = generate_api_key_string();
     let key_hash = hash_api_key(&api_key);
-    let RequestPayload { key_name } = payload.into_inner();
+    let ApiKeyReqPayload { key_name } = payload.into_inner();
     let key = ApiKeyInputDTO {
         user_id,
         name: key_name,
@@ -41,7 +41,7 @@ pub async fn generate_api_key(
         .await
         .context("failed to save key in database")?;
 
-    Ok(HttpResponse::Ok().json(ResponsePayload {
+    Ok(HttpResponse::Ok().json(ApiKeyResPayload {
         id: key_id,
         api_key: api_key.expose_secret().clone(),
     }))

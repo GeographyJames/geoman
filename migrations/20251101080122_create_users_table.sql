@@ -9,3 +9,8 @@ CREATE TABLE app.users (
     added timestamptz NOT NULL DEFAULT now()
 );
 
+INSERT INTO app.users (
+    username, admin, team_id, first_name, last_name
+) VALUES (
+    'root', true, (SELECT id FROM app.teams WHERE name = 'root'), 'root', 'user'
+);

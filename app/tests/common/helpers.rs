@@ -2,9 +2,11 @@ use app::ErrorResponse;
 use rand::Rng;
 use reqwest::{RequestBuilder, Response, header::AUTHORIZATION};
 use serde::de::DeserializeOwned;
+use serde_json::json;
 
 use crate::common::types::SessionToken;
 
+/// Cheks response is 200
 pub fn assert_ok(response: &reqwest::Response) {
     assert_eq!(
         response.status().as_u16(),
@@ -12,6 +14,18 @@ pub fn assert_ok(response: &reqwest::Response) {
         "Expected 200 OK but got {}",
         response.status()
     )
+}
+
+/// Checks response is 200 and prints body if not
+pub async fn check_ok(response: Response) -> Response {
+    assert_eq!(
+        response.status().as_u16(),
+        200,
+        "Expected 200 OK but got {}: {}",
+        response.status(),
+        response.text().await.unwrap_or("no body".to_string())
+    );
+    response
 }
 
 pub fn assert_status(response: &reqwest::Response, expected_status: u16) {
@@ -35,7 +49,8 @@ pub async fn check_error_response(
         .expect("failed to deserialise response")
 }
 
-/// Handles a response by returning the specified Json for successful responses or elegantly handling error cases or cases where the response body is not as expected
+/// Handles a response by returning the specified JSON type for successful responses,
+/// or pretty-printing useful error information for failure cases.
 pub async fn handle_json_response<T: DeserializeOwned>(
     response: Response,
 ) -> Result<T, anyhow::Error> {
@@ -44,7 +59,7 @@ pub async fn handle_json_response<T: DeserializeOwned>(
     if status.is_success() {
         let json: T = response.json().await.map_err(|e| {
             anyhow::anyhow!(
-                "Failed to deserialize successful {} response: {:?}",
+                "Failed to deserialize successful {} response: {}",
                 status,
                 e
             )
@@ -52,15 +67,24 @@ pub async fn handle_json_response<T: DeserializeOwned>(
         return Ok(json);
     }
 
-    let error = response
+    // Read the body as text
+    let body = response
         .text()
         .await
         .unwrap_or_else(|_| "no response body".to_string());
 
+    // Try to parse it as JSON for pretty-printing
+    let pretty_body = match serde_json::from_str::<serde_json::Value>(&body) {
+        Ok(json_value) => {
+            serde_json::to_string_pretty(&json_value).unwrap_or_else(|_| body.clone())
+        }
+        Err(_) => body.clone(), // not JSON, return raw text
+    };
+
     Err(anyhow::anyhow!(
-        "Unsuccessful response status: {}\nbody:\n{}",
+        "Unsuccessful response status: {}\nResponse Body:\n{}",
         status,
-        error,
+        pretty_body
     ))
 }
 

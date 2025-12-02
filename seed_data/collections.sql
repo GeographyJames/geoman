@@ -4,13 +4,7 @@ INSERT INTO app.collections (
     geometry_type,
     added_by,
     last_updated_by
-) VALUES (
-    'site boundaries',
-
-    'MULTIPOLYGON',
-    (SELECT id FROM app.users WHERE username = 'root'),
-    (SELECT id FROM app.users WHERE username = 'root')
-), (
+) VALUES  (
     'access tracks',
 
     'MULTILINESTRING',

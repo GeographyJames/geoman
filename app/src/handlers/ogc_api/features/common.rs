@@ -9,7 +9,8 @@ use actix_web::{
 };
 
 use domain::{
-    IntoOGCFeature, Project, ProjectFeature, ProjectFeatureId, ProjectId, enums::CollectionId,
+    IntoOGCFeature, ProjectFeature, ProjectFeatureId, ProjectId, enums::CollectionId,
+    project::Project,
 };
 use ogcapi_types::common::Crs;
 

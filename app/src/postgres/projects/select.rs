@@ -8,8 +8,8 @@ use crate::{
 };
 
 use domain::{
-    Project, ProjectId,
-    project::{ProjectName, Properties},
+    ProjectId,
+    project::{Project, ProjectName, Properties},
 };
 use sqlx::{prelude::FromRow, types::Json};
 

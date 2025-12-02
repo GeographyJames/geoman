@@ -3,7 +3,23 @@ CREATE TABLE app.subdivisions (
     country_code character(2) NOT NULL CHECK (country_code ~ '^[A-Z]{2}$'),
     subdivision_code varchar(3) NOT NULL CHECK (subdivision_code ~ '^[A-Z0-9]{1,3}$'),
     name text NOT NULL,
+    added TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (country_code, subdivision_code)
 );
 
 CREATE INDEX idx_subdivisions_country_code ON app.subdivisions(country_code);
+
+INSERT INTO app.subdivisions (
+    country_code, subdivision_code, name
+    ) VALUES (
+        'GB', 'ENG', 'England'
+    ),
+    (
+        'GB', 'SCT', 'Scotland'
+    ),
+    (
+        'GB', 'WLS', 'Wales'
+    ),
+    (
+        'GB', 'NIR', 'Northern Ireland'
+    );

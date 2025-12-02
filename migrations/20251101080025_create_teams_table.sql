@@ -4,3 +4,6 @@ CREATE TABLE app.teams (
     added timestamptz NOT NULL DEFAULT now()
 );
 
+INSERT INTO app.teams (
+    name
+    ) VALUES ('root');
