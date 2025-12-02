@@ -10,9 +10,13 @@ use actix_web::{
     web::Data,
 };
 
-use clerk_rs::validators::{
-    authorizer::{ClerkAuthorizer, ClerkError, ClerkJwt},
-    jwks::MemoryCacheJwksProvider,
+use anyhow::Context;
+use clerk_rs::{
+    clerk::Clerk,
+    validators::{
+        authorizer::{ClerkAuthorizer, ClerkError, ClerkJwt},
+        jwks::MemoryCacheJwksProvider,
+    },
 };
 
 use domain::UserId;
@@ -103,7 +107,17 @@ async fn validate_clerk_auth<B: MessageBody>(
                 .map_err(ErrorInternalServerError)?
             {
                 Some(user) => user,
-                None => todo!(),
+                None => {
+                    tracing::info!("User not found in database: provisioning");
+                    let clerk = req
+                        .app_data::<Data<Clerk>>()
+                        .ok_or_else(|| ErrorInternalServerError("Clerk not conifigured"))?;
+
+                    provision_clerk_user(&repo, jwt, clerk)
+                        .await
+                        .context("failed to provision new user")
+                        .map_err(ErrorInternalServerError)?
+                }
             };
 
             req.extensions_mut().insert(user_id);
@@ -117,6 +131,26 @@ async fn validate_clerk_auth<B: MessageBody>(
     }
 }
 
-fn provision_clerk_user(repo: &PostgresRepo, jwt: ClerkJwt) -> Result<UserId, anyhow::Error> {
-    todo!()
+async fn provision_clerk_user(
+    repo: &PostgresRepo,
+    jwt: ClerkJwt,
+    clerk_client: &Clerk,
+) -> Result<UserId, anyhow::Error> {
+    let user = clerk_rs::apis::users_api::User::get_user(clerk_client, &jwt.sub)
+        .await
+        .context("failed to retrive user from Clerk")?;
+    sqlx::query_scalar!(
+        r#"INSERT INTO app.users (
+            clerk_id, first_name, last_name
+            ) VALUES ($1, $2, $3)
+             RETURNING id AS "id: UserId""#,
+        jwt.sub,
+        user.first_name
+            .ok_or_else(|| anyhow::anyhow!("User has no first name"))?,
+        user.last_name
+            .ok_or_else(|| anyhow::anyhow!("User has no last name"))?
+    )
+    .fetch_one(&repo.db_pool)
+    .await
+    .context("failed to add new user to databqase")
 }

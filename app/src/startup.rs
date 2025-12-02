@@ -70,6 +70,7 @@ pub async fn run(
         App::new()
             .app_data(app_state.clone())
             .app_data(repo.clone())
+            .app_data(web::Data::new(clerk.clone()))
             .app_data(clerk_authoriser.clone())
             .wrap(TracingLogger::default())
             .route(&URLS.health_check, web::get().to(HttpResponse::Ok))
