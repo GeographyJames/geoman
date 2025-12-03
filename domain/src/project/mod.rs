@@ -6,3 +6,5 @@ mod properties;
 pub use properties::Properties;
 mod name;
 pub use name::ProjectName;
+mod slug;
+pub use slug::ProjectSlug;

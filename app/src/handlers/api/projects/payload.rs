@@ -1,5 +1,8 @@
 use anyhow::Context;
-use domain::{enums::Visibility, project::ProjectInputDto};
+use domain::{
+    enums::Visibility,
+    project::{ProjectInputDto, ProjectSlug},
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -19,6 +22,7 @@ impl ProjectReqPayload {
             crs_srid,
         } = self;
         Ok(ProjectInputDto {
+            slug: ProjectSlug::parse(&name),
             name,
             visibility,
             country_code: isocountry::CountryCode::for_alpha2(&country_code)

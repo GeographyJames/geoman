@@ -2,8 +2,6 @@ use ::chrono::{DateTime, Utc};
 use anyhow::Context;
 use sqlx::prelude::FromRow;
 
-use crate::traits::{Migrate, SelectAll};
-
 #[derive(Debug, FromRow)]
 pub struct Team {
     id: i32,
@@ -11,8 +9,8 @@ pub struct Team {
     added: DateTime<Utc>,
 }
 
-impl SelectAll for Team {
-    async fn select_all<'a, E>(executor: E) -> Result<Vec<Self>, anyhow::Error>
+impl Team {
+    pub async fn select_all<'a, E>(executor: E) -> Result<Vec<Self>, anyhow::Error>
     where
         Self: Sized,
         E: sqlx::PgExecutor<'a>,
@@ -22,10 +20,8 @@ impl SelectAll for Team {
             .await
             .context("failed to query source teams")
     }
-}
 
-impl Migrate for Team {
-    async fn migrate<'a, E>(self, executor: E) -> Result<(), anyhow::Error>
+    pub async fn migrate<'a, E>(self, executor: E) -> Result<(), anyhow::Error>
     where
         Self: Sized,
         E: sqlx::PgExecutor<'a>,

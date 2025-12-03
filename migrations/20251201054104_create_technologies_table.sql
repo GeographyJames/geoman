@@ -7,4 +7,4 @@ CREATE TABLE app.technologies (
 INSERT INTO app.technologies (
     name
     )
-    VALUES ('wind'), ('solar'), ('battery'), ('hydrogen');
+    VALUES ('onshore wind'), ('solar'), ('battery'), ('hydrogen'), ('offshore wind');

@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO app.projects (\n        id,\n        search_area_id,\n        search_site_name,\n        name,\n        slug,\n        status,\n        visibility,\n        country_code,\n        owner,\n        added_by,\n        added,\n        last_updated_by,\n        last_updated,\n        crs_srid,\n        team_id\n        ) OVERRIDING SYSTEM VALUE VALUES ($1, $2, $3, $4, $5, $6, $7, 'GB', $8, $9, $10,\n        (SELECT id FROM app.users WHERE username = 'root-user'), NOW()\n        , 27700, $11)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Text",
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "app.status",
+            "kind": {
+              "Enum": [
+                "ACTIVE",
+                "ARCHIVED",
+                "DELETED"
+              ]
+            }
+          }
+        },
+        {
+          "Custom": {
+            "name": "app.visibility",
+            "kind": {
+              "Enum": [
+                "PRIVATE",
+                "TEAM",
+                "PUBLIC"
+              ]
+            }
+          }
+        },
+        "Int4",
+        "Int4",
+        "Timestamptz",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ba6b8860bece667c1005faca237efd77de1047544b4b6f88171a39a32029b74b"
+}

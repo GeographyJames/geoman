@@ -2,8 +2,6 @@ use anyhow::Context;
 use chrono::{DateTime, Utc};
 use sqlx::prelude::FromRow;
 
-use crate::traits::{Migrate, SelectAll};
-
 #[derive(FromRow)]
 pub struct User {
     pub id: i32,
@@ -15,8 +13,8 @@ pub struct User {
     pub added: DateTime<Utc>,
 }
 
-impl SelectAll for User {
-    async fn select_all<'a, E>(executor: E) -> Result<Vec<Self>, anyhow::Error>
+impl User {
+    pub async fn select_all<'a, E>(executor: E) -> Result<Vec<Self>, anyhow::Error>
     where
         Self: Sized,
         E: sqlx::PgExecutor<'a>,
@@ -28,10 +26,8 @@ impl SelectAll for User {
         .await
         .context("failed to query source users")
     }
-}
 
-impl Migrate for User {
-    async fn migrate<'a, E>(self, executor: E) -> Result<(), anyhow::Error>
+    pub async fn migrate<'a, E>(self, executor: E) -> Result<(), anyhow::Error>
     where
         Self: Sized,
         E: sqlx::PgExecutor<'a>,

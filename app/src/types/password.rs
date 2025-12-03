@@ -4,6 +4,7 @@ use serde::Deserialize;
 #[derive(Clone, Deserialize)]
 pub struct Password(String);
 impl Zeroize for Password {
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn zeroize(&mut self) {
         self.0.zeroize();
     }

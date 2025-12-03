@@ -4,7 +4,7 @@ use anyhow::Context;
 use chrono::{DateTime, Utc};
 use sqlx::prelude::FromRow;
 
-use crate::traits::{Migrate, SelectAll};
+use crate::types::Subdivision;
 use domain::enums::Status;
 
 #[derive(FromRow)]
@@ -19,8 +19,8 @@ pub struct SearchArea {
     geom: Vec<u8>,
 }
 
-impl SelectAll for SearchArea {
-    async fn select_all<'a, E>(executor: E) -> Result<Vec<Self>, anyhow::Error>
+impl SearchArea {
+    pub async fn select_all<'a, E>(executor: E) -> Result<Vec<Self>, anyhow::Error>
     where
         Self: Sized,
         E: sqlx::PgExecutor<'a>,
@@ -42,19 +42,12 @@ impl SelectAll for SearchArea {
         .await
         .context("failed to select search areas")
     }
-}
 
-impl Migrate for SearchArea {
-    async fn migrate<'a, E>(self, executor: E) -> Result<(), anyhow::Error>
+    pub async fn migrate<'a, E>(self, executor: E) -> Result<(), anyhow::Error>
     where
         Self: Sized,
         E: sqlx::PgExecutor<'a>,
     {
-        let subdivison = match self.country {
-            geoman::domain::enums::Country::SCOTLAND => "SCT",
-            geoman::domain::enums::Country::ENGLAND => "ENG",
-            geoman::domain::enums::Country::WALES => "WAL",
-        };
         sqlx::query!(
             r#"
         INSERT INTO app.search_areas (
@@ -77,16 +70,15 @@ impl Migrate for SearchArea {
               $3,
               'GB',
         (SELECT id FROM app.subdivisions WHERE subdivision_code = $4),
-        $5, $6, $7, $8, $9, ST_GeomFromWKB($10))
+        $5, $6, $7,
+         NOW(), (SELECT id FROM app.users WHERE username = 'root-user'), ST_GeomFromWKB($8))
             "#,
             self.id,
             self.name,
             self.slug,
-            subdivison,
+            Subdivision::from(&self.country).0,
             Status::from_str(&self.status.to_string()).context("failed to convert status")?
                 as Status,
-            self.added,
-            self.user_id,
             self.added,
             self.user_id,
             self.geom

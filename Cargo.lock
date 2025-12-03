@@ -1520,6 +1520,7 @@ dependencies = [
  "ogcapi-types",
  "serde",
  "serde_json",
+ "slug",
  "sqlx",
  "strum",
  "uuid",

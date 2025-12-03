@@ -2,6 +2,7 @@ INSERT INTO app.projects (
     name,
     country_code,
     slug,
+    team_id,
 
     owner,
     added_by,
@@ -10,6 +11,7 @@ INSERT INTO app.projects (
     'Test Project',
     'GB',
     'test-project',
+    (SELECT id FROM app.teams WHERE name = 'root'),
 
     (SELECT id FROM app.users WHERE username = 'root'),
     (SELECT id FROM app.users WHERE username = 'root'),
@@ -20,6 +22,7 @@ INSERT INTO app.projects (
     name,
     country_code,
     slug,
+    team_id,
 
     owner,
     added_by,
@@ -28,6 +31,7 @@ INSERT INTO app.projects (
     'Test Project2',
     'GB',
     'test-project2',
+     (SELECT id FROM app.teams WHERE name = 'root'),
 
     (SELECT id FROM app.users WHERE username = 'root'),
     (SELECT id FROM app.users WHERE username = 'root'),
@@ -38,6 +42,7 @@ INSERT INTO app.projects (
     name,
     country_code,
     slug,
+    team_id,
 
     owner,
     added_by,
@@ -46,6 +51,7 @@ INSERT INTO app.projects (
     'Test Project3',
     'GB',
     'test-project3',
+    (SELECT id FROM app.teams WHERE name = 'root'),
 
     (SELECT id FROM app.users WHERE username = 'root'),
     (SELECT id FROM app.users WHERE username = 'root'),

@@ -220,10 +220,13 @@ impl TestApp<ClerkAuthService> {
             country_code,
             owner,
             added_by,
-            last_updated_by
-            ) VALUES ($1, 'GB', $2, $2, $2) RETURNING id",
+            last_updated_by,
+            slug,
+            team_id
+            ) VALUES ($1, 'GB', $2, $2, $2, $3, (SELECT team_id FROM app.users WHERE id = $2)) RETURNING id",
             name,
-            user_id.0
+            user_id.0,
+            name
         )
         .fetch_one(&self.db_pool)
         .await

@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO app.project_features (\n                    project_id,\n                    collection_id,\n                    name,\n                    added_by,\n                    last_updated_by,\n                    is_primary\n            ) VALUES (\n                     $1, $2, $3, $4, $4, true\n                     )\n            RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "637fff0cf05cf638576c5bed25d1dde038ca6637c95e475dda853dfac0edb576"
+}

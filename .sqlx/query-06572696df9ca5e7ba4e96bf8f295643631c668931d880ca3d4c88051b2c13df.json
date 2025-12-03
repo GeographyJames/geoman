@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO app.users (username, first_name, last_name, admin) VALUES ('root-user', 'root', 'user', true)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "06572696df9ca5e7ba4e96bf8f295643631c668931d880ca3d4c88051b2c13df"
+}

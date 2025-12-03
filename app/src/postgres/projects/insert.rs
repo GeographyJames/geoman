@@ -19,15 +19,20 @@ impl Insert for (ProjectInputDto, UserId) {
                             crs_srid,
                             owner,
                             added_by,
-                            last_updated_by
+                            last_updated_by,
+                            slug,
+                            team_id
                             )
-                    VALUES ($1, $2, $3, $4, $5, $5, $5)
+                    VALUES ($1, $2, $3, $4, $5, $5, $5, $6,
+                            (SELECT team_id FROM app.users WHERE id = $5)
+                )
                 RETURNING id AS "id: ProjectId""#,
             dto.name,
             &dto.visibility as &Visibility,
             dto.country_code.alpha2(),
             dto.crs_srid,
             user_id.0,
+            dto.slug.as_ref()
         )
         .fetch_one(executor)
         .await

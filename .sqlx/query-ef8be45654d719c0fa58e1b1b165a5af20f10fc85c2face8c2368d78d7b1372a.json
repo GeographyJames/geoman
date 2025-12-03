@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO app.search_areas (\n            id,\n            name,\n            team_id,\n            slug,\n            country_code,\n            subdivision,\n            status,\n            added,\n            added_by,\n            last_updated,\n            last_updated_by,\n            geom\n            ) OVERRIDING SYSTEM VALUE VALUES (\n             $1,\n             $2,\n             (SELECT id FROM app.teams WHERE name = 'Onshore Wind and Hydrogen Development'),\n              $3,\n              'GB',\n        (SELECT id FROM app.subdivisions WHERE subdivision_code = $4),\n        $5, $6, $7,\n         NOW(), (SELECT id FROM app.users WHERE username = 'root-user'), ST_GeomFromWKB($8))\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "app.status",
+            "kind": {
+              "Enum": [
+                "ACTIVE",
+                "ARCHIVED",
+                "DELETED"
+              ]
+            }
+          }
+        },
+        "Timestamptz",
+        "Int4",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ef8be45654d719c0fa58e1b1b165a5af20f10fc85c2face8c2368d78d7b1372a"
+}

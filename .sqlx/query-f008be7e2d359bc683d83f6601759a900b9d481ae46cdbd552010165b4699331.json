@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO app.feature_objects (collection_id, project_feature_id, geom) VALUES ($1, $2, ST_GeomFromEwkt('SRID=27700;MULTIPOLYGON (((30 10, 40 40, 20 40, 10 20, 30 10)))')) RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f008be7e2d359bc683d83f6601759a900b9d481ae46cdbd552010165b4699331"
+}

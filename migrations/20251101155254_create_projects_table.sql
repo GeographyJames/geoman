@@ -1,5 +1,6 @@
 CREATE TABLE app.projects (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    team_id integer NOT NULL REFERENCES app.teams(id),
     search_area_id integer REFERENCES app.search_areas(id),
     search_site_name text,
     name text NOT NULL UNIQUE,
