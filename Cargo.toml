@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["app", "db_migrate", "domain", "ogc"]
+members = ["app", "domain", "ogc"]
 
 [workspace.dependencies]
 sqlx = { version = "0.8", features = [
