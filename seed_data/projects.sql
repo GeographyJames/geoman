@@ -60,11 +60,11 @@ INSERT INTO app.projects (
 
 
 INSERT INTO app.project_technologies (project_id, technology_id) VALUES (
-    (SELECT id FROM app.projects WHERE name = 'Test Project'), (SELECT id FROM app.technologies WHERE name = 'wind')
+    (SELECT id FROM app.projects WHERE name = 'Test Project'), (SELECT id FROM app.technologies WHERE name = 'onshore wind')
 );
 
 INSERT INTO app.project_technologies (project_id, technology_id) VALUES (
-    (SELECT id FROM app.projects WHERE name = 'Test Project2'), (SELECT id FROM app.technologies WHERE name = 'wind')),
+    (SELECT id FROM app.projects WHERE name = 'Test Project2'), (SELECT id FROM app.technologies WHERE name = 'onshore wind')),
     ((SELECT id FROM app.projects WHERE name = 'Test Project2'), (SELECT id FROM app.technologies WHERE name = 'solar')
 );
 
