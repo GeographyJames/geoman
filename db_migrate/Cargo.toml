@@ -1,0 +1,19 @@
+[package]
+name = "db_migrate"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+path = "src/main.rs"
+name = "db_migrate"
+
+[dependencies]
+sqlx = { workspace = true }
+dotenvy = { workspace = true }
+chrono = { workspace = true }
+actix-web = { workspace = true }
+anyhow = { workspace = true }
+tracing-subscriber = { workspace = true }
+tracing = { workspace = true }
+geoman = { path = "../../geodata-manager" }
+domain = { path = "../domain" }

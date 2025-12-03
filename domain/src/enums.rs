@@ -1,9 +1,10 @@
 use crate::{ProjectCollectionId, TableName};
 use serde::{Deserialize, Deserializer, Serialize};
 use sqlx::prelude::Type;
-use strum::Display;
+use strum::{Display, EnumString};
 
-#[derive(Serialize, Deserialize, Debug, Type)]
+#[derive(Serialize, Deserialize, Debug, Type, EnumString, Display)]
+#[strum(ascii_case_insensitive)]
 #[sqlx(type_name = "app.status", rename_all = "UPPERCASE")]
 pub enum Status {
     Active,

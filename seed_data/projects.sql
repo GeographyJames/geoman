@@ -1,6 +1,7 @@
 INSERT INTO app.projects (
     name,
     country_code,
+    slug,
 
     owner,
     added_by,
@@ -8,6 +9,7 @@ INSERT INTO app.projects (
 ) VALUES (
     'Test Project',
     'GB',
+    'test-project',
 
     (SELECT id FROM app.users WHERE username = 'root'),
     (SELECT id FROM app.users WHERE username = 'root'),
@@ -17,6 +19,7 @@ INSERT INTO app.projects (
 INSERT INTO app.projects (
     name,
     country_code,
+    slug,
 
     owner,
     added_by,
@@ -24,6 +27,7 @@ INSERT INTO app.projects (
 ) VALUES (
     'Test Project2',
     'GB',
+    'test-project2',
 
     (SELECT id FROM app.users WHERE username = 'root'),
     (SELECT id FROM app.users WHERE username = 'root'),
@@ -33,6 +37,7 @@ INSERT INTO app.projects (
 INSERT INTO app.projects (
     name,
     country_code,
+    slug,
 
     owner,
     added_by,
@@ -40,6 +45,7 @@ INSERT INTO app.projects (
 ) VALUES (
     'Test Project3',
     'GB',
+    'test-project3',
 
     (SELECT id FROM app.users WHERE username = 'root'),
     (SELECT id FROM app.users WHERE username = 'root'),

@@ -10,14 +10,14 @@ name = "geoman"
 [dependencies]
 
 ogc = { path = "../ogc" }
-actix-web = "4.11"
+actix-web = { workspace = true }
 clerk-rs = { version = "0.4", features = ["actix"] }
 anyhow = { workspace = true }
 config = "0.15"
 serde = { workspace = true }
-dotenvy = "0.15"
+dotenvy = { workspace = true }
 tracing-bunyan-formatter = "0.3"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber = { workspace = true }
 tracing-log = "0.2"
 tracing-actix-web = "0.7"
 tracing = { workspace = true }

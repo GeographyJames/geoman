@@ -24,7 +24,7 @@ impl DatabaseSettings {
             .host(&self.host)
             .port(self.port)
             .database(&self.database_name)
-            .application_name("Geodata Manager")
+            .application_name("GeoMan")
             .log_statements(log::LevelFilter::Trace)
     }
 

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["app", "domain", "ogc"]
+members = ["app", "db_migrate", "domain", "ogc"]
 
 [workspace.dependencies]
 sqlx = { version = "0.8", features = [
@@ -11,6 +11,7 @@ sqlx = { version = "0.8", features = [
     "chrono",
     "ipnetwork",
 ] }
+dotenvy = "0.15"
 uuid = { version = "1.19", features = ["v4"] }
 anyhow = "1.0"
 futures = "0.3"
@@ -26,3 +27,5 @@ tracing = "0.1"
 ogcapi-types = "0.3"
 strum = "0.27"
 isocountry = "0.3"
+actix-web = "4.12"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
