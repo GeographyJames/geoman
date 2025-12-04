@@ -20,4 +20,7 @@ pub struct Properties {
     pub crs_srid: Option<i32>,
     pub last_updated_by: User,
     pub last_updated: DateTime<Utc>,
+    pub slug: String,
+    pub search_area_id: Option<i32>,
+    pub search_site_name: Option<String>,
 }

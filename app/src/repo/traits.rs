@@ -1,9 +1,9 @@
+#![allow(async_fn_in_trait)]
 use futures::Stream;
 
 use crate::repo::{PoolWrapper, RepositoryError, StreamItem};
 
 pub trait SelectAll {
-    #[allow(async_fn_in_trait)]
     async fn select_all<'a, E>(executor: &'a E) -> Result<Vec<Self>, RepositoryError>
     where
         Self: Sized,
@@ -11,7 +11,6 @@ pub trait SelectAll {
 }
 
 pub trait SelectOne<ID> {
-    #[allow(async_fn_in_trait)]
     async fn select_one<'a, E>(executor: &'a E, id: ID) -> Result<Option<Self>, RepositoryError>
     where
         Self: Sized,
