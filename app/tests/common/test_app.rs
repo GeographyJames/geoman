@@ -479,11 +479,11 @@ impl TestApp<ClerkAuthService> {
 
     pub async fn generate_api_key(
         &self,
-        token: &SessionToken,
+        token: Option<&SessionToken>,
     ) -> handlers::api::keys::ApiKeyResPayload {
         let response = self
             .api_keys_service
-            .generate_api_key(&self.api_client, Some(token))
+            .generate_api_key(&self.api_client, token)
             .await;
         let key: handlers::api::keys::ApiKeyResPayload = handle_json_response(response)
             .await

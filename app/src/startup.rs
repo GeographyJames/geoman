@@ -74,7 +74,13 @@ pub async fn run(
             .app_data(clerk_authoriser.clone())
             .wrap(TracingLogger::default())
             .route(&URLS.health_check, web::get().to(HttpResponse::Ok))
-            .configure(|cfg| api_routes(cfg, clerk.clone()))
+            .configure(|cfg| {
+                api_routes(
+                    cfg,
+                    clerk.clone(),
+                    config.app_settings.environment.run.clone(),
+                )
+            })
             .configure(|cfg| ogc_routes(cfg, config.app_settings.environment.run.clone()))
             // .configure(|cfg| {
             //     docs_routes(cfg, clerk.clone(), config.app_settings.environment.clone())

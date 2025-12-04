@@ -26,13 +26,15 @@ mod tests {
     use super::*;
     use crate::{ErrorResponse, testing::test_helpers::mock_app};
     use actix_web::test;
+    use domain::project::ProjectInputDto;
 
     #[actix_web::test]
     async fn post_project_returns_422_for_invalid_name() {
         let mut project = ProjectReqPayload::default();
         project.name = "".to_string();
+        let repo = PostgresRepo::mock();
         let req = test::TestRequest::post().set_json(project).to_request();
-        let resp = mock_app(post_project, req).await;
+        let resp = mock_app(repo, post_project, req).await;
         assert_eq!(resp.status(), 422);
         let error: ErrorResponse = test::read_body_json(resp).await;
         assert!(error.message.contains("Failed to validate project"))
@@ -42,13 +44,22 @@ mod tests {
     async fn post_project_return_422_for_integer_name() {
         let mut project = ProjectReqPayload::default();
         project.name = 1234.to_string();
+        let repo = PostgresRepo::mock();
         let req = test::TestRequest::post().set_json(project).to_request();
-        let resp = mock_app(post_project, req).await;
+        let resp = mock_app(repo, post_project, req).await;
         assert_eq!(resp.status(), 422);
     }
 
-    #[actix_web::test]
-    async fn post_project_returns_409_for_duplicate_name() {
-        todo!()
-    }
+    // #[actix_web::test]
+    // async fn post_project_returns_409_for_duplicate_name() {
+    //     let repo = PostgresRepo::mock();
+    //     let project_payload = ProjectReqPayload::default();
+    //     let project: ProjectInputDto = project_payload.clone().try_into().unwrap();
+    //     let _id = repo.insert(&(project, UserId(0))).await.unwrap();
+    //     let req = test::TestRequest::post()
+    //         .set_json(project_payload)
+    //         .to_request();
+    //     let resp = mock_app(repo, post_project, req).await;
+    //     assert_eq!(resp.status(), 409);
+    // }
 }

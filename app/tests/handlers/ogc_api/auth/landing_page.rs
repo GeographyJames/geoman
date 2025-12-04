@@ -52,7 +52,7 @@ pub async fn landing_page_requires_authentication_in_production() {
     assert_status(&response, 401);
 
     // Requests with valid api key are accepted
-    let api_key = app.generate_api_key(&token).await;
+    let api_key = app.generate_api_key(Some(&token)).await;
     let response = app
         .ogc_service
         .get_landing_page(&app.api_client, Some(&OgcAuth::Key(api_key.api_key)))

@@ -8,7 +8,7 @@ use crate::{
         },
         ogc_api,
     },
-    middleware::{auth_middleware, dual_auth_middleware},
+    middleware::{auth_middleware, dual_auth_middleware, mock_auth_middlewear},
 };
 use actix_web::{
     middleware,
@@ -32,11 +32,18 @@ use clerk_rs::clerk::Clerk;
 //     }
 // }
 
-pub fn api_routes(cfg: &mut web::ServiceConfig, _clerk: Clerk) {
+pub fn api_routes(cfg: &mut web::ServiceConfig, _clerk: Clerk, run_environment: GeoManEnvironment) {
     let scp = scope(&URLS.api.base)
         .configure(api_key_routes)
         .configure(project_routes);
-    cfg.service(scp.wrap(middleware::from_fn(auth_middleware)));
+    match run_environment {
+        GeoManEnvironment::Development => {
+            cfg.service(scp.wrap(middleware::from_fn(mock_auth_middlewear)));
+        }
+        _ => {
+            cfg.service(scp.wrap(middleware::from_fn(auth_middleware)));
+        }
+    };
 }
 
 pub fn api_key_routes(cfg: &mut web::ServiceConfig) {

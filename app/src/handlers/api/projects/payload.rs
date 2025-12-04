@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::handlers::ProjectValidationError;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ProjectReqPayload {
     pub name: String,
     pub visibility: Visibility,
