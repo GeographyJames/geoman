@@ -19,12 +19,6 @@ impl ProjectNameInputDTO {
     }
 }
 
-impl Into<String> for ProjectNameInputDTO {
-    fn into(self) -> String {
-        self.0
-    }
-}
-
 impl AsRef<str> for ProjectNameInputDTO {
     fn as_ref(&self) -> &str {
         &self.0
