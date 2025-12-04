@@ -10,7 +10,8 @@ use app::{
     Application, DatabaseSettings, Password, URLS,
     constants::{GIS_DATA_SCHEMA, SITE_BOUNDARIES_COLLECTION_NAME},
     enums::GeoManEnvironment,
-    get_config, handlers,
+    get_config,
+    handlers::{self, api::projects::ProjectReqPayload},
     telemetry::{get_subscriber, init_subscriber},
 };
 use domain::{
@@ -213,33 +214,6 @@ impl TestApp<ClerkAuthService> {
         collection_id
     }
 
-    pub async fn insert_project(&self, name: &str, user_id: UserId) -> ProjectId {
-        let record = sqlx::query!(
-            "INSERT INTO app.projects (
-            name,
-            country_code,
-            owner,
-            added_by,
-            last_updated_by,
-            slug,
-            team_id
-            ) VALUES ($1, 'GB', $2, $2, $2, $3, (SELECT team_id FROM app.users WHERE id = $2)) RETURNING id",
-            name,
-            user_id.0,
-            name
-        )
-        .fetch_one(&self.db_pool)
-        .await
-        .expect("Failed to save project in database");
-        ProjectId(record.id)
-    }
-
-    pub async fn generate_project_id(&self, user_id: UserId) -> ProjectId {
-        let name = uuid::Uuid::new_v4().to_string();
-
-        self.insert_project(&name, user_id).await
-    }
-
     pub async fn insert_project_feature_with_id<P: Serialize>(
         &self,
         id: i32,
@@ -373,7 +347,7 @@ impl TestApp<ClerkAuthService> {
     pub async fn generate_ids(&self) -> (TeamId, UserId, ProjectId) {
         let team_id = self.generate_team_id().await;
         let user_id = self.generate_user_id(team_id).await;
-        let project_id = self.generate_project_id(user_id).await;
+        let project_id = self.generate_project_id(None).await;
         (team_id, user_id, project_id)
     }
 
@@ -489,5 +463,16 @@ impl TestApp<ClerkAuthService> {
             .await
             .expect("failed to retrieve key");
         key
+    }
+
+    pub async fn generate_project_id(&self, token: Option<&SessionToken>) -> ProjectId {
+        let project = ProjectReqPayload::default();
+        let response = self
+            .projects_service
+            .post_json(&self.api_client, token, &project)
+            .await;
+        handle_json_response(response)
+            .await
+            .expect("failed to retrieve project id")
     }
 }

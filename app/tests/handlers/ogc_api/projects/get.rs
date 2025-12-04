@@ -50,10 +50,9 @@ async fn get_project_works() {
 #[actix_web::test]
 async fn get_projects_works_with_limit() {
     let app = TestApp::spawn_with_db().await;
-    let team_id = app.generate_team_id().await;
-    let user_id = app.generate_user_id(team_id).await;
+
     for _ in 0..10 {
-        app.generate_project_id(user_id).await;
+        app.generate_project_id(None).await;
     }
     let limit = 5;
 
