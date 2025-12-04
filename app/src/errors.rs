@@ -1,5 +1,8 @@
 use actix_web::{ResponseError, http::StatusCode};
-use domain::{FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName};
+use domain::{
+    FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName,
+    project::{ProjectName, ProjectNameInputDTO},
+};
 
 use isocountry::CountryCodeParseErr;
 use thiserror::Error;
@@ -14,6 +17,10 @@ pub enum ApiError {
     Database(#[from] RepositoryError),
     #[error("Project '{0}' not found")]
     ProjectNotFound(ProjectId),
+    #[error("A project with the name '{0}' already exists")]
+    DuplicateProjectName(ProjectNameInputDTO),
+    #[error("Project name '{0}' is too similar to existing project name: '{1}'")]
+    DuplicateProjectSlug(ProjectNameInputDTO, ProjectName),
     #[error("Project collection '{0}' not found")]
     ProjectCollectionNotFound(ProjectCollectionId),
     #[error("Project feature '{0}' not found")]
@@ -35,8 +42,16 @@ impl ResponseError for ApiError {
             ApiError::Database(RepositoryError::Sqlx(sqlx::Error::RowNotFound)) => {
                 StatusCode::NOT_FOUND
             }
+            ApiError::Database(RepositoryError::Sqlx(sqlx::Error::Database(err)))
+                if err.is_unique_violation() =>
+            {
+                StatusCode::CONFLICT
+            }
+
             ApiError::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::ProjectNotFound(_) => StatusCode::NOT_FOUND,
+            ApiError::DuplicateProjectName(_) => StatusCode::CONFLICT,
+            ApiError::DuplicateProjectSlug(_, _) => StatusCode::CONFLICT,
             ApiError::ProjectCollectionNotFound { .. } => StatusCode::NOT_FOUND,
             ApiError::ProjectFeatureNotFound { .. } => StatusCode::NOT_FOUND,
             ApiError::GisDataTableNotFound(_) => StatusCode::NOT_FOUND,
@@ -57,7 +72,12 @@ impl ResponseError for ApiError {
 
 impl std::fmt::Debug for ApiError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        error_chain_fmt(self, f)
+        match self {
+            // For database errors, just show the top-level message to avoid repetition
+            ApiError::Database(_) => write!(f, "{}", self),
+            // For other errors, show the full chain
+            _ => error_chain_fmt(self, f),
+        }
     }
 }
 

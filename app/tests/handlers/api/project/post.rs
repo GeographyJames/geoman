@@ -1,7 +1,10 @@
-use app::handlers::api::projects::ProjectReqPayload;
+use app::{ErrorResponse, handlers::api::projects::ProjectReqPayload};
 use domain::ProjectId;
 
-use crate::common::{AppBuilder, helpers::handle_json_response};
+use crate::common::{
+    AppBuilder,
+    helpers::{check_error_response, handle_json_response},
+};
 
 #[tokio::test]
 async fn post_project_works() {
@@ -18,4 +21,41 @@ async fn post_project_works() {
 #[tokio::test]
 async fn post_project_returns_409_for_duplicate_name() {
     let app = AppBuilder::new().build().await;
+    let project = ProjectReqPayload::default();
+    let _id: ProjectId = handle_json_response(
+        app.projects_service
+            .post_json(&app.api_client, None, &project)
+            .await,
+    )
+    .await
+    .expect("failed to get project id");
+    let response = app
+        .projects_service
+        .post_json(&app.api_client, None, &project)
+        .await;
+    let err: ErrorResponse = check_error_response(response, 409).await;
+    assert!(err.message.contains("A project with the name"))
+}
+
+#[tokio::test]
+async fn post_project_returns_409_for_duplicate_slug() {
+    let app = AppBuilder::new().build().await;
+    let mut project = ProjectReqPayload::default();
+    project.name = "Test Project".to_string();
+    let _id: ProjectId = handle_json_response(
+        app.projects_service
+            .post_json(&app.api_client, None, &project)
+            .await,
+    )
+    .await
+    .unwrap();
+    project.name = "test project".to_string();
+    let response = app
+        .projects_service
+        .post_json(&app.api_client, None, &project)
+        .await;
+    let err: ErrorResponse = check_error_response(response, 409).await;
+    assert!(err.message.contains(
+        "Project name 'test project' is too similar to existing project name: 'Test Project'"
+    ))
 }

@@ -1,6 +1,6 @@
 use crate::{
     enums::Visibility,
-    project::{ProjectNameInputDTO, ProjectSlug},
+    project::{ProjectNameInputDTO, ProjectSlugInputDto},
 };
 
 #[derive(Debug)]
@@ -9,5 +9,5 @@ pub struct ProjectInputDto {
     pub visibility: Visibility,
     pub country_code: isocountry::CountryCode,
     pub crs_srid: Option<i32>,
-    pub slug: ProjectSlug,
+    pub slug: ProjectSlugInputDto,
 }

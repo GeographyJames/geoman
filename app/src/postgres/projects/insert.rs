@@ -2,7 +2,7 @@ use domain::{ProjectId, UserId, enums::Visibility, project::ProjectInputDto};
 
 use crate::repo::traits::Insert;
 
-impl Insert for (ProjectInputDto, UserId) {
+impl Insert for (&ProjectInputDto, UserId) {
     type Id = ProjectId;
 
     async fn insert<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>

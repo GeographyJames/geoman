@@ -7,6 +7,6 @@ pub use properties::Properties;
 mod name;
 pub use name::ProjectName;
 mod slug;
-pub use slug::ProjectSlug;
+pub use slug::ProjectSlugInputDto;
 mod name_input_dto;
 pub use name_input_dto::ProjectNameInputDTO;

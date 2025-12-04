@@ -1,6 +1,6 @@
 use domain::{
     enums::Visibility,
-    project::{ProjectInputDto, ProjectNameInputDTO, ProjectSlug},
+    project::{ProjectInputDto, ProjectNameInputDTO, ProjectSlugInputDto},
 };
 use isocountry::CountryCode;
 use serde::{Deserialize, Serialize};
@@ -34,7 +34,7 @@ impl TryInto<ProjectInputDto> for ProjectReqPayload {
             country_code,
             crs_srid,
         } = self;
-        let slug = ProjectSlug::parse(&name);
+        let slug = ProjectSlugInputDto::parse(&name);
         let name =
             ProjectNameInputDTO::parse(name).map_err(ProjectValidationError::InvalidProjectName)?;
         Ok(ProjectInputDto {

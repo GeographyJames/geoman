@@ -5,7 +5,7 @@ pub struct ProjectNameInputDTO(String);
 
 impl std::fmt::Display for ProjectNameInputDTO {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{}", self.0)
+        write!(f, "{}", self.0)
     }
 }
 
@@ -16,6 +16,12 @@ impl ProjectNameInputDTO {
             return Err("name cannot be an integer".into());
         };
         Ok(Self(s))
+    }
+}
+
+impl Into<String> for ProjectNameInputDTO {
+    fn into(self) -> String {
+        self.0
     }
 }
 

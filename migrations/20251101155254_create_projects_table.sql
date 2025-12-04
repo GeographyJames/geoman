@@ -3,8 +3,8 @@ CREATE TABLE app.projects (
     team_id integer NOT NULL REFERENCES app.teams(id),
     search_area_id integer REFERENCES app.search_areas(id),
     search_site_name text,
-    name text NOT NULL UNIQUE CHECK (name ~ '[A-Za-z]'),
-    slug text NOT NULL UNIQUE CHECK (slug ~ '[a-z]' AND slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
+    name text NOT NULL CHECK (name ~ '[A-Za-z]'),
+    slug text NOT NULL CHECK (slug ~ '[a-z]' AND slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
     status app.status NOT NULL DEFAULT 'ACTIVE',
     visibility app.visibility NOT NULL DEFAULT 'PUBLIC',
     country_code character(2) NOT NULL CHECK (country_code ~ '^[A-Z]{2}$'),
@@ -14,6 +14,8 @@ CREATE TABLE app.projects (
     last_updated_by integer NOT NULL REFERENCES app.users(id),
     last_updated timestamptz NOT NULL DEFAULT now(),
     crs_srid integer REFERENCES public.spatial_ref_sys(srid),
+    CONSTRAINT projects_name_key UNIQUE (name),
+    CONSTRAINT projects_slug_key UNIQUE (slug),
     CONSTRAINT projects_codename_search_area_id_key UNIQUE (search_site_name, search_area_id),
     CONSTRAINT search_site_name_not_null_when_search_area_id_not_null CHECK (search_area_id IS NULL OR search_site_name IS NOT NULL)
 );

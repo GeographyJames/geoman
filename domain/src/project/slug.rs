@@ -2,15 +2,15 @@ use serde::Serialize;
 use slug::slugify;
 
 #[derive(Debug, Serialize)]
-pub struct ProjectSlug(String);
+pub struct ProjectSlugInputDto(String);
 
-impl ProjectSlug {
+impl ProjectSlugInputDto {
     pub fn parse(s: &str) -> Self {
         Self(slugify(s))
     }
 }
 
-impl AsRef<str> for ProjectSlug {
+impl AsRef<str> for ProjectSlugInputDto {
     fn as_ref(&self) -> &str {
         &self.0
     }

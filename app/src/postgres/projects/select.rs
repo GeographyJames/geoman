@@ -9,7 +9,7 @@ use crate::{
 
 use domain::{
     ProjectId,
-    project::{Project, ProjectName, Properties},
+    project::{Project, ProjectName, ProjectSlugInputDto, Properties},
 };
 use sqlx::{prelude::FromRow, types::Json};
 
@@ -187,5 +187,24 @@ impl SelectOneWithParams<ProjectId> for Project {
                 .await?;
 
         project_row.map(|row| row.try_into()).transpose()
+    }
+}
+
+impl SelectOne<&ProjectSlugInputDto> for ProjectName {
+    async fn select_one<'a, E>(
+        executor: &'a E,
+        id: &ProjectSlugInputDto,
+    ) -> Result<Option<Self>, RepositoryError>
+    where
+        Self: Sized,
+        &'a E: sqlx::PgExecutor<'a>,
+    {
+        sqlx::query_scalar!(
+            r#"SELECT name as "name: ProjectName" FROM app.projects WHERE slug = $1"#,
+            id.as_ref()
+        )
+        .fetch_optional(executor)
+        .await
+        .map_err(Into::into)
     }
 }
