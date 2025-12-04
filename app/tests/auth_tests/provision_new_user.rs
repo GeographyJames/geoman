@@ -1,4 +1,8 @@
-use crate::common::{AppBuilder, helpers::assert_ok, services::AuthService};
+use crate::common::{
+    AppBuilder,
+    helpers::assert_ok,
+    services::{AuthService, OgcAuth},
+};
 use domain::UserId;
 
 #[actix_web::test]
@@ -27,10 +31,7 @@ pub async fn new_clerk_user_is_added_to_database() {
         .await;
     let response = app
         .ogc_service
-        .get_landing_page(
-            &app.api_client,
-            Some(crate::common::services::OgcAuth::Token(token)),
-        )
+        .get_landing_page(&app.api_client, Some(&OgcAuth::Token(token)))
         .await;
     assert_ok(&response);
 

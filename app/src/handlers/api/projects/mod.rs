@@ -1,4 +1,4 @@
 mod post;
-pub use post::post_projcet;
+pub use post::post_project;
 mod payload;
 pub use payload::ProjectReqPayload;

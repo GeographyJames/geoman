@@ -5,8 +5,8 @@ use crate::common::{
 };
 
 use app::URLS;
-use domain::{ProjectCollectionId, ProjectId};
-use reqwest::{RequestBuilder, Response, header::AUTHORIZATION};
+use domain::{ProjectCollectionId, ProjectId, enums::CollectionId};
+use reqwest::{RequestBuilder, Response};
 use serde::Serialize;
 
 pub enum OgcAuth {
@@ -16,16 +16,23 @@ pub enum OgcAuth {
 
 pub struct OgcService {}
 
+fn auth_request(req: RequestBuilder, auth: Option<&OgcAuth>) -> RequestBuilder {
+    if let Some(auth) = auth {
+        req.bearer_auth(match auth {
+            OgcAuth::Key(key) => key,
+            OgcAuth::Token(token) => &token.0,
+        })
+    } else {
+        req
+    }
+}
+
 impl OgcService {
-    pub async fn get_landing_page(&self, client: &HttpClient, auth: Option<OgcAuth>) -> Response {
-        let mut req = client.get(&URLS.ogc_api.base);
-        if let Some(auth) = auth {
-            req = match auth {
-                OgcAuth::Key(key) => req.bearer_auth(key),
-                OgcAuth::Token(token) => req.header(AUTHORIZATION, format!("Bearer {}", token.0)),
-            }
-        };
-        req.send().await.expect(REQUEST_FAILED)
+    pub async fn get_landing_page(&self, client: &HttpClient, auth: Option<&OgcAuth>) -> Response {
+        auth_request(client.get(&URLS.ogc_api.base), auth)
+            .send()
+            .await
+            .expect(REQUEST_FAILED)
     }
 
     pub async fn get_project_landing_page(
@@ -249,5 +256,22 @@ impl OgcService {
         handle_json_response(response)
             .await
             .expect("failed to deserialise")
+    }
+
+    pub async fn post_feature_json<B: Serialize>(
+        &self,
+
+        client: &HttpClient,
+        collection: CollectionId,
+        body: &B,
+        auth: Option<&OgcAuth>,
+    ) -> Response {
+        let req = client
+            .post(&format!(
+                "{}{}/{}/items",
+                URLS.ogc_api.base, URLS.ogc_api.collections, collection
+            ))
+            .json(body);
+        auth_request(req, auth).send().await.expect(REQUEST_FAILED)
     }
 }

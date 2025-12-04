@@ -11,7 +11,7 @@ use crate::{
 
 #[post("")]
 #[tracing::instrument(skip(repo, payload, user_id))]
-pub async fn post_projcet(
+pub async fn post_project(
     repo: web::Data<PostgresRepo>,
     user_id: web::ReqData<UserId>,
     payload: Json<ProjectReqPayload>,

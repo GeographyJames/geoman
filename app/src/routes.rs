@@ -4,7 +4,7 @@ use crate::{
     handlers::{
         api::{
             keys::{generate_api_key, get_api_keys, renew_api_key, revoke_api_key},
-            projects::post_projcet,
+            projects::post_project,
         },
         ogc_api,
     },
@@ -50,7 +50,7 @@ pub fn api_key_routes(cfg: &mut web::ServiceConfig) {
 }
 
 pub fn project_routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(scope(&URLS.api.projects).service(post_projcet));
+    cfg.service(scope(&URLS.api.projects).service(post_project));
 }
 
 pub fn ogc_routes(cfg: &mut web::ServiceConfig, run_environment: GeoManEnvironment) {
