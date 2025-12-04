@@ -10,7 +10,7 @@ CREATE TABLE app.users (
 );
 
 INSERT INTO app.users (
-    username, admin, team_id, first_name, last_name
-) VALUES (
-    'root', true, (SELECT id FROM app.teams WHERE name = 'root'), 'root', 'user'
+    id, username, admin, team_id, first_name, last_name
+) OVERRIDING SYSTEM VALUE VALUES (
+    0, 'root', true, 0, 'root', 'user'
 );

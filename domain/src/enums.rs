@@ -12,11 +12,12 @@ pub enum Status {
     Deleted,
 }
 
-#[derive(Serialize, Deserialize, Type, Clone, Debug, Display)]
+#[derive(Serialize, Deserialize, Type, Clone, Debug, Display, Default)]
 #[sqlx(type_name = "app.visibility", rename_all = "UPPERCASE")]
 pub enum Visibility {
     Private,
     Team,
+    #[default]
     Public,
 }
 

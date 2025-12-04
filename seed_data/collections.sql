@@ -8,12 +8,10 @@ INSERT INTO app.collections (
     'access tracks',
 
     'MULTILINESTRING',
-    (SELECT id FROM app.users WHERE username = 'root'),
-    (SELECT id FROM app.users WHERE username = 'root')
+    0, 0
 ), (
     'cable routes',
 
     'MULTILINESTRING',
-    (SELECT id FROM app.users WHERE username = 'root'),
-    (SELECT id FROM app.users WHERE username = 'root')
+    0, 0
 );

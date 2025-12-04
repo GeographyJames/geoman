@@ -22,6 +22,6 @@ INSERT INTO app.collections (
 ) VALUES (
     'site boundaries',
     'MULTIPOLYGON',
-    (SELECT id FROM app.users WHERE username = 'root'),
-    (SELECT id FROM app.users WHERE username = 'root')
+   0,
+   0
 );

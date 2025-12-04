@@ -20,6 +20,17 @@ impl PostgresRepo {
         Self { db_pool }
     }
 
+    #[cfg(test)]
+    pub fn mock() -> Self {
+        use sqlx::postgres::PgPoolOptions;
+
+        let db_pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect_lazy("postgres://unused:unused@localhost/unused")
+            .expect("failed to create mock postgres pool");
+        Self { db_pool }
+    }
+
     #[tracing::instrument(skip(self))]
     pub async fn select_all<T>(&self) -> Result<Vec<T>, RepositoryError>
     where

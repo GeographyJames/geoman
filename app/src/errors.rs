@@ -10,7 +10,7 @@ use crate::{helpers::error_chain_fmt, repo::RepositoryError, types::ErrorRespons
 pub enum ApiError {
     #[error(transparent)]
     Unexpected(#[from] anyhow::Error),
-    #[error("Database error")]
+    #[error("Database error: {0}")]
     Database(#[from] RepositoryError),
     #[error("Project '{0}' not found")]
     ProjectNotFound(ProjectId),
@@ -63,9 +63,9 @@ impl std::fmt::Debug for ApiError {
 
 #[derive(Error)]
 pub enum ProjectValidationError {
-    #[error("Invalid country code: {0}")]
+    #[error("invalid country code: {0}")]
     InvalidCountryCode(#[from] CountryCodeParseErr),
-    #[error("Invalid project name: {0}")]
+    #[error("invalid project name: {0}")]
     InvalidProjectName(String),
 }
 

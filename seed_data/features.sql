@@ -14,16 +14,14 @@ WITH inserted_features AS (
         (SELECT id FROM app.collections WHERE title = 'site boundaries'),
         'Manchester Development Site',
         '{"site_type": "Development", "area_sqm": 200000, "status": "Active"}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+        0, 0,
         true
     ), (
         (SELECT id FROM app.projects WHERE name = 'Test Project'),
         (SELECT id FROM app.collections WHERE title = 'site boundaries'),
         'London Construction Zone',
         '{"site_type": "Construction", "area_sqm": 75000, "status": "Active"}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+        0, 0,
         false
         
     ), (
@@ -31,16 +29,14 @@ WITH inserted_features AS (
         (SELECT id FROM app.collections WHERE title = 'site boundaries'),
         'Birmingham Industrial Park',
         '{"site_type": "Industrial", "area_sqm": 300000, "status": "Active"}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+        0, 0, 
         false
     ), (
         (SELECT id FROM app.projects WHERE name = 'Test Project'),
         (SELECT id FROM app.collections WHERE title = 'site boundaries'),
         'Edinburgh Business Park',
         '{"site_type": "Business Park", "area_sqm": 140000, "status": "Planning"}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+         0, 0,
         false
     )
     RETURNING id, collection_id, name

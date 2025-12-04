@@ -10,12 +10,7 @@ INSERT INTO app.projects (
 ) VALUES (
     'Test Project',
     'GB',
-    'test-project',
-    (SELECT id FROM app.teams WHERE name = 'root'),
-
-    (SELECT id FROM app.users WHERE username = 'root'),
-    (SELECT id FROM app.users WHERE username = 'root'),
-    (SELECT id FROM app.users WHERE username = 'root')
+    'test-project', 0, 0, 0, 0
 );
 
 INSERT INTO app.projects (
@@ -30,12 +25,7 @@ INSERT INTO app.projects (
 ) VALUES (
     'Test Project2',
     'GB',
-    'test-project2',
-     (SELECT id FROM app.teams WHERE name = 'root'),
-
-    (SELECT id FROM app.users WHERE username = 'root'),
-    (SELECT id FROM app.users WHERE username = 'root'),
-    (SELECT id FROM app.users WHERE username = 'root')
+    'test-project2', 0, 0, 0, 0
 );
 
 INSERT INTO app.projects (
@@ -50,12 +40,7 @@ INSERT INTO app.projects (
 ) VALUES (
     'Test Project3',
     'GB',
-    'test-project3',
-    (SELECT id FROM app.teams WHERE name = 'root'),
-
-    (SELECT id FROM app.users WHERE username = 'root'),
-    (SELECT id FROM app.users WHERE username = 'root'),
-    (SELECT id FROM app.users WHERE username = 'root')
+    'test-project3', 0, 0, 0, 0
 );
 
 

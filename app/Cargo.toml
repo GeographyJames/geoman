@@ -41,9 +41,11 @@ rand = "0.9"
 sha2 = "0.10.9"
 hex = "0.4.3"
 isocountry = { workspace = true }
+actix-http = "3.11.2"
+uuid = { workspace = true }
 [dev-dependencies]
 
-
+app = { path = ".", features = ["test-utils"] }
 reqwest = "0.12"
 rstest = "0.26"
 tokio = { version = "1.48", features = ["sync"] }
@@ -53,3 +55,6 @@ uuid = { workspace = true }
 unexpected_cfgs = { level = "warn", check-cfg = [
     'cfg(coverage,coverage_nightly)',
 ] }
+
+[features]
+test-utils = []

@@ -3,6 +3,7 @@ use crate::{
     project::{ProjectNameInputDTO, ProjectSlug},
 };
 
+#[derive(Debug)]
 pub struct ProjectInputDto {
     pub name: ProjectNameInputDTO,
     pub visibility: Visibility,

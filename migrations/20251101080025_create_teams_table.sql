@@ -5,5 +5,5 @@ CREATE TABLE app.teams (
 );
 
 INSERT INTO app.teams (
-    name
-    ) VALUES ('root');
+    id, name
+    ) OVERRIDING SYSTEM VALUE VALUES (0, 'root');
