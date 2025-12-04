@@ -8,3 +8,5 @@ mod name;
 pub use name::ProjectName;
 mod slug;
 pub use slug::ProjectSlug;
+mod name_input_dto;
+pub use name_input_dto::ProjectNameInputDTO;

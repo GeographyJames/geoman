@@ -1,4 +1,3 @@
-mod error;
-pub mod ogc_api;
-pub use error::ApiError;
 pub mod api;
+pub mod ogc_api;
+pub use crate::errors::{ApiError, ProjectValidationError};

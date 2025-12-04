@@ -1,7 +1,10 @@
-use crate::{enums::Visibility, project::ProjectSlug};
+use crate::{
+    enums::Visibility,
+    project::{ProjectNameInputDTO, ProjectSlug},
+};
 
 pub struct ProjectInputDto {
-    pub name: String,
+    pub name: ProjectNameInputDTO,
     pub visibility: Visibility,
     pub country_code: isocountry::CountryCode,
     pub crs_srid: Option<i32>,

@@ -1,9 +1,10 @@
-use anyhow::Context;
 use domain::{
     enums::Visibility,
-    project::{ProjectInputDto, ProjectSlug},
+    project::{ProjectInputDto, ProjectNameInputDTO, ProjectSlug},
 };
 use serde::{Deserialize, Serialize};
+
+use crate::handlers::{ApiError, ProjectValidationError};
 
 #[derive(Serialize, Deserialize)]
 pub struct ProjectReqPayload {
@@ -14,19 +15,22 @@ pub struct ProjectReqPayload {
 }
 
 impl ProjectReqPayload {
-    pub fn try_into_dto(self) -> Result<ProjectInputDto, anyhow::Error> {
+    pub fn try_into_dto(self) -> Result<ProjectInputDto, ApiError> {
         let ProjectReqPayload {
             name,
             visibility,
             country_code,
             crs_srid,
         } = self;
+        let slug = ProjectSlug::parse(&name);
+        let name =
+            ProjectNameInputDTO::parse(name).map_err(ProjectValidationError::InvalidProjectName)?;
         Ok(ProjectInputDto {
-            slug: ProjectSlug::parse(&name),
+            slug,
             name,
             visibility,
             country_code: isocountry::CountryCode::for_alpha2(&country_code)
-                .context("failed to parse country code")?,
+                .map_err(ProjectValidationError::InvalidCountryCode)?,
             crs_srid,
         })
     }

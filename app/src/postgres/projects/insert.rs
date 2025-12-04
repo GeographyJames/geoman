@@ -27,7 +27,7 @@ impl Insert for (ProjectInputDto, UserId) {
                             (SELECT team_id FROM app.users WHERE id = $5)
                 )
                 RETURNING id AS "id: ProjectId""#,
-            dto.name,
+            dto.name.as_ref(),
             &dto.visibility as &Visibility,
             dto.country_code.alpha2(),
             dto.crs_srid,

@@ -19,4 +19,5 @@ mod postgres;
 mod streaming;
 mod types;
 pub use types::{ErrorResponse, Password, enums};
+mod errors;
 mod repo;

@@ -258,9 +258,8 @@ impl OgcService {
             .expect("failed to deserialise")
     }
 
-    pub async fn post_feature_json<B: Serialize>(
+    pub async fn _post_feature_json<B: Serialize>(
         &self,
-
         client: &HttpClient,
         collection: CollectionId,
         body: &B,
