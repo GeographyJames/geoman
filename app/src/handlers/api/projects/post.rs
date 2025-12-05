@@ -3,13 +3,9 @@ use actix_web::{
     web::{self, Json},
 };
 
-use domain::{
-    ProjectId, UserId,
-    project::{ProjectInputDto, ProjectName},
-};
+use domain::{ProjectId, UserId, project::ProjectInputDto};
 
 use crate::{
-    constants::db_constraints::{PROJECT_NAME_UNIQUE, PROJECT_SLUG_UNIQUE},
     handlers::{ApiError, api::projects::ProjectReqPayload},
     postgres::PostgresRepo,
 };
@@ -22,32 +18,7 @@ pub async fn post_project(
     payload: Json<ProjectReqPayload>,
 ) -> Result<Json<ProjectId>, ApiError> {
     let input_dto: ProjectInputDto = payload.into_inner().try_into()?;
-    let project_id = match repo.insert(&(&input_dto, user_id.into_inner())).await {
-        Ok(id) => id,
-        Err(err) => {
-            return Err(match err {
-                crate::repo::RepositoryError::Sqlx(sqlx::Error::Database(ref db_err))
-                    if db_err.is_unique_violation() =>
-                {
-                    match db_err.constraint() {
-                        Some(PROJECT_NAME_UNIQUE) => ApiError::DuplicateProjectName(input_dto.name),
-                        Some(PROJECT_SLUG_UNIQUE) => {
-                            let name = repo
-                                .select_one::<ProjectName, _>(&input_dto.slug)
-                                .await?
-                                .ok_or(ApiError::Unexpected(anyhow::anyhow!(
-                                    "unexpected error: please try again"
-                                )))?;
-                            ApiError::DuplicateProjectSlug(input_dto.name, name)
-                        }
-                        _ => err.into(),
-                    }
-                }
-                _ => err.into(),
-            });
-        }
-    };
-
+    let project_id = repo.insert(&(&input_dto, user_id.into_inner())).await?;
     Ok(Json(project_id))
 }
 

@@ -16,7 +16,7 @@ struct CollectionRow {
 }
 
 impl CollectionRow {
-    fn try_into_collection(self, extent_crs: Crs) -> Result<ProjectCollection, RepositoryError> {
+    fn into_collection(self, extent_crs: Crs) -> ProjectCollection {
         let Self {
             id,
             title,
@@ -25,18 +25,12 @@ impl CollectionRow {
             extent,
         } = self;
         let bbox: Option<Bbox> = extent
-            .map(|bbox| Bbox::try_from(bbox.as_slice()))
-            .transpose()
-            .map_err(|e| {
-                RepositoryError::UnexpectedError(anyhow::anyhow!(
-                    "collection has invalid bounding box: {}",
-                    e
-                ))
-            })?;
+            .map(|bbox| Bbox::try_from(bbox.as_slice()).ok())
+            .flatten();
         let storage_crs = storage_crs_srid.map(Crs::from_srid);
         let supported_crs = SupportedCrs::new(storage_crs.clone());
 
-        Ok(ProjectCollection {
+        ProjectCollection {
             id: CollectionId::ProjectCollection(ProjectCollectionId(id)),
             title,
             description,
@@ -46,7 +40,7 @@ impl CollectionRow {
                 bbox: vec![bbox],
                 crs: extent_crs,
             }),
-        })
+        }
     }
 }
 
@@ -111,7 +105,7 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
         .await?;
 
         match row_opt {
-            Some(row) => Ok(Some(row.try_into_collection(extent_crs)?)),
+            Some(row) => Ok(Some(row.into_collection(extent_crs))),
             None => Ok(None),
         }
     }
@@ -177,7 +171,7 @@ impl SelectAllWithParams for ProjectCollection {
 
         let mut items = Vec::new();
         for row in rows {
-            items.push(row.try_into_collection(extent_crs.clone())?);
+            items.push(row.into_collection(extent_crs.clone()));
         }
         Ok((items, ()))
     }

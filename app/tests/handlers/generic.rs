@@ -120,7 +120,7 @@ async fn handler_returns_500_for_fatal_database_error(
     app.drop_database().await;
     let response = endpoint.call(&app).await;
     let err = check_error_response(response, 500).await;
-    assert!(err.message.contains("Database error"));
+    assert!(err.message.to_lowercase().contains("database error"));
 }
 
 #[rstest]

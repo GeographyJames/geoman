@@ -1,26 +1,32 @@
 use actix_web::{ResponseError, http::StatusCode};
-use domain::{
-    FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName,
-    project::{ProjectName, ProjectNameInputDTO},
-};
+use domain::{FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName};
 
 use isocountry::CountryCodeParseErr;
 use thiserror::Error;
 
-use crate::{helpers::error_chain_fmt, repo::RepositoryError, types::ErrorResponse};
+use crate::{
+    constants::db_constraints::{PROJECT_NAME_UNIQUE, PROJECT_SLUG_UNIQUE},
+    helpers::error_chain_fmt,
+    repo::RepositoryError,
+    types::ErrorResponse,
+};
 
 #[derive(Error)]
 pub enum ApiError {
     #[error(transparent)]
     Unexpected(#[from] anyhow::Error),
-    #[error("Database error: {0}")]
-    Database(#[from] RepositoryError),
+    #[error("Unexpeced database error")]
+    UnexpectedDatabase(#[source] RepositoryError),
+    #[error("Resource not found")]
+    ResourceNotFound(#[source] RepositoryError),
+    #[error(transparent)]
+    Conflict(RepositoryError),
     #[error("Project '{0}' not found")]
     ProjectNotFound(ProjectId),
-    #[error("A project with the name '{0}' already exists")]
-    DuplicateProjectName(ProjectNameInputDTO),
-    #[error("Project name '{0}' is too similar to existing project name: '{1}'")]
-    DuplicateProjectSlug(ProjectNameInputDTO, ProjectName),
+    #[error("A project with this name already exists")]
+    DuplicateProjectName,
+    #[error("The project URL is unavailable")]
+    DuplicateProjectSlug,
     #[error("Project collection '{0}' not found")]
     ProjectCollectionNotFound(ProjectCollectionId),
     #[error("Project feature '{0}' not found")]
@@ -35,23 +41,31 @@ pub enum ApiError {
     ProjectValidation(#[from] ProjectValidationError),
 }
 
+impl From<RepositoryError> for ApiError {
+    fn from(value: RepositoryError) -> Self {
+        match value {
+            RepositoryError::UnexpectedSqlx(_) => Self::UnexpectedDatabase(value),
+            RepositoryError::RowNotFound => ApiError::ResourceNotFound(value),
+            RepositoryError::UnknownUniqueViolation(_) => Self::Conflict(value),
+            RepositoryError::UniqueKeyViolation(ref unique_key) => match unique_key.as_str() {
+                PROJECT_NAME_UNIQUE => ApiError::DuplicateProjectName,
+                PROJECT_SLUG_UNIQUE => ApiError::DuplicateProjectSlug,
+                _ => ApiError::Conflict(value),
+            },
+        }
+    }
+}
+
 impl ResponseError for ApiError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         match self {
             ApiError::Unexpected(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            ApiError::Database(RepositoryError::Sqlx(sqlx::Error::RowNotFound)) => {
-                StatusCode::NOT_FOUND
-            }
-            ApiError::Database(RepositoryError::Sqlx(sqlx::Error::Database(err)))
-                if err.is_unique_violation() =>
-            {
-                StatusCode::CONFLICT
-            }
-
-            ApiError::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiError::UnexpectedDatabase(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiError::Conflict(_) => StatusCode::CONFLICT,
+            ApiError::ResourceNotFound(_) => StatusCode::NOT_FOUND,
             ApiError::ProjectNotFound(_) => StatusCode::NOT_FOUND,
-            ApiError::DuplicateProjectName(_) => StatusCode::CONFLICT,
-            ApiError::DuplicateProjectSlug(_, _) => StatusCode::CONFLICT,
+            ApiError::DuplicateProjectName => StatusCode::CONFLICT,
+            ApiError::DuplicateProjectSlug => StatusCode::CONFLICT,
             ApiError::ProjectCollectionNotFound { .. } => StatusCode::NOT_FOUND,
             ApiError::ProjectFeatureNotFound { .. } => StatusCode::NOT_FOUND,
             ApiError::GisDataTableNotFound(_) => StatusCode::NOT_FOUND,
@@ -72,12 +86,7 @@ impl ResponseError for ApiError {
 
 impl std::fmt::Debug for ApiError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            // For database errors, just show the top-level message to avoid repetition
-            ApiError::Database(_) => write!(f, "{}", self),
-            // For other errors, show the full chain
-            _ => error_chain_fmt(self, f),
-        }
+        error_chain_fmt(self, f)
     }
 }
 
