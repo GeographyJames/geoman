@@ -23,7 +23,7 @@ impl IntoOGCCollection for GisDataTable {
         } = self;
         let id = crate::enums::CollectionId::DatabaseTable(table_name);
         let links = ogcapi_types::common::Collection::create_links(collections_url, &id);
-        let storage_crs = storage_crs_srid.map(|srid| Crs::from_srid(srid));
+        let storage_crs = storage_crs_srid.map(Crs::from_srid);
 
         ogcapi_types::common::Collection {
             id: id.to_string(),

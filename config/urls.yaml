@@ -6,7 +6,6 @@ api:
   keys: "/keys"
   projects: "/projects"
   users: "/users"
-  current_user: "/current"
 
 docs:
   base: "/docs"

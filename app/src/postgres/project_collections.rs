@@ -24,9 +24,7 @@ impl CollectionRow {
             storage_crs_srid,
             extent,
         } = self;
-        let bbox: Option<Bbox> = extent
-            .map(|bbox| Bbox::try_from(bbox.as_slice()).ok())
-            .flatten();
+        let bbox: Option<Bbox> = extent.and_then(|bbox| Bbox::try_from(bbox.as_slice()).ok());
         let storage_crs = storage_crs_srid.map(Crs::from_srid);
         let supported_crs = SupportedCrs::new(storage_crs.clone());
 

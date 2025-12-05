@@ -104,7 +104,7 @@ impl SelectAll for GisDataTable {
                 .fetch_all(executor)
                 .await?;
         for row in table_rows.into_iter() {
-            if let Some(table_name) = TableName::parse(row.table_name.to_string()).ok() {
+            if let Ok(table_name) = TableName::parse(row.table_name.to_string()) {
                 let extent = get_extent::<E>(executor, &table_name, &extent_crs).await;
                 result.push(row.into_data_table(table_name, extent))
             }

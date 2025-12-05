@@ -1,5 +1,4 @@
 use crate::common::{AppBuilder, helpers::handle_json_response, services::AuthService};
-use app::URLS;
 use clerk_rs::{
     ClerkConfiguration,
     clerk::Clerk,
@@ -38,7 +37,7 @@ async fn user_name_updated_in_database_on_name_change() {
         .await;
     let user: domain::User = handle_json_response(
         app.users_service
-            .get_one(&app.api_client, Some(&token), &URLS.api.current_user)
+            .get_one(&app.api_client, Some(&token), "current")
             .await,
     )
     .await
@@ -50,14 +49,13 @@ async fn user_name_updated_in_database_on_name_change() {
     let new_last_name = uuid::Uuid::new_v4().to_string();
     update_clerk_user(&clerk, &id, new_first_name.clone(), new_last_name.clone()).await;
 
-    // Move this to some kind of cleanup at end of function.
-    delete_clerk_user(&clerk, &id).await;
-
     // Update token
     let token = app
         .auth
         .get_test_session_token(&app.api_client.client, &id)
         .await;
+    // Move this to some kind of cleanup at end of function.
+    delete_clerk_user(&clerk, &id).await;
 
     let updated_user: domain::User = handle_json_response(
         app.users_service
