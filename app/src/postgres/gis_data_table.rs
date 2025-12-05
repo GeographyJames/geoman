@@ -1,4 +1,4 @@
-use domain::{GisDataTable, SupportedCrs, TableName, enums::GeometryType};
+use domain::{GisDataTable, TableName, enums::GeometryType};
 use ogcapi_types::common::{Bbox, Crs, SpatialExtent};
 use sqlx::{FromRow, PgExecutor};
 
@@ -12,7 +12,7 @@ struct GisDataTableRow {
     table_name: String,
     schema_name: String,
     storage_crs_srid: Option<i32>,
-    geometry_type: Option<String>,
+    geometry_type: Option<GeometryType>,
     owner: String,
     description: Option<String>,
 }
@@ -23,7 +23,7 @@ t.schemaname as "schema_name",
         g.srid as "storage_crs_srid",
         t.tableowner as "owner",
         obj_description((t.schemaname || '.' || t.tablename)::regclass) as "description",
-        g.type as "geometry_type"
+        g.type::geometry_type as "geometry_type"
  FROM pg_tables t
 INNER JOIN geometry_columns g
 ON g.f_table_schema = t.schemaname

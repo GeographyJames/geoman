@@ -9,7 +9,7 @@ pub struct GisDataTable {
     pub extent: Option<SpatialExtent>,
     pub description: Option<String>,
     pub owner: String,
-    pub geometry_type: Option<String>,
+    pub geometry_type: Option<GeometryType>,
 }
 
 impl IntoOGCCollection for GisDataTable {
