@@ -23,9 +23,12 @@ impl PostgresRepo {
     #[cfg(test)]
     pub fn mock() -> Self {
         use sqlx::postgres::PgPoolOptions;
+        use std::time::Duration;
 
         let db_pool = PgPoolOptions::new()
             .max_connections(1)
+            .acquire_timeout(Duration::from_millis(1)) // Timeout immediately when trying to get a connection
+            .idle_timeout(Duration::from_millis(1)) // Close idle connections immediately
             .connect_lazy("postgres://unused:unused@localhost/unused")
             .expect("failed to create mock postgres pool");
         Self { db_pool }

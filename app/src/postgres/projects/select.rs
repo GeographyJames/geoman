@@ -45,7 +45,8 @@ impl TryInto<Project> for ProjectRow {
 fn project_query() -> String {
     let user_row = |alias: &str| {
         format!(
-            "ROW({alias}.id, {alias}.first_name, {alias}.last_name, {alias}.clerk_id, ROW(t_{alias}.id, t_{alias}.name)::app.team)::app.user AS {alias}",
+            "ROW({alias}.id, {alias}.first_name, {alias}.last_name, {alias}.clerk_id,
+            CASE WHEN t_{alias}.id IS NULL THEN NULL ELSE ROW(t_{alias}.id, t_{alias}.name)::app.team END)::app.user AS {alias}",
             alias = alias
         )
     };
@@ -53,7 +54,7 @@ fn project_query() -> String {
     let user_join = |alias: &str| {
         format!(
             "JOIN app.users {alias} ON {alias}.id = p.{alias} \
-             JOIN app.teams t_{alias} ON {alias}.team_id = t_{alias}.id",
+             LEFT JOIN app.teams t_{alias} ON {alias}.team_id = t_{alias}.id",
             alias = alias
         )
     };

@@ -5,7 +5,7 @@ app_settings:
 db_settings:
   require_ssl: false
   host: "localhost"
-  port: 5432
+  port: 5434
   username: "app_local"
   password: "secret"
   database_name: "geoman_local"

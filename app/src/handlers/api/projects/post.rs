@@ -32,9 +32,8 @@ mod tests {
     async fn post_project_returns_422_for_invalid_name() {
         let mut project = ProjectReqPayload::default();
         project.name = "".to_string();
-        let repo = PostgresRepo::mock();
-        let req = test::TestRequest::post().set_json(project).to_request();
-        let resp = mock_app(repo, post_project, req).await;
+        let req = test::TestRequest::post().set_json(project);
+        let resp = mock_app(post_project, req, UserId(0)).await;
         assert_eq!(resp.status(), 422);
         let error: ErrorResponse = test::read_body_json(resp).await;
         assert!(error.message.contains("Failed to validate project"))
@@ -44,9 +43,15 @@ mod tests {
     async fn post_project_return_422_for_integer_name() {
         let mut project = ProjectReqPayload::default();
         project.name = 1234.to_string();
-        let repo = PostgresRepo::mock();
-        let req = test::TestRequest::post().set_json(project).to_request();
-        let resp = mock_app(repo, post_project, req).await;
+        let req = test::TestRequest::post().set_json(project);
+        let resp = mock_app(post_project, req, UserId(0)).await;
         assert_eq!(resp.status(), 422);
+    }
+    #[tokio::test]
+    async fn post_project_returns_403_for_user_without_team() {
+        let project = ProjectReqPayload::default();
+        let req = test::TestRequest::post().set_json(project);
+        let resp = mock_app(post_project, req, UserId(0)).await;
+        assert_eq!(resp.status(), 403)
     }
 }

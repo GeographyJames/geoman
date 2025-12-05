@@ -28,4 +28,18 @@ impl HttpService {
             .await
             .expect(REQUEST_FAILED)
     }
+    pub async fn get_one(
+        &self,
+        client: &HttpClient,
+        token: Option<&SessionToken>,
+        id: impl AsRef<str>,
+    ) -> Response {
+        auth_request(
+            client.get(&format!("{}/{}", &self.endpoint, id.as_ref())),
+            token,
+        )
+        .send()
+        .await
+        .expect(REQUEST_FAILED)
+    }
 }

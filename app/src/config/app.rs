@@ -10,7 +10,7 @@ use serde::Deserialize;
 use std::str::FromStr;
 
 /// Application configuration container
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct AppConfig {
     pub auth_settings: ClerkAuthSettings,
     pub app_settings: AppSettings,

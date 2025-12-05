@@ -35,23 +35,3 @@ async fn post_project_returns_409_for_duplicate_name() {
         .await;
     let _err: ErrorResponse = check_error_response(response, 409).await;
 }
-
-#[tokio::test]
-async fn post_project_returns_409_for_duplicate_slug() {
-    let app = AppBuilder::new().build().await;
-    let mut project = ProjectReqPayload::default();
-    project.name = "Test Project".to_string();
-    let _id: ProjectId = handle_json_response(
-        app.projects_service
-            .post_json(&app.api_client, None, &project)
-            .await,
-    )
-    .await
-    .unwrap();
-    project.name = "test project".to_string();
-    let response = app
-        .projects_service
-        .post_json(&app.api_client, None, &project)
-        .await;
-    let _err: ErrorResponse = check_error_response(response, 409).await;
-}

@@ -3,7 +3,7 @@ use app::enums::GeoManEnvironment;
 use crate::common::{
     AppBuilder,
     helpers::{assert_ok, assert_status},
-    services::{OgcAuth, SessionToken},
+    services::{AuthService, OgcAuth, SessionToken},
 };
 
 #[actix_web::test]
@@ -33,7 +33,10 @@ pub async fn landing_page_requires_authentication_in_production() {
     assert_status(&response, 401);
 
     // Requests with valid token are accepted
-    let token = app.generate_session_token().await;
+    let token = app
+        .auth
+        .get_test_session_token(&app.api_client.client, &app.test_user_id)
+        .await;
 
     let response = app
         .ogc_service

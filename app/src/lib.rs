@@ -5,7 +5,7 @@ mod helpers;
 mod startup;
 mod urls;
 mod utoipa;
-pub use config::{DatabaseSettings, get_config};
+pub use config::{AppConfig, DatabaseSettings, get_config};
 pub use startup::Application;
 pub use urls::URLS;
 pub mod handlers;

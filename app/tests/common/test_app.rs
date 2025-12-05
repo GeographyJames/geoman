@@ -7,7 +7,7 @@ use crate::common::{
     },
 };
 use app::{
-    Application, DatabaseSettings, Password, URLS,
+    AppConfig, Application, DatabaseSettings, Password, URLS,
     constants::{GIS_DATA_SCHEMA, SITE_BOUNDARIES_COLLECTION_NAME},
     enums::GeoManEnvironment,
     get_config,
@@ -19,6 +19,7 @@ use domain::{
     enums::GeometryType,
 };
 use dotenvy::dotenv;
+use reqwest::Response;
 use secrecy::ExposeSecret;
 use serde::Serialize;
 use serde_json::json;
@@ -27,7 +28,7 @@ use std::sync::LazyLock;
 use uuid::Uuid;
 
 static TRACING: LazyLock<()> = LazyLock::new(|| {
-    let default_filter_level = "info".to_string();
+    let default_filter_level = "trace".to_string();
     let subscriber_name = "test".to_string();
     if std::env::var("TEST_LOG").is_ok() {
         let subscriber = get_subscriber(subscriber_name, default_filter_level, std::io::stdout);
@@ -39,7 +40,7 @@ static TRACING: LazyLock<()> = LazyLock::new(|| {
 });
 
 pub struct TestApp<T: AuthService> {
-    db_settings: DatabaseSettings,
+    pub app_config: AppConfig,
     pub db_pool: PgPool,
     pub api_client: HttpClient,
     pub test_user_id: String,
@@ -49,12 +50,12 @@ pub struct TestApp<T: AuthService> {
     pub ogc_service: OgcService,
     pub api_keys_service: ApiKeysService,
     pub projects_service: HttpService,
+    pub users_service: HttpService,
 }
 
 pub struct AppBuilder {
     pub with_db: bool,
-    pub test_user: bool,
-    pub test_user_2: bool,
+
     pub environment: Option<GeoManEnvironment>,
 }
 
@@ -62,23 +63,14 @@ impl AppBuilder {
     pub fn new() -> Self {
         Self {
             with_db: true,
-            test_user: true,
-            test_user_2: true,
+
             environment: None,
         }
     }
     pub async fn build(self) -> TestApp<ClerkAuthService> {
         let app = TestApp::spawn(self.environment).await;
         if self.with_db {
-            configure_database(&app.db_settings).await
-        }
-        if self.test_user {
-            let team_id = app.generate_team_id().await;
-            let _user_id = app.insert_user(team_id, Some(&app.test_user_id)).await;
-        }
-        if self.test_user_2 {
-            let team_id = app.generate_team_id().await;
-            let _user_id = app.insert_user(team_id, Some(&app.test_user_2_id)).await;
+            configure_database(&app.app_config.db_settings).await
         }
 
         app
@@ -123,7 +115,7 @@ impl TestApp<ClerkAuthService> {
             "Spawning GeoMan test app for run environment '{}'",
             config.app_settings.environment.run
         );
-        let app = Application::build(config)
+        let app = Application::build(config.clone())
             .await
             .expect("failed to build application");
         let api_client = HttpClient::new(format!("http://127.0.0.1:{}", app.port));
@@ -132,7 +124,7 @@ impl TestApp<ClerkAuthService> {
         let db_pool = db_settings.get_connection_pool();
 
         Self {
-            db_settings,
+            app_config: config,
             db_pool,
             api_client,
             test_user_id,
@@ -143,51 +135,21 @@ impl TestApp<ClerkAuthService> {
             },
             ogc_service: OgcService {},
             api_keys_service: ApiKeysService {
-                endpoint: format!("{}{}", &URLS.api.base, &URLS.api.keys),
+                endpoint: format!("{}{}", URLS.api.base, URLS.api.keys),
             },
             projects_service: HttpService {
-                endpoint: format!("{}{}", &URLS.api.base, URLS.api.projects),
+                endpoint: format!("{}{}", URLS.api.base, URLS.api.projects),
+            },
+            users_service: HttpService {
+                endpoint: format!("{}{}", URLS.api.base, URLS.api.users),
             },
         }
     }
 
     pub async fn spawn_with_db() -> Self {
         let app = Self::spawn(None).await;
-        configure_database(&app.db_settings).await;
+        configure_database(&app.app_config.db_settings).await;
         app
-    }
-
-    pub async fn insert_team(&self, name: &str) -> i32 {
-        let record = sqlx::query!(
-            "INSERT INTO app.teams (name) VALUES ($1) RETURNING id",
-            name
-        )
-        .fetch_one(&self.db_pool)
-        .await
-        .expect("Failled to save team in database");
-        record.id
-    }
-
-    pub async fn generate_team_id(&self) -> TeamId {
-        TeamId(self.insert_team(&uuid::Uuid::new_v4().to_string()).await)
-    }
-
-    pub async fn insert_user(&self, team_id: TeamId, clerk_id: Option<&str>) -> i32 {
-        let record = sqlx::query!(
-            "INSERT INTO app.users (team_id, clerk_id, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING id",
-            team_id.0,
-            clerk_id,
-            uuid::Uuid::new_v4().to_string(),
-            uuid::Uuid::new_v4().to_string()
-        )
-        .fetch_one(&self.db_pool)
-        .await
-        .expect("Failed to save user in database");
-        record.id
-    }
-
-    pub async fn generate_user_id(&self, team_id: TeamId) -> UserId {
-        UserId(self.insert_user(team_id, None).await)
     }
 
     pub async fn insert_project_collection(
@@ -328,7 +290,7 @@ impl TestApp<ClerkAuthService> {
             database_name: "postgres".to_string(),
             username: "postgres".to_string(),
             password: Password::new("password".to_string()),
-            ..self.db_settings.clone()
+            ..self.app_config.db_settings.clone()
         };
         let mut superuser_connection =
             PgConnection::connect_with(&superuser_settings.connect_options())
@@ -337,7 +299,7 @@ impl TestApp<ClerkAuthService> {
         // Now drop the database
         sqlx::query(&format!(
             r#"DROP DATABASE "{}""#,
-            self.db_settings.database_name
+            self.app_config.db_settings.database_name
         ))
         .execute(&mut superuser_connection)
         .await
@@ -345,8 +307,8 @@ impl TestApp<ClerkAuthService> {
     }
 
     pub async fn generate_ids(&self) -> (TeamId, UserId, ProjectId) {
-        let team_id = self.generate_team_id().await;
-        let user_id = self.generate_user_id(team_id).await;
+        let team_id = TeamId(0);
+        let user_id = UserId(0);
         let project_id = self.generate_project_id(None).await;
         (team_id, user_id, project_id)
     }
@@ -444,11 +406,6 @@ impl TestApp<ClerkAuthService> {
             collection_id: ProjectCollectionId(collection_id),
             id: feature_id,
         }
-    }
-    pub async fn generate_session_token(&self) -> SessionToken {
-        self.auth
-            .get_test_session_token(&self.api_client.client, &self.test_user_id)
-            .await
     }
 
     pub async fn generate_api_key(

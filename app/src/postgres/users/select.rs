@@ -1,9 +1,9 @@
 use clerk_rs::validators::authorizer::ClerkJwt;
-use domain::{KeyHash, UserId};
+use domain::{KeyHash, User, UserId};
 
 use crate::repo::{
     RepositoryError,
-    traits::{SelectOne, SelectOneWithParams},
+    traits::{SelectAll, SelectOne, SelectOneWithParams},
     user_id::SelectOneParams,
 };
 
@@ -22,6 +22,41 @@ impl SelectOne<&ClerkJwt> for UserId {
         .fetch_optional(executor)
         .await
         .map_err(RepositoryError::from)
+    }
+}
+
+const SELECT_USER_QUERY: &str = r#"SELECT u.id, u.first_name, u.last_name, u.clerk_id,
+             CASE
+         WHEN t.id IS NULL THEN NULL
+         ELSE ROW(t.id, t.name)::app.team
+         END as team
+         FROM app.users u
+         LEFT JOIN app.teams t ON t.id = u.team_id"#;
+
+impl SelectAll for User {
+    async fn select_all<'a, E>(executor: &'a E) -> Result<Vec<Self>, RepositoryError>
+    where
+        Self: Sized,
+        &'a E: sqlx::PgExecutor<'a>,
+    {
+        sqlx::query_as(SELECT_USER_QUERY)
+            .fetch_all(executor)
+            .await
+            .map_err(Into::into)
+    }
+}
+
+impl SelectOne<UserId> for User {
+    async fn select_one<'a, E>(executor: &'a E, id: UserId) -> Result<Option<Self>, RepositoryError>
+    where
+        Self: Sized,
+        &'a E: sqlx::PgExecutor<'a>,
+    {
+        sqlx::query_as(&format!("{} WHERE u.id = $1", SELECT_USER_QUERY))
+            .bind(id.0)
+            .fetch_optional(executor)
+            .await
+            .map_err(Into::into)
     }
 }
 

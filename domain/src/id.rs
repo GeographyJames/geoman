@@ -18,7 +18,7 @@ pub struct TechnologyId(pub i32);
 #[sqlx(transparent)]
 pub struct SubdivisionId(pub i32);
 
-#[derive(Clone, Copy, Default, Debug, sqlx::Type, Serialize, Deserialize)]
+#[derive(Clone, Copy, Default, Debug, sqlx::Type, Serialize, Deserialize, PartialEq)]
 #[sqlx(transparent)]
 pub struct UserId(pub i32);
 #[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]

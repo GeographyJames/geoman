@@ -10,28 +10,21 @@ use crate::common::{
 #[actix_web::test]
 async fn revoke_api_key_works() {
     let app = AppBuilder::new().build().await;
-    let token = app.generate_session_token().await;
-    let key = app.generate_api_key(Some(&token)).await;
-    let keys: Vec<ApiKey> = handle_json_response(
-        app.api_keys_service
-            .get_all(&app.api_client, Some(&token))
-            .await,
-    )
-    .await
-    .unwrap();
+    let key = app.generate_api_key(None).await;
+    let keys: Vec<ApiKey> =
+        handle_json_response(app.api_keys_service.get_all(&app.api_client, None).await)
+            .await
+            .unwrap();
     assert!(keys.iter().any(|k| k.id == key.id));
     let response = app
         .api_keys_service
-        .revoke(&app.api_client, key.id, Some(&token))
+        .revoke(&app.api_client, key.id, None)
         .await;
     assert_status(&response, 204);
-    let keys: Vec<ApiKey> = handle_json_response(
-        app.api_keys_service
-            .get_all(&app.api_client, Some(&token))
-            .await,
-    )
-    .await
-    .unwrap();
+    let keys: Vec<ApiKey> =
+        handle_json_response(app.api_keys_service.get_all(&app.api_client, None).await)
+            .await
+            .unwrap();
     assert!(!keys.iter().any(|k| k.id == key.id));
 }
 
@@ -41,7 +34,10 @@ async fn revoke_api_key_returns_404_when_revoking_another_users_key() {
         .set_env(GeoManEnvironment::Production)
         .build()
         .await;
-    let token = app.generate_session_token().await;
+    let token = app
+        .auth
+        .get_test_session_token(&app.api_client.client, &app.test_user_id)
+        .await;
     let key = app.generate_api_key(Some(&token)).await;
     let user_2_token = app
         .auth
@@ -60,7 +56,10 @@ async fn revoked_api_key_returns_401() {
         .set_env(GeoManEnvironment::Production)
         .build()
         .await;
-    let token = app.generate_session_token().await;
+    let token = app
+        .auth
+        .get_test_session_token(&app.api_client.client, &app.test_user_id)
+        .await;
     let key = app.generate_api_key(Some(&token)).await;
     let response = app
         .ogc_service

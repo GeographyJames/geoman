@@ -7,9 +7,10 @@ use domain::UserId;
 
 #[actix_web::test]
 pub async fn new_clerk_user_is_added_to_database() {
-    let mut app_builder = AppBuilder::new().set_env(app::enums::GeoManEnvironment::Production);
-    app_builder.test_user = false;
-    let app = app_builder.build().await;
+    let app = AppBuilder::new()
+        .set_env(app::enums::GeoManEnvironment::Production)
+        .build()
+        .await;
 
     // Verify user doesn't exist yet
     let user_before = sqlx::query_scalar!(

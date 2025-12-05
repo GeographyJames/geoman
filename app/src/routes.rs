@@ -5,6 +5,7 @@ use crate::{
         api::{
             keys::{generate_api_key, get_api_keys, renew_api_key, revoke_api_key},
             projects::post_project,
+            users::{get_user, get_users},
         },
         ogc_api,
     },
@@ -35,7 +36,8 @@ use clerk_rs::clerk::Clerk;
 pub fn api_routes(cfg: &mut web::ServiceConfig, _clerk: Clerk, run_environment: GeoManEnvironment) {
     let scp = scope(&URLS.api.base)
         .configure(api_key_routes)
-        .configure(project_routes);
+        .configure(project_routes)
+        .configure(user_routes);
     match run_environment {
         GeoManEnvironment::Development => {
             cfg.service(scp.wrap(middleware::from_fn(mock_auth_middlewear)));
@@ -58,6 +60,10 @@ pub fn api_key_routes(cfg: &mut web::ServiceConfig) {
 
 pub fn project_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(scope(&URLS.api.projects).service(post_project));
+}
+
+pub fn user_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(scope(&URLS.api.users).service(get_users).service(get_user));
 }
 
 pub fn ogc_routes(cfg: &mut web::ServiceConfig, run_environment: GeoManEnvironment) {

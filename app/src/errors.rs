@@ -39,6 +39,8 @@ pub enum ApiError {
     FeatureNotFound(FeatureId),
     #[error("Failed to validate project: {0}")]
     ProjectValidation(#[from] ProjectValidationError),
+    #[error("Not found")]
+    NotFound,
 }
 
 impl From<RepositoryError> for ApiError {
@@ -59,6 +61,7 @@ impl From<RepositoryError> for ApiError {
 impl ResponseError for ApiError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         match self {
+            ApiError::NotFound => StatusCode::NOT_FOUND,
             ApiError::Unexpected(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::UnexpectedDatabase(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::Conflict(_) => StatusCode::CONFLICT,

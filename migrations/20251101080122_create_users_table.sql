@@ -12,5 +12,5 @@ CREATE TABLE app.users (
 INSERT INTO app.users (
     id, username, admin, team_id, first_name, last_name
 ) OVERRIDING SYSTEM VALUE VALUES (
-    0, 'root', true, 0, 'root', 'user'
+    0, 'root-user', true, 0, 'root', 'user'
 );

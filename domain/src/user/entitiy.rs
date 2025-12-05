@@ -1,13 +1,14 @@
 use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
 
 use crate::{Team, UserId};
 
-#[derive(Serialize, Deserialize, Debug, sqlx::Type)]
+#[derive(Serialize, Deserialize, Debug, sqlx::Type, FromRow)]
 #[sqlx(type_name = "app.user")]
 pub struct User {
-    id: UserId,
-    first_name: String,
-    last_name: String,
-    clerk_id: Option<String>,
-    team: Option<Team>,
+    pub id: UserId,
+    pub first_name: String,
+    pub last_name: String,
+    pub clerk_id: Option<String>,
+    pub team: Option<Team>,
 }
