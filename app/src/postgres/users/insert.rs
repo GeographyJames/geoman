@@ -1,19 +1,19 @@
-use domain::{UserId, UserInputDto};
+use domain::UserInputDto;
 
-use crate::{constants::USER_AUTH_ID_COLUMN, repo::traits::Insert};
+use crate::{constants::USER_AUTH_ID_COLUMN, repo::traits::Insert, types::AuthenticatedUser};
 
 impl Insert for UserInputDto {
-    type Id = UserId;
+    type Id = AuthenticatedUser;
 
     async fn insert<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>
     where
         &'a E: sqlx::PgExecutor<'a>,
     {
-        sqlx::query_scalar(&format!(
+        sqlx::query_as(&format!(
             "INSERT INTO app.users (
             {USER_AUTH_ID_COLUMN}, first_name, last_name
             ) VALUES ($1, $2, $3)
-             RETURNING id",
+             RETURNING id, team_id, admin",
         ))
         .bind(&self.auth_id)
         .bind(&self.first_name)

@@ -6,14 +6,15 @@ use actix_web::{
     test::{self, TestRequest},
     web::{Data, scope},
 };
-use domain::UserId;
 
-use crate::{middleware::mock_auth_middlewear, postgres::PostgresRepo};
+use serde_json::json;
+
+use crate::{middleware::mock_auth_middlewear, postgres::PostgresRepo, types::AuthenticatedUser};
 
 pub async fn mock_app(
     service: impl HttpServiceFactory + 'static,
     req: TestRequest,
-    user_id: UserId,
+    user: AuthenticatedUser,
 ) -> ServiceResponse<impl MessageBody> {
     let repo = PostgresRepo::mock();
     let app = test::init_service(
@@ -24,7 +25,7 @@ pub async fn mock_app(
     )
     .await;
     let req = req
-        .insert_header(("x-test-user-id", user_id.0.to_string()))
+        .insert_header(("x-test-user-id", json!(user).to_string()))
         .to_request();
 
     test::call_service(&app, req).await

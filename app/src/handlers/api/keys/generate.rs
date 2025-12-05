@@ -1,7 +1,9 @@
-use crate::{handlers::ApiError, helpers::hash_api_key, postgres::PostgresRepo};
+use crate::{
+    handlers::ApiError, helpers::hash_api_key, postgres::PostgresRepo, types::AuthenticatedUser,
+};
 use actix_web::{HttpResponse, post, web};
 use anyhow::Context;
-use domain::{ApiKeyInputDTO, KeyId, UserId};
+use domain::{ApiKeyInputDTO, KeyId};
 use rand::{Rng, distr::Alphanumeric};
 use secrecy::{ExposeSecret, SecretBox};
 use serde::{Deserialize, Serialize};
@@ -17,9 +19,9 @@ pub struct ApiKeyResPayload {
 }
 
 #[post("")]
-#[tracing::instrument(skip(repo, payload, user_id))]
+#[tracing::instrument(skip(repo, payload, user))]
 pub async fn generate_api_key(
-    user_id: web::ReqData<UserId>,
+    user: web::ReqData<AuthenticatedUser>,
     repo: web::Data<PostgresRepo>,
     payload: web::Json<ApiKeyReqPayload>,
 ) -> Result<HttpResponse, ApiError> {
@@ -27,7 +29,7 @@ pub async fn generate_api_key(
     let key_hash = hash_api_key(&api_key);
     let ApiKeyReqPayload { key_name } = payload.into_inner();
     let key = ApiKeyInputDTO {
-        user_id: user_id.into_inner(),
+        user_id: user.id,
         name: key_name,
         key_hash,
     };

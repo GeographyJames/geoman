@@ -19,7 +19,6 @@ use domain::{
     enums::GeometryType,
 };
 use dotenvy::dotenv;
-use reqwest::Response;
 use secrecy::ExposeSecret;
 use serde::Serialize;
 use serde_json::json;
@@ -28,7 +27,7 @@ use std::sync::LazyLock;
 use uuid::Uuid;
 
 static TRACING: LazyLock<()> = LazyLock::new(|| {
-    let default_filter_level = "trace".to_string();
+    let default_filter_level = "info".to_string();
     let subscriber_name = "test".to_string();
     if std::env::var("TEST_LOG").is_ok() {
         let subscriber = get_subscriber(subscriber_name, default_filter_level, std::io::stdout);

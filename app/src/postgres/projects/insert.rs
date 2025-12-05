@@ -1,15 +1,15 @@
-use domain::{ProjectId, UserId, enums::Visibility, project::ProjectInputDto};
+use domain::{ProjectId, TeamId, UserId, enums::Visibility, project::ProjectInputDto};
 
 use crate::repo::traits::Insert;
 
-impl Insert for (&ProjectInputDto, UserId) {
+impl Insert for (&ProjectInputDto, UserId, TeamId) {
     type Id = ProjectId;
 
     async fn insert<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>
     where
         &'a E: sqlx::PgExecutor<'a>,
     {
-        let (dto, user_id) = self;
+        let (dto, user_id, team_id) = self;
         sqlx::query_scalar!(
             r#"
             INSERT INTO app.projects (
@@ -23,8 +23,8 @@ impl Insert for (&ProjectInputDto, UserId) {
                             slug,
                             team_id
                             )
-                    VALUES ($1, $2, $3, $4, $5, $5, $5, $6,
-                            (SELECT team_id FROM app.users WHERE id = $5)
+                    VALUES ($1, $2, $3, $4, $5, $5, $5, $6, $7
+
                 )
                 RETURNING id AS "id: ProjectId""#,
             dto.name.as_ref(),
@@ -32,7 +32,8 @@ impl Insert for (&ProjectInputDto, UserId) {
             dto.country_code.alpha2(),
             dto.crs_srid,
             user_id.0,
-            dto.slug.as_ref()
+            dto.slug.as_ref(),
+            team_id.0
         )
         .fetch_one(executor)
         .await

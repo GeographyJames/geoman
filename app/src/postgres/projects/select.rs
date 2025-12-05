@@ -1,5 +1,6 @@
 use crate::{
     constants::SITE_BOUNDARIES_COLLECTION_NAME,
+    postgres::sql_fragments::{user_join_fragment, user_row_fragment},
     repo::{
         RepositoryError,
         project::{SelectAllParams, SelectOneParams},
@@ -43,22 +44,6 @@ impl TryInto<Project> for ProjectRow {
 }
 
 fn project_query() -> String {
-    let user_row = |alias: &str| {
-        format!(
-            "ROW({alias}.id, {alias}.first_name, {alias}.last_name, {alias}.clerk_id,
-            CASE WHEN t_{alias}.id IS NULL THEN NULL ELSE ROW(t_{alias}.id, t_{alias}.name)::app.team END)::app.user AS {alias}",
-            alias = alias
-        )
-    };
-
-    let user_join = |alias: &str| {
-        format!(
-            "JOIN app.users {alias} ON {alias}.id = p.{alias} \
-             LEFT JOIN app.teams t_{alias} ON {alias}.team_id = t_{alias}.id",
-            alias = alias
-        )
-    };
-
     format!(
         r#"WITH primary_boundary_centroid AS (
             SELECT pf.project_id, ST_Centroid(fo.geom) AS centroid
@@ -108,12 +93,12 @@ fn project_query() -> String {
              WHERE pt.project_id = p.id
         ) technologies ON true
         WHERE p.status = 'ACTIVE'"#,
-        user_row_owner = user_row("owner"),
-        user_row_added_by = user_row("added_by"),
-        user_row_last_updated_by = user_row("last_updated_by"),
-        user_join_owner = user_join("owner"),
-        user_join_added_by = user_join("added_by"),
-        user_join_last_updated_by = user_join("last_updated_by"),
+        user_row_owner = user_row_fragment("o", "owner"),
+        user_row_added_by = user_row_fragment("a", "added_by"),
+        user_row_last_updated_by = user_row_fragment("l", "last_updated_by"),
+        user_join_owner = user_join_fragment("o", "owner"),
+        user_join_added_by = user_join_fragment("a", "added_by"),
+        user_join_last_updated_by = user_join_fragment("l", "last_updated_by"),
     )
 }
 

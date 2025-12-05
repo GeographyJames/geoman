@@ -2,9 +2,9 @@ use actix_web::{
     get,
     web::{self, Json, ReqData},
 };
-use domain::{User, UserId};
+use domain::User;
 
-use crate::{errors::ApiError, postgres::PostgresRepo};
+use crate::{errors::ApiError, postgres::PostgresRepo, types::AuthenticatedUser};
 
 #[get("")]
 #[tracing::instrument(skip(repo))]
@@ -14,14 +14,11 @@ pub async fn get_users(repo: web::Data<PostgresRepo>) -> Result<Json<Vec<User>>,
 }
 
 #[get("/{user_id}")]
-#[tracing::instrument(skip(repo))]
+#[tracing::instrument(skip(repo, user))]
 pub async fn get_user(
     repo: web::Data<PostgresRepo>,
-    user_id: ReqData<UserId>,
+    user: ReqData<AuthenticatedUser>,
 ) -> Result<Json<User>, ApiError> {
-    let user: User = repo
-        .select_one(user_id.into_inner())
-        .await?
-        .ok_or(ApiError::NotFound)?;
+    let user: User = repo.select_one(user.id).await?.ok_or(ApiError::NotFound)?;
     Ok(Json(user))
 }

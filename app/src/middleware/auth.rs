@@ -19,10 +19,13 @@ use clerk_rs::{
     },
 };
 
-use domain::{UserId, UserInputDto};
+use domain::UserInputDto;
 use secrecy::SecretBox;
 
-use crate::{helpers::hash_api_key, postgres::PostgresRepo, repo::user_id::SelectOneParams};
+use crate::{
+    helpers::hash_api_key, postgres::PostgresRepo, repo::user_id::SelectOneParams,
+    types::AuthenticatedUser,
+};
 
 pub async fn dual_auth_middleware(
     req: ServiceRequest,
@@ -75,13 +78,13 @@ async fn validate_api_key<B: MessageBody>(
         ip_address,
         user_agent,
     };
-    let user_id: UserId = repo
+    let user: AuthenticatedUser = repo
         .select_one_with_params(&key_hash, &params)
         .await
         .map_err(ErrorInternalServerError)?
         .ok_or_else(|| ErrorUnauthorized("Invalid key"))?;
 
-    req.extensions_mut().insert(user_id);
+    req.extensions_mut().insert(user);
     next.call(req).await
 }
 
@@ -101,7 +104,7 @@ async fn validate_clerk_auth<B: MessageBody>(
         // We have authed request and can pass the user onto the next body
         Ok(jwt) => {
             // Look up the user in the database
-            let user_id: UserId = match repo
+            let user: AuthenticatedUser = match repo
                 .select_one(&jwt)
                 .await
                 .map_err(ErrorInternalServerError)?
@@ -120,7 +123,7 @@ async fn validate_clerk_auth<B: MessageBody>(
                 }
             };
 
-            req.extensions_mut().insert(user_id);
+            req.extensions_mut().insert(user);
             next.call(req).await
         }
         // Output any other errors thrown from the Clerk authorizer
@@ -135,7 +138,7 @@ async fn provision_clerk_user(
     repo: &PostgresRepo,
     jwt: ClerkJwt,
     clerk_client: &Clerk,
-) -> Result<UserId, anyhow::Error> {
+) -> Result<AuthenticatedUser, anyhow::Error> {
     let user = clerk_rs::apis::users_api::User::get_user(clerk_client, &jwt.sub)
         .await
         .context("failed to retrive user from Clerk")?;
