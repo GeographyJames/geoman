@@ -69,40 +69,35 @@ WITH inserted_features AS (
         (SELECT id FROM app.collections WHERE title = 'access tracks'),
         'Pennine Way Section',
         '{"track_type": "Hiking Trail", "difficulty": "Moderate", "surface": "Gravel", "length_m": 2100}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+0, 0,
         true
     ), (
         (SELECT id FROM app.projects WHERE name = 'Test Project'),
         (SELECT id FROM app.collections WHERE title = 'access tracks'),
         'Farm Access Road',
-        '{"track_type": "Access Road", "surface": "Dirt", "width_m": 3.5, "length_m": 850}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+                '{"track_type": "Access Road", "surface": "Dirt", "width_m": 3.5, "length_m": 850}',
+0, 0,
         false
     ), (
         (SELECT id FROM app.projects WHERE name = 'Test Project'),
         (SELECT id FROM app.collections WHERE title = 'access tracks'),
         'Coastal Path Section',
         '{"track_type": "Coastal Path", "difficulty": "Easy", "surface": "Paved", "length_m": 1250}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+0, 0,
         false
     ), (
         (SELECT id FROM app.projects WHERE name = 'Test Project'),
         (SELECT id FROM app.collections WHERE title = 'access tracks'),
         'Mountain Bike Trail',
         '{"track_type": "Mountain Bike", "difficulty": "Hard", "surface": "Natural", "length_m": 1450}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+0, 0,
         false
     ), (
         (SELECT id FROM app.projects WHERE name = 'Test Project'),
         (SELECT id FROM app.collections WHERE title = 'access tracks'),
         'Service Track',
         '{"track_type": "Service Road", "surface": "Gravel", "width_m": 4.0, "length_m": 320}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+0, 0,
         false
     )
     RETURNING id, collection_id, name
@@ -136,48 +131,42 @@ WITH inserted_features AS (
         (SELECT id FROM app.collections WHERE title = 'cable routes'),
         'Fiber Optic Main Line',
         '{"cable_type": "Fiber Optic", "capacity_gbps": 100, "owner": "BT", "depth_m": 1.2, "length_m": 5200}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+0, 0,
         true
     ), (
         (SELECT id FROM app.projects WHERE name = 'Test Project'),
         (SELECT id FROM app.collections WHERE title = 'cable routes'),
         'Power Cable Route HV',
         '{"cable_type": "Electrical", "voltage_kv": 11, "owner": "National Grid", "depth_m": 0.8, "length_m": 1850}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+0, 0,
         false
     ), (
         (SELECT id FROM app.projects WHERE name = 'Test Project'),
         (SELECT id FROM app.collections WHERE title = 'cable routes'),
         'Telecom Distribution Network',
         '{"cable_type": "Copper", "owner": "Virgin Media", "depth_m": 0.6, "length_m": 650}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+0, 0,
         false
     ), (
         (SELECT id FROM app.projects WHERE name = 'Test Project'),
         (SELECT id FROM app.collections WHERE title = 'cable routes'),
         'Fiber Backbone Scotland',
         '{"cable_type": "Fiber Optic", "capacity_gbps": 400, "owner": "BT", "depth_m": 1.5, "length_m": 4800}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+0, 0,
         false
     ), (
         (SELECT id FROM app.projects WHERE name = 'Test Project'),
         (SELECT id FROM app.collections WHERE title = 'cable routes'),
         'Low Voltage Distribution',
         '{"cable_type": "Electrical", "voltage_kv": 0.4, "owner": "UK Power Networks", "depth_m": 0.5, "length_m": 420}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+0, 0,
         false
     ), (
         (SELECT id FROM app.projects WHERE name = 'Test Project'),
         (SELECT id FROM app.collections WHERE title = 'cable routes'),
         'Data Center Interconnect',
         '{"cable_type": "Fiber Optic", "capacity_gbps": 1000, "owner": "Equinix", "depth_m": 2.0, "length_m": 780}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+0, 0,
         false
     )
     RETURNING id, collection_id, name
@@ -212,8 +201,7 @@ WITH inserted_features AS (
         (SELECT id FROM app.collections WHERE title = 'site boundaries'),
         'London Construction Zone',
         '{"site_type": "Construction", "area_sqm": 75000, "status": "Active"}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+0, 0,
         true
         
     )
@@ -244,8 +232,7 @@ WITH inserted_features AS (
         (SELECT id FROM app.collections WHERE title = 'site boundaries'),
         'Birmingham Industrial Park',
         '{"site_type": "Industrial", "area_sqm": 300000, "status": "Active"}',
-        (SELECT id FROM app.users WHERE username = 'root'),
-        (SELECT id FROM app.users WHERE username = 'root'),
+0, 0,
         true
     )
         

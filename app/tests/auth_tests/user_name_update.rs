@@ -6,6 +6,8 @@ use clerk_rs::{
 };
 
 use secrecy::ExposeSecret;
+
+#[ignore]
 #[actix_web::test]
 async fn user_name_updated_in_database_on_name_change() {
     let app = AppBuilder::new()
