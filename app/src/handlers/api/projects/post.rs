@@ -3,7 +3,7 @@ use actix_web::{
     web::{self, Json},
 };
 
-use domain::{ProjectId, project::ProjectInputDto};
+use domain::{ProjectId, enums::Action, project::ProjectInputDto};
 
 use crate::{
     handlers::{ApiError, api::projects::ProjectReqPayload},
@@ -19,7 +19,7 @@ pub async fn post_project(
     payload: Json<ProjectReqPayload>,
 ) -> Result<Json<ProjectId>, ApiError> {
     let AuthenticatedUser { id, team_id, .. } = user.into_inner();
-    let team_id = team_id.ok_or_else(|| todo!()).unwrap();
+    let team_id = team_id.ok_or_else(|| ApiError::UserWithoutTeam(Action::CreateProject))?;
     let input_dto: ProjectInputDto = payload.into_inner().try_into()?;
     let project_id = repo.insert(&(&input_dto, id, team_id)).await?;
     Ok(Json(project_id))
@@ -55,8 +55,8 @@ mod tests {
         let resp = mock_app(post_project, req, user).await;
         assert_eq!(resp.status(), 422);
     }
+
     #[tokio::test]
-    #[ignore]
     async fn post_project_returns_403_for_user_without_team() {
         let project = ProjectReqPayload::default();
         let req = test::TestRequest::post().set_json(project);
