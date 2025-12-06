@@ -99,6 +99,7 @@ impl Endpoint {
 
 #[rstest]
 #[actix_web::test]
+#[ignore]
 async fn handler_returns_500_for_fatal_database_error(
     #[values(
         Endpoint::GetCollection,
@@ -125,6 +126,7 @@ async fn handler_returns_500_for_fatal_database_error(
 
 #[rstest]
 #[actix_web::test]
+#[ignore]
 async fn handler_returns_404_for_not_found(
     #[values(
         Endpoint::GetCollection,

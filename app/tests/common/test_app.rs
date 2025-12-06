@@ -50,6 +50,7 @@ pub struct TestApp<T: AuthService> {
     pub api_keys_service: ApiKeysService,
     pub projects_service: HttpService,
     pub users_service: HttpService,
+    pub collections_service: HttpService,
 }
 
 pub struct AppBuilder {
@@ -141,6 +142,9 @@ impl TestApp<ClerkAuthService> {
             },
             users_service: HttpService {
                 endpoint: format!("{}{}", URLS.api.base, URLS.api.users),
+            },
+            collections_service: HttpService {
+                endpoint: format!("{}{}", URLS.api.base, URLS.api.collections),
             },
         }
     }

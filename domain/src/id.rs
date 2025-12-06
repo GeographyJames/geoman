@@ -32,7 +32,8 @@ pub struct FeatureId(pub i32);
 #[sqlx(transparent)]
 pub struct KeyId(pub i32);
 
-#[derive(Clone, Copy, Default, Debug, Deserialize)]
+#[derive(Clone, Copy, Default, Debug, Deserialize, sqlx::Type, Serialize)]
+#[sqlx(transparent)]
 pub struct ProjectCollectionId(pub i32);
 
 impl Display for ProjectCollectionId {

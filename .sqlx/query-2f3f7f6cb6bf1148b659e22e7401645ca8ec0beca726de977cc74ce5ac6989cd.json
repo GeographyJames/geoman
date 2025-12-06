@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO app.collections (title, description, geometry_type, added_by, last_updated_by)\n            VALUES ($1, $2, $3, $4, $4) RETURNING id AS \"id: ProjectCollectionId\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: ProjectCollectionId",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "geometry_type",
+            "kind": {
+              "Enum": [
+                "POINT",
+                "LINESTRING",
+                "POLYGON",
+                "MULTIPOINT",
+                "MULTILINESTRING",
+                "MULTIPOLYGON",
+                "GEOMETRYCOLLECTION"
+              ]
+            }
+          }
+        },
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2f3f7f6cb6bf1148b659e22e7401645ca8ec0beca726de977cc74ce5ac6989cd"
+}

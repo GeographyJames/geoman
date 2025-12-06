@@ -7,7 +7,9 @@ use isocountry::CountryCodeParseErr;
 use thiserror::Error;
 
 use crate::{
-    constants::db_constraints::{PROJECT_NAME_UNIQUE, PROJECT_SLUG_UNIQUE},
+    constants::db_constraints::{
+        PROJECT_COLLECTIONS_TITLE_UNIQUE, PROJECT_NAME_UNIQUE, PROJECT_SLUG_UNIQUE,
+    },
     helpers::error_chain_fmt,
     repo::RepositoryError,
     types::ErrorResponse,
@@ -45,6 +47,8 @@ pub enum ApiError {
     NotFound,
     #[error("User must be a member of a team to {0}")]
     UserWithoutTeam(Action),
+    #[error("A collection with this name already exists")]
+    DuplicateCollectionName,
 }
 
 impl From<RepositoryError> for ApiError {
@@ -56,6 +60,7 @@ impl From<RepositoryError> for ApiError {
             RepositoryError::UniqueKeyViolation(ref unique_key) => match unique_key.as_str() {
                 PROJECT_NAME_UNIQUE => ApiError::DuplicateProjectName,
                 PROJECT_SLUG_UNIQUE => ApiError::DuplicateProjectSlug,
+                PROJECT_COLLECTIONS_TITLE_UNIQUE => ApiError::DuplicateCollectionName,
                 _ => ApiError::Conflict(value),
             },
         }
@@ -80,6 +85,7 @@ impl ResponseError for ApiError {
             ApiError::FeatureNotFound(_) => StatusCode::NOT_FOUND,
             ApiError::ProjectValidation(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::UserWithoutTeam(_) => StatusCode::FORBIDDEN,
+            ApiError::DuplicateCollectionName => StatusCode::CONFLICT,
         }
     }
 

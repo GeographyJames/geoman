@@ -18,7 +18,11 @@ pub async fn get_users(repo: web::Data<PostgresRepo>) -> Result<Json<Vec<User>>,
 pub async fn get_user(
     repo: web::Data<PostgresRepo>,
     user: ReqData<AuthenticatedUser>,
+    user_id: web::Path<String>,
 ) -> Result<Json<User>, ApiError> {
-    let user: User = repo.select_one(user.id).await?.ok_or(ApiError::NotFound)?;
-    Ok(Json(user))
+    if *user_id == "current" {
+        let user: User = repo.select_one(user.id).await?.ok_or(ApiError::NotFound)?;
+        return Ok(Json(user));
+    }
+    todo!()
 }

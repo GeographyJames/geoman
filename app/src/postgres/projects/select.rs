@@ -23,7 +23,6 @@ pub struct ProjectRow {
     geom: Option<Json<geojson::Geometry>>,
 }
 
-#[allow(clippy::from_over_into)]
 impl TryInto<Project> for ProjectRow {
     type Error = RepositoryError;
     fn try_into(self) -> Result<Project, RepositoryError> {
