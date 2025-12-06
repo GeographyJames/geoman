@@ -54,7 +54,6 @@ pub enum CollectionId {
     Projects,
     ProjectCollection(ProjectCollectionId),
     DatabaseTable(TableName),
-    Other(String),
 }
 
 impl From<ProjectCollectionId> for CollectionId {
@@ -75,7 +74,6 @@ impl std::fmt::Display for CollectionId {
             CollectionId::Projects => "projects".to_string(),
             CollectionId::ProjectCollection(id) => id.to_string(),
             CollectionId::DatabaseTable(table) => table.to_string(),
-            CollectionId::Other(other) => other.clone(),
         };
         write!(f, "{}", s)
     }
@@ -87,21 +85,23 @@ impl<'de> Deserialize<'de> for CollectionId {
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        Ok(s.into())
+        s.try_into().map_err(serde::de::Error::custom)
     }
 }
 
-impl From<String> for CollectionId {
-    fn from(s: String) -> Self {
+impl TryFrom<String> for CollectionId {
+    fn try_from(s: String) -> Result<Self, Self::Error> {
         if let Ok(id) = s.parse::<i32>() {
-            return CollectionId::ProjectCollection(ProjectCollectionId(id));
+            return Ok(CollectionId::ProjectCollection(ProjectCollectionId(id)));
         }
         if s == "projects" {
-            return CollectionId::Projects;
+            return Ok(CollectionId::Projects);
         }
         match TableName::parse(s.clone()) {
-            Ok(table_name) => CollectionId::DatabaseTable(table_name),
-            Err(_) => CollectionId::Other(s),
+            Ok(table_name) => Ok(CollectionId::DatabaseTable(table_name)),
+            _ => Err("invalid collection".to_string()),
         }
     }
+
+    type Error = String;
 }
