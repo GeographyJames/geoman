@@ -9,13 +9,7 @@ use crate::common::{
 #[tokio::test]
 async fn post_project_works() {
     let app = AppBuilder::new().build().await;
-    let response = app
-        .projects_service
-        .post_json(&app.api_client, None, &ProjectReqPayload::default())
-        .await;
-    let _project_id: ProjectId = handle_json_response(response)
-        .await
-        .expect("failed to retrieve project id");
+    let _project_id = app.generate_project_id(None).await;
 }
 
 #[tokio::test]

@@ -9,7 +9,7 @@ use ogcapi_types::common::Crs;
 pub async fn crs_transform_works() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let collection_id = app.generate_project_collection_id(user_id).await;
+    let collection_id = app.generate_project_collection_id(None).await;
     let (easting, northing, ewkt) = generate_random_bng_point_ewkt();
     let feature_id = app
         .insert_project_feature(

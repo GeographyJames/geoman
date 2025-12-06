@@ -2,24 +2,13 @@ use app::{
     constants::SITE_BOUNDARIES_COLLECTION_NAME,
     handlers::api::project_collections::CollectionReqPayload,
 };
-use domain::ProjectCollectionId;
 
-use crate::common::{
-    AppBuilder,
-    helpers::{check_error_response, handle_json_response},
-};
+use crate::common::{AppBuilder, helpers::check_error_response};
 
 #[actix_web::test]
 async fn post_collection_works() {
     let app = AppBuilder::new().build().await;
-    let collection = CollectionReqPayload::default();
-    let response = app
-        .collections_service
-        .post_json(&app.api_client, None, &collection)
-        .await;
-    let _id: ProjectCollectionId = handle_json_response(response)
-        .await
-        .expect("failed to retrieve collection id");
+    let _collection_id = app.generate_project_collection_id(None).await;
 }
 
 #[actix_web::test]

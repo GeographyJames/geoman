@@ -11,7 +11,10 @@ use app::{
     constants::{GIS_DATA_SCHEMA, SITE_BOUNDARIES_COLLECTION_NAME},
     enums::GeoManEnvironment,
     get_config,
-    handlers::{self, api::projects::ProjectReqPayload},
+    handlers::{
+        self,
+        api::{project_collections::CollectionReqPayload, projects::ProjectReqPayload},
+    },
     telemetry::{get_subscriber, init_subscriber},
 };
 use domain::{
@@ -155,28 +158,18 @@ impl TestApp<ClerkAuthService> {
         app
     }
 
-    pub async fn insert_project_collection(
+    pub async fn generate_project_collection_id(
         &self,
-        title: &str,
-        geometry_type: GeometryType,
-        user_id: UserId,
-    ) -> i32 {
-        let record = sqlx::query!(
-            "INSERT INTO app.collections (title, geometry_type, added_by, last_updated_by) VALUES ($1, $2, $3, $3) RETURNING id",
-            title,
-            geometry_type as GeometryType,
-            user_id.0
-        ).fetch_one(&self.db_pool).await.expect("Failed to save collection in database");
-        record.id
-    }
-
-    pub async fn generate_project_collection_id(&self, user_id: UserId) -> ProjectCollectionId {
-        let title = uuid::Uuid::new_v4().to_string();
-        let collection_id = ProjectCollectionId(
-            self.insert_project_collection(&title, GeometryType::MultiPolygon, user_id)
-                .await,
-        );
-        collection_id
+        session_token: Option<&SessionToken>,
+    ) -> ProjectCollectionId {
+        let collection = CollectionReqPayload::default();
+        let response = self
+            .collections_service
+            .post_json(&self.api_client, session_token, &collection)
+            .await;
+        handle_json_response(response)
+            .await
+            .expect("failed to retrieve collection id")
     }
 
     pub async fn insert_project_feature_with_id<P: Serialize>(

@@ -33,8 +33,8 @@ impl Default for Properties {
 async fn get_feature_works() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let collection_1_id = app.generate_project_collection_id(user_id).await;
-    let collection_2_id = app.generate_project_collection_id(user_id).await;
+    let collection_1_id = app.generate_project_collection_id(None).await;
+    let collection_2_id = app.generate_project_collection_id(None).await;
 
     let feature_1_id = app
         .insert_project_feature_with_id(
@@ -95,7 +95,7 @@ async fn get_feature_works() {
 async fn get_project_feature_returns_404_for_project_not_found() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let collection_id = app.generate_project_collection_id(user_id).await;
+    let collection_id = app.generate_project_collection_id(None).await;
     let feature_id = app
         .generate_project_feature_id(collection_id, project_id, user_id, Some({}))
         .await;
@@ -116,7 +116,7 @@ async fn get_project_feature_returns_404_for_project_not_found() {
 async fn get_project_feature_returns_404_for_feature_belonging_to_different_project() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let collection_id = app.generate_project_collection_id(user_id).await;
+    let collection_id = app.generate_project_collection_id(None).await;
     let another_project = app.generate_project_id(None).await;
     let feature_id = app
         .generate_project_feature_id(collection_id, another_project, user_id, Some({}))
