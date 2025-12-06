@@ -1,53 +1,56 @@
 use crate::common::{
     TestApp,
-    helpers::{assert_ok, handle_json_response},
+    helpers::{assert_ok, generate_random_wgs84_point_ewkt, handle_json_response},
 };
-use domain::{TableName, enums::CollectionId};
+use domain::enums::CollectionId;
 
 #[actix_web::test]
 async fn get_collection_works() {
     let app = TestApp::spawn_with_db().await;
-    let collection_id = app.generate_gis_data_table_name().await;
+    // Create a couple of tables
+    let table_one_name = app.generate_gis_data_table_name().await;
+    let table_two_name = app.generate_gis_data_table_name().await;
 
-    let response = app
-        .ogc_service
-        .get_collection(&app.api_client, collection_id.as_ref())
-        .await;
+    // Assert the tables have different names
+    assert_ne!(table_one_name, table_two_name);
 
-    assert_ok(&response);
+    // Check the response from table two
+    let collection: ogcapi_types::common::Collection = handle_json_response(
+        app.ogc_service
+            .get_collection(&app.api_client, table_two_name.as_ref())
+            .await,
+    )
+    .await
+    .expect("failed to retrieve collection");
 
-    let collection: ogcapi_types::common::Collection = handle_json_response(response)
-        .await
-        .expect("failed to retrieve collection");
-
-    assert_eq!(collection.id, collection_id.as_ref());
+    // Assert we get the correct collection back
+    assert_eq!(collection.id, table_two_name.as_ref());
     assert!(!collection.links.is_empty());
+    assert!(
+        collection.extent.is_none(),
+        "extent should be none beacuse there are no features"
+    );
 
-    let table_one_name = TableName::parse("one".to_string()).unwrap();
-    app.create_gis_data_table(
-        &table_one_name,
-        &domain::enums::GeometryType::Point,
-        27700,
-        None,
-    )
-    .await;
-    let table_two_name = TableName::parse("two".to_string()).unwrap();
-    app.create_gis_data_table(
-        &table_two_name,
-        &domain::enums::GeometryType::Point,
-        27700,
-        None,
-    )
-    .await;
+    // Add some data to table two
+    for _ in 0..10 {
+        let (_, _, ewkt) = generate_random_wgs84_point_ewkt();
+        app.insert_feature(&table_two_name, &ewkt, &uuid::Uuid::new_v4().to_string())
+            .await;
+    }
 
-    let response = app
-        .ogc_service
-        .get_collection(&app.api_client, table_two_name.as_ref())
-        .await;
-    let collection: ogcapi_types::common::Collection = handle_json_response(response)
-        .await
-        .expect("failet to retrieve collection");
-    assert_eq!(collection.id, table_two_name.as_ref())
+    // Check the response from table two again
+    let collection: ogcapi_types::common::Collection = handle_json_response(
+        app.ogc_service
+            .get_collection(&app.api_client, table_two_name.as_ref())
+            .await,
+    )
+    .await
+    .expect("failed to retrieve collection");
+
+    assert!(
+        collection.extent.is_some(),
+        "extent should be some because we have added features"
+    );
 }
 
 #[actix_web::test]
