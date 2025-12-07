@@ -1,6 +1,7 @@
 use crate::{
     AppState, URLS,
     config::AppConfig,
+    handlers::webhooks::clerk_webhook,
     postgres::PostgresRepo,
     routes::{api_routes, ogc_routes},
     types::UserClient,
@@ -74,6 +75,7 @@ pub async fn run(
             .app_data(web::Data::new(UserClient(clerk.clone())))
             .app_data(clerk_authoriser.clone())
             .wrap(TracingLogger::default())
+            .route("/webhooks/clerk", web::post().to(clerk_webhook))
             .route(&URLS.health_check, web::get().to(HttpResponse::Ok))
             .configure(|cfg| {
                 api_routes(
