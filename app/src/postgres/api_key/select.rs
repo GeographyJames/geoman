@@ -4,7 +4,7 @@ use domain::KeyId;
 use std::net::IpAddr;
 
 impl SelectAllWithParams for ApiKey {
-    type Params<'a> = SelectAllParams;
+    type Params<'a> = SelectAllParams<'a>;
 
     type MetaData<'a> = ();
 
@@ -19,19 +19,20 @@ impl SelectAllWithParams for ApiKey {
         let keys = sqlx::query_as!(
             ApiKey,
             r#"
-        SELECT id as "id: KeyId",
-               name,
-               created,
-               last_used,
-               expiry,
-               last_used_ip as "last_used_ip:IpAddr",
-               last_used_user_agent
-          FROM app.api_keys
-         WHERE revoked IS NULL
-           AND user_id = $1
-         ORDER BY created DESC
+        SELECT k.id as "id: KeyId",
+               k.name,
+               k.created,
+               k.last_used,
+               k.expiry,
+               k.last_used_ip as "last_used_ip:IpAddr",
+               k.last_used_user_agent
+          FROM app.api_keys k
+          JOIN app.users u ON k.user_id = u.id
+         WHERE k.revoked IS NULL
+           AND u.clerk_id = $1
+         ORDER BY k.created DESC
            "#,
-            params.user_id.0
+            params.auth_id
         )
         .fetch_all(executor)
         .await?;
