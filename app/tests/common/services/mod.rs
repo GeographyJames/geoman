@@ -3,7 +3,7 @@ mod http_service;
 mod ogc_service;
 pub use http_client::HttpClient;
 pub use http_service::HttpService;
-pub use ogc_service::{OgcAuth, OgcService};
+pub use ogc_service::OgcService;
 mod api_keys;
 pub use api_keys::ApiKeysService;
 mod clerk;

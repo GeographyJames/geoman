@@ -1,9 +1,9 @@
 use app::enums::GeoManEnvironment;
 
 use crate::common::{
-    AppBuilder,
+    AppBuilder, Auth,
     helpers::{assert_ok, assert_status},
-    services::{AuthService, OgcAuth, SessionToken},
+    services::{AuthService, SessionToken},
 };
 
 #[actix_web::test]
@@ -25,9 +25,7 @@ pub async fn landing_page_requires_authentication_in_production() {
         .ogc_service
         .get_landing_page(
             &app.api_client,
-            Some(&OgcAuth::Token(SessionToken(
-                uuid::Uuid::new_v4().to_string(),
-            ))),
+            Some(&Auth::Token(SessionToken(uuid::Uuid::new_v4().to_string()))),
         )
         .await;
     assert_status(&response, 401);
@@ -40,7 +38,7 @@ pub async fn landing_page_requires_authentication_in_production() {
 
     let response = app
         .ogc_service
-        .get_landing_page(&app.api_client, Some(&OgcAuth::Token(token.clone())))
+        .get_landing_page(&app.api_client, Some(&Auth::Token(token.clone())))
         .await;
     assert_ok(&response);
 
@@ -49,16 +47,16 @@ pub async fn landing_page_requires_authentication_in_production() {
         .ogc_service
         .get_landing_page(
             &app.api_client,
-            Some(&OgcAuth::Key(uuid::Uuid::new_v4().to_string())),
+            Some(&Auth::Key(uuid::Uuid::new_v4().to_string())),
         )
         .await;
     assert_status(&response, 401);
 
     // Requests with valid api key are accepted
-    let api_key = app.generate_api_key(Some(&token)).await;
+    let api_key = app.generate_api_key(Some(&Auth::Token(token))).await;
     let response = app
         .ogc_service
-        .get_landing_page(&app.api_client, Some(&OgcAuth::Key(api_key.api_key)))
+        .get_landing_page(&app.api_client, Some(&Auth::Key(api_key.api_key)))
         .await;
     assert_ok(&response);
 }

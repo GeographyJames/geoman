@@ -5,3 +5,5 @@ pub use db::configure_database;
 pub mod services;
 mod test_app;
 pub use test_app::{AppBuilder, TestApp};
+mod enums;
+pub use enums::Auth;

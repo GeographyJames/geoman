@@ -50,6 +50,7 @@ pub async fn get_user_context(
     user: AuthenticatedUser,
     user_client: &UserClient,
 ) -> Result<UserContext, anyhow::Error> {
+    tracing::info!("\n\nherae");
     Ok(match user {
         AuthenticatedUser::AuthenticationId(id) => match repo
             .select_one(id.as_str())

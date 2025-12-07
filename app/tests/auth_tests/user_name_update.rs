@@ -1,4 +1,4 @@
-use crate::common::{AppBuilder, helpers::handle_json_response, services::AuthService};
+use crate::common::{AppBuilder, Auth, helpers::handle_json_response, services::AuthService};
 use clerk_rs::{
     ClerkConfiguration,
     clerk::Clerk,
@@ -39,7 +39,7 @@ async fn user_name_updated_in_database_on_name_change() {
         .await;
     let user: domain::User = handle_json_response(
         app.users_service
-            .get_one(&app.api_client, Some(&token), "current")
+            .get_one(&app.api_client, Some(&Auth::Token(token)), "current")
             .await,
     )
     .await
@@ -61,7 +61,7 @@ async fn user_name_updated_in_database_on_name_change() {
 
     let updated_user: domain::User = handle_json_response(
         app.users_service
-            .get_one(&app.api_client, Some(&token), "current")
+            .get_one(&app.api_client, Some(&Auth::Token(token)), "current")
             .await,
     )
     .await

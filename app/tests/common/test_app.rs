@@ -1,5 +1,5 @@
 use crate::common::{
-    configure_database,
+    Auth, configure_database,
     helpers::{generate_random_bng_point_ewkt, handle_json_response},
     services::{
         ApiKeysService, AuthService, ClerkAuthService, HttpClient, HttpService, OgcService,
@@ -158,14 +158,11 @@ impl TestApp<ClerkAuthService> {
         app
     }
 
-    pub async fn generate_project_collection_id(
-        &self,
-        session_token: Option<&SessionToken>,
-    ) -> ProjectCollectionId {
+    pub async fn generate_project_collection_id(&self, auth: Option<&Auth>) -> ProjectCollectionId {
         let collection = CollectionReqPayload::default();
         let response = self
             .collections_service
-            .post_json(&self.api_client, session_token, &collection)
+            .post_json(&self.api_client, auth, &collection)
             .await;
         handle_json_response(response)
             .await
@@ -406,11 +403,11 @@ impl TestApp<ClerkAuthService> {
 
     pub async fn generate_api_key(
         &self,
-        token: Option<&SessionToken>,
+        auth: Option<&Auth>,
     ) -> handlers::api::keys::ApiKeyResPayload {
         let response = self
             .api_keys_service
-            .generate_api_key(&self.api_client, token)
+            .generate_api_key(&self.api_client, auth)
             .await;
         let key: handlers::api::keys::ApiKeyResPayload = handle_json_response(response)
             .await
@@ -418,11 +415,11 @@ impl TestApp<ClerkAuthService> {
         key
     }
 
-    pub async fn generate_project_id(&self, token: Option<&SessionToken>) -> ProjectId {
+    pub async fn generate_project_id(&self, auth: Option<&Auth>) -> ProjectId {
         let project = ProjectReqPayload::default();
         let response = self
             .projects_service
-            .post_json(&self.api_client, token, &project)
+            .post_json(&self.api_client, auth, &project)
             .await;
         handle_json_response(response)
             .await

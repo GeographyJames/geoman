@@ -10,16 +10,11 @@ use actix_web::{
     web::Data,
 };
 
-use anyhow::Context;
-use clerk_rs::{
-    clerk::Clerk,
-    validators::{
-        authorizer::{ClerkAuthorizer, ClerkError, ClerkJwt},
-        jwks::MemoryCacheJwksProvider,
-    },
+use clerk_rs::validators::{
+    authorizer::{ClerkAuthorizer, ClerkError},
+    jwks::MemoryCacheJwksProvider,
 };
 
-use domain::UserInputDto;
 use secrecy::SecretBox;
 
 use crate::{

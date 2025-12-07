@@ -3,7 +3,7 @@ use rand::Rng;
 use reqwest::{RequestBuilder, Response, header::AUTHORIZATION};
 use serde::de::DeserializeOwned;
 
-use crate::common::services::SessionToken;
+use crate::common::{Auth, services::SessionToken};
 
 /// Cheks response is 200
 pub fn assert_ok(response: &reqwest::Response) {
@@ -93,9 +93,14 @@ pub fn generate_random_wgs84_point_ewkt() -> (f32, f32, String) {
     (long, lat, generate_point(long, lat, 4326))
 }
 
-pub fn auth_request(req: RequestBuilder, token: Option<&SessionToken>) -> RequestBuilder {
-    if let Some(token) = token {
-        return req.header(AUTHORIZATION, &token.0);
+pub fn auth_request(req: RequestBuilder, auth: Option<&Auth>) -> RequestBuilder {
+    if let Some(auth) = auth {
+        req.bearer_auth(match auth {
+            Auth::Key(key) => key,
+            Auth::Token(token) => &token.0,
+            Auth::Context(_) => todo!(),
+        })
+    } else {
+        req
     }
-    req
 }

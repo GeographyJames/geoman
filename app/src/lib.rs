@@ -18,7 +18,7 @@ pub mod constants;
 mod postgres;
 mod streaming;
 mod types;
-pub use types::{ErrorResponse, Password, enums};
+pub use types::{ErrorResponse, Password, UserContext, enums};
 mod errors;
 mod repo;
 #[cfg(test)]

@@ -1,7 +1,8 @@
 use crate::common::{
+    Auth,
     constants::REQUEST_FAILED,
-    helpers::handle_json_response,
-    services::{HttpClient, auth_service::SessionToken},
+    helpers::{auth_request, handle_json_response},
+    services::HttpClient,
 };
 
 use app::URLS;
@@ -9,26 +10,10 @@ use domain::{ProjectCollectionId, ProjectId, enums::CollectionId};
 use reqwest::{RequestBuilder, Response};
 use serde::Serialize;
 
-pub enum OgcAuth {
-    Key(String),
-    Token(SessionToken),
-}
-
 pub struct OgcService {}
 
-fn auth_request(req: RequestBuilder, auth: Option<&OgcAuth>) -> RequestBuilder {
-    if let Some(auth) = auth {
-        req.bearer_auth(match auth {
-            OgcAuth::Key(key) => key,
-            OgcAuth::Token(token) => &token.0,
-        })
-    } else {
-        req
-    }
-}
-
 impl OgcService {
-    pub async fn get_landing_page(&self, client: &HttpClient, auth: Option<&OgcAuth>) -> Response {
+    pub async fn get_landing_page(&self, client: &HttpClient, auth: Option<&Auth>) -> Response {
         auth_request(client.get(&URLS.ogc_api.base), auth)
             .send()
             .await
@@ -263,7 +248,7 @@ impl OgcService {
         client: &HttpClient,
         collection: CollectionId,
         body: &B,
-        auth: Option<&OgcAuth>,
+        auth: Option<&Auth>,
     ) -> Response {
         let req = client
             .post(&format!(
