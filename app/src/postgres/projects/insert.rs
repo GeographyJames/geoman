@@ -12,13 +12,6 @@ impl Insert for (&ProjectInputDto, &str) {
         let (dto, clerk_id) = self;
         sqlx::query_scalar!(
             r#"
-            WITH user_data AS (
-                INSERT INTO app.users (clerk_id, first_name, last_name, team_id)
-                VALUES ($1, 'New', 'User', -1)
-                ON CONFLICT (clerk_id) DO UPDATE
-                SET clerk_id = EXCLUDED.clerk_id
-                RETURNING id, team_id
-            )
             INSERT INTO app.projects (
                 name,
                 visibility,
@@ -30,8 +23,8 @@ impl Insert for (&ProjectInputDto, &str) {
                 slug,
                 team_id
             )
-            SELECT $2, $3, $4, $5, user_data.id, user_data.id, user_data.id, $6, user_data.team_id
-            FROM user_data
+            SELECT $2, $3, $4, $5, user_id, user_id, user_id, $6, user_team_id
+            FROM app.upsert_user_and_get_context($1)
             RETURNING id AS "id: ProjectId"
             "#,
             clerk_id,
