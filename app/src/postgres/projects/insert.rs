@@ -2,14 +2,14 @@ use domain::{ProjectId, enums::Visibility, project::ProjectInputDto};
 
 use crate::repo::traits::Insert;
 
-impl Insert for (&ProjectInputDto, &str) {
+impl Insert for (ProjectInputDto, &str) {
     type Id = ProjectId;
 
     async fn insert<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>
     where
         &'a E: sqlx::PgExecutor<'a>,
     {
-        let (dto, clerk_id) = self;
+        let (dto, auth_id) = self;
         sqlx::query_scalar!(
             r#"
             INSERT INTO app.projects (
@@ -27,7 +27,7 @@ impl Insert for (&ProjectInputDto, &str) {
             FROM app.upsert_user_and_get_context($1)
             RETURNING id AS "id: ProjectId"
             "#,
-            clerk_id,
+            auth_id,
             dto.name.as_ref(),
             &dto.visibility as &Visibility,
             dto.country_code.alpha2(),

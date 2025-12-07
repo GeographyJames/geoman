@@ -1,9 +1,11 @@
+use crate::constants::USER_AUTH_ID_COLUMN;
+
 /// Row alias should match corresponding struct field name
 pub fn user_row_fragment(user_alias: &str, row_alias: &str) -> String {
     let alias = user_alias;
 
     format!(
-        "ROW({alias}.id, {alias}.first_name, {alias}.last_name, {alias}.clerk_id, \
+        "ROW({alias}.id, {alias}.first_name, {alias}.last_name, {alias}.{USER_AUTH_ID_COLUMN}, \
  ROW(t_{alias}.id, t_{alias}.name)::app.team)::app.user AS {row_alias}"
     )
 }

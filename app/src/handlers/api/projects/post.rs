@@ -18,7 +18,7 @@ pub async fn post_project(
     user: web::ReqData<AuthenticatedUser>,
     payload: Json<ProjectReqPayload>,
 ) -> Result<Json<ProjectId>, ApiError> {
-    let clerk_id = match user.into_inner() {
+    let auth_id = match user.into_inner() {
         AuthenticatedUser::AuthenticationId(id) => id,
         AuthenticatedUser::User(_) => {
             return Err(ApiError::Unexpected(anyhow::anyhow!(
@@ -27,7 +27,7 @@ pub async fn post_project(
         }
     };
     let input_dto: ProjectInputDto = payload.into_inner().try_into()?;
-    let project_id = repo.insert(&(&input_dto, clerk_id.as_str())).await?;
+    let project_id = repo.insert(&(input_dto, auth_id.as_str())).await?;
     Ok(Json(project_id))
 }
 

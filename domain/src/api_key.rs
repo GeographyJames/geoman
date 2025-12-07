@@ -17,7 +17,6 @@ pub struct ApiKey {
 }
 
 pub struct ApiKeyInputDTO {
-    pub user_id: UserId,
     pub name: String,
     pub key_hash: KeyHash,
 }

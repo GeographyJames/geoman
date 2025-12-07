@@ -1,8 +1,5 @@
 use crate::{
-    handlers::ApiError,
-    helpers::{get_user_context, hash_api_key},
-    postgres::PostgresRepo,
-    types::{AuthenticatedUser, UserClient},
+    handlers::ApiError, helpers::hash_api_key, postgres::PostgresRepo, types::AuthenticatedUser,
 };
 use actix_web::{HttpResponse, post, web};
 use anyhow::Context;
@@ -22,24 +19,29 @@ pub struct ApiKeyResPayload {
 }
 
 #[post("")]
-#[tracing::instrument(skip(repo, payload, user, user_client))]
+#[tracing::instrument(skip(repo, payload, user))]
 pub async fn generate_api_key(
     user: web::ReqData<AuthenticatedUser>,
     repo: web::Data<PostgresRepo>,
     payload: web::Json<ApiKeyReqPayload>,
-    user_client: web::Data<UserClient>,
 ) -> Result<HttpResponse, ApiError> {
-    let user_context = get_user_context(&repo, user.into_inner(), &user_client).await?;
+    let auth_id = match user.into_inner() {
+        AuthenticatedUser::AuthenticationId(id) => id,
+        AuthenticatedUser::User(_) => {
+            return Err(ApiError::Unexpected(anyhow::anyhow!(
+                "Expected AuthenticationId, got User context"
+            )));
+        }
+    };
     let api_key = generate_api_key_string();
     let key_hash = hash_api_key(&api_key);
     let ApiKeyReqPayload { key_name } = payload.into_inner();
     let key = ApiKeyInputDTO {
-        user_id: user_context.id,
         name: key_name,
         key_hash,
     };
     let key_id = repo
-        .insert(&key)
+        .insert(&(key, auth_id.as_str()))
         .await
         .context("failed to save key in database")?;
 
