@@ -2,22 +2,23 @@ use actix_web::{HttpResponse, http::StatusCode, patch, web};
 
 use domain::KeyId;
 
-use crate::{
-    handlers::ApiError,
-    helpers::get_user_context,
-    postgres::PostgresRepo,
-    types::{AuthenticatedUser, UserClient},
-};
+use crate::{handlers::ApiError, postgres::PostgresRepo, types::AuthenticatedUser};
 
 #[patch("/{id}/renew")]
-#[tracing::instrument(skip(repo, id, user, user_client))]
+#[tracing::instrument(skip(repo, id, user))]
 pub async fn renew_api_key(
     repo: web::Data<PostgresRepo>,
     id: web::Path<KeyId>,
     user: web::ReqData<AuthenticatedUser>,
-    user_client: web::Data<UserClient>,
 ) -> Result<HttpResponse, ApiError> {
-    let user_context = get_user_context(&repo, user.into_inner(), &user_client).await?;
-    repo.renew_api_key(id.into_inner(), user_context.id).await?;
+    let auth_id = match user.into_inner() {
+        AuthenticatedUser::AuthenticationId(id) => id,
+        AuthenticatedUser::User(_) => {
+            return Err(ApiError::Unexpected(anyhow::anyhow!(
+                "Expected AuthenticationId, got User context"
+            )));
+        }
+    };
+    repo.renew_api_key(id.into_inner(), &auth_id).await?;
     Ok(HttpResponse::new(StatusCode::NO_CONTENT))
 }
