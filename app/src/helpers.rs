@@ -55,7 +55,7 @@ pub async fn get_user_context(
         AuthenticatedUser::AuthenticationId(id) => match repo
             .select_one(id.as_str())
             .await
-            .context("failed to retrieve use from database...")?
+            .context("failed to retrieve user from database...")?
         {
             Some(user_context) => user_context,
             None => {

@@ -2,7 +2,7 @@ use domain::{ProjectFeature, ProjectId};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 use crate::common::{
-    TestApp,
+    Auth, TestApp,
     helpers::{assert_ok, assert_status, handle_json_response},
 };
 
@@ -117,7 +117,9 @@ async fn get_project_feature_returns_404_for_feature_belonging_to_different_proj
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
     let collection_id = app.generate_project_collection_id(None).await;
-    let another_project = app.generate_project_id(None).await;
+    let another_project = app
+        .generate_project_id(Some(&Auth::mock_session_token()))
+        .await;
     let feature_id = app
         .generate_project_feature_id(collection_id, another_project, user_id, Some({}))
         .await;

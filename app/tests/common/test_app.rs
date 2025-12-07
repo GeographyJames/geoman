@@ -3,7 +3,6 @@ use crate::common::{
     helpers::{generate_random_bng_point_ewkt, handle_json_response},
     services::{
         ApiKeysService, AuthService, ClerkAuthService, HttpClient, HttpService, OgcService,
-        SessionToken,
     },
 };
 use app::{
@@ -302,7 +301,9 @@ impl TestApp<ClerkAuthService> {
     pub async fn generate_ids(&self) -> (TeamId, UserId, ProjectId) {
         let team_id = TeamId(0);
         let user_id = UserId(0);
-        let project_id = self.generate_project_id(None).await;
+        let project_id = self
+            .generate_project_id(Some(&Auth::mock_session_token()))
+            .await;
         (team_id, user_id, project_id)
     }
 

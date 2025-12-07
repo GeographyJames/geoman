@@ -2,7 +2,7 @@ use domain::enums::CollectionId;
 use domain::project::Project;
 
 use crate::common::{
-    TestApp,
+    Auth, TestApp,
     helpers::{assert_ok, handle_json_response},
 };
 
@@ -52,7 +52,8 @@ async fn get_projects_works_with_limit() {
     let app = TestApp::spawn_with_db().await;
 
     for _ in 0..10 {
-        app.generate_project_id(None).await;
+        app.generate_project_id(Some(&Auth::mock_session_token()))
+            .await;
     }
     let limit = 5;
 

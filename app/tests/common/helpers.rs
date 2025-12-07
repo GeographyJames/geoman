@@ -1,9 +1,10 @@
-use app::ErrorResponse;
+use app::{AuthenticatedUser, ErrorResponse};
 use rand::Rng;
-use reqwest::{RequestBuilder, Response, header::AUTHORIZATION};
+use reqwest::{RequestBuilder, Response};
 use serde::de::DeserializeOwned;
+use serde_json::json;
 
-use crate::common::{Auth, services::SessionToken};
+use crate::common::Auth;
 
 /// Cheks response is 200
 pub fn assert_ok(response: &reqwest::Response) {
@@ -95,11 +96,14 @@ pub fn generate_random_wgs84_point_ewkt() -> (f32, f32, String) {
 
 pub fn auth_request(req: RequestBuilder, auth: Option<&Auth>) -> RequestBuilder {
     if let Some(auth) = auth {
-        req.bearer_auth(match auth {
-            Auth::Key(key) => key,
-            Auth::Token(token) => &token.0,
-            Auth::Context(_) => todo!(),
-        })
+        match auth {
+            Auth::Key(key) => req.bearer_auth(key),
+            Auth::Token(token) => req.bearer_auth(&token.0),
+            Auth::MockToken(token) => req.header(
+                "X-Test-User",
+                json!(AuthenticatedUser::AuthenticationId(token.clone())).to_string(),
+            ),
+        }
     } else {
         req
     }

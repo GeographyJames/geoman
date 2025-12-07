@@ -1,7 +1,7 @@
 use domain::ProjectId;
 
 use crate::common::{
-    TestApp,
+    Auth, TestApp,
     helpers::{assert_ok, assert_status, handle_json_response},
 };
 
@@ -11,7 +11,9 @@ async fn get_project_features_works() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
     let collection_id = app.generate_project_collection_id(None).await;
-    let another_project = app.generate_project_id(None).await;
+    let another_project = app
+        .generate_project_id(Some(&Auth::mock_session_token()))
+        .await;
     let _feature_id = app
         .generate_project_feature_id(collection_id, project_id, user_id, Some({}))
         .await;

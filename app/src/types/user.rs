@@ -11,6 +11,6 @@ pub enum AuthenticatedUser {
 #[derive(Clone, FromRow, Default, Serialize, Deserialize, Debug)]
 pub struct UserContext {
     pub id: UserId,
-    pub team_id: Option<TeamId>,
+    pub team_id: TeamId,
     pub admin: bool,
 }

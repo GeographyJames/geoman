@@ -1,7 +1,7 @@
 use domain::ProjectId;
 
 use crate::common::{
-    TestApp,
+    Auth, TestApp,
     helpers::{
         assert_ok, assert_status, generate_random_bng_point_ewkt, generate_random_wgs84_point_ewkt,
     },
@@ -11,7 +11,9 @@ use crate::common::{
 async fn get_project_collection_has_correct_storage_crs() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_one_id) = app.generate_ids().await;
-    let project_two_id = app.generate_project_id(None).await;
+    let project_two_id = app
+        .generate_project_id(Some(&Auth::mock_session_token()))
+        .await;
     let collection_id = app.generate_project_collection_id(None).await;
     let (_, _, bng_ewkt) = generate_random_bng_point_ewkt();
     let (_, _, wges84_ewkt) = generate_random_wgs84_point_ewkt();
@@ -127,7 +129,9 @@ async fn get_project_collection_returns_404_for_project_not_found() {
 async fn get_project_collection_returns_404_for_collection_with_no_features() {
     let app = TestApp::spawn_with_db().await;
     let (_, user_id, project_id) = app.generate_ids().await;
-    let another_project = app.generate_project_id(None).await;
+    let another_project = app
+        .generate_project_id(Some(&Auth::mock_session_token()))
+        .await;
     let collection_id = app.generate_project_collection_id(None).await;
     let _feature = app
         .generate_project_feature_id(collection_id, another_project, user_id, Some({}))

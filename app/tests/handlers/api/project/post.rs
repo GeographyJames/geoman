@@ -2,14 +2,16 @@ use app::{ErrorResponse, handlers::api::projects::ProjectReqPayload};
 use domain::ProjectId;
 
 use crate::common::{
-    AppBuilder,
+    AppBuilder, Auth,
     helpers::{check_error_response, handle_json_response},
 };
 
 #[tokio::test]
 async fn post_project_works() {
     let app = AppBuilder::new().build().await;
-    let _project_id = app.generate_project_id(None).await;
+    let _project_id = app
+        .generate_project_id(Some(&Auth::mock_session_token()))
+        .await;
 }
 
 #[tokio::test]
@@ -18,14 +20,14 @@ async fn post_project_returns_409_for_duplicate_name() {
     let project = ProjectReqPayload::default();
     let _id: ProjectId = handle_json_response(
         app.projects_service
-            .post_json(&app.api_client, None, &project)
+            .post_json(&app.api_client, Some(&Auth::mock_session_token()), &project)
             .await,
     )
     .await
     .expect("failed to get project id");
     let response = app
         .projects_service
-        .post_json(&app.api_client, None, &project)
+        .post_json(&app.api_client, Some(&Auth::mock_session_token()), &project)
         .await;
     let err: ErrorResponse = check_error_response(response, 409).await;
     assert!(

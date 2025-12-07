@@ -33,22 +33,6 @@ pub enum GeometryType {
     GeometryCollection,
 }
 
-pub enum Action {
-    CreateProject,
-}
-
-impl std::fmt::Display for Action {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Action::CreateProject => "create project",
-            }
-        )
-    }
-}
-
 #[derive(Clone, Debug)]
 pub enum CollectionId {
     Projects,

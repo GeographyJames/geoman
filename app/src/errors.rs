@@ -1,7 +1,5 @@
 use actix_web::{ResponseError, http::StatusCode};
-use domain::{
-    FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName, enums::Action,
-};
+use domain::{FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName};
 
 use isocountry::CountryCodeParseErr;
 use thiserror::Error;
@@ -45,8 +43,6 @@ pub enum ApiError {
     ProjectValidation(#[from] ProjectValidationError),
     #[error("Not found")]
     NotFound,
-    #[error("User must be a member of a team to {0}")]
-    UserWithoutTeam(Action),
     #[error("A collection with this name already exists")]
     DuplicateCollectionName,
 }
@@ -84,7 +80,7 @@ impl ResponseError for ApiError {
             ApiError::CollectionNotFound => StatusCode::NOT_FOUND,
             ApiError::FeatureNotFound(_) => StatusCode::NOT_FOUND,
             ApiError::ProjectValidation(_) => StatusCode::UNPROCESSABLE_ENTITY,
-            ApiError::UserWithoutTeam(_) => StatusCode::FORBIDDEN,
+
             ApiError::DuplicateCollectionName => StatusCode::CONFLICT,
         }
     }
