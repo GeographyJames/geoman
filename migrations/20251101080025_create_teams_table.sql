@@ -6,4 +6,4 @@ CREATE TABLE app.teams (
 
 INSERT INTO app.teams (
     id, name
-    ) OVERRIDING SYSTEM VALUE VALUES (0, 'root');
+    ) OVERRIDING SYSTEM VALUE VALUES (0, 'root'), (-1, 'unassigned users');

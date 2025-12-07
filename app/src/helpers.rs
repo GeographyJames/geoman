@@ -80,10 +80,13 @@ async fn provision_user(
 
     let first_name = user.first_name.flatten().unwrap_or("Unknown".to_string());
     let last_name = user.last_name.flatten().unwrap_or("User".to_string());
+    let username = user.username.flatten();
+
     let new_user = UserInputDto {
         auth_id: id,
         first_name,
         last_name,
+        username,
     };
     repo.insert(&new_user)
         .await

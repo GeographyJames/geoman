@@ -4,8 +4,7 @@ pub fn user_row_fragment(user_alias: &str, row_alias: &str) -> String {
 
     format!(
         "ROW({alias}.id, {alias}.first_name, {alias}.last_name, {alias}.clerk_id, \
-           CASE WHEN t_{alias}.id IS NULL THEN NULL \
-           ELSE ROW(t_{alias}.id, t_{alias}.name)::app.team END)::app.user AS {row_alias}"
+ ROW(t_{alias}.id, t_{alias}.name)::app.team)::app.user AS {row_alias}"
     )
 }
 
@@ -21,5 +20,5 @@ pub fn user_join_fragment(user_alias: &str, col: &str) -> String {
 
 pub fn team_join_fragment(user_alias: &str) -> String {
     let alias = user_alias;
-    format!("LEFT JOIN app.teams t_{alias} ON {alias}.team_id = t_{alias}.id")
+    format!("JOIN app.teams t_{alias} ON {alias}.team_id = t_{alias}.id")
 }

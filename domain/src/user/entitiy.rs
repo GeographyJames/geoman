@@ -10,5 +10,5 @@ pub struct User {
     pub first_name: String,
     pub last_name: String,
     pub clerk_id: Option<String>,
-    pub team: Option<Team>,
+    pub team: Team,
 }
