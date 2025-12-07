@@ -66,9 +66,11 @@ async fn revoked_api_key_returns_401() {
         .get_landing_page(&app.api_client, Some(&OgcAuth::Key(key.api_key.clone())))
         .await;
     assert_ok(&response);
-    app.api_keys_service
+    let response = app
+        .api_keys_service
         .revoke(&app.api_client, key.id, Some(&token))
         .await;
+    assert_ok(&response);
     let response = app
         .ogc_service
         .get_landing_page(&app.api_client, Some(&OgcAuth::Key(key.api_key)))

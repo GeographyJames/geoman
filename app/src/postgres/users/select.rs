@@ -1,29 +1,28 @@
-use clerk_rs::validators::authorizer::ClerkJwt;
 use domain::{KeyHash, TeamId, User, UserId};
 
 use crate::{
+    constants::USER_AUTH_ID_COLUMN,
     postgres::sql_fragments::{team_join_fragment, user_row_fragment},
     repo::{
         RepositoryError,
         traits::{SelectAll, SelectOne, SelectOneWithParams},
         user_id::SelectOneParams,
     },
-    types::AuthenticatedUser,
+    types::UserContext,
 };
 
-impl SelectOne<&ClerkJwt> for AuthenticatedUser {
+impl SelectOne<&str> for UserContext {
     async fn select_one<'a, E>(
         executor: &'a E,
-        token: &ClerkJwt,
+        authentication_id: &str,
     ) -> Result<Option<Self>, crate::repo::RepositoryError>
     where
         &'a E: sqlx::PgExecutor<'a>,
     {
-        sqlx::query_as!(
-            AuthenticatedUser,
-            r#"SELECT id as "id: UserId", team_id as "team_id: TeamId", admin FROM app.users WHERE clerk_id = $1"#,
-            token.sub
-        )
+        sqlx::query_as(&format!(
+            r#"SELECT id as TheId, team_id, admin FROM app.users WHERE {USER_AUTH_ID_COLUMN} = $1"#
+        ))
+        .bind(authentication_id)
         .fetch_optional(executor)
         .await
         .map_err(RepositoryError::from)
@@ -68,7 +67,7 @@ impl SelectOne<UserId> for User {
     }
 }
 
-impl SelectOneWithParams<&KeyHash> for AuthenticatedUser {
+impl SelectOneWithParams<&KeyHash> for UserContext {
     type Params<'a> = &'a SelectOneParams;
     async fn select_one_with_params<'a, E>(
         executor: &'a E,
@@ -79,7 +78,7 @@ impl SelectOneWithParams<&KeyHash> for AuthenticatedUser {
         &'a E: sqlx::PgExecutor<'a>,
     {
         sqlx::query_as!(
-            AuthenticatedUser,
+            UserContext,
             r#"UPDATE app.api_keys k
                     SET last_used = NOW(),
                         last_used_ip = $1,

@@ -1,11 +1,13 @@
 import { SignedIn, UserButton } from "@clerk/clerk-react";
-import { Key, Plus, Copy, AlertCircle, Trash2 } from "lucide-react";
+import { Key, Plus, Copy, AlertCircle, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateApiKey } from "@/hooks/api/useCreateApiKey";
 import { useApiKeys } from "@/hooks/api/useApiKeys";
 import { useRevokeApiKey } from "@/hooks/api/useRevokeApiKey";
 import { useRenewApiKey } from "@/hooks/api/useRenewApiKey";
+import { useCurrentUser } from "@/hooks/api/useCurrentUser";
+import { useUsers } from "@/hooks/api/useUsers";
 
 export default function AdminPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -14,9 +16,16 @@ export default function AdminPage() {
 
   const queryClient = useQueryClient();
   const { data: apiKeys = [], isLoading, error } = useApiKeys();
+  const { data: currentUser, isLoading: isLoadingUser, error: userError } = useCurrentUser();
+  const { data: users = [] } = useUsers();
   const createApiKeyMutation = useCreateApiKey();
   const revokeApiKeyMutation = useRevokeApiKey();
   const renewApiKeyMutation = useRenewApiKey();
+
+  // Filter users to only show team members
+  const teamMembers = users.filter(
+    (user) => currentUser?.team && user.team?.id === currentUser.team.id
+  );
 
   const handleCreateKey = async () => {
     try {
@@ -98,6 +107,86 @@ export default function AdminPage() {
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto p-6">
+        {/* Team Information */}
+        <div className="card bg-base-100 border border-base-300 mb-6">
+          <div className="card-body">
+            <h2 className="card-title text-lg flex items-center gap-2">
+              <Users size={20} />
+              Team Information
+            </h2>
+            {isLoadingUser ? (
+              <div className="flex items-center gap-3 py-2">
+                <span className="loading loading-spinner loading-sm"></span>
+                <p className="text-base-content/70">Loading team information...</p>
+              </div>
+            ) : userError ? (
+              <div className="alert alert-error">
+                <AlertCircle size={20} />
+                <div>
+                  <h3 className="font-semibold">Failed to load team information</h3>
+                  <div className="text-sm">
+                    {userError instanceof Error ? userError.message : "An error occurred"}
+                  </div>
+                </div>
+              </div>
+            ) : currentUser?.team ? (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-base-content/70">Team:</span>
+                  <span className="font-semibold">{currentUser.team.name}</span>
+                </div>
+
+                {teamMembers.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-base-content/70 mb-2">
+                      Team Members ({teamMembers.length})
+                    </h3>
+                    <div className="space-y-2">
+                      {teamMembers.map((member) => (
+                        <div
+                          key={member.id}
+                          className={`flex items-center gap-2 p-2 rounded ${
+                            member.id === currentUser.id
+                              ? "bg-primary/10 border border-primary/20"
+                              : "bg-base-200"
+                          }`}
+                        >
+                          <div className="avatar placeholder">
+                            <div className="bg-neutral text-neutral-content rounded-full w-8">
+                              <span className="text-xs">
+                                {member.first_name[0]}
+                                {member.last_name[0]}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium">
+                              {member.first_name} {member.last_name}
+                              {member.id === currentUser.id && (
+                                <span className="ml-2 text-xs text-primary">(You)</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="alert">
+                <AlertCircle size={20} />
+                <div>
+                  <h3 className="font-semibold">No team assigned</h3>
+                  <div className="text-sm">
+                    You are not currently assigned to a team. Contact your administrator to join a team.
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Page Header */}
         <div className="mb-6">
           <div className="flex justify-between items-center">

@@ -6,7 +6,7 @@ use actix_web::{
 };
 use domain::{TeamId, UserId};
 
-use crate::types::AuthenticatedUser;
+use crate::types::{AuthenticatedUser, UserContext};
 
 pub async fn mock_auth_middlewear(
     req: ServiceRequest,
@@ -14,14 +14,16 @@ pub async fn mock_auth_middlewear(
 ) -> Result<ServiceResponse<impl MessageBody>, actix_web::Error> {
     let user: AuthenticatedUser = req
         .headers()
-        .get("X-Test-User-Id")
+        .get("X-Test-User")
         .and_then(|h| h.to_str().ok())
         .and_then(|str| serde_json::from_str(str).ok())
         .and_then(|json| serde_json::from_value(json).ok())
-        .unwrap_or(AuthenticatedUser {
-            id: UserId(0),
-            team_id: Some(TeamId(0)),
-            admin: false,
+        .unwrap_or_else(|| {
+            AuthenticatedUser::User(UserContext {
+                id: UserId(0),
+                team_id: Some(TeamId(0)),
+                admin: false,
+            })
         });
 
     req.extensions_mut().insert(user);

@@ -3,6 +3,7 @@ use crate::{
     config::AppConfig,
     postgres::PostgresRepo,
     routes::{api_routes, ogc_routes},
+    types::UserClient,
 };
 use actix_web::{App, HttpResponse, HttpServer, dev::Server, web};
 use anyhow::Context;
@@ -70,7 +71,7 @@ pub async fn run(
         App::new()
             .app_data(app_state.clone())
             .app_data(repo.clone())
-            .app_data(web::Data::new(clerk.clone()))
+            .app_data(web::Data::new(UserClient(clerk.clone())))
             .app_data(clerk_authoriser.clone())
             .wrap(TracingLogger::default())
             .route(&URLS.health_check, web::get().to(HttpResponse::Ok))

@@ -53,3 +53,8 @@ pub async fn new_clerk_user_is_added_to_database() {
         "the user should now be in the database"
     );
 }
+
+#[actix_web::test]
+pub async fn existing_clerk_user_is_retrived_from_database() {
+    let app = AppBuilder::new().build().await;
+}

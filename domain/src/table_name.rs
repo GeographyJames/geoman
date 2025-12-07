@@ -25,7 +25,7 @@ impl TableName {
             None => return Err("table name cannot be empty".to_string()),
             Some(first_char) => {
                 if first_char.is_numeric() {
-                    return Err("table name cannot start with a digit".to_string());
+                    return Err("table name cannot start with a number".to_string());
                 }
             }
         }

@@ -28,7 +28,7 @@ async fn get_collection_works() {
     assert!(!collection.links.is_empty());
     assert!(
         collection.extent.is_none(),
-        "extent should be none beacuse there are no features"
+        "extent should be none beacause there are no features"
     );
 
     // Add some data to table two

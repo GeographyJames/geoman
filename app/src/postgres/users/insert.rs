@@ -1,9 +1,9 @@
 use domain::UserInputDto;
 
-use crate::{constants::USER_AUTH_ID_COLUMN, repo::traits::Insert, types::AuthenticatedUser};
+use crate::{constants::USER_AUTH_ID_COLUMN, repo::traits::Insert, types::UserContext};
 
 impl Insert for UserInputDto {
-    type Id = AuthenticatedUser;
+    type Id = UserContext;
 
     async fn insert<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>
     where
