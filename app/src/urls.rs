@@ -12,6 +12,7 @@ pub struct Urls {
     pub api: Api,
     pub docs: Docs,
     pub ogc_api: Ogcapi,
+    pub webhooks: Webhooks,
 }
 
 #[derive(Deserialize)]
@@ -23,6 +24,11 @@ pub struct Api {
     pub collections: String,
 }
 
+#[derive(Deserialize)]
+pub struct Webhooks {
+    pub base: String,
+    pub clerk: String,
+}
 #[derive(Deserialize)]
 pub struct Docs {
     pub base: String,
