@@ -25,14 +25,6 @@ pub async fn generate_api_key(
     repo: web::Data<PostgresRepo>,
     payload: web::Json<ApiKeyReqPayload>,
 ) -> Result<HttpResponse, ApiError> {
-    let auth_id = match user.into_inner() {
-        AuthenticatedUser::AuthenticationId(id) => id,
-        AuthenticatedUser::User(_) => {
-            return Err(ApiError::Unexpected(anyhow::anyhow!(
-                "Expected AuthenticationId, got User context"
-            )));
-        }
-    };
     let api_key = generate_api_key_string();
     let key_hash = hash_api_key(&api_key);
     let ApiKeyReqPayload { key_name } = payload.into_inner();
@@ -41,7 +33,7 @@ pub async fn generate_api_key(
         key_hash,
     };
     let key_id = repo
-        .insert(&(key, auth_id.as_str()))
+        .insert(&(&key, user.id))
         .await
         .context("failed to save key in database")?;
 

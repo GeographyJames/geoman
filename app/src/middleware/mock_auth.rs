@@ -4,8 +4,16 @@ use actix_web::{
     dev::{ServiceRequest, ServiceResponse},
     middleware::Next,
 };
+use domain::{TeamId, UserId};
+use serde::{Deserialize, Serialize};
 
 use crate::types::AuthenticatedUser;
+
+#[derive(Serialize, Deserialize)]
+pub enum MockUserCredentials {
+    Token(String),
+    User(AuthenticatedUser),
+}
 
 pub async fn mock_auth_middlewear(
     req: ServiceRequest,
@@ -16,8 +24,16 @@ pub async fn mock_auth_middlewear(
         .get("X-Test-User")
         .and_then(|h| h.to_str().ok())
         .and_then(|str| serde_json::from_str(str).ok())
-        .and_then(|json| serde_json::from_value::<AuthenticatedUser>(json).ok())
+        .and_then(|json| serde_json::from_value::<MockUserCredentials>(json).ok())
     {
+        let user = match user {
+            MockUserCredentials::Token(_) => AuthenticatedUser {
+                id: UserId(0),
+                team_id: TeamId(-1),
+                admin: false,
+            },
+            MockUserCredentials::User(authenticated_user) => authenticated_user,
+        };
         req.extensions_mut().insert(user);
     }
 

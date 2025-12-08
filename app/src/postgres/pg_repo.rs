@@ -1,5 +1,5 @@
-use domain::{KeyId, UserId};
 /// Appplication repository
+use domain::{KeyId, UserId};
 use futures::Stream;
 use sqlx::PgPool;
 
@@ -110,17 +110,17 @@ impl PostgresRepo {
         Ok(())
     }
 
-    #[tracing::instrument(skip(self, id, auth_id))]
-    pub async fn renew_api_key(&self, id: KeyId, auth_id: &str) -> Result<(), RepositoryError> {
+    #[tracing::instrument(skip(self, id, user_id))]
+    pub async fn renew_api_key(&self, id: KeyId, user_id: UserId) -> Result<(), RepositoryError> {
         sqlx::query_scalar!(
             "
         UPDATE app.api_keys
         SET expiry = (NOW() + INTERVAL '6 months')
         WHERE id = $1
-        AND user_id = (SELECT id FROM app.users WHERE clerk_id = $2)
+        AND user_id =  $2
         RETURNING id",
             id.0,
-            auth_id
+            user_id.0
         )
         .fetch_one(&self.db_pool)
         .await?;

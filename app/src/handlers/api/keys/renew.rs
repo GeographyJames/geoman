@@ -11,14 +11,6 @@ pub async fn renew_api_key(
     id: web::Path<KeyId>,
     user: web::ReqData<AuthenticatedUser>,
 ) -> Result<HttpResponse, ApiError> {
-    let auth_id = match user.into_inner() {
-        AuthenticatedUser::AuthenticationId(id) => id,
-        AuthenticatedUser::User(_) => {
-            return Err(ApiError::Unexpected(anyhow::anyhow!(
-                "Expected AuthenticationId, got User context"
-            )));
-        }
-    };
-    repo.renew_api_key(id.into_inner(), &auth_id).await?;
+    repo.renew_api_key(id.into_inner(), user.id).await?;
     Ok(HttpResponse::new(StatusCode::NO_CONTENT))
 }

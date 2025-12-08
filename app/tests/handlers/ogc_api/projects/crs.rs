@@ -1,5 +1,5 @@
 use crate::common::{
-    TestApp,
+    Auth, TestApp,
     helpers::{generate_random_bng_point_ewkt, handle_json_response},
 };
 use ogc::FeatureCollection;
@@ -8,8 +8,9 @@ use ogcapi_types::common::Crs;
 #[actix_web::test]
 pub async fn crs_transform_works() {
     let app = TestApp::spawn_with_db().await;
+    let auth = Auth::mock_session_token();
     let (_, user_id, project_id) = app.generate_ids().await;
-    let collection_id = app.generate_project_collection_id(None).await;
+    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let (easting, northing, ewkt) = generate_random_bng_point_ewkt();
     let feature_id = app
         .insert_project_feature(

@@ -69,8 +69,10 @@ pub mod features {
     }
 }
 pub mod api_keys {
-    pub struct SelectAllParams<'a> {
-        pub auth_id: &'a str,
+    use domain::UserId;
+
+    pub struct SelectAllParams {
+        pub user_id: UserId,
     }
 }
 

@@ -10,18 +10,18 @@ use actix_web::{
     web::Data,
 };
 
+use anyhow::Context;
 use clerk_rs::validators::{
-    authorizer::{ClerkAuthorizer, ClerkError},
+    authorizer::{ClerkAuthorizer, ClerkError, ClerkJwt},
     jwks::MemoryCacheJwksProvider,
 };
 
+use domain::UserInputDto;
 use secrecy::SecretBox;
 
 use crate::{
-    helpers::hash_api_key,
-    postgres::PostgresRepo,
-    repo::user_id::SelectOneParams,
-    types::{AuthenticatedUser, UserContext},
+    helpers::hash_api_key, postgres::PostgresRepo, repo::user_id::SelectOneParams,
+    types::AuthenticatedUser,
 };
 
 pub async fn dual_auth_middleware(
@@ -59,7 +59,7 @@ async fn validate_api_key<B: MessageBody>(
 ) -> Result<ServiceResponse<B>, actix_web::Error> {
     let repo = req
         .app_data::<Data<PostgresRepo>>()
-        .ok_or_else(|| ErrorInternalServerError("Database not configured"))?;
+        .ok_or_else(|| ErrorInternalServerError("Postgres Repo not configured"))?;
     let key_hash = hash_api_key(token);
     let ip_address = req
         .connection_info()
@@ -75,13 +75,13 @@ async fn validate_api_key<B: MessageBody>(
         ip_address,
         user_agent,
     };
-    let user: UserContext = repo
+    let user: AuthenticatedUser = repo
         .select_one_with_params(&key_hash, &params)
         .await
         .map_err(ErrorInternalServerError)?
         .ok_or_else(|| ErrorUnauthorized("Invalid key"))?;
 
-    req.extensions_mut().insert(AuthenticatedUser::User(user));
+    req.extensions_mut().insert(user);
     next.call(req).await
 }
 
@@ -93,11 +93,24 @@ async fn validate_clerk_auth<B: MessageBody>(
         .app_data::<Data<ClerkAuthorizer<MemoryCacheJwksProvider>>>()
         .ok_or_else(|| ErrorInternalServerError("Clerk authoriser not configured"))?;
 
+    let repo = req
+        .app_data::<Data<PostgresRepo>>()
+        .ok_or_else(|| ErrorInternalServerError("Postgres repo not configured"))?;
     match clerk_authoriser.authorize(&req).await {
         // We have authed request and can pass the user onto the next body
         Ok(jwt) => {
-            req.extensions_mut()
-                .insert(AuthenticatedUser::AuthenticationId(jwt.sub));
+            let user: AuthenticatedUser = match repo
+                .select_one(jwt.sub.as_str())
+                .await
+                .map_err(ErrorInternalServerError)?
+            {
+                Some(user) => user,
+                None => provision_clerk_user(&repo, jwt)
+                    .await
+                    .context("failed to provision user")
+                    .map_err(ErrorInternalServerError)?,
+            };
+            req.extensions_mut().insert(user);
             next.call(req).await
         }
         // Output any other errors thrown from the Clerk authorizer
@@ -106,4 +119,22 @@ async fn validate_clerk_auth<B: MessageBody>(
             ClerkError::InternalServerError(msg) => Err(ErrorInternalServerError(msg)),
         },
     }
+}
+
+async fn provision_clerk_user(
+    repo: &PostgresRepo,
+    jwt: ClerkJwt,
+) -> Result<AuthenticatedUser, anyhow::Error> {
+    let first_name = "Unknown".to_string();
+    let last_name = "Uesr".to_string();
+
+    let new_user = UserInputDto {
+        auth_id: jwt.sub,
+        first_name,
+        last_name,
+        username: None,
+    };
+    repo.insert(&new_user)
+        .await
+        .context("failed to insert now use to database")
 }

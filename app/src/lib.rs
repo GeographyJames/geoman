@@ -10,6 +10,7 @@ pub use startup::Application;
 pub use urls::URLS;
 pub mod handlers;
 mod middleware;
+pub use middleware::MockUserCredentials;
 mod routes;
 mod state;
 pub mod telemetry;
@@ -18,7 +19,7 @@ pub mod constants;
 mod postgres;
 mod streaming;
 mod types;
-pub use types::{AuthenticatedUser, ErrorResponse, Password, UserContext, enums};
+pub use types::{AuthenticatedUser, ErrorResponse, Password, enums};
 mod errors;
 mod repo;
 #[cfg(test)]

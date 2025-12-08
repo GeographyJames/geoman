@@ -10,11 +10,12 @@ use crate::common::{
 #[actix_web::test]
 async fn get_project_collection_has_correct_storage_crs() {
     let app = TestApp::spawn_with_db().await;
+    let auth = Auth::mock_session_token();
     let (_, user_id, project_one_id) = app.generate_ids().await;
     let project_two_id = app
-        .generate_project_id(Some(&Auth::mock_session_token()))
+        .generate_project_id(Some(&auth))
         .await;
-    let collection_id = app.generate_project_collection_id(None).await;
+    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let (_, _, bng_ewkt) = generate_random_bng_point_ewkt();
     let (_, _, wges84_ewkt) = generate_random_wgs84_point_ewkt();
 
@@ -101,8 +102,9 @@ async fn get_project_collection_has_correct_storage_crs() {
 #[actix_web::test]
 async fn get_project_collection_works() {
     let app = TestApp::spawn_with_db().await;
+    let auth = Auth::mock_session_token();
     let (_, user_id, project_id) = app.generate_ids().await;
-    let collection_id = app.generate_project_collection_id(None).await;
+    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let _feature_id = app
         .generate_project_feature_id(collection_id, project_id, user_id, Some({}))
         .await;
@@ -116,8 +118,8 @@ async fn get_project_collection_works() {
 #[actix_web::test]
 async fn get_project_collection_returns_404_for_project_not_found() {
     let app = TestApp::spawn_with_db().await;
-
-    let collection_id = app.generate_project_collection_id(None).await;
+    let auth = Auth::mock_session_token();
+    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let response = app
         .ogc_service
         .get_project_collection(&app.api_client, ProjectId::default(), collection_id)
@@ -128,11 +130,12 @@ async fn get_project_collection_returns_404_for_project_not_found() {
 #[actix_web::test]
 async fn get_project_collection_returns_404_for_collection_with_no_features() {
     let app = TestApp::spawn_with_db().await;
+    let auth = Auth::mock_session_token();
     let (_, user_id, project_id) = app.generate_ids().await;
     let another_project = app
-        .generate_project_id(Some(&Auth::mock_session_token()))
+        .generate_project_id(Some(&auth))
         .await;
-    let collection_id = app.generate_project_collection_id(None).await;
+    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let _feature = app
         .generate_project_feature_id(collection_id, another_project, user_id, Some({}))
         .await;
@@ -146,8 +149,9 @@ async fn get_project_collection_returns_404_for_collection_with_no_features() {
 #[actix_web::test]
 async fn get_project_collection_has_correct_crs_list() {
     let app = TestApp::spawn_with_db().await;
+    let auth = Auth::mock_session_token();
     let (_, user_id, project_id) = app.generate_ids().await;
-    let collection_id = app.generate_project_collection_id(None).await;
+    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let _feature_id = app
         .generate_project_feature_id(collection_id, project_id, user_id, Some({}))
         .await;

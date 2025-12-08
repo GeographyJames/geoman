@@ -4,7 +4,7 @@ use domain::KeyId;
 use std::net::IpAddr;
 
 impl SelectAllWithParams for ApiKey {
-    type Params<'a> = SelectAllParams<'a>;
+    type Params<'a> = SelectAllParams;
 
     type MetaData<'a> = ();
 
@@ -29,10 +29,10 @@ impl SelectAllWithParams for ApiKey {
           FROM app.api_keys k
           JOIN app.users u ON k.user_id = u.id
          WHERE k.revoked IS NULL
-           AND u.clerk_id = $1
+           AND u.id = $1
          ORDER BY k.created DESC
            "#,
-            params.auth_id
+            params.user_id.0
         )
         .fetch_all(executor)
         .await?;

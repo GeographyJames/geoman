@@ -6,8 +6,9 @@ use crate::common::{
 #[actix_web::test]
 async fn get_project_collections_works() {
     let app = TestApp::spawn_with_db().await;
+    let auth = Auth::mock_session_token();
     let (_, user_id, project_id) = app.generate_ids().await;
-    let collection_id = app.generate_project_collection_id(None).await;
+    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let _item = app
         .generate_project_feature_id(collection_id, project_id, user_id, Some({}))
         .await;
@@ -25,11 +26,12 @@ async fn get_project_collections_works() {
 #[actix_web::test]
 async fn get_project_collections_only_returns_collections_that_contain_items_for_the_project() {
     let app = TestApp::spawn_with_db().await;
+    let auth = Auth::mock_session_token();
     let (_, user_id, project_id) = app.generate_ids().await;
     let another_project = app
-        .generate_project_id(Some(&Auth::mock_session_token()))
+        .generate_project_id(Some(&auth))
         .await;
-    let collection_id = app.generate_project_collection_id(None).await;
+    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let _item = app
         .generate_project_feature_id(collection_id, another_project, user_id, Some({}))
         .await;

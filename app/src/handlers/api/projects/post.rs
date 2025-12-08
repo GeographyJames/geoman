@@ -18,23 +18,15 @@ pub async fn post_project(
     user: web::ReqData<AuthenticatedUser>,
     payload: Json<ProjectReqPayload>,
 ) -> Result<Json<ProjectId>, ApiError> {
-    let auth_id = match user.into_inner() {
-        AuthenticatedUser::AuthenticationId(id) => id,
-        AuthenticatedUser::User(_) => {
-            return Err(ApiError::Unexpected(anyhow::anyhow!(
-                "Expected AuthenticationId, got User context"
-            )));
-        }
-    };
     let input_dto: ProjectInputDto = payload.into_inner().try_into()?;
-    let project_id = repo.insert(&(input_dto, auth_id.as_str())).await?;
+    let project_id = repo.insert(&(&input_dto, user.id)).await?;
     Ok(Json(project_id))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{ErrorResponse, testing::test_helpers::mock_app};
+    use crate::{ErrorResponse, MockUserCredentials, testing::test_helpers::mock_app};
     use actix_web::test;
 
     #[actix_web::test]
@@ -46,7 +38,7 @@ mod tests {
         let resp = mock_app(
             post_project,
             req,
-            AuthenticatedUser::AuthenticationId("user_test123".to_string()),
+            MockUserCredentials::Token("user_test123".to_string()),
         )
         .await;
         assert_eq!(resp.status(), 422);
@@ -63,7 +55,7 @@ mod tests {
         let resp = mock_app(
             post_project,
             req,
-            AuthenticatedUser::AuthenticationId("user_test123".to_string()),
+            MockUserCredentials::Token("user_test123".to_string()),
         )
         .await;
         assert_eq!(resp.status(), 422);

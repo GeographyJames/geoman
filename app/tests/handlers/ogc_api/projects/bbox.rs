@@ -1,16 +1,16 @@
 use ogcapi_types::common::Crs;
 
 use crate::common::{
-    TestApp,
+    Auth, TestApp,
     helpers::{generate_point, handle_json_response},
 };
 
 #[actix_web::test]
 pub async fn bbox_works() {
     let app = TestApp::spawn_with_db().await;
-
+    let auth = Auth::mock_session_token();
     let (_, user_id, project_id) = app.generate_ids().await;
-    let collection_id = app.generate_project_collection_id(None).await;
+    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let feature_1 = generate_point(1., 1., 27700);
     let feature_2 = generate_point(3., 1., 27700);
     let _feature_1_id = app

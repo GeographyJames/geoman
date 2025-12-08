@@ -11,15 +11,14 @@ use clerk_rs::{ClerkConfiguration, clerk::Clerk};
 use serde_json::json;
 
 use crate::{
-    middleware::mock_auth_middlewear,
-    postgres::PostgresRepo,
-    types::{AuthenticatedUser, UserClient},
+    MockUserCredentials, middleware::mock_auth_middlewear, postgres::PostgresRepo,
+    types::UserClient,
 };
 
 pub async fn mock_app(
     service: impl HttpServiceFactory + 'static,
     req: TestRequest,
-    user: AuthenticatedUser,
+    user: MockUserCredentials,
 ) -> ServiceResponse<impl MessageBody> {
     let repo = PostgresRepo::mock();
     let clerk_config = ClerkConfiguration::new(None, None, None, None);
