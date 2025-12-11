@@ -7,7 +7,7 @@ use crate::repo::{
     PoolWrapper, RepositoryError, StreamItem,
     traits::{
         Insert, SelectAll, SelectAllWithParams, SelectAllWithParamsStreaming, SelectOne,
-        SelectOneWithParams,
+        SelectOneWithParams, Update,
     },
 };
 
@@ -91,6 +91,13 @@ impl PostgresRepo {
         T: Insert,
     {
         item.insert(&self.db_pool).await
+    }
+    #[tracing::instrument(skip(self, item))]
+    pub async fn update<T>(&self, item: &T) -> Result<T::Id, RepositoryError>
+    where
+        T: Update,
+    {
+        item.update(&self.db_pool).await
     }
 
     #[tracing::instrument(skip(self, id, user_id))]

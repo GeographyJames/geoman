@@ -29,6 +29,9 @@ pub async fn mock_auth_middlewear(
         let user = match user {
             MockUserCredentials::Token(_) => AuthenticatedUser {
                 id: UserId(0),
+                first_name: uuid::Uuid::new_v4().to_string(),
+                last_name: uuid::Uuid::new_v4().to_string(),
+                username: None,
                 team_id: TeamId(-1),
                 admin: false,
             },

@@ -71,7 +71,11 @@ impl SelectOneWithParams<&KeyHash> for AuthenticatedUser {
                     AND u.id = k.user_id
               RETURNING u.id AS "id: UserId",
                         u.team_id AS "team_id: TeamId",
-                        u.admin"#,
+                        u.admin,
+                        u.first_name,
+                        u.last_name,
+                        u.username
+                        "#,
             params.ip_address as _,
             params.user_agent,
             key_hash.0
@@ -92,7 +96,7 @@ impl SelectOne<&str> for AuthenticatedUser {
     {
         sqlx::query_as!(
             AuthenticatedUser,
-            r#"SELECT id as "id: UserId", team_id as "team_id: TeamId", admin FROM app.users WHERE clerk_id = $1"#,
+            r#"SELECT id as "id: UserId", team_id as "team_id: TeamId", admin, username, first_name, last_name FROM app.users WHERE clerk_id = $1"#,
             token
         )
         .fetch_optional(executor)

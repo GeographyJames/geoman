@@ -21,7 +21,6 @@ pub async fn get_user(
     user_id: web::Path<String>,
 ) -> Result<Json<User>, ApiError> {
     if *user_id == "current" {
-        tracing::info!("\n\nhere!!!!\n");
         let user: User = repo.select_one(user.id).await?.ok_or(ApiError::NotFound)?;
         return Ok(Json(user));
     }

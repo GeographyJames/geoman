@@ -12,7 +12,7 @@ use actix_web::{
 
 use anyhow::Context;
 use clerk_rs::validators::{
-    authorizer::{ClerkAuthorizer, ClerkError, ClerkJwt},
+    authorizer::{ClerkAuthorizer, ClerkError},
     jwks::MemoryCacheJwksProvider,
 };
 
@@ -97,17 +97,46 @@ async fn validate_clerk_auth<B: MessageBody>(
         .app_data::<Data<PostgresRepo>>()
         .ok_or_else(|| ErrorInternalServerError("Postgres repo not configured"))?;
     match clerk_authoriser.authorize(&req).await {
-        // We have authed request and can pass the user onto the next body
+        // We have authed request retrieve user from database
         Ok(jwt) => {
+            let input_dto = UserInputDto {
+                auth_id: jwt.sub.as_str(),
+                first_name: jwt.other.get("first_name").and_then(|v| v.as_str()),
+                last_name: jwt.other.get("last_name").and_then(|v| v.as_str()),
+                username: jwt.other.get("username").map(|v| v.as_str()).flatten(),
+            };
+            tracing::info!("\n\n{:?}\n\n", input_dto);
+
             let user: AuthenticatedUser = match repo
-                .select_one(jwt.sub.as_str())
+                .select_one::<AuthenticatedUser, _>(jwt.sub.as_str())
                 .await
                 .map_err(ErrorInternalServerError)?
             {
-                Some(user) => user,
-                None => provision_clerk_user(&repo, jwt)
+                // User found, check the details
+                Some(user) => {
+                    let needs_update = input_dto
+                        .first_name
+                        .is_some_and(|name| name != user.first_name.as_str())
+                        || input_dto
+                            .last_name
+                            .is_some_and(|name| name != user.last_name.as_str())
+                        || input_dto.username != user.username.as_deref();
+
+                    if needs_update {
+                        let updated_user = repo
+                            .update(&input_dto)
+                            .await
+                            .map_err(ErrorInternalServerError)?;
+                        updated_user
+                    } else {
+                        user
+                    }
+                }
+                // User not found in databse, provision
+                None => repo
+                    .insert(&input_dto)
                     .await
-                    .context("failed to provision user")
+                    .context("failed insert new user do database")
                     .map_err(ErrorInternalServerError)?,
             };
             req.extensions_mut().insert(user);
@@ -119,22 +148,4 @@ async fn validate_clerk_auth<B: MessageBody>(
             ClerkError::InternalServerError(msg) => Err(ErrorInternalServerError(msg)),
         },
     }
-}
-
-async fn provision_clerk_user(
-    repo: &PostgresRepo,
-    jwt: ClerkJwt,
-) -> Result<AuthenticatedUser, anyhow::Error> {
-    let first_name = "Unknown".to_string();
-    let last_name = "Uesr".to_string();
-
-    let new_user = UserInputDto {
-        auth_id: jwt.sub,
-        first_name,
-        last_name,
-        username: None,
-    };
-    repo.insert(&new_user)
-        .await
-        .context("failed to insert now use to database")
 }

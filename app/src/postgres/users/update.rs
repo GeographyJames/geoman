@@ -1,24 +1,26 @@
 use domain::{TeamId, UserId, UserInputDto};
 
-use crate::{AuthenticatedUser, repo::traits::Insert};
+use crate::{AuthenticatedUser, repo::traits::Update};
 
-impl<'b> Insert for UserInputDto<'b> {
+impl<'b> Update for UserInputDto<'b> {
     type Id = AuthenticatedUser;
 
-    async fn insert<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>
+    async fn update<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>
     where
         &'a E: sqlx::PgExecutor<'a>,
     {
         sqlx::query_as!(
             AuthenticatedUser,
-            r#"INSERT INTO app.users (
-            clerk_id, first_name, last_name, username, team_id
-            ) VALUES ($1, $2, $3, $4, -1)
+            r#"UPDATE app.users SET
+          first_name = $1, last_name = $2, username = $3
+          WHERE clerk_id = $4  
              RETURNING id AS "id: UserId", team_id AS "team_id: TeamId", admin, first_name, last_name, username"#,
-            self.auth_id,
+
             self.first_name.unwrap_or("Unknown"),
             self.last_name.unwrap_or("User"),
-            self.username
+            self.username,
+            self.auth_id
+
         )
         .fetch_one(executor)
         .await
