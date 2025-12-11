@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT id as \"id: KeyId\",\n               name,\n               created,\n               last_used,\n               expiry,\n               last_used_ip as \"last_used_ip:IpAddr\",\n               last_used_user_agent\n          FROM app.api_keys\n         WHERE revoked IS NULL\n           AND user_id = $1\n         ORDER BY created DESC\n           ",
+  "query": "\n        SELECT k.id as \"id: KeyId\",\n               k.name,\n               k.created,\n               k.last_used,\n               k.expiry,\n               k.last_used_ip as \"last_used_ip:IpAddr\",\n               k.last_used_user_agent\n          FROM app.api_keys k\n          JOIN app.users u ON k.user_id = u.id\n         WHERE k.revoked IS NULL\n           AND u.id = $1\n         ORDER BY k.created DESC\n           ",
   "describe": {
     "columns": [
       {
@@ -54,5 +54,5 @@
       true
     ]
   },
-  "hash": "b260b4b409ae32bfd8a610593ace9bce79acc367b3a695d9b5b1bdf32c413f57"
+  "hash": "73b645934df40a2053a4ae747782e4b08ae65db89e3f6f9444342cc7f5da49d0"
 }

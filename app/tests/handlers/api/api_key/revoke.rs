@@ -12,20 +12,26 @@ async fn revoke_api_key_works() {
     let app = AppBuilder::new().build().await;
     let auth = Auth::mock_session_token();
     let key = app.generate_api_key(Some(&auth)).await;
-    let keys: Vec<ApiKey> =
-        handle_json_response(app.api_keys_service.get_all(&app.api_client, Some(&auth)).await)
-            .await
-            .unwrap();
+    let keys: Vec<ApiKey> = handle_json_response(
+        app.api_keys_service
+            .get_all(&app.api_client, Some(&auth))
+            .await,
+    )
+    .await
+    .unwrap();
     assert!(keys.iter().any(|k| k.id == key.id));
     let response = app
         .api_keys_service
         .revoke(&app.api_client, key.id, Some(&auth))
         .await;
     assert_status(&response, 204);
-    let keys: Vec<ApiKey> =
-        handle_json_response(app.api_keys_service.get_all(&app.api_client, Some(&auth)).await)
-            .await
-            .unwrap();
+    let keys: Vec<ApiKey> = handle_json_response(
+        app.api_keys_service
+            .get_all(&app.api_client, Some(&auth))
+            .await,
+    )
+    .await
+    .unwrap();
     assert!(!keys.iter().any(|k| k.id == key.id));
 }
 

@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO app.projects (\n                name,\n                visibility,\n                country_code,\n                crs_srid,\n                owner,\n                added_by,\n                last_updated_by,\n                slug,\n                team_id\n            )\n            VALUES( $1, $2, $3, $4, $5, $5, $5, $6, (SELECT team_id from app.users WHERE id =$5 ))\n\n            RETURNING id AS \"id: ProjectId\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: ProjectId",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        {
+          "Custom": {
+            "name": "app.visibility",
+            "kind": {
+              "Enum": [
+                "PRIVATE",
+                "TEAM",
+                "PUBLIC"
+              ]
+            }
+          }
+        },
+        "Bpchar",
+        "Int4",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a492405b0dcbebb3b88c52cf9a16e3e6283b5f7eed6dbf349ee8c7a7414b6e32"
+}

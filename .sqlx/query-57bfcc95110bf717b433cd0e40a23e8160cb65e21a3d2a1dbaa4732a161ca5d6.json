@@ -1,0 +1,55 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE app.users SET\n          first_name = $1, last_name = $2, username = $3\n          WHERE clerk_id = $4  \n             RETURNING id AS \"id: UserId\", team_id AS \"team_id: TeamId\", admin, first_name, last_name, username",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: UserId",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "team_id: TeamId",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "admin",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "first_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "last_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "username",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "57bfcc95110bf717b433cd0e40a23e8160cb65e21a3d2a1dbaa4732a161ca5d6"
+}

@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO app.api_keys (user_id, name, key_hash)\n            VALUES ($1 , $2, $3)\n\n            RETURNING id as \"id: KeyId\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: KeyId",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c1e1d0e07557928e95ac1d14dd96d5274e2657fb3b4e2ac452b918613b6e6e35"
+}

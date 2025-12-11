@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE app.api_keys k\n                    SET last_used = NOW(),\n                        last_used_ip = $1,\n                        last_used_user_agent = $2\n                   FROM app.users u\n                  WHERE k.key_hash = $3\n                    AND k.revoked IS NULL\n                    AND k.expiry > NOW()\n                    AND u.id = k.user_id\n              RETURNING u.id AS \"id: UserId\",\n                        u.team_id AS \"team_id: TeamId\",\n                        u.admin,\n                        u.first_name,\n                        u.last_name,\n                        u.username\n                        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: UserId",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "team_id: TeamId",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "admin",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "first_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "last_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "username",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Inet",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "8ac0edba8fda83210d09248739fcb4ee674698cca5b54d1d37a32b88fba9748e"
+}

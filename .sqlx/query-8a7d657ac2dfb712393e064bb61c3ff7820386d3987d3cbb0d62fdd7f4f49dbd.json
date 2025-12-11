@@ -1,0 +1,55 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO app.users (\n            clerk_id, first_name, last_name, username, team_id\n            ) VALUES ($1, $2, $3, $4, -1)\n             RETURNING id AS \"id: UserId\", team_id AS \"team_id: TeamId\", admin, first_name, last_name, username",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: UserId",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "team_id: TeamId",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "admin",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "first_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "last_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "username",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "8a7d657ac2dfb712393e064bb61c3ff7820386d3987d3cbb0d62fdd7f4f49dbd"
+}
