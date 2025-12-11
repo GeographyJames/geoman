@@ -3,7 +3,7 @@ use std::net::IpAddr;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::{KeyId, UserId};
+use crate::KeyId;
 
 #[derive(Serialize, Deserialize)]
 pub struct ApiKey {

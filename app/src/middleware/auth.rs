@@ -96,56 +96,56 @@ async fn validate_clerk_auth<B: MessageBody>(
     let repo = req
         .app_data::<Data<PostgresRepo>>()
         .ok_or_else(|| ErrorInternalServerError("Postgres repo not configured"))?;
-    match clerk_authoriser.authorize(&req).await {
-        // We have authed request retrieve user from database
-        Ok(jwt) => {
-            let input_dto = UserInputDto {
-                auth_id: jwt.sub.as_str(),
-                first_name: jwt.other.get("first_name").and_then(|v| v.as_str()),
-                last_name: jwt.other.get("last_name").and_then(|v| v.as_str()),
-                username: jwt.other.get("username").map(|v| v.as_str()).flatten(),
-            };
-            tracing::info!("\n\n{:?}\n\n", input_dto);
 
-            let user: AuthenticatedUser = match repo
-                .select_one::<AuthenticatedUser, _>(jwt.sub.as_str())
-                .await
-                .map_err(ErrorInternalServerError)?
-            {
-                // User found, check the details
-                Some(user) => {
-                    let needs_update = input_dto
-                        .first_name
-                        .is_some_and(|name| name != user.first_name.as_str())
-                        || input_dto
-                            .last_name
-                            .is_some_and(|name| name != user.last_name.as_str())
-                        || input_dto.username != user.username.as_deref();
-
-                    if needs_update {
-                        let updated_user = repo
-                            .update(&input_dto)
-                            .await
-                            .map_err(ErrorInternalServerError)?;
-                        updated_user
-                    } else {
-                        user
-                    }
-                }
-                // User not found in databse, provision
-                None => repo
-                    .insert(&input_dto)
-                    .await
-                    .context("failed insert new user do database")
-                    .map_err(ErrorInternalServerError)?,
-            };
-            req.extensions_mut().insert(user);
-            next.call(req).await
-        }
-        // Output any other errors thrown from the Clerk authorizer
+    let jwt = match clerk_authoriser.authorize(&req).await {
         Err(error) => match error {
-            ClerkError::Unauthorized(msg) => Err(ErrorUnauthorized(msg)),
-            ClerkError::InternalServerError(msg) => Err(ErrorInternalServerError(msg)),
+            ClerkError::Unauthorized(msg) => return Err(ErrorUnauthorized(msg)),
+            ClerkError::InternalServerError(msg) => return Err(ErrorInternalServerError(msg)),
         },
+        Ok(jwt) => jwt,
+    };
+
+    let input_dto = UserInputDto {
+        auth_id: jwt.sub.as_str(),
+        first_name: jwt.other.get("first_name").and_then(|v| v.as_str()),
+        last_name: jwt.other.get("last_name").and_then(|v| v.as_str()),
+        username: jwt.other.get("username").and_then(|v| v.as_str()),
+    };
+
+    let user: AuthenticatedUser = match repo
+        .select_one::<AuthenticatedUser, _>(jwt.sub.as_str())
+        .await
+        .map_err(ErrorInternalServerError)?
+    {
+        // User found, check the details
+        Some(user) => check_user_details(&input_dto, user, repo).await?,
+        // User not found in databse, provision
+        None => repo
+            .insert(&input_dto)
+            .await
+            .context("failed insert new user do database")
+            .map_err(ErrorInternalServerError)?,
+    };
+    req.extensions_mut().insert(user);
+    next.call(req).await
+}
+
+async fn check_user_details<'a>(
+    input_dto: &UserInputDto<'a>,
+    user: AuthenticatedUser,
+    repo: &PostgresRepo,
+) -> Result<AuthenticatedUser, actix_web::Error> {
+    let needs_update = input_dto
+        .first_name
+        .is_some_and(|name| name != user.first_name.as_str())
+        || input_dto
+            .last_name
+            .is_some_and(|name| name != user.last_name.as_str())
+        || input_dto.username != user.username.as_deref();
+    if !needs_update {
+        return Ok(user);
     }
+    repo.update(input_dto)
+        .await
+        .map_err(ErrorInternalServerError)
 }

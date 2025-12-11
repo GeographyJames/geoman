@@ -6,5 +6,3 @@ mod password;
 pub use password::Password;
 mod user;
 pub use user::AuthenticatedUser;
-mod user_client;
-pub use user_client::UserClient;

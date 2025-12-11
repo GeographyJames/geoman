@@ -7,13 +7,9 @@ use actix_web::{
     web::{Data, scope},
 };
 
-use clerk_rs::{ClerkConfiguration, clerk::Clerk};
 use serde_json::json;
 
-use crate::{
-    MockUserCredentials, middleware::mock_auth_middlewear, postgres::PostgresRepo,
-    types::UserClient,
-};
+use crate::{MockUserCredentials, middleware::mock_auth_middlewear, postgres::PostgresRepo};
 
 pub async fn mock_app(
     service: impl HttpServiceFactory + 'static,
@@ -21,11 +17,9 @@ pub async fn mock_app(
     user: MockUserCredentials,
 ) -> ServiceResponse<impl MessageBody> {
     let repo = PostgresRepo::mock();
-    let clerk_config = ClerkConfiguration::new(None, None, None, None);
     let app = test::init_service(
         App::new()
             .app_data(Data::new(repo))
-            .app_data(Data::new(UserClient(Clerk::new(clerk_config))))
             .wrap(middleware::from_fn(mock_auth_middlewear))
             .service(scope("/").service(service)),
     )
