@@ -20,7 +20,7 @@ geojson = "0.24"
 geo-types = "0.7"
 utoipa = { version = "4.2.3", features = [
     "actix_extras",
-] } # Cannot upgrade to 5 due to OpenAPI 3.1 breaking OGC test suit 
+] } # Cannot upgrade to 5 due to OpenAPI 3.1 breaking OGC test suit and incompatible with current ogcapi_types craet
 chrono = { version = "0.4", features = ["serde"] }
 serde_json = "1.0"
 tracing = "0.1"

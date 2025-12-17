@@ -43,6 +43,9 @@ hex = "0.4.3"
 isocountry = { workspace = true }
 actix-http = "3.11.2"
 uuid = { workspace = true }
+utoipa-swagger-ui = { version = "7", features = [
+    "actix-web",
+] } # Version 7 is latest version compatible with utoipa version 4.
 [dev-dependencies]
 
 app = { path = ".", features = ["test-utils"] }

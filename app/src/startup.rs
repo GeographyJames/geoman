@@ -16,6 +16,7 @@ use secrecy::ExposeSecret;
 use sqlx::PgPool;
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
+use utoipa_swagger_ui::SwaggerUi;
 
 pub struct Application {
     pub server: Server,
@@ -60,7 +61,10 @@ pub async fn run(
         None,
     );
     let clerk = Clerk::new(clerk_config);
-    let app_state = web::Data::new(AppState::new());
+
+    let app_state = AppState::new();
+    let openapi = app_state.openapi.clone();
+    let app_state = web::Data::new(app_state);
     let repo = web::Data::new(PostgresRepo::new(db_pool));
     let clerk_authoriser = web::Data::new(ClerkAuthorizer::new(
         MemoryCacheJwksProvider::new(clerk.clone()),
@@ -89,6 +93,9 @@ pub async fn run(
             // .configure(|cfg| {
             //     docs_routes(cfg, clerk.clone(), config.app_settings.environment.clone())
             // })
+            .service(
+                SwaggerUi::new("/swagger-ui/{_:.*}").url("/ogcapi/openapi.json", openapi.clone()),
+            )
             .service(
                 actix_files::Files::new("/book", "geoman-book/book")
                     .index_file("index.html")
