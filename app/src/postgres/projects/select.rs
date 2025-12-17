@@ -19,7 +19,6 @@ pub struct ProjectRow {
     id: ProjectId,
     #[sqlx(flatten)]
     properties: Properties,
-    centroid_in_storage_crs: Option<Json<geojson::Geometry>>,
     geom: Option<Json<geojson::Geometry>>,
 }
 
@@ -30,14 +29,12 @@ impl TryInto<Project> for ProjectRow {
             id,
             properties,
             geom,
-            centroid_in_storage_crs,
         } = self;
 
         Ok(Project {
             id,
             properties,
             centroid: geom.map(|g| g.0),
-            centroid_in_storage_crs: centroid_in_storage_crs.map(|g| g.0),
         })
     }
 }
@@ -72,8 +69,7 @@ fn project_query() -> String {
             {user_row_last_updated_by},
             COALESCE(subdivisions.subdivisions, ARRAY[]::app.subdivision[]) AS subdivisions,
             COALESCE(technologies.technologies, ARRAY[]::app.technology[]) AS technologies,
-            ST_AsGeoJson(ST_Transform(pb.centroid, $1))::json AS geom,
-            ST_AsGeoJson(pb.centroid)::json AS centroid_in_storage_crs
+            ST_AsGeoJson(ST_Transform(pb.centroid, $1))::json AS geom
         FROM app.projects p
         {user_join_owner}
         {user_join_added_by}
