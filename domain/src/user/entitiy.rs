@@ -13,7 +13,7 @@ pub struct User {
     pub team: Team,
 }
 
-#[derive(Serialize, Deserialize, sqlx::Type)]
+#[derive(Serialize, Deserialize, sqlx::Type, Debug)]
 #[sqlx(type_name = "app.user")]
 pub struct AddedBy {
     #[serde(rename = "added_by_id")]
@@ -28,7 +28,7 @@ pub struct AddedBy {
     team: Team,
 }
 
-#[derive(Serialize, Deserialize, sqlx::Type)]
+#[derive(Serialize, Deserialize, sqlx::Type, Debug)]
 #[sqlx(type_name = "app.user")]
 pub struct Owner {
     #[serde(rename = "owner_id")]
@@ -43,7 +43,7 @@ pub struct Owner {
     team: Team,
 }
 
-#[derive(Serialize, Deserialize, sqlx::Type)]
+#[derive(Serialize, Deserialize, sqlx::Type, Debug)]
 #[sqlx(type_name = "app.user")]
 pub struct LastUpdatedBy {
     #[serde(rename = "last_updated_by_id")]

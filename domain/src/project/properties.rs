@@ -1,12 +1,12 @@
 use crate::{
-    AddedBy, LastUpdatedBy, Owner, Subdivision, Technology,
+    AddedBy, LastUpdatedBy, Owner,
     enums::{Status, Visibility},
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-#[derive(Serialize, Deserialize, FromRow)]
+#[derive(Serialize, Deserialize, FromRow, Debug)]
 pub struct Properties {
     pub name: String,
     pub added: DateTime<Utc>,
@@ -14,9 +14,9 @@ pub struct Properties {
     pub owner: Owner,
     #[serde(flatten)]
     pub added_by: AddedBy,
-    pub technologies: Vec<Technology>,
+    pub technologies: Vec<String>,
     pub country_code: String, // ISO 3166-1-ALPHA-2
-    pub subdivisions: Vec<Subdivision>,
+    pub subdivisions: Vec<String>,
     pub status: Status,
     pub visibility: Visibility,
     pub crs_srid: Option<i32>,

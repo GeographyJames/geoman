@@ -14,6 +14,7 @@ CREATE TABLE app.projects (
     last_updated_by integer NOT NULL REFERENCES app.users(id),
     last_updated timestamptz NOT NULL DEFAULT now(),
     crs_srid integer REFERENCES public.spatial_ref_sys(srid),
+    subdivisions text[],
     CONSTRAINT projects_name_key UNIQUE (name),
     CONSTRAINT projects_slug_key UNIQUE (slug),
     CONSTRAINT projects_codename_search_area_id_key UNIQUE (search_site_name, search_area_id),

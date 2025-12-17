@@ -2,7 +2,7 @@ use crate::{IntoOGCFeature, ProjectId, project::Properties};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, from_value, json};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Project {
     pub id: ProjectId,
     pub properties: Properties,

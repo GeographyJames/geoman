@@ -21,8 +21,6 @@ mod api_key;
 pub use api_key::{ApiKey, ApiKeyInputDTO, KeyHash};
 mod id;
 pub use id::*;
-mod technology;
-pub use technology::Technology;
 mod subdivision;
 pub use subdivision::Subdivision;
 mod user;

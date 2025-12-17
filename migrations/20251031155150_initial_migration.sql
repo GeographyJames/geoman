@@ -25,11 +25,6 @@ CREATE TYPE app.user AS (
     team app.team
     );
 
-CREATE TYPE app.technology AS (
-    id INTEGER,
-    name TEXT
-);
-
 CREATE TYPE app.subdivision AS (
     id INTEGER,
     country_code TEXT,
