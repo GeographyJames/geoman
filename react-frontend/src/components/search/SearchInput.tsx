@@ -1,0 +1,77 @@
+import Project from "@/domain/project/entity";
+import { IoSearch } from "react-icons/io5";
+
+interface Props {
+  searchTextState: [string, React.Dispatch<React.SetStateAction<string>>];
+  searchResultsOpenState: [
+    boolean,
+    React.Dispatch<React.SetStateAction<boolean>>,
+  ];
+  highlightedSearchIndexState: [
+    number,
+    React.Dispatch<React.SetStateAction<number>>,
+  ];
+  filteredItems: Project[];
+  handleSelect: (item: Project) => void;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  placeholderText: string;
+}
+export default function SearchInput({
+  searchResultsOpenState: [searchOpen, setSearchOpen],
+  handleSelect,
+  placeholderText,
+  searchTextState: [searchText, setSearchText],
+  highlightedSearchIndexState: [highlightedIndex, setHighlightedIndex],
+  filteredItems,
+  inputRef,
+}: Props) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!searchOpen) return;
+
+    // Arrow down
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev < filteredItems.length - 1 ? prev + 1 : 0
+      );
+    }
+    // Arrow up
+    else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev > 0 ? prev - 1 : filteredItems.length - 1
+      );
+    }
+    // Enter
+    else if (
+      e.key === "Enter" &&
+      highlightedIndex >= 0 &&
+      filteredItems.length > 0
+    ) {
+      e.preventDefault();
+      handleSelect(filteredItems[highlightedIndex]);
+    }
+    // Escape
+    else if (e.key === "Escape") {
+      e.preventDefault();
+      setSearchOpen(false);
+    }
+  };
+  return (
+    <label className="min-w-0 input border-none focus-within:outline-none focus-within:border-none flex-grow focus-within:shadow-none">
+      <input
+        ref={inputRef}
+        onChange={(e) => setSearchText(e.target.value)}
+        value={searchText}
+        onFocus={() => setSearchOpen(true)}
+        type="text"
+        id="search"
+        placeholder={placeholderText}
+        name="search"
+        onKeyDown={handleKeyDown}
+        className=""
+      />
+      <IoSearch />
+    </label>
+  );
+}

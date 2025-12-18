@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@clerk/clerk-react";
-import { User } from "./useCurrentUser";
-
+import type { User } from "./useCurrentUser";
 export function useUsers() {
   const { getToken } = useAuth();
 
