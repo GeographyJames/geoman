@@ -48,7 +48,7 @@ function ProjectIcons({ project }: { project: Project }) {
       <div>
         {project.hasWind && project.primaryLayoutTurbineCount && (
           <div
-            className="tooltip"
+            className="sm:tooltip"
             data-tip={`primary layout turbine count: ${project.primaryLayoutTurbineCount}`}
           >
             <GiWindTurbine size={22} />

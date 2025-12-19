@@ -5,6 +5,7 @@ import SearchInput from "./SearchInput";
 import Project from "@/domain/project/entity";
 import { useNavigate } from "@tanstack/react-router";
 import { useProjects } from "@/hooks/api/useProjects";
+import { IoMenu } from "react-icons/io5";
 
 export function SearchBar() {
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
@@ -14,6 +15,7 @@ export function SearchBar() {
   const highlightedSearchIndexState = useState<number>(0);
   const navigate = useNavigate();
   const { data: projects, isError, isPending } = useProjects();
+  const [selectedTab, setSelectedTab] = useState<number>(0);
 
   const handleSelect = (project: Project) => {
     setSearchText("");
@@ -23,12 +25,18 @@ export function SearchBar() {
 
   return (
     <div
-      className={`w-full sm:w-96 bg-white ${searchOpen ? "rounded-xl shadow-lg" : "rounded-full"}`}
+      className={`w-full min-w-96 sm:w-96 bg-white ${searchOpen ? "rounded-xl shadow-lg" : "rounded-full"}`}
     >
       <div
-        id="search-bar"
         className={`box-border flex bg-white px-4 items-center relative z-10 rounded-full ${!searchOpen && "shadow-lg"}`}
       >
+        <button
+          type="button"
+          onClick={() => setSearchOpen(!searchOpen)}
+          className="p-2 cursor-pointer"
+        >
+          <IoMenu size={24} />
+        </button>
         <button
           type="button"
           onClick={() => setSearchOpen(!searchOpen)}
@@ -56,17 +64,40 @@ export function SearchBar() {
           }
         />
       </div>
-
-      {projects && (
-        <SearchResultsBox
-          projects={projects}
-          highlightedSearchIndexState={highlightedSearchIndexState}
-          searchOpen={searchOpen}
-          searchText={searchText}
-          filterSate={[filteredItems, setFilteredItems]}
-          handleSelect={handleSelect}
-          inputRef={inputRef}
-        />
+      {searchOpen && (
+        <div className="tabs tabs-border justify-between" id="tab">
+          <input
+            type="radio"
+            name="my_tabs_2"
+            className="tab"
+            aria-label="Projects"
+            checked={selectedTab === 0}
+            onClick={() => setSelectedTab(0)}
+          />
+          <div className="tab-content rounded-none border-b-0 border-base-200 p-0">
+            {projects && (
+              <SearchResultsBox
+                projects={projects}
+                highlightedSearchIndexState={highlightedSearchIndexState}
+                searchText={searchText}
+                filterSate={[filteredItems, setFilteredItems]}
+                handleSelect={handleSelect}
+                inputRef={inputRef}
+              />
+            )}
+          </div>
+          <input
+            type="radio"
+            name="my_tabs_2"
+            className="tab"
+            aria-label="Strategic Search Areas"
+            checked={selectedTab === 1}
+            onClick={() => setSelectedTab(1)}
+          />
+          <div className="tab-content   rounded-none border-b-0 border-base-200 p-0">
+            Tab content 2
+          </div>
+        </div>
       )}
     </div>
   );

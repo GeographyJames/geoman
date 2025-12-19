@@ -6,7 +6,7 @@ import SidebarList from "../overviewList/SidebarList";
 interface Props {
   projects: Project[];
   searchText: string;
-  searchOpen: boolean;
+
   filterSate: [Project[], React.Dispatch<React.SetStateAction<Project[]>>];
   highlightedSearchIndexState: [
     number,
@@ -18,7 +18,6 @@ interface Props {
 
 export default function SearchResultsBox({
   projects,
-  searchOpen,
 
   searchText,
   filterSate: [filteredItems, setFilteredItems],
@@ -39,8 +38,5 @@ export default function SearchResultsBox({
     }
   }, [searchText]);
 
-  if (searchOpen) {
-    return <SidebarList items={filteredItems} />;
-  }
-  return null;
+  return <SidebarList items={filteredItems} />;
 }

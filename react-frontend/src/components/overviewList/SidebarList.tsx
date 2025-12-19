@@ -1,8 +1,10 @@
-import SidebarListBody from "./SidebarListBody";
 import { useState } from "react";
 
 import Project from "@/domain/project/entity";
 import SortBy, { SORT_OPTIONS } from "./SortBy";
+import SidebarListItem from "./SidebarListItem";
+import { ShowArchivedProjectsToggle } from "../ShowArchivedToggle";
+import { FaPlus } from "react-icons/fa6";
 
 interface Props {
   items: Project[];
@@ -12,23 +14,43 @@ interface Props {
 
 export default function SidebarList({ items }: Props) {
   const [sortBy, setSortBy] = useState(SORT_OPTIONS.NAME_ASCENDING);
+  const sortedData = items.slice().sort((a, b) => {
+    switch (sortBy) {
+      case "name_ascending":
+        return a.name.localeCompare(b.name);
+      case "created":
+        return b.added.getTime() - a.added.getTime();
+      case "id_ascending":
+        return a.id - b.id;
+      case "id_descending":
+        return b.id - a.id;
+      default:
+        return 0;
+    }
+  });
 
   return (
-    <div className=" py-2">
-      <div className=" flex items-center">
-        {/* {newDataType && (
-          <div className="pl-2">
-            <AddDataButton newDataType={newDataType} />
-          </div>
-        )} */}
-        {/* {showArchivedToggle && (
-          <div className="ml-auto">{showArchivedToggle()}</div>
-        )} */}
+    <div>
+      <div className="px-4 pt-2 flex flex-col gap-2">
+        <div className="flex justify-between">
+          <SortBy sortBy={sortBy} setSortBy={setSortBy} />
+          <button className="btn btn-primary btn-sm">
+            <FaPlus />
+            Create project
+          </button>
+        </div>
+
+        <div className="flex justify-between">
+          <ShowArchivedProjectsToggle />
+
+          <span className="flex ml-auto text-xs text-gray-500">{`showing ${sortedData.length}`}</span>
+        </div>
       </div>
-      <div className="px-4 flex justify-between items-center">
-        <SortBy sortBy={sortBy} setSortBy={setSortBy} />
-      </div>
-      <SidebarListBody sortBy={sortBy} items={items} />
+      <ul className="menu  w-full">
+        {sortedData.map((item) => (
+          <SidebarListItem key={item.id} item={item} />
+        ))}
+      </ul>
     </div>
   );
 }
