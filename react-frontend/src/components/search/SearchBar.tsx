@@ -4,7 +4,7 @@ import SearchResultsBox from "./SearchResultsBox";
 import SearchInput from "./SearchInput";
 import Project from "@/domain/project/entity";
 import { useNavigate } from "@tanstack/react-router";
-import { useProjects } from "@/hooks/api/useProjects";
+import { useProjects } from "@/hooks/api/project/useProjects";
 import { IoMenu } from "react-icons/io5";
 import { SignedIn, UserButton } from "@clerk/clerk-react";
 
@@ -36,7 +36,7 @@ export function SearchBar({
   return (
     <div
       id="search-bar"
-      className={`w-[28rem] max-w-[calc(100vw-2rem)] overflow-hidden bg-white ${searchOpen ? "rounded-box shadow-lg" : "rounded-full"}`}
+      className={`w-[28rem] max-w-[calc(100vw-2rem)] overflow-hidden bg-white pointer-events-auto ${searchOpen ? "rounded-box shadow-lg" : "rounded-full"}`}
     >
       <div
         className={`box-border flex bg-white px-4 items-center relative z-10 rounded-full ${!searchOpen && "shadow-lg"}`}

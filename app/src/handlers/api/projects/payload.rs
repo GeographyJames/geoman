@@ -10,7 +10,7 @@ use crate::handlers::ProjectValidationError;
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ProjectReqPayload {
     pub name: String,
-    pub visibility: Visibility,
+    pub visibility: Option<Visibility>,
     pub country_code: String,
     pub crs_srid: Option<i32>,
 }
@@ -40,7 +40,7 @@ impl TryInto<ProjectInputDto> for ProjectReqPayload {
         Ok(ProjectInputDto {
             slug,
             name,
-            visibility,
+            visibility: visibility.unwrap_or(Visibility::Private),
             country_code: isocountry::CountryCode::for_alpha2(&country_code)?,
             crs_srid,
         })

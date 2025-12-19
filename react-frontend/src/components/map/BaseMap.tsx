@@ -23,8 +23,8 @@ export default function BaseMap({ containerRef, onMapClick }: BaseMapProps) {
     <div
       ref={divRef}
       className="w-full h-full"
-      style={{ backgroundColor: '#f0f0f0' }}
-      onClick={onMapClick}
+      style={{ backgroundColor: "#f0f0f0" }}
+      onMouseDown={onMapClick}
     />
   );
 }

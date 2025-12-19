@@ -1,5 +1,5 @@
 import ProjectsMap from "@/features/projects/components/ProjectsMap";
-import { useProjects } from "@/hooks/api/useProjects";
+import { useProjects } from "@/hooks/api/project/useProjects";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 

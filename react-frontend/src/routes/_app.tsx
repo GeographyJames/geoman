@@ -43,15 +43,16 @@ const AppLayout = () => {
               containerRef={containerRef}
               onMapClick={() => setSearchOpen(false)}
             />
-            <div className="flex flex-col gap-2 absolute top-0 m-4">
-              <div className="flex flex-wrap  gap-2">
-                <SearchBar
-                  setSidebarOpen={setSidebarOpen}
-                  searchOpen={searchOpen}
-                  setSearchOpen={setSearchOpen}
-                />
+            <div className="flex flex-col gap-2 absolute top-0 m-4 max-h-screen pointer-events-none ">
+              <SearchBar
+                setSidebarOpen={setSidebarOpen}
+                searchOpen={searchOpen}
+                setSearchOpen={setSearchOpen}
+              />
+
+              <div className="pointer-events-auto">
+                <Outlet />
               </div>
-              <Outlet />
             </div>
           </div>
           <div className="drawer-side">
