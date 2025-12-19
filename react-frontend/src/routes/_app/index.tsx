@@ -3,14 +3,14 @@ import { useProjects } from "@/hooks/api/useProjects";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
-export const Route = createFileRoute("/_app/")({
-  component: ProjectsRoute,
-});
-
-function ProjectsRoute() {
+const ProjectsRoute = () => {
   const [showArchived, setShowArchived] = useState<boolean>(false);
   const { data } = useProjects();
   if (data) {
     return <ProjectsMap showArchived={showArchived} />;
   }
-}
+};
+
+export const Route = createFileRoute("/_app/")({
+  component: ProjectsRoute,
+});

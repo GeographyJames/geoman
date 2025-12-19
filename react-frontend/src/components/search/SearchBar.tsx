@@ -36,7 +36,7 @@ export function SearchBar({
   return (
     <div
       id="search-bar"
-      className={`w-[28rem] max-w-[calc(100vw-2rem)] bg-white ${searchOpen ? "rounded-xl shadow-lg" : "rounded-full"}`}
+      className={`w-[28rem] max-w-[calc(100vw-2rem)] overflow-hidden bg-white ${searchOpen ? "rounded-box shadow-lg" : "rounded-full"}`}
     >
       <div
         className={`box-border flex bg-white px-4 items-center relative z-10 rounded-full ${!searchOpen && "shadow-lg"}`}
@@ -98,7 +98,7 @@ export function SearchBar({
             checked={selectedTab === 0}
             onChange={() => setSelectedTab(0)}
           />
-          <div className="tab-content rounded-none border-b-0 rounded-b-xl border-base-200 p-0">
+          <div className="tab-content rounded-none border-b-0 border-base-200 p-0">
             {projects && (
               <SearchResultsBox
                 setSearchOpen={setSearchOpen}
@@ -119,7 +119,7 @@ export function SearchBar({
             checked={selectedTab === 1}
             onChange={() => setSelectedTab(1)}
           />
-          <div className="tab-content   rounded-none border-b-0 rounded-b-xl border-base-200 p-0">
+          <div className="tab-content   rounded-none border-b-0 border-base-200 p-0">
             Tab content 2
           </div>
         </div>

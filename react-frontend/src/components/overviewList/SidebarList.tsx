@@ -34,7 +34,15 @@ export default function SidebarList({ items, setSearchOpen }: Props) {
     <div>
       <div className="px-4 pt-2 flex flex-col gap-2">
         <div className="flex justify-between flex-wrap gap-2">
-          <button className="btn btn-primary btn-sm">
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => {
+              const el = document.getElementById("create_project");
+              if (el instanceof HTMLDialogElement) {
+                el.showModal();
+              }
+            }}
+          >
             <FaPlus />
             Create project
           </button>

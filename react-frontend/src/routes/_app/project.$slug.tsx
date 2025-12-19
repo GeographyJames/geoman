@@ -5,13 +5,8 @@ import TileLayer from "ol/layer/Tile";
 import { OSM } from "ol/source";
 import { useEffect } from "react";
 import { defaults as defaultControls } from "ol/control";
-import { IoClose } from "react-icons/io5";
 
-export const Route = createFileRoute("/_app/project/$slug")({
-  component: ProjectRoute,
-});
-
-function ProjectRoute() {
+const ProjectRoute = () => {
   const { slug } = Route.useParams();
   const { containerRef, mapRef } = useMapContext();
   const navigate = useNavigate();
@@ -44,15 +39,19 @@ function ProjectRoute() {
   }, [containerRef, mapRef]);
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-lg w-[600px] relative">
+    <div className="bg-white p-4 rounded-box shadow-lg w-[600px] relative">
       <button
         onClick={() => navigate({ to: "/" })}
         className="absolute top-2 right-2 btn btn-sm btn-ghost btn-circle"
       >
-        <IoClose size={24} />
+        ✕
       </button>
       <h1 className="text-xl font-bold">Project: {slug}</h1>
       <p>Project details will go here</p>
     </div>
   );
-}
+};
+
+export const Route = createFileRoute("/_app/project/$slug")({
+  component: ProjectRoute,
+});
