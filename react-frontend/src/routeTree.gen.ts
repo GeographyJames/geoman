@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppProjectSlugRouteImport } from './routes/_app/project.$slug'
 
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
@@ -39,18 +40,25 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProjectSlugRoute = AppProjectSlugRouteImport.update({
+  id: '/project/$slug',
+  path: '/project/$slug',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/docs': typeof DocsRoute
   '/': typeof AppIndexRoute
+  '/project/$slug': typeof AppProjectSlugRoute
 }
 export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/docs': typeof DocsRoute
   '/': typeof AppIndexRoute
+  '/project/$slug': typeof AppProjectSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,13 +67,21 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/docs': typeof DocsRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/project/$slug': typeof AppProjectSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/about' | '/admin' | '/docs' | '/'
+  fullPaths: '/about' | '/admin' | '/docs' | '/' | '/project/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/about' | '/admin' | '/docs' | '/'
-  id: '__root__' | '/_app' | '/about' | '/admin' | '/docs' | '/_app/'
+  to: '/about' | '/admin' | '/docs' | '/' | '/project/$slug'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/about'
+    | '/admin'
+    | '/docs'
+    | '/_app/'
+    | '/_app/project/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -112,15 +128,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/project/$slug': {
+      id: '/_app/project/$slug'
+      path: '/project/$slug'
+      fullPath: '/project/$slug'
+      preLoaderRoute: typeof AppProjectSlugRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
+  AppProjectSlugRoute: typeof AppProjectSlugRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
+  AppProjectSlugRoute: AppProjectSlugRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

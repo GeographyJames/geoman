@@ -35,7 +35,8 @@ export function SearchBar({
 
   return (
     <div
-      className={`w-full min-w-96 sm:w-[28rem] bg-white ${searchOpen ? "rounded-xl shadow-lg" : "rounded-full"}`}
+      id="search-bar"
+      className={`w-[28rem] max-w-[calc(100vw-2rem)] bg-white ${searchOpen ? "rounded-xl shadow-lg" : "rounded-full"}`}
     >
       <div
         className={`box-border flex bg-white px-4 items-center relative z-10 rounded-full ${!searchOpen && "shadow-lg"}`}
@@ -43,14 +44,14 @@ export function SearchBar({
         <button
           type="button"
           onClick={() => setSidebarOpen((prev) => !prev)}
-          className="p-2 cursor-pointer"
+          className="btn btn-ghost btn-circle btn-sm"
         >
           <IoMenu size={24} />
         </button>
         <button
           type="button"
           onClick={() => setSearchOpen(!searchOpen)}
-          className="p-2 cursor-pointer"
+          className="btn btn-ghost btn-circle btn-sm"
         >
           <MdChevronRight
             size={24}
@@ -74,13 +75,18 @@ export function SearchBar({
                 : "search projects"
           }
         />
-        {__RUN_ENVIRONMENT__ === "demo" && (
-          <div className="badge badge-warning">Demo</div>
+        {__RUN_ENVIRONMENT__ === "demo" ? (
+          <div
+            className="tooltip tooltip-left"
+            data-tip="User authentication disabled in demo mode"
+          >
+            <div className="badge badge-warning">Demo</div>
+          </div>
+        ) : (
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
         )}
-
-        <SignedIn>
-          <UserButton />
-        </SignedIn>
       </div>
       {searchOpen && (
         <div className="tabs tabs-border justify-between" id="tab">
@@ -92,9 +98,10 @@ export function SearchBar({
             checked={selectedTab === 0}
             onChange={() => setSelectedTab(0)}
           />
-          <div className="tab-content rounded-none border-b-0 border-base-200 p-0">
+          <div className="tab-content rounded-none border-b-0 rounded-b-xl border-base-200 p-0">
             {projects && (
               <SearchResultsBox
+                setSearchOpen={setSearchOpen}
                 projects={projects}
                 highlightedSearchIndexState={highlightedSearchIndexState}
                 searchText={searchText}
@@ -112,7 +119,7 @@ export function SearchBar({
             checked={selectedTab === 1}
             onChange={() => setSelectedTab(1)}
           />
-          <div className="tab-content   rounded-none border-b-0 border-base-200 p-0">
+          <div className="tab-content   rounded-none border-b-0 rounded-b-xl border-base-200 p-0">
             Tab content 2
           </div>
         </div>

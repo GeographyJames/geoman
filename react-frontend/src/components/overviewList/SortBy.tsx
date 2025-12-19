@@ -12,7 +12,7 @@ export default function SortBy({ sortBy, setSortBy }: Props) {
       <select
         onChange={(e) => setSortBy(e.target.value)}
         id="sort-by"
-        className="select select-bordered w-40 select-sm max-w-xs"
+        className="select select-bordered w-40 select-sm"
         value={sortBy}
       >
         <option value={SORT_OPTIONS.NAME_ASCENDING}>Name: A to Z</option>

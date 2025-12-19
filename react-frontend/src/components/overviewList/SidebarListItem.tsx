@@ -4,19 +4,28 @@ import { GiWindTurbine } from "react-icons/gi";
 import Project from "@/domain/project/entity";
 
 import { FaLock } from "react-icons/fa";
-import { useOverviewSidebar } from "@/contexts/SidebarContext";
+
 import UserInitials from "../UserInitials";
+import { Link } from "@tanstack/react-router";
 
-export default function SidebarListItem({ item }: { item: Project }) {
-  const { setIsOpen } = useOverviewSidebar();
-
+export default function SidebarListItem({
+  item,
+  setSearchOpen,
+}: {
+  item: Project;
+  setSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   const handleClick = () => {
-    setIsOpen(false);
+    setSearchOpen(false);
   };
 
   return (
     <li key={item.id}>
-      <div onClick={handleClick} className={` flex justify-start`}>
+      <Link
+        to={item.url}
+        onClick={handleClick}
+        className={` flex justify-start`}
+      >
         <div
           className={`flex gap-2 ${
             item.status === "archived" && "text-gray-400"
@@ -36,7 +45,7 @@ export default function SidebarListItem({ item }: { item: Project }) {
               </div> */}
           </>
         </div>
-      </div>
+      </Link>
     </li>
   );
 }
@@ -47,12 +56,12 @@ function ProjectIcons({ project }: { project: Project }) {
       <div>{project.private && <FaLock size={18} />}</div>
       <div>
         {project.hasWind && project.primaryLayoutTurbineCount && (
-          <div
-            className="sm:tooltip"
-            data-tip={`primary layout turbine count: ${project.primaryLayoutTurbineCount}`}
-          >
-            <GiWindTurbine size={22} />
-          </div>
+          // <div
+          //   className="sm:tooltip"
+          //   data-tip={`primary layout turbine count: ${project.primaryLayoutTurbineCount}`}
+          // >
+          <GiWindTurbine size={22} />
+          // </div>
         )}
       </div>
       <div>{project.centroid && <FaLocationDot size={20} />}</div>

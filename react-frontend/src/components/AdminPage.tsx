@@ -16,7 +16,11 @@ export default function AdminPage() {
 
   const queryClient = useQueryClient();
   const { data: apiKeys = [], isLoading, error } = useApiKeys();
-  const { data: currentUser, isLoading: isLoadingUser, error: userError } = useCurrentUser();
+  const {
+    data: currentUser,
+    isLoading: isLoadingUser,
+    error: userError,
+  } = useCurrentUser();
   const { data: users = [] } = useUsers();
   const createApiKeyMutation = useCreateApiKey();
   const revokeApiKeyMutation = useRevokeApiKey();
@@ -43,7 +47,11 @@ export default function AdminPage() {
   };
 
   const handleRevokeKey = async (keyId: number) => {
-    if (!confirm("Are you sure you want to revoke this API key? This action cannot be undone.")) {
+    if (
+      !confirm(
+        "Are you sure you want to revoke this API key? This action cannot be undone."
+      )
+    ) {
       return;
     }
 
@@ -99,9 +107,18 @@ export default function AdminPage() {
           </div>
         </div>
         <div className="flex-none gap-2">
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
+          {__RUN_ENVIRONMENT__ === "demo" ? (
+            <div
+              className="tooltip tooltip-left"
+              data-tip="User authentication disabled in demo mode"
+            >
+              <div className="badge badge-warning">Demo</div>
+            </div>
+          ) : (
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+          )}
         </div>
       </div>
 
@@ -117,15 +134,21 @@ export default function AdminPage() {
             {isLoadingUser ? (
               <div className="flex items-center gap-3 py-2">
                 <span className="loading loading-spinner loading-sm"></span>
-                <p className="text-base-content/70">Loading team information...</p>
+                <p className="text-base-content/70">
+                  Loading team information...
+                </p>
               </div>
             ) : userError ? (
               <div className="alert alert-error">
                 <AlertCircle size={20} />
                 <div>
-                  <h3 className="font-semibold">Failed to load team information</h3>
+                  <h3 className="font-semibold">
+                    Failed to load team information
+                  </h3>
                   <div className="text-sm">
-                    {userError instanceof Error ? userError.message : "An error occurred"}
+                    {userError instanceof Error
+                      ? userError.message
+                      : "An error occurred"}
                   </div>
                 </div>
               </div>
@@ -163,7 +186,9 @@ export default function AdminPage() {
                             <div className="font-medium">
                               {member.first_name} {member.last_name}
                               {member.id === currentUser.id && (
-                                <span className="ml-2 text-xs text-primary">(You)</span>
+                                <span className="ml-2 text-xs text-primary">
+                                  (You)
+                                </span>
                               )}
                             </div>
                           </div>
@@ -179,7 +204,8 @@ export default function AdminPage() {
                 <div>
                   <h3 className="font-semibold">No team assigned</h3>
                   <div className="text-sm">
-                    You are not currently assigned to a team. Contact your administrator to join a team.
+                    You are not currently assigned to a team. Contact your
+                    administrator to join a team.
                   </div>
                 </div>
               </div>
@@ -216,7 +242,9 @@ export default function AdminPage() {
           ) : error ? (
             <div className="card-body items-center text-center py-12">
               <AlertCircle size={48} className="text-error mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Failed to load API keys</h3>
+              <h3 className="text-lg font-semibold mb-2">
+                Failed to load API keys
+              </h3>
               <p className="text-base-content/70">
                 {error instanceof Error ? error.message : "An error occurred"}
               </p>
@@ -266,14 +294,21 @@ export default function AdminPage() {
                       </td>
                       <td className="text-sm">
                         {key.last_used_ip ? (
-                          <span className="font-mono text-xs">{key.last_used_ip}</span>
+                          <span className="font-mono text-xs">
+                            {key.last_used_ip}
+                          </span>
                         ) : (
                           <span className="opacity-50">-</span>
                         )}
                       </td>
-                      <td className="text-sm max-w-xs truncate" title={key.last_used_user_agent || undefined}>
+                      <td
+                        className="text-sm max-w-xs truncate"
+                        title={key.last_used_user_agent || undefined}
+                      >
                         {key.last_used_user_agent ? (
-                          <span className="text-xs">{key.last_used_user_agent}</span>
+                          <span className="text-xs">
+                            {key.last_used_user_agent}
+                          </span>
                         ) : (
                           <span className="opacity-50">-</span>
                         )}
@@ -281,9 +316,13 @@ export default function AdminPage() {
                       <td className="text-sm">{formatDate(key.expiry)}</td>
                       <td>
                         {isExpired(key.expiry) ? (
-                          <div className="badge badge-warning badge-sm">Expired</div>
+                          <div className="badge badge-warning badge-sm">
+                            Expired
+                          </div>
                         ) : (
-                          <div className="badge badge-success badge-sm">Active</div>
+                          <div className="badge badge-success badge-sm">
+                            Active
+                          </div>
                         )}
                       </td>
                       <td>
@@ -371,7 +410,9 @@ export default function AdminPage() {
                   </button>
                   <button
                     onClick={handleCreateKey}
-                    disabled={!newKeyName.trim() || createApiKeyMutation.isPending}
+                    disabled={
+                      !newKeyName.trim() || createApiKeyMutation.isPending
+                    }
                     className="btn btn-primary"
                   >
                     {createApiKeyMutation.isPending ? (

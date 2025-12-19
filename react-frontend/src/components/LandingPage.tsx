@@ -4,6 +4,7 @@ import {
   SignInButton,
   UserButton,
 } from "@clerk/clerk-react";
+import { Link } from "@tanstack/react-router";
 import { Map, Database, Globe } from "lucide-react";
 
 export default function LandingPage() {
@@ -11,23 +12,34 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-700">
       <header className="p-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2 text-white">
+          <Link to="/" className="flex items-center gap-2 text-white">
             <Map size={32} />
             <h1 className="text-2xl font-bold">GeoMan</h1>
-          </div>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button
-                type="button"
-                className="px-4 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-gray-100 transition"
-              >
-                Sign In
-              </button>
-            </SignInButton>
-          </SignedOut>
+          </Link>
+          {__RUN_ENVIRONMENT__ === "demo" ? (
+            <div
+              className="tooltip tooltip-left"
+              data-tip="User authentication disabled in demo mode"
+            >
+              <div className="badge badge-warning">Demo</div>
+            </div>
+          ) : (
+            <>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-gray-100 transition"
+                  >
+                    Sign In
+                  </button>
+                </SignInButton>
+              </SignedOut>
+            </>
+          )}
         </div>
       </header>
 
@@ -127,14 +139,18 @@ export default function LandingPage() {
               className="block p-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg hover:from-pink-600 hover:to-purple-700 transition"
             >
               <h4 className="font-bold mb-1">API Documentation</h4>
-              <p className="text-sm text-purple-100">Interactive API reference</p>
+              <p className="text-sm text-purple-100">
+                Interactive API reference
+              </p>
             </a>
             <a
               href="/book"
               className="block p-4 bg-gradient-to-r from-indigo-500 to-blue-600 text-white rounded-lg hover:from-indigo-600 hover:to-blue-700 transition"
             >
               <h4 className="font-bold mb-1">Documentation</h4>
-              <p className="text-sm text-purple-100">User guide and tutorials</p>
+              <p className="text-sm text-purple-100">
+                User guide and tutorials
+              </p>
             </a>
           </div>
         </div>
