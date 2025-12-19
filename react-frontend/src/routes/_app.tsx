@@ -1,10 +1,12 @@
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute, Link } from "@tanstack/react-router";
 import BaseMap from "@/components/map/BaseMap";
 import { useRef, useEffect, useState } from "react";
 import type { Map } from "ol";
 import { MapRefContext } from "@/contexts/MapRefContext";
 import { OverviewSidebarProvider } from "@/contexts/SidebarContext";
 import { SearchBar } from "@/components/search/SearchBar";
+import { MdAdminPanelSettings } from "react-icons/md";
+import { HiInformationCircle } from "react-icons/hi";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -58,10 +60,16 @@ function AppLayout() {
             ></label>
             <ul className="menu bg-base-200 min-h-full w-80 p-4">
               <li>
-                <a>Sidebar Item 1</a>
+                <Link to="/admin" className="flex gap-2 items-center">
+                  <MdAdminPanelSettings size={18} />
+                  Admin
+                </Link>
               </li>
               <li>
-                <a>Sidebar Item 2</a>
+                <Link to="/about" className="flex gap-2 items-center">
+                  <HiInformationCircle size={18} />
+                  About
+                </Link>
               </li>
             </ul>
           </div>

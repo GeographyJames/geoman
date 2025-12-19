@@ -74,6 +74,9 @@ export function SearchBar({
                 : "search projects"
           }
         />
+        {__RUN_ENVIRONMENT__ === "demo" && (
+          <div className="badge badge-warning">Demo</div>
+        )}
 
         <SignedIn>
           <UserButton />

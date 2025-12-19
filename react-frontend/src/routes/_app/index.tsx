@@ -3,7 +3,7 @@ import { useProjects } from "@/hooks/api/useProjects";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
-export const Route = createFileRoute("/_app/projects")({
+export const Route = createFileRoute("/_app/")({
   component: ProjectsRoute,
 });
 
