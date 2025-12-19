@@ -11,6 +11,7 @@ interface Props {
     number,
     React.Dispatch<React.SetStateAction<number>>,
   ];
+  setSelectedTab: React.Dispatch<React.SetStateAction<number>>;
   filteredItems: Project[];
   handleSelect: (item: Project) => void;
   inputRef: React.RefObject<HTMLInputElement | null>;
@@ -19,6 +20,7 @@ interface Props {
 export default function SearchInput({
   searchResultsOpenState: [searchOpen, setSearchOpen],
   handleSelect,
+  setSelectedTab,
   placeholderText,
   searchTextState: [searchText, setSearchText],
   highlightedSearchIndexState: [highlightedIndex, setHighlightedIndex],
@@ -63,7 +65,10 @@ export default function SearchInput({
         ref={inputRef}
         onChange={(e) => setSearchText(e.target.value)}
         value={searchText}
-        onFocus={() => setSearchOpen(true)}
+        onFocus={() => {
+          setSearchOpen(true);
+          setSelectedTab(0);
+        }}
         type="text"
         id="search"
         placeholder={placeholderText}

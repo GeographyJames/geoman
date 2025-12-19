@@ -16,7 +16,9 @@ export function useProjects() {
 
   return useQuery({
     queryKey: CACHE_KEY_PROJECTS,
-    queryFn: () => apiRequest<ProjectsResponse>(url),
-    select: (data) => data.features.map(dto => new Project(dto)),
+    queryFn: async () => {
+      const data = await apiRequest<ProjectsResponse>(url);
+      return data.features.map(dto => new Project(dto));
+    },
   });
 }

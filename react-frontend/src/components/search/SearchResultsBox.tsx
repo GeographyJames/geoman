@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 import Project from "@/domain/project/entity";
 import SidebarList from "../overviewList/SidebarList";
@@ -36,7 +36,7 @@ export default function SearchResultsBox({
       const allProjects = projects.filter((p) => p.searchAreaId === null);
       setFilteredItems(allProjects);
     }
-  }, [searchText]);
+  }, [searchText, projects, setFilteredItems]);
 
   return <SidebarList items={filteredItems} />;
 }

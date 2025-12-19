@@ -6,9 +6,19 @@ import Project from "@/domain/project/entity";
 import { useNavigate } from "@tanstack/react-router";
 import { useProjects } from "@/hooks/api/useProjects";
 import { IoMenu } from "react-icons/io5";
+import { SignedIn, UserButton } from "@clerk/clerk-react";
 
-export function SearchBar() {
-  const [searchOpen, setSearchOpen] = useState<boolean>(false);
+interface Props {
+  setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  searchOpen: boolean;
+  setSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export function SearchBar({
+  setSidebarOpen,
+  searchOpen,
+  setSearchOpen,
+}: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchText, setSearchText] = useState<string>("");
   const [filteredItems, setFilteredItems] = useState<Project[]>([]);
@@ -25,14 +35,14 @@ export function SearchBar() {
 
   return (
     <div
-      className={`w-full min-w-96 sm:w-96 bg-white ${searchOpen ? "rounded-xl shadow-lg" : "rounded-full"}`}
+      className={`w-full min-w-96 sm:w-[28rem] bg-white ${searchOpen ? "rounded-xl shadow-lg" : "rounded-full"}`}
     >
       <div
         className={`box-border flex bg-white px-4 items-center relative z-10 rounded-full ${!searchOpen && "shadow-lg"}`}
       >
         <button
           type="button"
-          onClick={() => setSearchOpen(!searchOpen)}
+          onClick={() => setSidebarOpen((prev) => !prev)}
           className="p-2 cursor-pointer"
         >
           <IoMenu size={24} />
@@ -49,6 +59,7 @@ export function SearchBar() {
         </button>
 
         <SearchInput
+          setSelectedTab={setSelectedTab}
           searchResultsOpenState={[searchOpen, setSearchOpen]}
           searchTextState={[searchText, setSearchText]}
           highlightedSearchIndexState={highlightedSearchIndexState}
@@ -63,6 +74,10 @@ export function SearchBar() {
                 : "search projects"
           }
         />
+
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
       </div>
       {searchOpen && (
         <div className="tabs tabs-border justify-between" id="tab">
@@ -72,7 +87,7 @@ export function SearchBar() {
             className="tab"
             aria-label="Projects"
             checked={selectedTab === 0}
-            onClick={() => setSelectedTab(0)}
+            onChange={() => setSelectedTab(0)}
           />
           <div className="tab-content rounded-none border-b-0 border-base-200 p-0">
             {projects && (
@@ -92,7 +107,7 @@ export function SearchBar() {
             className="tab"
             aria-label="Strategic Search Areas"
             checked={selectedTab === 1}
-            onClick={() => setSelectedTab(1)}
+            onChange={() => setSelectedTab(1)}
           />
           <div className="tab-content   rounded-none border-b-0 border-base-200 p-0">
             Tab content 2
