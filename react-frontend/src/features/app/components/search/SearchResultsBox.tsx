@@ -61,15 +61,15 @@ export default function SearchResultsBox({
         </button>
       </div>
 
-      <div className=" flex flex-col min-h-0">
+      <div className=" flex flex-col min-h-0 ">
         {selectedTab === "projects" && (
           <div className=" min-h-0">
-            {projects && <SidebarList items={filteredItems} />}
+            <SidebarList items={filteredItems} />
           </div>
         )}
 
         {selectedTab === "search-sites" && (
-          <div className="min-h-0 overflow-y-auto p-0">Tab content 2</div>
+          <div className="flex flex-col min-h-0">Tab content 2</div>
         )}
       </div>
     </div>

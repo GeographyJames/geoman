@@ -59,7 +59,7 @@ export const ModalForm = <T,>({
           {children}
 
           <div className="modal-action">
-            <CancelButton handleClick={handleCancel} />
+            <CancelButton onClick={handleCancel} />
             <SubmitButton />
           </div>
         </form>

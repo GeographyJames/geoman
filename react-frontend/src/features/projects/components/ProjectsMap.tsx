@@ -12,11 +12,7 @@ import { Point } from "ol/geom";
 import { fromLonLat } from "ol/proj";
 import { Style, Icon } from "ol/style";
 
-interface Props {
-  showArchived: boolean;
-}
-
-export default function ProjectsMap({ showArchived }: Props) {
+export default function ProjectsMap() {
   const { containerRef, mapRef } = useMapContext();
   const { data: projects } = useProjects();
 

@@ -6,7 +6,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useSearchbar } from "../../contexts/SearchbarContext";
 import { SearchBar } from "./SearchBar";
 
-export function SearchPanel() {
+export function Search() {
   const { setIsOpen: setSearchOpen, isOpen: searchOpen } = useSearchbar();
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchText, setSearchText] = useState<string>("");
@@ -25,7 +25,7 @@ export function SearchPanel() {
   return (
     <div
       id="search-bar"
-      className={`overflow-hidden flex h-full flex-col min-h-0 w-[28rem] max-w-[calc(100vw-2rem)] bg-white shadow-lg pointer-events-auto ${searchOpen ? "rounded-box" : "rounded-full"}`}
+      className={`overflow-hidden gap-2 flex h-full flex-col min-h-0 w-[28rem] max-w-[calc(100vw-2rem)] bg-white shadow-lg pointer-events-auto ${searchOpen ? "rounded-box" : "rounded-full"}`}
     >
       <SearchBar
         highlightedSearchIndexState={highlightedSearchIndexState}

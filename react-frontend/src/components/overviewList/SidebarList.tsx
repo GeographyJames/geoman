@@ -31,8 +31,8 @@ export default function SidebarList({ items }: Props) {
   });
 
   return (
-    <div className="flex flex-col min-h-0 h-full py-2 gap-2">
-      <div className="px-4 flex flex-col gap-2">
+    <div className="flex flex-col min-h-0 h-full pb-2 pt-4 gap-2">
+      <div className="px-4 flex flex-col gap-4">
         <div className="flex justify-between flex-wrap gap-2">
           <CreateButton
             text="project"

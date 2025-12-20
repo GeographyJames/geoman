@@ -1,20 +1,18 @@
-import { useOverviewSidebar } from "@/features/app/contexts/SidebarContext";
 import { Link } from "@tanstack/react-router";
 import { HiDocumentText } from "react-icons/hi";
 import { MdAdminPanelSettings } from "react-icons/md";
 import { HiLocationMarker } from "react-icons/hi";
 
 export default function NavBar() {
-  const sidebar = useOverviewSidebar();
   return (
     <>
       <Link
-        to="/projects"
+        to="/"
         className="hover:bg-gray-200 justify-center place-items-center flex shadow-lg bg-white h-8 px-4 rounded-full font-semibold gap-2"
         activeProps={{
           className: "bg-gray-100",
         }}
-        onClick={sidebar.toggleSidebar}
+        onClick={() => {}}
       >
         <HiLocationMarker size={18} />
         Projects
