@@ -1,5 +1,6 @@
 import { FaPlus } from "react-icons/fa6";
 import { IoMenu } from "react-icons/io5";
+import { IoClose } from "react-icons/io5";
 import { MdChevronRight } from "react-icons/md";
 
 const CIRCLE_BUTTON_STYLE = "btn btn-ghost btn-circle btn-sm";
@@ -19,7 +20,7 @@ export const CloseButton = ({ onClick }: { onClick?: () => void }) => {
       aria-label="Close"
       onClick={onClick}
     >
-      ✕
+      <IoClose size={18} />
     </button>
   );
 };
