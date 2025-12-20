@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import Project from "@/domain/project/entity";
 import SidebarList from "../projectsList/ProjectList";
-import { useProjects } from "@/hooks/api/useProjects";
+import { useProjects } from "@/features/app/hooks/useProjects";
 
 interface Props {
   searchText: string;
@@ -30,16 +30,13 @@ export default function SearchResultsBox({
   useEffect(() => {
     if (!projects) return;
     if (searchText.trim() !== "") {
-      const filtered = projects
-        .filter((p) => p.searchAreaId === null)
-        .filter((d) =>
-          d.name.toLowerCase().startsWith(searchText.toLowerCase())
-        );
+      const filtered = projects.filter((d) =>
+        d.name.toLowerCase().startsWith(searchText.toLowerCase())
+      );
 
       setFilteredItems(filtered);
     } else {
-      const allProjects = projects.filter((p) => p.searchAreaId === null);
-      setFilteredItems(allProjects);
+      setFilteredItems(projects);
     }
   }, [searchText, projects, setFilteredItems]);
 
@@ -64,7 +61,7 @@ export default function SearchResultsBox({
       <div className=" flex flex-col min-h-0 ">
         {selectedTab === "projects" && (
           <div className=" min-h-0">
-            <SidebarList items={filteredItems} />
+            <SidebarList projects={filteredItems} />
           </div>
         )}
 

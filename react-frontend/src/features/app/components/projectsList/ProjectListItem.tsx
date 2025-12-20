@@ -5,7 +5,7 @@ import Project from "@/domain/project/entity";
 
 import { FaLock } from "react-icons/fa";
 
-import UserInitials from "../../../../components/UserInitials";
+import UserInitials from "../UserInitials";
 import { Link } from "@tanstack/react-router";
 import { useSearchbar } from "@/features/app/contexts/SearchbarContext";
 

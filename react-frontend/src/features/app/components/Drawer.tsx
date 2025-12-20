@@ -1,6 +1,6 @@
-import BaseMap from "@/components/map/BaseMap";
+import BaseMap from "@/features/app/components/map/BaseMap";
 
-import { useMapContext } from "@/contexts/MapRefContext";
+import { useMapContext } from "@/features/app/contexts/MapRefContext";
 import { Sidebar } from "./Sidebar";
 import { OverlayPanels } from "./OverlayPanels";
 import { useSidebar } from "@/features/app/contexts/SidebarContext";

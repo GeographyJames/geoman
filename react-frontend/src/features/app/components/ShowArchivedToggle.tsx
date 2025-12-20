@@ -5,7 +5,7 @@ import {
   ShowArchivedProjectsContext,
   ShowArchivedSearchAreasContext,
   type ShowArchivedType,
-} from "@/contexts/showArchivedContext";
+} from "@/features/app/contexts/showArchivedContext";
 import React, { useContext } from "react";
 
 export function ShowArchivedProjectsToggle() {

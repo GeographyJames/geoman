@@ -2,21 +2,21 @@ import { useState } from "react";
 
 import Project from "@/domain/project/entity";
 
-import { ShowArchivedProjectsToggle } from "../../../../components/ShowArchivedToggle";
+import { ShowArchivedProjectsToggle } from "../ShowArchivedToggle";
 import { CreateButton } from "../../../../components/Buttons";
 import ProjectListItem from "./ProjectListItem";
 import SortBy, { SORT_OPTIONS } from "./SortBy";
 
 interface Props {
-  items: Project[];
+  projects: Project[];
 
   // showArchived: boolean;
   // setShowArchived: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function ProjectsList({ items }: Props) {
+export default function ProjectsList({ projects }: Props) {
   const [sortBy, setSortBy] = useState(SORT_OPTIONS.NAME_ASCENDING);
-  const sortedData = items.slice().sort((a, b) => {
+  const sortedProjects = projects.slice().sort((a, b) => {
     switch (sortBy) {
       case "name_ascending":
         return a.name.localeCompare(b.name);
@@ -50,12 +50,12 @@ export default function ProjectsList({ items }: Props) {
         <div className="flex justify-between">
           <ShowArchivedProjectsToggle />
 
-          <span className="flex ml-auto text-xs text-gray-500">{`showing ${sortedData.length}`}</span>
+          <span className="flex ml-auto text-xs text-gray-500">{`showing ${sortedProjects.length}`}</span>
         </div>
       </div>
       <div className="flex flex-col overflow-y-auto scroll-gutter-stable scroll-panel">
         <ul className="menu w-full  pb-0">
-          {sortedData.map((item) => (
+          {sortedProjects.map((item) => (
             <ProjectListItem key={item.id} item={item} />
           ))}
         </ul>

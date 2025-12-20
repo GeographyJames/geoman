@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useProjects } from "@/hooks/api/useProjects";
-import { useMapContext } from "@/contexts/MapRefContext";
+import { useProjects } from "@/features/app/hooks/useProjects";
+import { useMapContext } from "@/features/app/contexts/MapRefContext";
 import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
 import { OSM } from "ol/source";

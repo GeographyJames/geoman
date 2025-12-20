@@ -1,4 +1,4 @@
-import { useMapContext } from "@/contexts/MapRefContext";
+import { useMapContext } from "@/features/app/contexts/MapRefContext";
 import { useNavigate } from "@tanstack/react-router";
 import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";

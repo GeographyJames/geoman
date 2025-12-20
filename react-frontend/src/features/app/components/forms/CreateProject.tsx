@@ -1,5 +1,5 @@
-import { TextInput } from "./components/TextInput";
-import { ModalForm } from "./ModalForm";
+import { TextInput } from "../../../../components/forms/components/TextInput";
+import { ModalForm } from "../../../../components/forms/ModalForm";
 
 interface Props {
   name: string;

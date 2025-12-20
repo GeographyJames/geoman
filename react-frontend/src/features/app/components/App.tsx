@@ -1,8 +1,8 @@
 import { useRef, useEffect } from "react";
 import type { Map } from "ol";
-import { MapRefContext } from "@/contexts/MapRefContext";
+import { MapRefContext } from "@/features/app/contexts/MapRefContext";
 
-import { CreateProjectForm } from "@/components/forms/CreateProject";
+import { CreateProjectForm } from "@/features/app/components/forms/CreateProject";
 
 import { Drawer } from "./Drawer";
 import { SidebarProvider } from "@/features/app/contexts/SidebarContext";

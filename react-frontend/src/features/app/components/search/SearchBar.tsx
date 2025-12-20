@@ -1,9 +1,9 @@
 import SearchInput from "./SearchInput";
-import { useProjects } from "@/hooks/api/useProjects";
+import { useProjects } from "@/features/app/hooks/useProjects";
 import { useSidebar } from "@/features/app/contexts/SidebarContext";
 import { useSearchbar } from "../../contexts/SearchbarContext";
 import { ExpandButton, MenuButton } from "@/components/Buttons";
-import { UserBadge } from "@/components/DemoBadge";
+import { UserBadge } from "@/components/UserBadge";
 import type Project from "@/domain/project/entity";
 
 interface Props {
