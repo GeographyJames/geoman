@@ -3,12 +3,17 @@ import { useNavigate } from "@tanstack/react-router";
 import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
 import { OSM } from "ol/source";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { defaults as defaultControls } from "ol/control";
+import { CloseButton, ExpandButton } from "@/components/Buttons";
 
 export const ProjectPanel = () => {
   const { containerRef, mapRef } = useMapContext();
   const navigate = useNavigate();
+  const [expanded, setExpanded] = useState<boolean>(() => {
+    // Default to expanded on medium screens and up (sm breakpoint is 640px)
+    return window.matchMedia("(min-width: 640px)").matches;
+  });
 
   useEffect(() => {
     const container = containerRef.current;
@@ -40,16 +45,20 @@ export const ProjectPanel = () => {
   return (
     <div
       id="outlet"
-      className="flex  flex-shrink-0 flex-col pointer-events-auto bg-white p-4 min-w-0 w-full max-w-[600px] shadow-lg rounded-box relative  min-w-0"
+      className="flex  flex-shrink-0 flex-col pointer-events-auto bg-white p-2 min-w-0 w-full max-w-[600px] shadow-lg rounded-box relative  min-w-0"
     >
-      <button
-        onClick={() => navigate({ to: "/" })}
-        className="absolute top-2 right-2 btn btn-sm btn-ghost btn-circle"
-      >
-        ✕
-      </button>
-      <h1 className="text-xl font-bold">Project: todo!</h1>
-      <p>Project details will go here</p>
+      <div className="absolute right-2 top-2">
+        <CloseButton onClick={() => navigate({ to: "/" })} />
+      </div>
+      <div className="flex gap-2 items-center">
+        <ExpandButton
+          expanded={expanded}
+          onClick={() => setExpanded(!expanded)}
+        />
+        <h1 className="text-l font-bold">Project: todo!</h1>
+      </div>
+
+      {expanded && <p>Project details will go here</p>}
     </div>
   );
 };

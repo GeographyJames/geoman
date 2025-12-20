@@ -12,9 +12,13 @@ export const CancelButton = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
-export const CloseButton = () => {
+export const CloseButton = ({ onClick }: { onClick?: () => void }) => {
   return (
-    <button className={CIRCLE_BUTTON_STYLE} aria-label="Close">
+    <button
+      className={CIRCLE_BUTTON_STYLE}
+      aria-label="Close"
+      onClick={onClick}
+    >
       ✕
     </button>
   );

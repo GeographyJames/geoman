@@ -27,7 +27,7 @@ export default function ProjectListItem({ item }: { item: Project }) {
             item.status === "archived" && "text-gray-400"
           }`}
         >
-          <span className="w-6">{item.id}</span>
+          <span className="w-6 flex items-center font-bold">{item.id}</span>
           {item.name}
         </div>
 

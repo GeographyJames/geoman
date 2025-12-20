@@ -5,7 +5,7 @@ function useIsSmallScreen() {
   const [isSmall, setIsSmall] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 639px)");
+    const mq = window.matchMedia("(max-width: 640px)");
     const update = () => setIsSmall(mq.matches);
     update();
     mq.addEventListener("change", update);
