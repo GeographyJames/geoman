@@ -44,17 +44,17 @@ export default function SearchResultsBox({
   }, [searchText, projects, setFilteredItems]);
 
   return (
-    <div className="flex flex-col min-h-0 ">
-      <div className="flex  justify-between">
+    <div className="flex flex-col min-h-0">
+      <div className="flex  justify-between border-b border-base-300">
         <button
-          className={`tab ${selectedTab === "projects" ? "tab-active" : ""}`}
+          className={`tab ${selectedTab === "projects" && "border-b-2 border-black tab-active"}`}
           onClick={() => setSelectedTab("projects")}
         >
           Projects
         </button>
 
         <button
-          className={`tab ${selectedTab === "search-sites" ? "tab-active" : ""}`}
+          className={`tab ${selectedTab === "search-sites" && "border-b-2 border-black tab-active"}`}
           onClick={() => setSelectedTab("search-sites")}
         >
           Strategic Search Areas
