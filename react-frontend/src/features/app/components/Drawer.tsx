@@ -32,6 +32,7 @@ const DrawerMain = () => {
         containerRef={containerRef}
         onMapClick={() => setSearchOpen(false)}
       />
+
       <OverlayPanels />
     </div>
   );

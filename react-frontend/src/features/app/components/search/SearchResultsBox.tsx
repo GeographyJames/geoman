@@ -2,10 +2,14 @@ import { useEffect } from "react";
 
 import Project from "@/domain/project/entity";
 import SidebarList from "../../../../components/overviewList/SidebarList";
+import { useProjects } from "@/hooks/api/useProjects";
 
 interface Props {
-  projects: Project[];
   searchText: string;
+  selectedTab: "projects" | "search-sites";
+  setSelectedTab: React.Dispatch<
+    React.SetStateAction<"projects" | "search-sites">
+  >;
 
   filterSate: [Project[], React.Dispatch<React.SetStateAction<Project[]>>];
   highlightedSearchIndexState: [
@@ -17,11 +21,12 @@ interface Props {
 }
 
 export default function SearchResultsBox({
-  projects,
-
+  setSelectedTab,
+  selectedTab,
   searchText,
   filterSate: [filteredItems, setFilteredItems],
 }: Props) {
+  const { data: projects } = useProjects();
   useEffect(() => {
     if (!projects) return;
     if (searchText.trim() !== "") {
@@ -38,5 +43,35 @@ export default function SearchResultsBox({
     }
   }, [searchText, projects, setFilteredItems]);
 
-  return <SidebarList items={filteredItems} />;
+  return (
+    <div className="flex flex-col min-h-0 ">
+      <div className="flex  justify-between">
+        <button
+          className={`tab ${selectedTab === "projects" ? "tab-active" : ""}`}
+          onClick={() => setSelectedTab("projects")}
+        >
+          Projects
+        </button>
+
+        <button
+          className={`tab ${selectedTab === "search-sites" ? "tab-active" : ""}`}
+          onClick={() => setSelectedTab("search-sites")}
+        >
+          Strategic Search Areas
+        </button>
+      </div>
+
+      <div className=" flex flex-col min-h-0">
+        {selectedTab === "projects" && (
+          <div className=" min-h-0">
+            {projects && <SidebarList items={filteredItems} />}
+          </div>
+        )}
+
+        {selectedTab === "search-sites" && (
+          <div className="min-h-0 overflow-y-auto p-0">Tab content 2</div>
+        )}
+      </div>
+    </div>
+  );
 }

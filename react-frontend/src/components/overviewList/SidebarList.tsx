@@ -31,7 +31,7 @@ export default function SidebarList({ items }: Props) {
   });
 
   return (
-    <div>
+    <div className="flex flex-col min-h-0 h-full">
       <div className="px-4 pt-2 flex flex-col gap-2">
         <div className="flex justify-between flex-wrap gap-2">
           <CreateButton
@@ -52,11 +52,13 @@ export default function SidebarList({ items }: Props) {
           <span className="flex ml-auto text-xs text-gray-500">{`showing ${sortedData.length}`}</span>
         </div>
       </div>
-      <ul className="menu  w-full">
-        {sortedData.map((item) => (
-          <SidebarListItem key={item.id} item={item} />
-        ))}
-      </ul>
+      <div className="flex flex-col overflow-y-auto scroll-gutter-stable scroll-panel">
+        <ul className="menu w-full">
+          {sortedData.map((item) => (
+            <SidebarListItem key={item.id} item={item} />
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

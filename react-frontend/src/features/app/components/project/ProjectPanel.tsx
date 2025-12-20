@@ -38,7 +38,10 @@ export const ProjectPanel = () => {
   }, [containerRef, mapRef]);
 
   return (
-    <>
+    <div
+      id="outlet"
+      className="pointer-events-auto bg-orange-500 p-4 w-[600px] shadow-lg rounded-box relative min-h-0"
+    >
       <button
         onClick={() => navigate({ to: "/" })}
         className="absolute top-2 right-2 btn btn-sm btn-ghost btn-circle"
@@ -47,6 +50,6 @@ export const ProjectPanel = () => {
       </button>
       <h1 className="text-xl font-bold">Project: todo!</h1>
       <p>Project details will go here</p>
-    </>
+    </div>
   );
 };

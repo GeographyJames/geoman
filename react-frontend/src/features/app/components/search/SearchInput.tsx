@@ -9,7 +9,9 @@ interface Props {
     number,
     React.Dispatch<React.SetStateAction<number>>,
   ];
-  setSelectedTab: React.Dispatch<React.SetStateAction<number>>;
+  setSelectedTab: React.Dispatch<
+    React.SetStateAction<"projects" | "search-sites">
+  >;
   filteredItems: Project[];
   handleSelect: (item: Project) => void;
   inputRef: React.RefObject<HTMLInputElement | null>;
@@ -65,14 +67,13 @@ export default function SearchInput({
         value={searchText}
         onFocus={() => {
           setSearchOpen(true);
-          setSelectedTab(0);
+          setSelectedTab("projects");
         }}
         type="text"
         id="search"
         placeholder={placeholderText}
         name="search"
         onKeyDown={handleKeyDown}
-        className=""
       />
       <IoSearch />
     </label>
