@@ -1,11 +1,11 @@
 
 import User from "../user/entity";
 import type { UserOutputDto } from "../user/outputDto";
-import type { ProjectOutputDto } from "./outputDTO";
+import type { ProjectOutputDTO } from "./outputDTO";
 
 export default class Project {
-    outputDto: ProjectOutputDto
-    constructor(outputDto: ProjectOutputDto ){
+    outputDto: ProjectOutputDTO
+    constructor(outputDto: ProjectOutputDTO ){
         this.outputDto = outputDto
     }
     get name(): string {

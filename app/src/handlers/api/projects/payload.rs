@@ -8,14 +8,14 @@ use serde::{Deserialize, Serialize};
 use crate::handlers::ProjectValidationError;
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct ProjectReqPayload {
+pub struct PostProjectPayload {
     pub name: String,
-    pub visibility: Visibility,
+    pub visibility: Option<Visibility>,
     pub country_code: String,
     pub crs_srid: Option<i32>,
 }
 
-impl Default for ProjectReqPayload {
+impl Default for PostProjectPayload {
     fn default() -> Self {
         Self {
             name: uuid::Uuid::new_v4().to_string(),
@@ -26,9 +26,9 @@ impl Default for ProjectReqPayload {
     }
 }
 
-impl TryInto<ProjectInputDto> for ProjectReqPayload {
+impl TryInto<ProjectInputDto> for PostProjectPayload {
     fn try_into(self) -> Result<ProjectInputDto, ProjectValidationError> {
-        let ProjectReqPayload {
+        let PostProjectPayload {
             name,
             visibility,
             country_code,
@@ -40,7 +40,7 @@ impl TryInto<ProjectInputDto> for ProjectReqPayload {
         Ok(ProjectInputDto {
             slug,
             name,
-            visibility,
+            visibility: visibility.unwrap_or(Visibility::Private),
             country_code: isocountry::CountryCode::for_alpha2(&country_code)?,
             crs_srid,
         })

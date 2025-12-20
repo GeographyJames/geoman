@@ -12,7 +12,7 @@ use app::{
     get_config,
     handlers::{
         self,
-        api::{project_collections::CollectionReqPayload, projects::ProjectReqPayload},
+        api::{project_collections::CollectionReqPayload, projects::PostProjectPayload},
     },
     telemetry::{get_subscriber, init_subscriber},
 };
@@ -417,7 +417,7 @@ impl TestApp<ClerkAuthService> {
     }
 
     pub async fn generate_project_id(&self, auth: Option<&Auth>) -> ProjectId {
-        let project = ProjectReqPayload::default();
+        let project = PostProjectPayload::default();
         let response = self
             .projects_service
             .post_json(&self.api_client, auth, &project)

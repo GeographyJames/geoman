@@ -6,7 +6,7 @@ use actix_web::{
 use domain::{ProjectId, project::ProjectInputDto};
 
 use crate::{
-    handlers::{ApiError, api::projects::ProjectReqPayload},
+    handlers::{ApiError, api::projects::PostProjectPayload},
     postgres::PostgresRepo,
     types::AuthenticatedUser,
 };
@@ -16,7 +16,7 @@ use crate::{
 pub async fn post_project(
     repo: web::Data<PostgresRepo>,
     user: web::ReqData<AuthenticatedUser>,
-    payload: Json<ProjectReqPayload>,
+    payload: Json<PostProjectPayload>,
 ) -> Result<Json<ProjectId>, ApiError> {
     let input_dto: ProjectInputDto = payload.into_inner().try_into()?;
     let project_id = repo.insert(&(&input_dto, user.id)).await?;
@@ -31,7 +31,7 @@ mod tests {
 
     #[actix_web::test]
     async fn post_project_returns_422_for_invalid_name() {
-        let mut project = ProjectReqPayload::default();
+        let mut project = PostProjectPayload::default();
         project.name = "".to_string();
         let req = test::TestRequest::post().set_json(project);
 
@@ -48,7 +48,7 @@ mod tests {
 
     #[actix_web::test]
     async fn post_project_return_422_for_integer_name() {
-        let mut project = ProjectReqPayload::default();
+        let mut project = PostProjectPayload::default();
         project.name = 1234.to_string();
 
         let req = test::TestRequest::post().set_json(project);

@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useApiRequest } from "@/lib/api";
-import type { ProjectOutputDto } from "@/domain/project/outputDTO";
+import type { ProjectOutputDTO } from "@/domain/project/outputDTO";
 import type { FeatureCollection, Point } from "geojson";
 import type { ProjectProperties } from "@/domain/project/properties";
 import { CACHE_KEY_PROJECTS } from "@/cache_keys";
 import Project from "@/domain/project/entity";
 
 export interface ProjectsResponse extends FeatureCollection<Point | null, ProjectProperties> {
-  features: ProjectOutputDto[];
+  features: ProjectOutputDTO[];
 }
 
 export function useProjects() {
