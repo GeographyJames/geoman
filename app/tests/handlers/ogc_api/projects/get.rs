@@ -43,7 +43,7 @@ async fn get_project_works() {
         .await
         .expect("failed to retrieve project");
     assert!(ogc_feature.foreign_members.is_none());
-    let project = Project::try_from(ogc_feature).expect("Failed to convert to project");
+    let _project = Project::try_from(ogc_feature).expect("Failed to convert to project");
 }
 
 #[actix_web::test]

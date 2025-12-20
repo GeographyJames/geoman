@@ -13,7 +13,7 @@ function UserInitials({ user, date, tooltip_position }: Props) {
       className={`tooltip ${
         tooltip_position ? tooltip_position : "tooltip-left"
       }`}
-      data-tip={`${user.firstName} ${user.lastName}\n${dateFormat.format(date)}`}
+      data-tip={`${user.firstName} ${user.lastName} ${dateFormat.format(date)}`}
     >
       <div className="flex items-center justify-center w-6 h-6 border-2 border-gray-500 rounded-full content-center">
         <span className="text-xs">

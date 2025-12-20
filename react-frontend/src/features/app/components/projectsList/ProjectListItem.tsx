@@ -27,15 +27,14 @@ export default function ProjectListItem({ item }: { item: Project }) {
             item.status === "archived" && "text-gray-400"
           }`}
         >
-          <span>{item.id}</span>
+          <span className="w-6">{item.id}</span>
           {item.name}
         </div>
 
-        <div className="flex gap-2 ml-auto items-center">
+        <div className="flex ml-auto">
           {item instanceof Project && <ProjectIcons project={item} />}
 
           <>
-            <UserInitials date={item.added} user={item.addedBy} />
             {/* <div>
                 <ActionsDropdown entity={item} />
               </div> */}
@@ -48,19 +47,28 @@ export default function ProjectListItem({ item }: { item: Project }) {
 
 function ProjectIcons({ project }: { project: Project }) {
   return (
-    <div className="flex gap-1 items-center w-16 justify-between">
-      <div>{project.private && <FaLock size={18} />}</div>
-      <div>
+    <>
+      <div className="flex w-6 items-center justify-center">
+        {project.private && <FaLock size={16} />}
+      </div>
+      <div className="flex w-6 items-center items-center justify-center">
         {project.hasWind && project.primaryLayoutTurbineCount && (
-          // <div
-          //   className="sm:tooltip"
-          //   data-tip={`primary layout turbine count: ${project.primaryLayoutTurbineCount}`}
-          // >
-          <GiWindTurbine size={22} />
-          // </div>
+          <div
+            className="tooltip tooltip-left"
+            data-tip={`${project.primaryLayoutTurbineCount} turbines`}
+          >
+            <div>
+              <GiWindTurbine size={20} />
+            </div>
+          </div>
         )}
       </div>
-      <div>{project.centroid && <FaLocationDot size={20} />}</div>
-    </div>
+      <div className="flex w-6  items-center justify-center">
+        {project.centroid && <FaLocationDot size={20} />}
+      </div>
+      <div className="flex w-8 itemc-center justify-center">
+        <UserInitials date={project.added} user={project.addedBy} />
+      </div>
+    </>
   );
 }
