@@ -25,6 +25,7 @@ export default function SearchResultsBox({
   selectedTab,
   searchText,
   filterSate: [filteredItems, setFilteredItems],
+  inputRef,
 }: Props) {
   const { data: projects } = useProjects();
   useEffect(() => {
@@ -41,7 +42,11 @@ export default function SearchResultsBox({
   }, [searchText, projects, setFilteredItems]);
 
   return (
-    <div className="flex flex-col min-h-0">
+    <div
+      className="flex flex-col min-h-0"
+      onClick={() => inputRef.current?.blur()}
+      onTouchStart={() => inputRef.current?.blur()}
+    >
       <div className="flex  justify-between border-b border-base-300">
         <button
           className={`tab ${selectedTab === "projects" && "border-b-2 border-black tab-active"}`}
