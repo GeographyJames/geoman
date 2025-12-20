@@ -5,11 +5,11 @@ import Project from "@/domain/project/entity";
 
 import { FaLock } from "react-icons/fa";
 
-import UserInitials from "../UserInitials";
+import UserInitials from "../../../../components/UserInitials";
 import { Link } from "@tanstack/react-router";
 import { useSearchbar } from "@/features/app/contexts/SearchbarContext";
 
-export default function SidebarListItem({ item }: { item: Project }) {
+export default function ProjectListItem({ item }: { item: Project }) {
   const { setIsOpen: setSearchOpen } = useSearchbar();
   const handleClick = () => {
     setSearchOpen(false);

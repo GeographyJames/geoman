@@ -3,10 +3,10 @@ import "ol/ol.css";
 
 interface BaseMapProps {
   containerRef: { current: HTMLDivElement | null };
-  onMapClick?: () => void;
+  onMouseDown?: () => void;
 }
 
-export default function BaseMap({ containerRef, onMapClick }: BaseMapProps) {
+export default function BaseMap({ containerRef, onMouseDown }: BaseMapProps) {
   const divRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,8 +23,8 @@ export default function BaseMap({ containerRef, onMapClick }: BaseMapProps) {
     <div
       ref={divRef}
       className="w-full h-full"
-      style={{ backgroundColor: '#f0f0f0' }}
-      onClick={onMapClick}
+      style={{ backgroundColor: "#f0f0f0" }}
+      onMouseDown={onMouseDown}
     />
   );
 }

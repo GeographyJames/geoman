@@ -25,7 +25,7 @@ export function Search() {
   return (
     <div
       id="search-bar"
-      className={`overflow-hidden gap-2 flex h-full flex-col min-h-0 w-[28rem] max-w-[calc(100vw-2rem)] bg-white shadow-lg pointer-events-auto ${searchOpen ? "rounded-box" : "rounded-full"}`}
+      className={`overflow-hidden gap-2 flex flex-col min-h-0 w-full sm:max-w-[28rem] bg-white shadow-lg pointer-events-auto ${searchOpen ? "rounded-box" : "rounded-full"}`}
     >
       <SearchBar
         highlightedSearchIndexState={highlightedSearchIndexState}

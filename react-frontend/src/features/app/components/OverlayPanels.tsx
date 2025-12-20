@@ -5,11 +5,9 @@ export const OverlayPanels = () => {
   return (
     <div
       id="overlay-panels"
-      className="flex flex-col gap-2 absolute top-0 p-4 h-full bg-pink-500/30 pointer-events-none"
+      className="flex flex-col gap-2 absolute top-0 p-4 h-full  pointer-events-none w-full min-w-0"
     >
-      <div id="search-bar-container" className="bg-yellow-500/30 min-h-0">
-        <Search />
-      </div>
+      <Search />
 
       <Outlet />
     </div>

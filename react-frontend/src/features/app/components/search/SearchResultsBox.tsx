@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import Project from "@/domain/project/entity";
-import SidebarList from "../../../../components/overviewList/SidebarList";
+import SidebarList from "../projectsList/ProjectList";
 import { useProjects } from "@/hooks/api/useProjects";
 
 interface Props {

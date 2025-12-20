@@ -30,7 +30,7 @@ const DrawerMain = () => {
     <div className="drawer-content h-full">
       <BaseMap
         containerRef={containerRef}
-        onMapClick={() => setSearchOpen(false)}
+        onMouseDown={() => setSearchOpen(false)}
       />
 
       <OverlayPanels />

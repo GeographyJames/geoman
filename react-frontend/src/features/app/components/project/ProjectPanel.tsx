@@ -40,7 +40,7 @@ export const ProjectPanel = () => {
   return (
     <div
       id="outlet"
-      className="pointer-events-auto bg-orange-500 p-4 w-[600px] shadow-lg rounded-box relative min-h-0"
+      className="flex flex-col pointer-events-auto bg-white p-4 min-w-0 w-full max-w-[600px] shadow-lg rounded-box relative min-h-0 min-w-0"
     >
       <button
         onClick={() => navigate({ to: "/" })}
