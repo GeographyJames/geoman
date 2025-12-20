@@ -1,5 +1,5 @@
 // import { useOverviewSidebarContext } from "@/providers/OverviewSidebarProvider";
-import { useOverviewSidebar } from "@/contexts/SidebarContext";
+import { useOverviewSidebar } from "@/features/app/contexts/SidebarContext";
 import type { ReactNode } from "react";
 
 import { MdOutlineKeyboardArrowLeft } from "react-icons/md";

@@ -7,14 +7,10 @@ import { FaLock } from "react-icons/fa";
 
 import UserInitials from "../UserInitials";
 import { Link } from "@tanstack/react-router";
+import { useSearchbar } from "@/features/app/contexts/SearchbarContext";
 
-export default function SidebarListItem({
-  item,
-  setSearchOpen,
-}: {
-  item: Project;
-  setSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}) {
+export default function SidebarListItem({ item }: { item: Project }) {
+  const { setIsOpen: setSearchOpen } = useSearchbar();
   const handleClick = () => {
     setSearchOpen(false);
   };

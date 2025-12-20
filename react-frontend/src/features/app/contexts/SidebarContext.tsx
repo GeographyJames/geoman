@@ -1,18 +1,15 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-
-interface OverviewSidebarContextValue {
+interface SidebarContextValue {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   toggleSidebar: () => void;
 }
 
-const SidebarContext = createContext<OverviewSidebarContextValue | null>(null);
+const SidebarContext = createContext<SidebarContextValue | null>(null);
 
-export function OverviewSidebarProvider({ children }: { children: ReactNode }) {
+export function SidebarProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-
   const toggleSidebar = () => setIsOpen((prev) => !prev);
-
   return (
     <SidebarContext.Provider value={{ isOpen, setIsOpen, toggleSidebar }}>
       {children}
@@ -20,7 +17,7 @@ export function OverviewSidebarProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useOverviewSidebar() {
+export function useSidebar() {
   const context = useContext(SidebarContext);
   if (!context) {
     throw new Error("useSidebar must be used within SidebarProvider");

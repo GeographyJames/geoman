@@ -1,4 +1,4 @@
-import { useOverviewSidebar } from "@/contexts/SidebarContext";
+import { useOverviewSidebar } from "@/features/app/contexts/SidebarContext";
 import { Link } from "@tanstack/react-router";
 import { HiDocumentText } from "react-icons/hi";
 import { MdAdminPanelSettings } from "react-icons/md";

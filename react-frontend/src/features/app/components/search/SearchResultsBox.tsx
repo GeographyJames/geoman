@@ -1,12 +1,11 @@
 import { useEffect } from "react";
 
 import Project from "@/domain/project/entity";
-import SidebarList from "../overviewList/SidebarList";
+import SidebarList from "../../../../components/overviewList/SidebarList";
 
 interface Props {
   projects: Project[];
   searchText: string;
-  setSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
 
   filterSate: [Project[], React.Dispatch<React.SetStateAction<Project[]>>];
   highlightedSearchIndexState: [
@@ -19,7 +18,7 @@ interface Props {
 
 export default function SearchResultsBox({
   projects,
-  setSearchOpen,
+
   searchText,
   filterSate: [filteredItems, setFilteredItems],
 }: Props) {
@@ -39,5 +38,5 @@ export default function SearchResultsBox({
     }
   }, [searchText, projects, setFilteredItems]);
 
-  return <SidebarList items={filteredItems} setSearchOpen={setSearchOpen} />;
+  return <SidebarList items={filteredItems} />;
 }

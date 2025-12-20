@@ -1,24 +1,22 @@
 import { useRef, useState } from "react";
-import { MdChevronRight } from "react-icons/md";
+
 import SearchResultsBox from "./SearchResultsBox";
 import SearchInput from "./SearchInput";
 import Project from "@/domain/project/entity";
 import { useNavigate } from "@tanstack/react-router";
 import { useProjects } from "@/hooks/api/useProjects";
-import { IoMenu } from "react-icons/io5";
+
 import { SignedIn, UserButton } from "@clerk/clerk-react";
+import { ExpandButton, MenuButton } from "../../../../components/Buttons";
+import { useSidebar } from "@/features/app/contexts/SidebarContext";
+import { useSearchbar } from "../../contexts/SearchbarContext";
 
-interface Props {
-  setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  searchOpen: boolean;
-  setSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-export function SearchBar({
-  setSidebarOpen,
-  searchOpen,
-  setSearchOpen,
-}: Props) {
+export function SearchBar() {
+  const {
+    toggleSearchbar,
+    setIsOpen: setSearchOpen,
+    isOpen: searchOpen,
+  } = useSearchbar();
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchText, setSearchText] = useState<string>("");
   const [filteredItems, setFilteredItems] = useState<Project[]>([]);
@@ -26,6 +24,7 @@ export function SearchBar({
   const navigate = useNavigate();
   const { data: projects, isError, isPending } = useProjects();
   const [selectedTab, setSelectedTab] = useState<number>(0);
+  const { toggleSidebar } = useSidebar();
 
   const handleSelect = (project: Project) => {
     setSearchText("");
@@ -41,27 +40,14 @@ export function SearchBar({
       <div
         className={`box-border flex bg-white px-4 items-center relative z-10 rounded-full ${!searchOpen && "shadow-lg"}`}
       >
-        <button
-          type="button"
-          onClick={() => setSidebarOpen((prev) => !prev)}
-          className="btn btn-ghost btn-circle btn-sm"
-        >
-          <IoMenu size={24} />
-        </button>
-        <button
-          type="button"
-          onClick={() => setSearchOpen(!searchOpen)}
-          className="btn btn-ghost btn-circle btn-sm"
-        >
-          <MdChevronRight
-            size={24}
-            className={`transition-transform ${searchOpen ? "rotate-90" : ""}`}
-          />
-        </button>
+        <MenuButton onClick={toggleSidebar}></MenuButton>
+        <ExpandButton
+          expanded={searchOpen}
+          onClick={toggleSearchbar}
+        ></ExpandButton>
 
         <SearchInput
           setSelectedTab={setSelectedTab}
-          searchResultsOpenState={[searchOpen, setSearchOpen]}
           searchTextState={[searchText, setSearchText]}
           highlightedSearchIndexState={highlightedSearchIndexState}
           handleSelect={handleSelect}
@@ -101,7 +87,6 @@ export function SearchBar({
           <div className="tab-content rounded-none border-b-0 border-base-200 p-0">
             {projects && (
               <SearchResultsBox
-                setSearchOpen={setSearchOpen}
                 projects={projects}
                 highlightedSearchIndexState={highlightedSearchIndexState}
                 searchText={searchText}

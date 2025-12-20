@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { CancelButton, CloseButton, SubmitButton } from "../Buttons";
 
 interface ModalFormProps<T> {
   id: string;
@@ -49,12 +50,7 @@ export const ModalForm = <T,>({
     <dialog id={id} className="modal">
       <div className="modal-box">
         <form method="dialog" className="absolute right-2 top-2">
-          <button
-            className="btn btn-sm btn-circle btn-ghost"
-            aria-label="Close"
-          >
-            ✕
-          </button>
+          <CloseButton />
         </form>
 
         <h3 className="font-bold text-lg">{title}</h3>
@@ -63,16 +59,8 @@ export const ModalForm = <T,>({
           {children}
 
           <div className="modal-action">
-            <button
-              type="button"
-              className="btn"
-              onClick={() => handleCancel()}
-            >
-              Cancel
-            </button>
-            <button type="submit" className="btn btn-primary">
-              Submit
-            </button>
+            <CancelButton handleClick={handleCancel} />
+            <SubmitButton />
           </div>
         </form>
       </div>

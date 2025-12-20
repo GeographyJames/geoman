@@ -1,12 +1,10 @@
 import Project from "@/domain/project/entity";
 import { IoSearch } from "react-icons/io5";
+import { useSearchbar } from "../../contexts/SearchbarContext";
 
 interface Props {
   searchTextState: [string, React.Dispatch<React.SetStateAction<string>>];
-  searchResultsOpenState: [
-    boolean,
-    React.Dispatch<React.SetStateAction<boolean>>,
-  ];
+
   highlightedSearchIndexState: [
     number,
     React.Dispatch<React.SetStateAction<number>>,
@@ -18,7 +16,6 @@ interface Props {
   placeholderText: string;
 }
 export default function SearchInput({
-  searchResultsOpenState: [searchOpen, setSearchOpen],
   handleSelect,
   setSelectedTab,
   placeholderText,
@@ -27,6 +24,7 @@ export default function SearchInput({
   filteredItems,
   inputRef,
 }: Props) {
+  const { isOpen: searchOpen, setIsOpen: setSearchOpen } = useSearchbar();
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!searchOpen) return;
 
