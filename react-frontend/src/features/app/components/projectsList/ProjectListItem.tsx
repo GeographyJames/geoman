@@ -24,7 +24,7 @@ export default function ProjectListItem({ item }: { item: Project }) {
       >
         <div
           className={`flex gap-2 ${
-            item.status === "archived" && "text-gray-400"
+            item.status === "ARCHIVED" && "text-gray-400"
           }`}
         >
           <span className="w-6 flex items-center font-bold">{item.id}</span>

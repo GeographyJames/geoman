@@ -5,7 +5,7 @@ import { ErrorAlert } from "../Alert";
 interface ModalFormProps<T> {
   id: string;
   title: string;
-  onSubmit: (values: T) => Promise<void> | void;
+  onSubmit: ((values: T) => Promise<void> | void) | ((e: React.FormEvent) => Promise<void> | void);
   onClose?: () => void;
   onReset?: () => void;
   children: React.ReactNode;
@@ -31,25 +31,19 @@ export const ModalForm = <T,>({
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formRef.current) return;
-
-    const formData = new FormData(formRef.current);
-    const values = Object.fromEntries(formData.entries()) as unknown as T;
 
     try {
-      await onSubmit(values);
+      // Call onSubmit - it might be from React Hook Form (already has values)
+      // or it might be expecting FormData extraction
+      await onSubmit(e as any);
 
-      // Reset the form
-      formRef.current.reset();
+      // Reset and close on success
       onReset && onReset();
       setErrors([]);
 
-      // Close the modal
       const dialog = document.getElementById(id) as HTMLDialogElement | null;
       dialog?.close();
     } catch (error) {
-      // Add error to state
-
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 

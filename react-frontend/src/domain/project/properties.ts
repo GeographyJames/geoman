@@ -1,7 +1,7 @@
 import type { TeamOutputDto } from "../team/outputDto";
+import type { Status, Visibility } from "../types";
 
-export type Status = "ACTIVE" | "ARCHIVED" | "DELETED";
-export type Visibility = "PRIVATE" | "TEAM" | "PUBLIC";
+
 
 
 

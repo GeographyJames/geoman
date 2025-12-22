@@ -2,6 +2,7 @@
 import User from "../user/entity";
 import type { UserOutputDto } from "../user/outputDto";
 import type { ProjectOutputDTO } from "./outputDTO";
+import type { Status, Visibility } from "../types";
 
 export default class Project {
     outputDto: ProjectOutputDTO
@@ -23,8 +24,11 @@ export default class Project {
     get slug(): string {
         return this.outputDto.properties.slug
     }
-    get status(): string {
+    get status(): Status {
         return this.outputDto.properties.status
+    }
+    get visibility(): Visibility {
+        return this.outputDto.properties.visibility
     }
     get added(): Date {
         return new Date(this.outputDto.properties.added)
