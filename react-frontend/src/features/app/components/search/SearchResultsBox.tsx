@@ -47,16 +47,16 @@ export default function SearchResultsBox({
       onClick={() => inputRef.current?.blur()}
       onTouchStart={() => inputRef.current?.blur()}
     >
-      <div className="flex  justify-between border-b border-base-300">
+      <div className="mx-2 flex  justify-between border-b border-base-300">
         <button
-          className={`tab ${selectedTab === "projects" && "border-b-2 border-black tab-active"}`}
+          className={`tab ${selectedTab === "projects" && "border-b-2 border-base-content tab-active"}`}
           onClick={() => setSelectedTab("projects")}
         >
           Projects
         </button>
 
         <button
-          className={`tab ${selectedTab === "search-sites" && "border-b-2 border-black tab-active"}`}
+          className={`tab ${selectedTab === "search-sites" && "border-b-2 border-base-content tab-active"}`}
           onClick={() => setSelectedTab("search-sites")}
         >
           Strategic Search Areas

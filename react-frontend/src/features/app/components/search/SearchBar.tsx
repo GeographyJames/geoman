@@ -34,7 +34,7 @@ export const SearchBar = ({
   const { toggleSidebar } = useSidebar();
   const { toggleSearchbar, isOpen: searchOpen } = useSearchbar();
   return (
-    <div className={"flex pl-2 pr-3 items-center"}>
+    <div className="flex pl-2 pr-3 gap-2 items-center">
       <MenuButton onClick={toggleSidebar}></MenuButton>
       <ExpandButton
         expanded={searchOpen}

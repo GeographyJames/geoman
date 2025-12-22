@@ -1,7 +1,6 @@
 import Project from "@/domain/project/entity";
-import { IoSearch } from "react-icons/io5";
+import { IoClose, IoSearch } from "react-icons/io5";
 import { useSearchbar } from "../../contexts/SearchbarContext";
-import { CloseButton } from "@/components/Buttons";
 
 interface Props {
   searchTextState: [string, React.Dispatch<React.SetStateAction<string>>];
@@ -61,7 +60,7 @@ export default function SearchInput({
     }
   };
   return (
-    <label className="min-w-0 pl-2 input border-none focus-within:outline-none focus-within:border-none flex-grow focus-within:shadow-none">
+    <label className="min-w-0 pl-0 my-2 input border-none focus-within:outline-none focus-within:border-none flex-grow focus-within:shadow-none !shadow-none ">
       <input
         ref={inputRef}
         onChange={(e) => setSearchText(e.target.value)}
@@ -81,8 +80,9 @@ export default function SearchInput({
         <button
           className="btn btn-circle btn-ghost btn-xs"
           onClick={() => setSearchText("")}
+          aria-label="clear search text"
         >
-          ✕
+          <IoClose size={16} />
         </button>
       )}
 

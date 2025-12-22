@@ -6,33 +6,69 @@ import { useAuth } from "@clerk/clerk-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 export const usePostProject = () => {
-    const { getToken } = useAuth();
-    const queryClient = useQueryClient()
-    return useMutation<number, Error, ProjectInputDTO>({mutationFn: async (dto: ProjectInputDTO): Promise<number> => {
-        const token = await getToken();
-      const response = await fetch("/api/projects", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(dto),
-      });
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Failed to create project");
+  const postProject = async (dto: ProjectInputDTO): Promise<number> => {
+    const token = await getToken();
+    const response = await fetch("/api/projects", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(dto),
+    });
+
+  if (!response.ok) {
+
+    if (response.status >= 500) {
+      try {
+        const text = await response.text();
+        console.error("Server error creating project:", {
+          status: response.status,
+          body: text,
+        });
+      } catch {
+        console.error("Server error creating project:", response.status);
       }
 
-      // assume the API returns JSON like { id: number }
-      const data = await response.json();
-      return data.id;
-    },
+      throw new Error("Unexpected error");
+    }
 
-    // on success: invalidate or update relevant queries
+
+    let message = "Failed to create project";
+    const contentType = response.headers.get("content-type");
+
+    if (contentType?.includes("application/json")) {
+      try {
+        const errorJson = await response.json();
+        if (typeof errorJson?.message === "string") {
+          message = errorJson.message;
+        }
+      } catch {
+        // ignore
+      }
+    } else {
+      try {
+        const text = await response.text();
+        if (text) message = text;
+      } catch {
+        // ignore
+      }
+    }
+
+    throw new Error(message);
+  }
+
+    const data = await response.json();
+    return data.id;
+  };
+
+  return useMutation<number, Error, ProjectInputDTO>({
+    mutationFn: postProject,
     onSuccess: () => {
-      // invalidate the project list query so it refetches
       queryClient.invalidateQueries({ queryKey: CACHE_KEY_PROJECTS });
-        
-    }})
-}
+    },
+  });
+};

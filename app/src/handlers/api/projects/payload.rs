@@ -13,12 +13,15 @@ pub struct PostProjectPayload {
     pub visibility: Option<Visibility>,
     pub country_code: String,
     pub crs_srid: Option<i32>,
+    pub slug: String,
 }
 
 impl Default for PostProjectPayload {
     fn default() -> Self {
+        let name = uuid::Uuid::new_v4().to_string();
         Self {
-            name: uuid::Uuid::new_v4().to_string(),
+            slug: name.clone(),
+            name,
             visibility: Default::default(),
             country_code: CountryCode::GBR.alpha2().to_string(),
             crs_srid: Default::default(),
@@ -33,8 +36,10 @@ impl TryInto<ProjectInputDto> for PostProjectPayload {
             visibility,
             country_code,
             crs_srid,
+            slug,
         } = self;
-        let slug = ProjectSlugInputDto::parse(&name);
+        let slug = ProjectSlugInputDto::try_from(slug)
+            .map_err(ProjectValidationError::InvalidProjectSlug)?;
         let name =
             ProjectNameInputDTO::parse(name).map_err(ProjectValidationError::InvalidProjectName)?;
         Ok(ProjectInputDto {

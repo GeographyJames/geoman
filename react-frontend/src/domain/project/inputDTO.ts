@@ -3,5 +3,6 @@ export default interface ProjectInputDTO{
     visibility?: string,
     crs_srid?: number,
     country_code: string
+    slug: string
 
 }

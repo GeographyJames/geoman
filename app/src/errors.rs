@@ -39,7 +39,7 @@ pub enum ApiError {
     CollectionNotFound,
     #[error("Feature '{0}' not found")]
     FeatureNotFound(FeatureId),
-    #[error("Failed to validate project: {0}")]
+    #[error(transparent)]
     ProjectValidation(#[from] ProjectValidationError),
     #[error("Not found")]
     NotFound,
@@ -106,6 +106,8 @@ pub enum ProjectValidationError {
     InvalidCountryCode(#[from] CountryCodeParseErr),
     #[error("invalid project name: {0}")]
     InvalidProjectName(String),
+    #[error("invalid url: {0}")]
+    InvalidProjectSlug(String),
 }
 
 impl std::fmt::Debug for ProjectValidationError {

@@ -3,7 +3,7 @@ import { IoMenu } from "react-icons/io5";
 import { IoClose } from "react-icons/io5";
 import { MdChevronRight } from "react-icons/md";
 
-const CIRCLE_BUTTON_STYLE = "btn btn-ghost btn-circle btn-sm";
+const CIRCLE_BUTTON_STYLE = "btn btn-ghost btn-circle btn-sm ";
 
 export const CancelButton = ({ onClick }: { onClick: () => void }) => {
   return (
@@ -13,10 +13,16 @@ export const CancelButton = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
-export const CloseButton = ({ onClick }: { onClick?: () => void }) => {
+export const CloseButton = ({
+  onClick,
+  style,
+}: {
+  onClick?: () => void;
+  style?: string;
+}) => {
   return (
     <button
-      className={CIRCLE_BUTTON_STYLE}
+      className={style ? style : CIRCLE_BUTTON_STYLE}
       aria-label="Close"
       onClick={onClick}
     >

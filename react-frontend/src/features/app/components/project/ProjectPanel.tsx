@@ -45,7 +45,7 @@ export const ProjectPanel = () => {
   return (
     <div
       id="outlet"
-      className="flex  flex-shrink-0 flex-col pointer-events-auto bg-white p-2 min-w-0 w-full max-w-[600px] shadow-lg rounded-box relative  min-w-0"
+      className="flex  flex-shrink-0 flex-col pointer-events-auto bg-base-100 p-2 min-w-0 w-full max-w-[600px] shadow-lg rounded-box relative  min-w-0"
     >
       <div className="absolute right-2 top-2">
         <CloseButton onClick={() => navigate({ to: "/" })} />

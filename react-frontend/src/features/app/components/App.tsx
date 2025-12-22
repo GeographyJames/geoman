@@ -30,6 +30,7 @@ export const App = () => {
           <MapRefContext.Provider value={{ containerRef, mapRef }}>
             <Drawer />
           </MapRefContext.Provider>
+
           <CreateProjectForm />
         </SearchbarProvider>
       </SidebarProvider>
