@@ -19,7 +19,7 @@ interface CreateProjectFormData {
 export const CreateProjectForm = () => {
   const postProject = usePostProject();
 
-  const { register, handleSubmit, watch, reset, setValue } =
+  const { handleSubmit, watch, reset, setValue } =
     useForm<CreateProjectFormData>({
       defaultValues: {
         projectName: "",

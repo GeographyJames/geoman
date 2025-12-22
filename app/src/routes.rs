@@ -3,6 +3,7 @@ use crate::{
     enums::GeoManEnvironment,
     handlers::{
         api::{
+            app_settings::get_app_settings,
             keys::{generate_api_key, get_api_keys, renew_api_key, revoke_api_key},
             project_collections::post_project_collection,
             projects::post_project,
@@ -39,7 +40,8 @@ pub fn api_routes(cfg: &mut web::ServiceConfig, _clerk: Clerk, run_environment: 
         .configure(api_key_routes)
         .configure(project_routes)
         .configure(user_routes)
-        .configure(project_collection_routes);
+        .configure(project_collection_routes)
+        .route(&URLS.api.app_settings, web::get().to(get_app_settings));
     match run_environment {
         GeoManEnvironment::Development => {
             cfg.service(scp.wrap(middleware::from_fn(mock_auth_middlewear)));

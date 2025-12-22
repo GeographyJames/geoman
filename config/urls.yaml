@@ -7,6 +7,7 @@ api:
   projects: "/projects"
   users: "/users"
   collections: "/collections"
+  app_settings: "/app-settings"
 
 docs:
   base: "/docs"

@@ -22,6 +22,7 @@ pub struct Api {
     pub projects: String,
     pub users: String,
     pub collections: String,
+    pub app_settings: String,
 }
 
 #[derive(Deserialize)]

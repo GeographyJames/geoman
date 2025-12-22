@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Select } from "./Select";
 
 // Full list of ISO alpha-2 country codes (can be extended)
