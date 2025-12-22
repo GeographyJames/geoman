@@ -29,7 +29,7 @@ use secrecy::ExposeSecret;
 use serde::Serialize;
 use serde_json::json;
 use sqlx::{Connection, PgConnection, PgPool};
-use std::sync::LazyLock;
+use std::{str::FromStr, sync::LazyLock};
 use uuid::Uuid;
 
 static TRACING: LazyLock<()> = LazyLock::new(|| {
@@ -69,7 +69,6 @@ impl AppBuilder {
     pub fn new() -> Self {
         Self {
             with_db: true,
-
             environment: None,
         }
     }
@@ -112,9 +111,13 @@ impl TestApp<ClerkAuthService> {
                     .to_owned(),
             )),
         };
+
         // Set environment for running the app
         if let Some(env) = run_env {
             config.app_settings.environment.run = env
+        } else if let Ok(env) = std::env::var("GEOMAN_TEST_ENVIRONMENT") {
+            config.app_settings.environment.run =
+                GeoManEnvironment::from_str(&env).expect("invlaid test environment");
         };
 
         tracing::info!(

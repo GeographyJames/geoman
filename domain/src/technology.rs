@@ -6,5 +6,4 @@ use crate::TechnologyId;
 pub struct Technology {
     pub id: TechnologyId,
     pub name: String,
-    pub logo_svg: Option<String>,
 }

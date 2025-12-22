@@ -8,6 +8,7 @@ import { FaCircleInfo } from "react-icons/fa6";
 import { Select } from "@/components/forms/components/Select";
 import { Visibility } from "@/domain/types";
 import { useForm } from "react-hook-form";
+import { useAppSettings } from "@/hooks/api/useAppSettings";
 
 interface CreateProjectFormData {
   projectName: string;
@@ -18,6 +19,7 @@ interface CreateProjectFormData {
 
 export const CreateProjectForm = () => {
   const postProject = usePostProject();
+  const { data: appSettings } = useAppSettings();
 
   const { handleSubmit, watch, reset, setValue } =
     useForm<CreateProjectFormData>({
@@ -128,6 +130,17 @@ export const CreateProjectForm = () => {
             Private (only visible to you)
           </option>
         </Select>
+        <fieldset className="fieldset bg-base-100 border-base-300 rounded-box border p-4">
+          <legend className="fieldset-legend">Technologies</legend>
+          {appSettings &&
+            appSettings.technologies.map((t) => (
+              <label className="label">
+                <input type="checkbox" className="checkbox checkbox-sm" />{" "}
+                <span className="label-text">{t.name}</span>
+              </label>
+            ))}
+          select all that apply
+        </fieldset>
       </div>
     </ModalForm>
   );

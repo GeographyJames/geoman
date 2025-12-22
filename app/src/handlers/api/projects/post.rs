@@ -43,7 +43,7 @@ mod tests {
         .await;
         assert_eq!(resp.status(), 422);
         let error: ErrorResponse = test::read_body_json(resp).await;
-        assert!(error.message.contains("Failed to validate project"))
+        assert!(error.message.contains("invalid project name"))
     }
 
     #[actix_web::test]

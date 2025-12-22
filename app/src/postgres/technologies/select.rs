@@ -10,7 +10,7 @@ impl SelectAll for Technology {
     {
         sqlx::query_as!(
             Technology,
-            r#"SELECT id AS "id: TechnologyId", name, logo_svg FROM app.technologies"#
+            r#"SELECT id AS "id: TechnologyId", name FROM app.technologies"#
         )
         .fetch_all(executor)
         .await
