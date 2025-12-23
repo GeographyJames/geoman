@@ -1,5 +1,6 @@
 #![allow(async_fn_in_trait)]
 use futures::Stream;
+use sqlx::{Acquire, Postgres};
 
 use crate::repo::{PoolWrapper, RepositoryError, StreamItem};
 
@@ -55,10 +56,10 @@ pub trait SelectOneWithParams<ID> {
 
 pub trait Insert {
     type Id;
-    async fn insert<'a, E>(&self, executor: &'a E) -> Result<Self::Id, RepositoryError>
+    async fn insert<'a, A>(&self, executor: A) -> Result<Self::Id, RepositoryError>
     where
         Self: Sized,
-        &'a E: sqlx::PgExecutor<'a>;
+        A: Acquire<'a, Database = Postgres>;
 }
 
 pub trait Update {

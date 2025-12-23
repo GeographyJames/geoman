@@ -1,16 +1,18 @@
 use domain::{ProjectId, UserId, enums::Visibility, project::ProjectInputDto};
+use sqlx::{Acquire, Postgres};
 
 use crate::repo::traits::Insert;
 
 impl Insert for (&ProjectInputDto, UserId) {
     type Id = ProjectId;
 
-    async fn insert<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>
+    async fn insert<'a, A>(&self, conn: A) -> Result<Self::Id, crate::repo::RepositoryError>
     where
-        &'a E: sqlx::PgExecutor<'a>,
+        A: Acquire<'a, Database = Postgres>,
     {
+        let mut tx = conn.begin().await?;
         let (dto, id) = self;
-        sqlx::query_scalar!(
+        let project_id = sqlx::query_scalar!(
             r#"
             INSERT INTO app.projects (
                 name,
@@ -34,8 +36,26 @@ impl Insert for (&ProjectInputDto, UserId) {
             id.0,
             dto.slug.as_ref()
         )
-        .fetch_one(executor)
-        .await
-        .map_err(Into::into)
+        .fetch_one(&mut *tx)
+        .await?;
+
+        if let Some(techs) = &dto.technologies {
+            let tech_ids: Vec<i32> = techs.iter().map(|t| t.0).collect();
+            // Insert technologies
+            sqlx::query!(
+                r#"
+      INSERT INTO app.project_technologies (project_id, technology_id)
+      SELECT $1, UNNEST($2::integer[])
+      "#,
+                project_id.0,
+                &tech_ids as &[i32]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        tx.commit().await?;
+
+        Ok(project_id)
     }
 }

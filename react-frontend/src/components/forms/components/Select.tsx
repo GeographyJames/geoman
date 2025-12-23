@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-interface TextInputProps {
+interface SelectProps {
   name: string;
   label: string;
   placeholder?: string;
@@ -20,7 +20,7 @@ export const Select = ({
   onChange,
   children,
   defaultValue,
-}: TextInputProps) => {
+}: SelectProps) => {
   return (
     <fieldset className="fieldset">
       <legend className="fieldset-legend">{label}</legend>

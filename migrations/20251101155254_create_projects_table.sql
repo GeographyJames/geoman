@@ -13,10 +13,11 @@ CREATE TABLE app.projects (
     added timestamptz NOT NULL DEFAULT now(),
     last_updated_by integer NOT NULL REFERENCES app.users(id),
     last_updated timestamptz NOT NULL DEFAULT now(),
-    crs_srid integer REFERENCES public.spatial_ref_sys(srid),
+    crs_srid integer,
     subdivisions text[],
     CONSTRAINT projects_name_key UNIQUE (name),
     CONSTRAINT projects_slug_key UNIQUE (slug),
+    CONSTRAINT projects_crs_srid_fkey FOREIGN KEY (crs_srid) REFERENCES public.spatial_ref_sys(srid),
     CONSTRAINT projects_codename_search_area_id_key UNIQUE (search_site_name, search_area_id),
     CONSTRAINT search_site_name_not_null_when_search_area_id_not_null CHECK (search_area_id IS NULL OR search_site_name IS NOT NULL)
 );

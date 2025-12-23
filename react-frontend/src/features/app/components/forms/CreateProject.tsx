@@ -6,8 +6,8 @@ import { slugify } from "@/lib/slugify";
 import { CountrySelect } from "@/components/forms/components/CountrySelector";
 import { FaCircleInfo } from "react-icons/fa6";
 import { Select } from "@/components/forms/components/Select";
-import { Visibility } from "@/domain/types";
-import { useForm } from "react-hook-form";
+import { Visibility, VisibilityConfig } from "@/domain/types";
+import { useForm, Controller } from "react-hook-form";
 import type User from "@/domain/user/entity";
 import type { TechnologyOutputDto } from "@/domain/technology/outputDto";
 
@@ -16,7 +16,7 @@ interface CreateProjectFormData {
   country: string;
   srid: number | "";
   visibility: Visibility;
-  technologies: TechnologyOutputDto[];
+  technologies: number[];
 }
 
 interface Props {
@@ -28,35 +28,28 @@ export const CreateProjectForm = ({ currentUser, technologies }: Props) => {
   const postProject = usePostProject();
   const defautlSrid = currentUser.operatingCountryId === "GB" ? 27700 : "";
 
-  const { handleSubmit, watch, reset, setValue } =
+  const { handleSubmit, watch, reset, setValue, control } =
     useForm<CreateProjectFormData>({
       defaultValues: {
         projectName: "",
         country: currentUser.operatingCountryId,
         srid: defautlSrid,
         visibility: Visibility.Private,
+        technologies: [],
       },
     });
 
   const projectName = watch("projectName");
-  const country = watch("country");
-  const srid = watch("srid");
   const slug = slugify(projectName);
-
-  const handleCountryChange = (val: string) => {
-    setValue("country", val);
-    if (val === "GB") {
-      setValue("srid", 27700);
-    } else {
-      setValue("srid", "");
-    }
-  };
 
   const onSubmit = async (data: CreateProjectFormData) => {
     const dto: ProjectInputDTO = {
       name: data.projectName,
       slug: slug,
       country_code: data.country,
+      technologies: data.technologies,
+      visibility: data.visibility,
+      crs_srid: data.srid !== "" ? data.srid : undefined,
     };
 
     await postProject.mutateAsync(dto);
@@ -65,6 +58,9 @@ export const CreateProjectForm = ({ currentUser, technologies }: Props) => {
   const onReset = () => {
     reset();
   };
+  const priv = VisibilityConfig[Visibility.Private];
+  const team = VisibilityConfig[Visibility.Team];
+  const pub = VisibilityConfig[Visibility.Public];
 
   return (
     <ModalForm
@@ -74,12 +70,19 @@ export const CreateProjectForm = ({ currentUser, technologies }: Props) => {
       onReset={onReset}
     >
       <div className="flex flex-col gap-2">
-        <TextInput
+        <Controller
           name="projectName"
-          label="Project name"
-          required
-          value={projectName}
-          onChange={(val) => setValue("projectName", val)}
+          control={control}
+          rules={{ required: true }}
+          render={({ field }) => (
+            <TextInput
+              name="projectName"
+              label="Project name"
+              required
+              value={field.value}
+              onChange={field.onChange}
+            />
+          )}
         />
 
         <TextInput
@@ -91,62 +94,118 @@ export const CreateProjectForm = ({ currentUser, technologies }: Props) => {
           disabled
           value={slug}
         />
-        <CountrySelect value={country} onChange={handleCountryChange} />
 
-        <TextInput
+        <Controller
+          name="country"
+          control={control}
+          render={({ field }) => (
+            <CountrySelect
+              name="country"
+              value={field.value}
+              onChange={(val) => {
+                field.onChange(val);
+                if (val === "GB") {
+                  setValue("srid", 27700);
+                } else {
+                  setValue("srid", "");
+                }
+              }}
+            />
+          )}
+        />
+
+        <Controller
           name="srid"
-          label="Coordinate Reference System ID"
-          placeholder="CRS ID"
-          type="number"
-          bottomLabel="Optional (recommended)"
-          step={1}
-          value={srid}
-          onChange={(val) => setValue("srid", val === "" ? "" : Number(val))}
-        >
-          <div className="dropdown dropdown-end">
-            <div
-              tabIndex={0}
-              role="button"
-              className="btn btn-circle btn-ghost btn-xs text-info"
+          control={control}
+          render={({ field }) => (
+            <TextInput
+              name="srid"
+              label="Coordinate Reference System ID"
+              placeholder="CRS ID"
+              type="number"
+              bottomLabel="Optional (recommended)"
+              step={1}
+              value={field.value}
+              onChange={(val) => field.onChange(val === "" ? "" : Number(val))}
+              max={900913}
+              min={2000}
             >
-              <FaCircleInfo size={18} />
-            </div>
-            <div
-              tabIndex={0}
-              className="card card-sm dropdown-content bg-base-100 rounded-box z-1 w-64 shadow-sm"
-            >
-              <div tabIndex={0} className="card-body">
-                <h2 className="card-title"></h2>
-                <p>TLDR: Set as 27700 for UK projects</p>
+              <div className="dropdown dropdown-end">
+                <div
+                  tabIndex={0}
+                  role="button"
+                  className="btn btn-circle btn-ghost btn-xs text-info"
+                >
+                  <FaCircleInfo size={18} />
+                </div>
+                <div
+                  tabIndex={0}
+                  className="card card-sm dropdown-content bg-base-100 rounded-box z-1 w-64 shadow-sm"
+                >
+                  <div tabIndex={0} className="card-body">
+                    <h2 className="card-title"></h2>
+                    <p>TLDR: Set as 27700 for UK projects</p>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </TextInput>
-        <Select
+            </TextInput>
+          )}
+        />
+
+        <Controller
           name="visibility"
-          label="Visibility"
-          defaultValue={Visibility.Private}
-        >
-          <option key={Visibility.Team} value={Visibility.Team}>
-            Team (visible to you and your team)
-          </option>
-          <option key={Visibility.Public} value={Visibility.Public}>
-            Public (visible to whole organisation)
-          </option>
-          <option key={Visibility.Private} value={Visibility.Private}>
-            Private (only visible to you)
-          </option>
-        </Select>
-        <fieldset className="fieldset bg-base-100 border-base-300 rounded-box border p-4">
-          <legend className="fieldset-legend">Technologies</legend>
-          {technologies.map((t) => (
-            <label key={t.id} className="label">
-              <input type="checkbox" className="checkbox checkbox-sm" />
-              <span className="label-text">{t.name}</span>
-            </label>
-          ))}
-          select all that apply
-        </fieldset>
+          control={control}
+          render={({ field }) => (
+            <Select
+              name="visibility"
+              label="Visibility"
+              value={field.value}
+              onChange={field.onChange}
+            >
+              <option value={Visibility.Team}>
+                {`${team.label} (${team.description})`}
+              </option>
+              <option value={Visibility.Public}>
+                {`${pub.label} (${pub.description})`}
+              </option>
+              <option value={Visibility.Private}>
+                {`${priv.label} (${priv.description})`}
+              </option>
+            </Select>
+          )}
+        />
+
+        <Controller
+          name="technologies"
+          control={control}
+          render={({ field }) => (
+            <fieldset className="fieldset bg-base-100 border-base-300 rounded-box border p-4">
+              <legend className="fieldset-legend">Technologies</legend>
+              {technologies.map((t) => (
+                <label
+                  key={t.id}
+                  className="label cursor-pointer justify-start gap-2"
+                >
+                  <input
+                    type="checkbox"
+                    className="checkbox checkbox-sm"
+                    checked={field.value.includes(t.id)}
+                    onChange={(e) => {
+                      const updatedValue = e.target.checked
+                        ? [...field.value, t.id]
+                        : field.value.filter((id) => id !== t.id);
+                      field.onChange(updatedValue);
+                    }}
+                  />
+                  <span className="label-text">{t.name}</span>
+                </label>
+              ))}
+              <p className="text-sm text-base-content/70 mt-2">
+                Select all that apply
+              </p>
+            </fieldset>
+          )}
+        />
       </div>
     </ModalForm>
   );

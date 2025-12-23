@@ -3,11 +3,10 @@ import { GiWindTurbine } from "react-icons/gi";
 
 import Project from "@/domain/project/entity";
 
-import { FaLock } from "react-icons/fa";
-
 import UserInitials from "../UserInitials";
 import { Link } from "@tanstack/react-router";
 import { useSearchbar } from "@/features/app/contexts/SearchbarContext";
+import { VisibilityConfig } from "@/domain/types";
 
 export default function ProjectListItem({ item }: { item: Project }) {
   const { setIsOpen: setSearchOpen } = useSearchbar();
@@ -46,10 +45,17 @@ export default function ProjectListItem({ item }: { item: Project }) {
 }
 
 function ProjectIcons({ project }: { project: Project }) {
+  const vis = VisibilityConfig[project.visibility];
+  const VisibilityIcon = vis.icon;
   return (
     <>
       <div className="flex w-6 items-center justify-center">
-        {project.private && <FaLock size={16} />}
+        <div
+          className="tooltip tooltip-left"
+          data-tip={`${vis.label}: ${vis.description}`}
+        >
+          <VisibilityIcon size={16} />
+        </div>
       </div>
       <div className="flex w-6 items-center items-center justify-center">
         {project.hasWind && project.primaryLayoutTurbineCount && (
@@ -57,9 +63,7 @@ function ProjectIcons({ project }: { project: Project }) {
             className="tooltip tooltip-left"
             data-tip={`${project.primaryLayoutTurbineCount} turbines`}
           >
-            <div>
-              <GiWindTurbine size={20} />
-            </div>
+            <GiWindTurbine size={20} />
           </div>
         )}
       </div>

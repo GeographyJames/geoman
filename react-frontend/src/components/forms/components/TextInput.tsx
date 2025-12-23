@@ -13,6 +13,8 @@ interface TextInputProps {
   step?: number;
   children?: ReactNode;
   defaultValue?: string;
+  max?: number;
+  min?: number;
 }
 
 export const TextInput = ({
@@ -25,10 +27,10 @@ export const TextInput = ({
   bottomLabel,
   children,
   defaultValue,
-
   type = "text",
   step,
-
+  max,
+  min,
   onChange,
 }: TextInputProps) => {
   return (
@@ -46,6 +48,8 @@ export const TextInput = ({
           onChange={(e) => onChange?.(e.target.value)}
           step={step}
           defaultValue={defaultValue}
+          max={max}
+          min={min}
         />
         {children && children}
       </div>

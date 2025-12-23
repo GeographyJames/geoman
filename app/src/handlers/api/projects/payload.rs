@@ -1,4 +1,5 @@
 use domain::{
+    TechnologyId,
     enums::Visibility,
     project::{ProjectInputDto, ProjectNameInputDTO, ProjectSlugInputDto},
 };
@@ -14,6 +15,7 @@ pub struct PostProjectPayload {
     pub country_code: String,
     pub crs_srid: Option<i32>,
     pub slug: String,
+    pub technologies: Option<Vec<TechnologyId>>,
 }
 
 impl Default for PostProjectPayload {
@@ -25,6 +27,7 @@ impl Default for PostProjectPayload {
             visibility: Default::default(),
             country_code: CountryCode::GBR.alpha2().to_string(),
             crs_srid: Default::default(),
+            technologies: Default::default(),
         }
     }
 }
@@ -37,6 +40,7 @@ impl TryInto<ProjectInputDto> for PostProjectPayload {
             country_code,
             crs_srid,
             slug,
+            technologies,
         } = self;
         let slug = ProjectSlugInputDto::try_from(slug)
             .map_err(ProjectValidationError::InvalidProjectSlug)?;
@@ -48,6 +52,7 @@ impl TryInto<ProjectInputDto> for PostProjectPayload {
             visibility: visibility.unwrap_or(Visibility::Private),
             country_code: isocountry::CountryCode::for_alpha2(&country_code)?,
             crs_srid,
+            technologies,
         })
     }
 

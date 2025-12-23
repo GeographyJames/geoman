@@ -1,13 +1,15 @@
 use domain::{ApiKeyInputDTO, KeyId, UserId};
+use sqlx::{Acquire, Postgres};
 
 use crate::repo::traits::Insert;
 
 impl Insert for (&ApiKeyInputDTO, UserId) {
     type Id = KeyId;
-    async fn insert<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>
+    async fn insert<'a, A>(&self, conn: A) -> Result<Self::Id, crate::repo::RepositoryError>
     where
-        &'a E: sqlx::PgExecutor<'a>,
+        A: Acquire<'a, Database = Postgres>,
     {
+        let mut executor = conn.acquire().await?;
         let (dto, id) = self;
         sqlx::query_scalar!(
             r#"
@@ -20,7 +22,7 @@ impl Insert for (&ApiKeyInputDTO, UserId) {
             dto.name,
             dto.key_hash.0
         )
-        .fetch_one(executor)
+        .fetch_one(&mut *executor)
         .await
         .map_err(Into::into)
     }

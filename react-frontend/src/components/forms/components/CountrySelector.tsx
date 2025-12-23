@@ -198,9 +198,11 @@ const allCountryCodes = [
 export const CountrySelect = ({
   value,
   onChange,
+  name,
 }: {
   value: string;
   onChange: (code: string) => void;
+  name: string;
 }) => {
   // Create the DisplayNames instance once
   const regionNames = useMemo(
@@ -217,7 +219,12 @@ export const CountrySelect = ({
   }, [regionNames]);
 
   return (
-    <Select name="country" value={value} onChange={onChange} label="Country">
+    <Select
+      name={name}
+      value={value}
+      onChange={onChange}
+      label="Country"
+    >
       <option value="" disabled>
         Select a country
       </option>

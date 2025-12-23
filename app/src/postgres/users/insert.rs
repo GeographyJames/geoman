@@ -1,14 +1,16 @@
 use domain::{TeamId, UserId, UserInputDto};
+use sqlx::{Acquire, Postgres};
 
 use crate::{AuthenticatedUser, repo::traits::Insert};
 
 impl<'b> Insert for UserInputDto<'b> {
     type Id = AuthenticatedUser;
 
-    async fn insert<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>
+    async fn insert<'a, A>(&self, conn: A) -> Result<Self::Id, crate::repo::RepositoryError>
     where
-        &'a E: sqlx::PgExecutor<'a>,
+        A: Acquire<'a, Database = Postgres>,
     {
+        let mut executor = conn.acquire().await?;
         sqlx::query_as!(
             AuthenticatedUser,
             r#"INSERT INTO app.users (
@@ -20,7 +22,7 @@ impl<'b> Insert for UserInputDto<'b> {
             self.last_name.unwrap_or("User"),
             self.username
         )
-        .fetch_one(executor)
+        .fetch_one(&mut *executor)
         .await
         .map_err(Into::into)
     }

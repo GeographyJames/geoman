@@ -1,16 +1,17 @@
 use domain::{ProjectCollectionId, ProjectCollectionInputDto, UserId, enums::GeometryType};
+use sqlx::{Acquire, Postgres};
 
 use crate::repo::traits::Insert;
 
 impl Insert for (&ProjectCollectionInputDto, UserId) {
     type Id = ProjectCollectionId;
 
-    async fn insert<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>
+    async fn insert<'a, A>(&self, conn: A) -> Result<Self::Id, crate::repo::RepositoryError>
     where
-        Self: Sized,
-        &'a E: sqlx::PgExecutor<'a>,
+        A: Acquire<'a, Database = Postgres>,
     {
         let (collection, id) = self;
+        let mut executor = conn.acquire().await?;
         sqlx::query_scalar!(
             r#"
             INSERT INTO app.collections (title, description, geometry_type, added_by, last_updated_by)
@@ -21,6 +22,6 @@ impl Insert for (&ProjectCollectionInputDto, UserId) {
             collection.description,
             &collection.geometry_type as &GeometryType,
             id.0
-        ).fetch_one(executor).await.map_err(Into::into)
+        ).fetch_one(&mut *executor).await.map_err(Into::into)
     }
 }

@@ -6,7 +6,8 @@ use thiserror::Error;
 
 use crate::{
     constants::db_constraints::{
-        PROJECT_COLLECTIONS_TITLE_UNIQUE, PROJECT_NAME_UNIQUE, PROJECT_SLUG_UNIQUE,
+        PROJECT_COLLECTIONS_TITLE_UNIQUE, PROJECT_CRS_ID_FKEY, PROJECT_NAME_UNIQUE,
+        PROJECT_SLUG_UNIQUE,
     },
     helpers::error_chain_fmt,
     repo::RepositoryError,
@@ -27,7 +28,7 @@ pub enum ApiError {
     ProjectNotFound(ProjectId),
     #[error("A project with this name already exists")]
     DuplicateProjectName,
-    #[error("The project URL is unavailable")]
+    #[error("A project with this URL already exists")]
     DuplicateProjectSlug,
     #[error("Project collection '{0}' not found")]
     ProjectCollectionNotFound(ProjectCollectionId),
@@ -45,13 +46,15 @@ pub enum ApiError {
     NotFound,
     #[error("A collection with this name already exists")]
     DuplicateCollectionName,
+    #[error("Invalid Coordinate Reference System ID")]
+    InvalidCRSID,
 }
 
 impl From<RepositoryError> for ApiError {
     fn from(value: RepositoryError) -> Self {
         match value {
             RepositoryError::UnexpectedSqlx(_) => Self::UnexpectedDatabase(value),
-            RepositoryError::RowNotFound => ApiError::ResourceNotFound(value),
+            RepositoryError::RowNotFound => Self::ResourceNotFound(value),
             RepositoryError::UnknownUniqueViolation(_) => Self::Conflict(value),
             RepositoryError::UniqueKeyViolation(ref unique_key) => match unique_key.as_str() {
                 PROJECT_NAME_UNIQUE => ApiError::DuplicateProjectName,
@@ -59,6 +62,13 @@ impl From<RepositoryError> for ApiError {
                 PROJECT_COLLECTIONS_TITLE_UNIQUE => ApiError::DuplicateCollectionName,
                 _ => ApiError::Conflict(value),
             },
+            RepositoryError::ForeignKeyViolation(ref fkey, error) => match fkey.as_str() {
+                PROJECT_CRS_ID_FKEY => ApiError::InvalidCRSID,
+                _ => ApiError::UnexpectedDatabase(error.into()),
+            },
+            RepositoryError::UnknownForeignKeyViolation(error) => {
+                ApiError::UnexpectedDatabase(error.into())
+            }
         }
     }
 }
@@ -80,6 +90,7 @@ impl ResponseError for ApiError {
             ApiError::CollectionNotFound => StatusCode::NOT_FOUND,
             ApiError::FeatureNotFound(_) => StatusCode::NOT_FOUND,
             ApiError::ProjectValidation(_) => StatusCode::UNPROCESSABLE_ENTITY,
+            ApiError::InvalidCRSID => StatusCode::UNPROCESSABLE_ENTITY,
 
             ApiError::DuplicateCollectionName => StatusCode::CONFLICT,
         }
@@ -102,11 +113,11 @@ impl std::fmt::Debug for ApiError {
 
 #[derive(Error)]
 pub enum ProjectValidationError {
-    #[error("invalid country code: {0}")]
+    #[error("Invalid country code: {0}")]
     InvalidCountryCode(#[from] CountryCodeParseErr),
-    #[error("invalid project name: {0}")]
+    #[error("Invalid project name: {0}")]
     InvalidProjectName(String),
-    #[error("invalid url: {0}")]
+    #[error("Invalid url: {0}")]
     InvalidProjectSlug(String),
 }
 

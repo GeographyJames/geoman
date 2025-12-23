@@ -4,7 +4,6 @@ use sqlx::prelude::Type;
 use strum::{Display, EnumString};
 
 #[derive(Serialize, Deserialize, Debug, Type, EnumString, Display)]
-#[strum(ascii_case_insensitive)]
 #[sqlx(type_name = "app.status", rename_all = "UPPERCASE")]
 pub enum Status {
     Active,
@@ -14,6 +13,7 @@ pub enum Status {
 
 #[derive(Serialize, Deserialize, Type, Clone, Debug, Display, Default)]
 #[sqlx(type_name = "app.visibility", rename_all = "UPPERCASE")]
+#[serde(rename_all = "UPPERCASE")]
 pub enum Visibility {
     Private,
     Team,
