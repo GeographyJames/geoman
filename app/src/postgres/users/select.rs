@@ -2,7 +2,6 @@ use domain::{KeyHash, Team, TeamId, User, UserId};
 
 use crate::{
     AuthenticatedUser,
-    postgres::sql_fragments::{team_join_fragment, user_row_fragment},
     repo::{
         RepositoryError,
         traits::{SelectAll, SelectOne, SelectOneWithParams},

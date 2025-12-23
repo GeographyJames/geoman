@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id AS \"id: TechnologyId\", name FROM app.technologies",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: TechnologyId",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "a12cf50303c4c86c4d0b495a0ecc3e697d093ddc07bc7ce1de8bf5478d755c8f"
+}

@@ -25,12 +25,12 @@ export type Visibility = typeof Visibility[keyof typeof Visibility];
     [Visibility.Private]: {
       icon: FiLock,
       label: "Private",
-      description: "only visible to you"
+      description: "only visible to you and other project members"
     },
     [Visibility.Team]: {
       icon: FiUsers,
       label: "Team",
-      description: "visible to you and your team"
+      description: "visible to you, other project members, and your team"
     },
     [Visibility.Public]: {
       icon: FiGlobe,

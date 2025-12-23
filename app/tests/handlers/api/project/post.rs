@@ -1,4 +1,3 @@
-use actix_web::App;
 use app::{ErrorResponse, handlers::api::projects::PostProjectPayload};
 use domain::{ProjectId, TechnologyId, project::Project};
 

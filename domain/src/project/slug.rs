@@ -24,6 +24,6 @@ impl TryFrom<String> for ProjectSlugInputDto {
 
 impl Default for ProjectSlugInputDto {
     fn default() -> Self {
-        Self(Default::default())
+        Self(uuid::Uuid::new_v4().to_string())
     }
 }

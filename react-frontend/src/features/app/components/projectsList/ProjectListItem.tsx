@@ -49,14 +49,6 @@ function ProjectIcons({ project }: { project: Project }) {
   const VisibilityIcon = vis.icon;
   return (
     <>
-      <div className="flex w-6 items-center justify-center">
-        <div
-          className="tooltip tooltip-left"
-          data-tip={`${vis.label}: ${vis.description}`}
-        >
-          <VisibilityIcon size={16} />
-        </div>
-      </div>
       <div className="flex w-6 items-center items-center justify-center">
         {project.hasWind && project.primaryLayoutTurbineCount && (
           <div
@@ -69,6 +61,14 @@ function ProjectIcons({ project }: { project: Project }) {
       </div>
       <div className="flex w-6  items-center justify-center">
         {project.centroid && <FaLocationDot size={20} />}
+      </div>
+      <div className="flex w-6 items-center justify-center">
+        <div
+          className="tooltip tooltip-left"
+          data-tip={`${vis.label}: ${vis.description}`}
+        >
+          <VisibilityIcon size={16} />
+        </div>
       </div>
       <div className="flex w-8 itemc-center justify-center">
         <UserInitials

@@ -1,4 +1,3 @@
-import type Team from "../team/entity";
 import type { TeamOutputDto } from "../team/outputDto";
 
 export interface UserOutputDto {

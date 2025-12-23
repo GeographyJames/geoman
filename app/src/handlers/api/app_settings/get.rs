@@ -1,7 +1,4 @@
-use actix_web::{
-    get,
-    web::{self, Json},
-};
+use actix_web::web::{self, Json};
 use domain::Technology;
 use serde::{Deserialize, Serialize};
 

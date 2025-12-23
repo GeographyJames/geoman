@@ -1,0 +1,66 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT u.id AS \"id: UserId\",\n                    u.first_name,\n                    u.last_name,\n                    u.clerk_id,\n                    u.operating_country_code,\n                    (ROW(t.id, t.name)::app.team) as \"team!: Team\"\n                FROM app.users u JOIN app.teams t ON t.id = u.team_id ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: UserId",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "first_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "last_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "clerk_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "operating_country_code",
+        "type_info": "Bpchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "team!: Team",
+        "type_info": {
+          "Custom": {
+            "name": "app.team",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Int4"
+                ],
+                [
+                  "name",
+                  "Text"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "f008ff01969f8db8e22d0f432e699cf73f06a0fe0013a537ae2d5aac855220ff"
+}
