@@ -6,21 +6,22 @@ import { useCreateApiKey } from "@/hooks/api/useCreateApiKey";
 import { useApiKeys } from "@/hooks/api/useApiKeys";
 import { useRevokeApiKey } from "@/hooks/api/useRevokeApiKey";
 import { useRenewApiKey } from "@/hooks/api/useRenewApiKey";
-import { useCurrentUser } from "@/hooks/api/useCurrentUser";
-import { useUsers } from "@/hooks/api/useUsers";
 
-export default function AdminPage() {
+import { useUsers } from "@/hooks/api/useUsers";
+import type User from "@/domain/user/entity";
+
+interface Props {
+  currentUser: User;
+}
+
+export default function AdminPage({ currentUser }: Props) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
   const { data: apiKeys = [], isLoading, error } = useApiKeys();
-  const {
-    data: currentUser,
-    isLoading: isLoadingUser,
-    error: userError,
-  } = useCurrentUser();
+
   const { data: users = [] } = useUsers();
   const createApiKeyMutation = useCreateApiKey();
   const revokeApiKeyMutation = useRevokeApiKey();
@@ -28,7 +29,7 @@ export default function AdminPage() {
 
   // Filter users to only show team members
   const teamMembers = users.filter(
-    (user) => currentUser?.team && user.team?.id === currentUser.team.id
+    (user) => user?.teamId === currentUser.teamId
   );
 
   const handleCreateKey = async () => {
@@ -131,28 +132,7 @@ export default function AdminPage() {
               <Users size={20} />
               Team Information
             </h2>
-            {isLoadingUser ? (
-              <div className="flex items-center gap-3 py-2">
-                <span className="loading loading-spinner loading-sm"></span>
-                <p className="text-base-content/70">
-                  Loading team information...
-                </p>
-              </div>
-            ) : userError ? (
-              <div className="alert alert-error">
-                <AlertCircle size={20} />
-                <div>
-                  <h3 className="font-semibold">
-                    Failed to load team information
-                  </h3>
-                  <div className="text-sm">
-                    {userError instanceof Error
-                      ? userError.message
-                      : "An error occurred"}
-                  </div>
-                </div>
-              </div>
-            ) : currentUser?.team ? (
+            {currentUser.team ? (
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-2">
                   <span className="text-base-content/70">Team:</span>
@@ -177,14 +157,14 @@ export default function AdminPage() {
                           <div className="avatar placeholder">
                             <div className="bg-neutral text-neutral-content rounded-full w-8">
                               <span className="text-xs">
-                                {member.first_name[0]}
-                                {member.last_name[0]}
+                                {member.firstName[0]}
+                                {member.lastName[0]}
                               </span>
                             </div>
                           </div>
                           <div className="flex-1">
                             <div className="font-medium">
-                              {member.first_name} {member.last_name}
+                              {member.firstName} {member.lastName}
                               {member.id === currentUser.id && (
                                 <span className="ml-2 text-xs text-primary">
                                   (You)

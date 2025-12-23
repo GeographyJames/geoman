@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@clerk/clerk-react";
-import type { User } from "./useCurrentUser";
+import type User from "@/domain/user/entity";
+
 export function useUsers() {
   const { getToken } = useAuth();
 
@@ -9,7 +10,7 @@ export function useUsers() {
     queryFn: async (): Promise<User[]> => {
       const token = await getToken();
 
-      const response = await fetch("/api/users", {
+      const response = await fetch(__URLS__.api.base + __URLS__.api.users, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

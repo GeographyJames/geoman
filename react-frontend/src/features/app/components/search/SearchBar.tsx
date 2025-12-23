@@ -1,5 +1,5 @@
 import SearchInput from "./SearchInput";
-import { useProjects } from "@/features/app/hooks/useProjects";
+import { useProjects } from "@/hooks/api/useProjects";
 import { useSidebar } from "@/features/app/contexts/SidebarContext";
 import { useSearchbar } from "../../contexts/SearchbarContext";
 import { ExpandButton, MenuButton } from "@/components/Buttons";

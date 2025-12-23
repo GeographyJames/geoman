@@ -6,4 +6,5 @@ export default class Team {
     constructor(outputDto: TeamOutputDto) {
         this.outputDto = outputDto
     }
+get name(): string {return this.outputDto.name}
 }

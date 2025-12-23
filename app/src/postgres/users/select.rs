@@ -1,4 +1,4 @@
-use domain::{KeyHash, TeamId, User, UserId};
+use domain::{KeyHash, Team, TeamId, User, UserId};
 
 use crate::{
     AuthenticatedUser,
@@ -16,11 +16,16 @@ impl SelectAll for User {
         Self: Sized,
         &'a E: sqlx::PgExecutor<'a>,
     {
-        sqlx::query_scalar(&format!(
-            "SELECT {} FROM app.users u {}",
-            user_row_fragment("u", "user"),
-            team_join_fragment("u")
-        ))
+        sqlx::query_as!(
+            User,
+            r#"SELECT u.id AS "id: UserId",
+                    u.first_name,
+                    u.last_name,
+                    u.clerk_id,
+                    u.operating_country_code,
+                    (ROW(t.id, t.name)::app.team) as "team!: Team"
+                FROM app.users u JOIN app.teams t ON t.id = u.team_id "#,
+        )
         .fetch_all(executor)
         .await
         .map_err(Into::into)
@@ -33,15 +38,18 @@ impl SelectOne<UserId> for User {
         Self: Sized,
         &'a E: sqlx::PgExecutor<'a>,
     {
-        sqlx::query_scalar(&format!(
-            "SELECT {}
-            FROM app.users u
-            {}
-            WHERE u.id = $1",
-            user_row_fragment("u", "user"),
-            team_join_fragment("u")
-        ))
-        .bind(id.0)
+        sqlx::query_as!(
+            User,
+            r#"SELECT u.id AS "id: UserId",
+                    u.first_name,
+                    u.last_name,
+                    u.clerk_id,
+                    u.operating_country_code,
+                    (ROW(t.id, t.name)::app.team) as "team!: Team"
+                FROM app.users u JOIN app.teams t ON t.id = u.team_id
+                WHERE u.id = $1 "#,
+            id.0
+        )
         .fetch_optional(executor)
         .await
         .map_err(Into::into)

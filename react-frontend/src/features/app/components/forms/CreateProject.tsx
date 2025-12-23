@@ -1,32 +1,39 @@
 import type ProjectInputDTO from "@/domain/project/inputDTO";
 import { TextInput } from "../../../../components/forms/components/TextInput";
 import { ModalForm } from "../../../../components/forms/ModalForm";
-import { usePostProject } from "../../hooks/usePostProject";
+import { usePostProject } from "../../../../hooks/api/usePostProject";
 import { slugify } from "@/lib/slugify";
 import { CountrySelect } from "@/components/forms/components/CountrySelector";
 import { FaCircleInfo } from "react-icons/fa6";
 import { Select } from "@/components/forms/components/Select";
 import { Visibility } from "@/domain/types";
 import { useForm } from "react-hook-form";
-import { useAppSettings } from "@/hooks/api/useAppSettings";
+import type User from "@/domain/user/entity";
+import type { TechnologyOutputDto } from "@/domain/technology/outputDto";
 
 interface CreateProjectFormData {
   projectName: string;
   country: string;
   srid: number | "";
   visibility: Visibility;
+  technologies: TechnologyOutputDto[];
 }
 
-export const CreateProjectForm = () => {
+interface Props {
+  currentUser: User;
+  technologies: TechnologyOutputDto[];
+}
+
+export const CreateProjectForm = ({ currentUser, technologies }: Props) => {
   const postProject = usePostProject();
-  const { data: appSettings } = useAppSettings();
+  const defautlSrid = currentUser.operatingCountryId === "GB" ? 27700 : "";
 
   const { handleSubmit, watch, reset, setValue } =
     useForm<CreateProjectFormData>({
       defaultValues: {
         projectName: "",
-        country: "GB",
-        srid: 27700,
+        country: currentUser.operatingCountryId,
+        srid: defautlSrid,
         visibility: Visibility.Private,
       },
     });
@@ -120,25 +127,24 @@ export const CreateProjectForm = () => {
           label="Visibility"
           defaultValue={Visibility.Private}
         >
-          <option value={Visibility.Team}>
+          <option key={Visibility.Team} value={Visibility.Team}>
             Team (visible to you and your team)
           </option>
-          <option value={Visibility.Public}>
+          <option key={Visibility.Public} value={Visibility.Public}>
             Public (visible to whole organisation)
           </option>
-          <option value={Visibility.Private}>
+          <option key={Visibility.Private} value={Visibility.Private}>
             Private (only visible to you)
           </option>
         </Select>
         <fieldset className="fieldset bg-base-100 border-base-300 rounded-box border p-4">
           <legend className="fieldset-legend">Technologies</legend>
-          {appSettings &&
-            appSettings.technologies.map((t) => (
-              <label className="label">
-                <input type="checkbox" className="checkbox checkbox-sm" />{" "}
-                <span className="label-text">{t.name}</span>
-              </label>
-            ))}
+          {technologies.map((t) => (
+            <label key={t.id} className="label">
+              <input type="checkbox" className="checkbox checkbox-sm" />
+              <span className="label-text">{t.name}</span>
+            </label>
+          ))}
           select all that apply
         </fieldset>
       </div>

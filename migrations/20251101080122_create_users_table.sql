@@ -6,6 +6,7 @@ CREATE TABLE app.users (
     clerk_id text UNIQUE,
     admin bool NOT NULL DEFAULT FALSE,
     team_id integer NOT NULL REFERENCES app.teams(id),
+    operating_country_code character(2) CHECK (operating_country_code ~ '^[A-Z]{2}$')  DEFAULT 'GB',
     added timestamptz NOT NULL DEFAULT now()
 );
 

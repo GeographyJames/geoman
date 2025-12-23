@@ -67,7 +67,11 @@ function ProjectIcons({ project }: { project: Project }) {
         {project.centroid && <FaLocationDot size={20} />}
       </div>
       <div className="flex w-8 itemc-center justify-center">
-        <UserInitials date={project.added} user={project.addedBy} />
+        <UserInitials
+          message={`project owner: ${project.ownerFirstName} ${project.ownerLastName}`}
+          firstName={project.ownerFirstName}
+          lastName={project.ownerLastName}
+        />
       </div>
     </>
   );

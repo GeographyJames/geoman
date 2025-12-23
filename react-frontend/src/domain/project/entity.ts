@@ -1,6 +1,5 @@
 
-import User from "../user/entity";
-import type { UserOutputDto } from "../user/outputDto";
+
 import type { ProjectOutputDTO } from "./outputDTO";
 import type { Status, Visibility } from "../types";
 
@@ -45,13 +44,11 @@ export default class Project {
     get private(): boolean {
         return true
     }
-get addedBy(): User {
-    let dto: UserOutputDto = {
-        first_name: this.outputDto.properties.added_by_first_name,
-        last_name: this.outputDto.properties.added_by_last_name,
-        id: this.outputDto.properties.added_by_id,
-        team: this.outputDto.properties.added_by_team
+    get ownerFirstName(): string {
+        return this.outputDto.properties.owner_first_name
     }
-    return new User(dto)
-}
+    get ownerLastName(): string {
+        return this.outputDto.properties.owner_last_name
+    }
+
 }
