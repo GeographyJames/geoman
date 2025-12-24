@@ -3,6 +3,7 @@ use domain::{
     Collections, GisDataTable, IntoOGCCollection, ProjectCollection, ProjectCollectionId,
     ProjectId, SupportedCrs, enums::CollectionId, project::ProjectName,
 };
+use ogcapi_types::common::Link;
 
 use crate::{
     URLS,
@@ -194,7 +195,7 @@ pub async fn get_project_collection(
 }
 
 fn project_collection(collections_url: &str) -> ogcapi_types::common::Collection {
-    ProjectCollection {
+    let mut projects = ProjectCollection {
         id: CollectionId::Projects,
         storage_crs: None,
         title: "Projects".to_string(),
@@ -202,5 +203,14 @@ fn project_collection(collections_url: &str) -> ogcapi_types::common::Collection
         description: None,
         supported_crs: SupportedCrs::new(None),
     }
-    .into_ogc_collection(collections_url)
+    .into_ogc_collection(collections_url);
+    let queryables_link = Link::new(
+        format!("{collections_url}/{}/queryables", CollectionId::Projects),
+        "http://www.opengis.net/def/rel/ogc/1.0/queryables",
+    )
+    .title("Queryables")
+    .mediatype("application/schema+json");
+
+    projects.links.push(queryables_link);
+    projects
 }

@@ -89,7 +89,8 @@ pub fn ogc_routes(cfg: &mut web::ServiceConfig, run_environment: GeoManEnvironme
                 .service(ogc_api::get_collections)
                 .service(ogc_api::get_collection)
                 .service(ogc_api::get_features)
-                .service(ogc_api::get_feature),
+                .service(ogc_api::get_feature)
+                .service(ogc_api::get_collection_queryables),
         );
 
     match run_environment {

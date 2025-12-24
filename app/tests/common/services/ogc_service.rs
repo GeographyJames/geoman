@@ -258,4 +258,18 @@ impl OgcService {
             .json(body);
         auth_request(req, auth).send().await.expect(REQUEST_FAILED)
     }
+
+    pub async fn get_collection_queryables(
+        &self,
+
+        client: &HttpClient,
+        collection: CollectionId,
+        auth: Option<&Auth>,
+    ) -> Response {
+        let req = client.get(&format!(
+            "{}{}/{}/queryables",
+            URLS.ogc_api.base, URLS.ogc_api.collections, collection
+        ));
+        auth_request(req, auth).send().await.expect(REQUEST_FAILED)
+    }
 }

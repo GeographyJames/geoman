@@ -13,3 +13,5 @@ pub use features::{
 };
 mod openapi;
 pub use openapi::get_openapi;
+mod queryables;
+pub use queryables::get_collection_queryables;
