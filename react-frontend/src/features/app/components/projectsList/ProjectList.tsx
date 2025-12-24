@@ -6,6 +6,7 @@ import { ShowArchivedProjectsToggle } from "../ShowArchivedToggle";
 import { CreateButton } from "../../../../components/Buttons";
 import ProjectListItem from "./ProjectListItem";
 import SortBy, { SORT_OPTIONS } from "./SortBy";
+import { ActionsDropdown } from "@/components/ActionsDropdown";
 
 interface Props {
   projects: Project[];

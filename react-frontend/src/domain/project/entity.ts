@@ -1,7 +1,7 @@
 
 
 import type { ProjectOutputDTO } from "./outputDTO";
-import type { Status, Visibility } from "../types";
+import { Status, type Visibility } from "../types";
 
 export default class Project {
     outputDto: ProjectOutputDTO
@@ -49,6 +49,9 @@ export default class Project {
     }
     get ownerLastName(): string {
         return this.outputDto.properties.owner_last_name
+    }
+    get archived(): boolean {
+        return this.outputDto.properties.status === Status.Archived
     }
 
 }
