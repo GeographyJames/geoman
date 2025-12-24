@@ -6,7 +6,7 @@ use crate::{
             app_settings::get_app_settings,
             keys::{generate_api_key, get_api_keys, renew_api_key, revoke_api_key},
             project_collections::post_project_collection,
-            projects::post_project,
+            projects::{patch_project, post_project},
             users::{get_user, get_users},
         },
         ogc_api,
@@ -63,7 +63,11 @@ pub fn api_key_routes(cfg: &mut web::ServiceConfig) {
 }
 
 pub fn project_routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(scope(&URLS.api.projects).service(post_project));
+    cfg.service(
+        scope(&URLS.api.projects)
+            .service(post_project)
+            .service(patch_project),
+    );
 }
 
 pub fn user_routes(cfg: &mut web::ServiceConfig) {

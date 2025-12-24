@@ -1,4 +1,6 @@
 mod post;
 pub use post::post_project;
-mod payload;
-pub use payload::PostProjectPayload;
+mod payloads;
+pub use payloads::{PatchProjectPayload, PostProjectPayload};
+mod patch;
+pub use patch::patch_project;

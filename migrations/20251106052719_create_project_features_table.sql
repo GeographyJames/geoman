@@ -27,7 +27,3 @@ CREATE INDEX idx_features_status ON app.project_features(status);
 
 
 
-CREATE TRIGGER update_last_updated_trigger
-    BEFORE UPDATE ON app.project_features
-    FOR EACH ROW
-    EXECUTE FUNCTION update_last_updated();

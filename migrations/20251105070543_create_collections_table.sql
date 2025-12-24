@@ -10,10 +10,7 @@ CREATE TABLE app.collections (
     CONSTRAINT project_collections_title_key UNIQUE (title)
 );
 
-CREATE TRIGGER update_last_updated_trigger
-    BEFORE UPDATE ON app.collections
-    FOR EACH ROW
-    EXECUTE FUNCTION update_last_updated();
+
 
 INSERT INTO app.collections (
     title,

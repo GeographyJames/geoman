@@ -26,7 +26,3 @@ CREATE INDEX idx_country_code ON app.projects(country_code);
 CREATE INDEX idx_project_owner ON app.projects(owner);
 CREATE INDEX idx_projects_search_area_id ON app.projects(search_area_id);
 
-CREATE TRIGGER update_last_updated_trigger
-    BEFORE UPDATE ON app.projects
-    FOR EACH ROW
-    EXECUTE FUNCTION update_last_updated();

@@ -10,3 +10,5 @@ mod slug;
 pub use slug::ProjectSlugInputDto;
 mod name_input_dto;
 pub use name_input_dto::ProjectNameInputDTO;
+mod update;
+pub use update::ProjectUpdateDto;

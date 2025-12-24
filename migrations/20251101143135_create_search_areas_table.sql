@@ -16,10 +16,7 @@ CREATE TABLE app.search_areas
     geom geometry(MultiPolygon,4326) NOT NULL CHECK (st_isvalid(geom))
 );
 
-CREATE TRIGGER update_last_updated_trigger
-    BEFORE UPDATE ON app.search_areas
-    FOR EACH ROW
-    EXECUTE FUNCTION update_last_updated();
+
 
 CREATE INDEX idx_search_areas_geom ON app.search_areas USING GIST(geom);
 

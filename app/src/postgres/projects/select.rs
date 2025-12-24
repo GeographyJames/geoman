@@ -81,8 +81,7 @@ fn project_query() -> String {
               FROM app.project_technologies pt
               JOIN app.technologies t ON t.id = pt.technology_id
              WHERE pt.project_id = p.id
-        ) technologies ON true
-        WHERE p.status = 'ACTIVE'"#,
+        ) technologies ON true"#,
         user_row_owner = user_row_fragment("o", "owner"),
         user_row_added_by = user_row_fragment("a", "added_by"),
         user_row_last_updated_by = user_row_fragment("l", "last_updated_by"),
@@ -109,7 +108,8 @@ impl SelectAllWithParams for Project {
             _bbox_crs: _,
         } = params;
         let rows: Vec<ProjectRow> = sqlx::query_as(&format!(
-            "{} ORDER BY id
+            "{}         WHERE p.status != 'DELETED'
+            ORDER BY id
                  LIMIT $2",
             project_query()
         ))

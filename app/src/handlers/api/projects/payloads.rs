@@ -1,12 +1,12 @@
 use domain::{
-    TechnologyId,
-    enums::Visibility,
-    project::{ProjectInputDto, ProjectNameInputDTO, ProjectSlugInputDto},
+    ProjectId, TechnologyId,
+    enums::{Status, Visibility},
+    project::{ProjectInputDto, ProjectNameInputDTO, ProjectSlugInputDto, ProjectUpdateDto},
 };
 use isocountry::CountryCode;
 use serde::{Deserialize, Serialize};
 
-use crate::handlers::ProjectValidationError;
+use crate::{errors::ApiError, handlers::ProjectValidationError};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct PostProjectPayload {
@@ -57,4 +57,19 @@ impl TryInto<ProjectInputDto> for PostProjectPayload {
     }
 
     type Error = ProjectValidationError;
+}
+
+#[derive(Default, Serialize, Deserialize)]
+pub struct PatchProjectPayload {
+    pub status: Option<Status>,
+}
+
+impl PatchProjectPayload {
+    pub fn try_into_dto(self, project_id: ProjectId) -> Result<ProjectUpdateDto, ApiError> {
+        let PatchProjectPayload { status } = self;
+        Ok(ProjectUpdateDto {
+            status,
+            id: project_id,
+        })
+    }
 }

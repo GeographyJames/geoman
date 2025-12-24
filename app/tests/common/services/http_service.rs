@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::common::{Auth, constants::REQUEST_FAILED, helpers::auth_request, services::HttpClient};
 use reqwest::Response;
 use serde::Serialize;
@@ -28,10 +30,24 @@ impl HttpService {
         &self,
         client: &HttpClient,
         auth: Option<&Auth>,
-        id: impl AsRef<str>,
+        id: impl Display,
+    ) -> Response {
+        auth_request(client.get(&format!("{}/{}", &self.endpoint, id)), auth)
+            .send()
+            .await
+            .expect(REQUEST_FAILED)
+    }
+    pub async fn patch_json<B: Serialize>(
+        &self,
+        client: &HttpClient,
+        id: impl Display,
+        auth: Option<&Auth>,
+        body: &B,
     ) -> Response {
         auth_request(
-            client.get(&format!("{}/{}", &self.endpoint, id.as_ref())),
+            client
+                .patch(&format!("{}/{}", &self.endpoint, id))
+                .json(body),
             auth,
         )
         .send()
