@@ -9,9 +9,12 @@ import { useSearchbar } from "@/features/app/contexts/SearchbarContext";
 import { VisibilityConfig } from "@/domain/types";
 import { ActionsDropdown } from "@/components/ActionsDropdown";
 import { ToggleArchivedStatus } from "@/components/ToggleArchivedStatus";
+import { usePatchProject } from "@/hooks/api/projects/usePatchProject";
 
 export default function ProjectListItem({ item }: { item: Project }) {
   const { setIsOpen: setSearchOpen } = useSearchbar();
+  const { mutate: patchProject } = usePatchProject();
+
   const handleClick = () => {
     setSearchOpen(false);
   };
@@ -41,8 +44,11 @@ export default function ProjectListItem({ item }: { item: Project }) {
           <li>
             <ToggleArchivedStatus
               archived={item.archived}
-              setArchived={() => {
-                console.log("archive");
+              setArchived={(archived) => {
+                patchProject({
+                  id: item.id,
+                  dto: { status: archived ? "ARCHIVED" : "ACTIVE" },
+                });
               }}
             />
           </li>

@@ -17,7 +17,7 @@ import { useAuth } from "@clerk/clerk-react";
 export function useApiRequest() {
   const { getToken, isSignedIn } = useAuth();
 
-  return async <T>(url: string, options?: RequestInit): Promise<T> => {
+  return async <T>(url: string, options?: RequestInit): Promise<T | undefined> => {
     // Get token if user is signed in
     let token: string | null = null;
     if (isSignedIn) {
@@ -37,7 +37,14 @@ export function useApiRequest() {
         `API request failed: ${response.statusText} (${response.status})`
       );
     }
+    if (response.status === 204) {
+      return undefined
+    }
+    const contentType = response.headers.get("content-type");
+    if (contentType?.includes("application/json")) {
+      return response.json();
+    }
 
-    return response.json();
+    return undefined;
   };
 }

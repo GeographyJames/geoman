@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import Project from "@/domain/project/entity";
 import SidebarList from "../projectsList/ProjectList";
-import { useProjects } from "@/hooks/api/useProjects";
+import { useProjects } from "@/hooks/api/projects/useProjects";
 
 interface Props {
   searchText: string;

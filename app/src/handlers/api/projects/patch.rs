@@ -16,5 +16,5 @@ pub async fn patch_project(
 ) -> Result<HttpResponse, ApiError> {
     let dto: ProjectUpdateDto = body.into_inner().try_into_dto(id.into_inner())?;
     repo.update(&(&dto, user.id)).await?;
-    Ok(HttpResponse::Ok().finish())
+    Ok(HttpResponse::NoContent().finish())
 }

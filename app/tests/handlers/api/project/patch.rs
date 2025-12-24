@@ -6,7 +6,7 @@ use domain::{
 
 use crate::common::{
     AppBuilder, Auth,
-    helpers::{assert_ok, handle_json_response},
+    helpers::{assert_status, handle_json_response},
 };
 
 #[actix_web::test]
@@ -26,7 +26,7 @@ async fn patch_project_works() {
             &updated_project,
         )
         .await;
-    assert_ok(&response);
+    assert_status(&response, 204);
     let project: ogc::Feature = handle_json_response(
         app.ogc_service
             .get_feature(

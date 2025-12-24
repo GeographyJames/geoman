@@ -1,7 +1,7 @@
 import type ProjectInputDTO from "@/domain/project/inputDTO";
 import { TextInput } from "../../../../components/forms/components/TextInput";
 import { ModalForm } from "../../../../components/forms/ModalForm";
-import { usePostProject } from "../../../../hooks/api/usePostProject";
+import { usePostProject } from "../../../../hooks/api/projects/usePostProject";
 import { slugify } from "@/lib/slugify";
 import { CountrySelect } from "@/components/forms/components/CountrySelector";
 import { FaCircleInfo } from "react-icons/fa6";
