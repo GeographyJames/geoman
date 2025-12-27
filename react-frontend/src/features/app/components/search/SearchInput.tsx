@@ -60,7 +60,7 @@ export default function SearchInput({
     }
   };
   return (
-    <label className="min-w-0 pl-0 my-2 input border-none focus-within:outline-none focus-within:border-none flex-grow focus-within:shadow-none !shadow-none ">
+    <label className="min-w-0 pl-0 my-2 input input-ghost border-none focus-within:outline-none  flex-grow  ">
       <input
         ref={inputRef}
         onChange={(e) => setSearchText(e.target.value)}

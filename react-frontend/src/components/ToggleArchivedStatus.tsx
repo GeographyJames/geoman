@@ -1,12 +1,12 @@
 interface Props {
   archived: boolean;
-  setArchived: (archived: boolean) => void;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
 }
 
-export const ToggleArchivedStatus = ({ archived, setArchived }: Props) => {
+export const ToggleArchivedStatus = ({ archived, onClick }: Props) => {
   return (
-    <div onClick={() => setArchived(!archived)}>
+    <button type="button" onClick={onClick}>
       {archived ? "restore" : "archive"}
-    </div>
+    </button>
   );
 };

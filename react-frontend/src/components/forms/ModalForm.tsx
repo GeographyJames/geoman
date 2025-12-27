@@ -5,7 +5,9 @@ import { ErrorAlert } from "../Alert";
 interface ModalFormProps<T> {
   id: string;
   title: string;
-  onSubmit: ((values: T) => Promise<void> | void) | ((e: React.FormEvent) => Promise<void> | void);
+  onSubmit:
+    | ((values: T) => Promise<void> | void)
+    | ((e: React.FormEvent) => Promise<void> | void);
   onClose?: () => void;
   onReset?: () => void;
   children: React.ReactNode;
@@ -66,7 +68,7 @@ export const ModalForm = <T,>({
   };
 
   return (
-    <dialog id={id} className="modal">
+    <dialog id={id} className="modal overflow-y-auto">
       <div className="modal-box flex flex-col gap-2">
         <form method="dialog" className="absolute right-2 top-2">
           <CloseButton />

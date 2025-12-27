@@ -18,7 +18,8 @@ export function useCurrentUser() {
     queryKey: ["currentUser"],
     queryFn: async () => {
       const data = await apiRequest<UserOutputDto>(url)
-      return new User(data)
+      if (data) {
+      return new User(data)}
 
 
 

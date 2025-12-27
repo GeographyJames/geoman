@@ -5,6 +5,7 @@ import { useSearchbar } from "../../contexts/SearchbarContext";
 import { ExpandButton, MenuButton } from "@/components/Buttons";
 import { UserBadge } from "@/components/UserBadge";
 import type Project from "@/domain/project/entity";
+import { ThemeSwitch } from "../ThemeSwitch";
 
 interface Props {
   searchText: string;
@@ -56,6 +57,10 @@ export const SearchBar = ({
               : "search projects"
         }
       />
+      <div className="pr-2">
+        <ThemeSwitch />
+      </div>
+
       <UserBadge />
     </div>
   );

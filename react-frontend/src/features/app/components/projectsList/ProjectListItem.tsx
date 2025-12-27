@@ -29,7 +29,7 @@ export default function ProjectListItem({ item }: { item: Project }) {
         >
           <div
             className={`flex gap-2 ${
-              item.status === "ARCHIVED" && "text-gray-400"
+              item.status === "ARCHIVED" && "text-base-content/50"
             }`}
           >
             <span className="w-6 flex items-center font-bold">{item.id}</span>
@@ -44,11 +44,16 @@ export default function ProjectListItem({ item }: { item: Project }) {
           <li>
             <ToggleArchivedStatus
               archived={item.archived}
-              setArchived={(archived) => {
+              onClick={(e) => {
                 patchProject({
                   id: item.id,
-                  dto: { status: archived ? "ARCHIVED" : "ACTIVE" },
+                  dto: { status: item.archived ? "ACTIVE" : "ARCHIVED" },
                 });
+
+                const popover = (e.currentTarget as HTMLElement).closest(
+                  "[popover]"
+                ) as HTMLElement | null;
+                popover?.hidePopover();
               }}
             />
           </li>

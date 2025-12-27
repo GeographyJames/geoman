@@ -3,6 +3,7 @@
   themes: light --default, dark --prefersdark;
 }
 
+
 html,
 body,
 #app {
@@ -12,3 +13,4 @@ body,
 .scroll-panel {
   scrollbar-gutter: stable;
 }
+
