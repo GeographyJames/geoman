@@ -2,34 +2,35 @@ import { useState } from "react";
 
 import Project from "@/domain/project/entity";
 
-import { ShowArchivedProjectsToggle } from "../ShowArchivedToggle";
 import { CreateButton } from "../../../../components/Buttons";
 import ProjectListItem from "./ProjectListItem";
 import SortBy, { SORT_OPTIONS } from "./SortBy";
+import ShowArchivedToggle from "../ShowArchivedToggle";
 
 interface Props {
   projects: Project[];
-
-  // showArchived: boolean;
-  // setShowArchived: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function ProjectsList({ projects }: Props) {
+  const [showArchived, setShowArchived] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState(SORT_OPTIONS.NAME_ASCENDING);
-  const sortedProjects = projects.slice().sort((a, b) => {
-    switch (sortBy) {
-      case "name_ascending":
-        return a.name.localeCompare(b.name);
-      case "created":
-        return b.added.getTime() - a.added.getTime();
-      case "id_ascending":
-        return a.id - b.id;
-      case "id_descending":
-        return b.id - a.id;
-      default:
-        return 0;
-    }
-  });
+  const sortedProjects = projects
+    .filter((a) => showArchived || !a.archived)
+    .slice()
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "name_ascending":
+          return a.name.localeCompare(b.name);
+        case "created":
+          return b.added.getTime() - a.added.getTime();
+        case "id_ascending":
+          return a.id - b.id;
+        case "id_descending":
+          return b.id - a.id;
+        default:
+          return 0;
+      }
+    });
 
   return (
     <div className="flex flex-col min-h-0 h-full pb-2 pt-4 gap-2">
@@ -48,7 +49,10 @@ export default function ProjectsList({ projects }: Props) {
         </div>
 
         <div className="flex justify-between">
-          <ShowArchivedProjectsToggle />
+          <ShowArchivedToggle
+            showArchived={showArchived}
+            setShowArchived={setShowArchived}
+          />
 
           <span className="flex ml-auto text-xs text-gray-500">{`showing ${sortedProjects.length}`}</span>
         </div>

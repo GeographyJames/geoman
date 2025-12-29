@@ -68,8 +68,8 @@ export const ModalForm = <T,>({
   };
 
   return (
-    <dialog id={id} className="modal overflow-y-auto">
-      <div className="modal-box flex flex-col gap-2">
+    <dialog id={id} className="modal">
+      <div className="modal-box flex flex-col gap-2 max-h-[90dvh] overflow-y-auto overscroll-contain touch-pan-y">
         <form method="dialog" className="absolute right-2 top-2">
           <CloseButton />
         </form>

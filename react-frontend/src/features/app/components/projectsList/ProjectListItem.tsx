@@ -4,7 +4,7 @@ import { GiWindTurbine } from "react-icons/gi";
 import Project from "@/domain/project/entity";
 
 import UserInitials from "../UserInitials";
-import { Link } from "@tanstack/react-router";
+import { Link, useSearch } from "@tanstack/react-router";
 import { useSearchbar } from "@/features/app/contexts/SearchbarContext";
 import { VisibilityConfig } from "@/domain/types";
 import { ActionsDropdown } from "@/components/ActionsDropdown";
@@ -14,16 +14,24 @@ import { usePatchProject } from "@/hooks/api/projects/usePatchProject";
 export default function ProjectListItem({ item }: { item: Project }) {
   const { setIsOpen: setSearchOpen } = useSearchbar();
   const { mutate: patchProject } = usePatchProject();
+  const { projects } = useSearch({ from: "/_app/" });
 
   const handleClick = () => {
     setSearchOpen(false);
   };
 
+  const currentProjects = projects;
+  const projectsArray = currentProjects ? currentProjects : [];
+  const newProjects = projectsArray.includes(item.slug)
+    ? projectsArray
+    : [...projectsArray, item.slug];
+
   return (
     <li key={item.id}>
       <div className="flex">
         <Link
-          to={item.url}
+          from={"/"}
+          search={{ projects: newProjects }}
           onClick={handleClick}
           className="flex justify-start flex-1"
         >
