@@ -6,8 +6,9 @@ import { OSM } from "ol/source";
 import { useEffect, useState } from "react";
 import { defaults as defaultControls } from "ol/control";
 import { CloseButton, ExpandButton } from "@/components/Buttons";
+import type Project from "@/domain/project/entity";
 
-export const ProjectPanel = ({ project }: { project: string }) => {
+export const ProjectPanel = ({ project }: { project: Project }) => {
   const { containerRef, mapRef } = useMapContext();
   const navigate = useNavigate();
   const search = useSearch({ from: "/_app/" });
@@ -20,7 +21,7 @@ export const ProjectPanel = ({ project }: { project: string }) => {
     const currentProjects = search.projects || "";
     const projectsArray = currentProjects.split(",").filter(Boolean);
     const updatedProjects = projectsArray
-      .filter((p) => p !== project)
+      .filter((p) => p !== project.slug)
       .join(",");
 
     navigate({
@@ -67,7 +68,7 @@ export const ProjectPanel = ({ project }: { project: string }) => {
           onClick={() => setExpanded(!expanded)}
         />
 
-        <h1 className="text-l font-bold">{project}</h1>
+        <h1 className="text-l font-bold">{project.name}</h1>
       </div>
 
       {expanded && (

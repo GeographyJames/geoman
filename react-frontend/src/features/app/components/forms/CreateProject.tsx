@@ -8,8 +8,8 @@ import { FaCircleInfo } from "react-icons/fa6";
 import { Select } from "@/components/forms/components/Select";
 import { Visibility, VisibilityConfig } from "@/domain/types";
 import { useForm, Controller } from "react-hook-form";
-import type User from "@/domain/user/entity";
-import type { TechnologyOutputDto } from "@/domain/technology/outputDto";
+import { useAppSettings } from "@/hooks/api/useAppSettings";
+import { useCurrentUser } from "@/hooks/api/useCurrentUser";
 
 interface CreateProjectFormData {
   projectName: string;
@@ -19,20 +19,19 @@ interface CreateProjectFormData {
   technologies: number[];
 }
 
-interface Props {
-  currentUser: User;
-  technologies: TechnologyOutputDto[];
-}
-
-export const CreateProjectForm = ({ currentUser, technologies }: Props) => {
+export const CreateProjectForm = () => {
   const postProject = usePostProject();
-  const defautlSrid = currentUser.operatingCountryId === "GB" ? 27700 : "";
+  const { data: appSettings, isLoading: isLoadingSettings } = useAppSettings();
+  const { data: currentUser, isLoading: isLoadingUser } = useCurrentUser();
+  console.log("form loaded");
+  const isLoading = isLoadingSettings || isLoadingUser;
+  const defautlSrid = currentUser?.operatingCountryId === "GB" ? 27700 : "";
 
   const { handleSubmit, watch, reset, setValue, control } =
     useForm<CreateProjectFormData>({
       defaultValues: {
         projectName: "",
-        country: currentUser.operatingCountryId,
+        country: currentUser?.operatingCountryId || "",
         srid: defautlSrid,
         visibility: Visibility.Private,
         technologies: [],
@@ -61,6 +60,27 @@ export const CreateProjectForm = ({ currentUser, technologies }: Props) => {
   const priv = VisibilityConfig[Visibility.Private];
   const team = VisibilityConfig[Visibility.Team];
   const pub = VisibilityConfig[Visibility.Public];
+
+  if (isLoading) {
+    return (
+      <ModalForm
+        id="create_project"
+        title="Create project"
+        onSubmit={handleSubmit(onSubmit)}
+        onReset={onReset}
+      >
+        <div className="flex justify-center items-center py-8">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </ModalForm>
+    );
+  }
+
+  if (!currentUser || !appSettings) {
+    return null;
+  }
+
+  const technologies = appSettings.technologies;
 
   return (
     <ModalForm

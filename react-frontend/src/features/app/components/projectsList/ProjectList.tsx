@@ -57,7 +57,7 @@ export default function ProjectsList({ projects }: Props) {
           <span className="flex ml-auto text-xs text-gray-500">{`showing ${sortedProjects.length}`}</span>
         </div>
       </div>
-      <div className="flex flex-col overflow-y-auto scroll-gutter-stable scroll-panel">
+      <div className="flex flex-col  overflow-y-auto scroll-gutter-stable scroll-panel py-1">
         <ul className="menu w-full  pb-0">
           {sortedProjects.map((item) => (
             <ProjectListItem key={item.id} item={item} />
