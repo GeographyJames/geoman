@@ -3,7 +3,7 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@clerk/clerk-react";
 
 type MapParams = {
-  projects?: string[];
+  projects?: string;
 };
 
 const AppLayout = () => {
@@ -26,7 +26,7 @@ const AppLayout = () => {
 export const Route = createFileRoute("/_app")({
   validateSearch: (search: Record<string, unknown>): MapParams => {
     return {
-      projects: search.projects as string[],
+      projects: search.projects as string,
     };
   },
   component: AppLayout,

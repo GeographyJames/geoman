@@ -21,10 +21,10 @@ export default function ProjectListItem({ item }: { item: Project }) {
   };
 
   const currentProjects = projects;
-  const projectsArray = currentProjects ? currentProjects : [];
+  const projectsArray = currentProjects ? currentProjects.split(",") : [];
   const newProjects = projectsArray.includes(item.slug)
-    ? projectsArray
-    : [...projectsArray, item.slug];
+    ? projectsArray.join(",")
+    : [...projectsArray, item.slug].join(",");
 
   return (
     <li key={item.id}>
