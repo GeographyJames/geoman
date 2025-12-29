@@ -1,6 +1,6 @@
-import type { TechnologyOutputDto } from "@/domain/technology/outputDTO";
+
+import type { TechnologyOutputDto } from "@/domain/technology/outputDto";
 import { useApiRequest } from "@/lib/api";
-import { useAuth } from "@clerk/clerk-react";
 import { useQuery } from "@tanstack/react-query";
 
 
@@ -10,7 +10,6 @@ export interface AppSettingsResponse {
 
 export function useAppSettings() {
     const apiRequest = useApiRequest();
-    const { isLoaded } = useAuth();
     const url = __URLS__.api.base + __URLS__.api.app_settings;
 
 
@@ -20,6 +19,5 @@ export function useAppSettings() {
       const data = await apiRequest<AppSettingsResponse>(url);
       return data
     },
-    enabled: isLoaded, // Wait for Clerk to initialize
   });
 }

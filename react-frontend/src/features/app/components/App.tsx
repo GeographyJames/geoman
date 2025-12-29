@@ -13,8 +13,8 @@ import { useCurrentUser } from "@/hooks/api/useCurrentUser";
 export const App = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
-  const { data: appSettings } = useAppSettings();
-  const { data: currentUser } = useCurrentUser();
+  const appSettings = useAppSettings();
+  const currentUser = useCurrentUser();
   // Cleanup: destroy map when leaving the _app layout
   useEffect(() => {
     return () => {
@@ -27,27 +27,27 @@ export const App = () => {
     };
   }, []);
 
-  if (!appSettings) {
-    return <>Error loading application</>;
+  if (appSettings.isError) {
+    return <>Error loading application settings</>;
   }
-  if (!currentUser) {
-    return <>Error loading application</>;
+  if (currentUser.isError) {
+    return <>Error loading application user</>;
   }
+  if (appSettings.data && currentUser.data)
+    return (
+      <>
+        <SidebarProvider>
+          <SearchbarProvider>
+            <MapRefContext.Provider value={{ containerRef, mapRef }}>
+              <Drawer />
+            </MapRefContext.Provider>
 
-  return (
-    <>
-      <SidebarProvider>
-        <SearchbarProvider>
-          <MapRefContext.Provider value={{ containerRef, mapRef }}>
-            <Drawer />
-          </MapRefContext.Provider>
-
-          <CreateProjectForm
-            currentUser={currentUser}
-            technologies={appSettings.technologies}
-          />
-        </SearchbarProvider>
-      </SidebarProvider>
-    </>
-  );
+            <CreateProjectForm
+              currentUser={currentUser.data}
+              technologies={appSettings.data.technologies}
+            />
+          </SearchbarProvider>
+        </SidebarProvider>
+      </>
+    );
 };
