@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ProjectPanel } from "@/features/app/components/project/ProjectPanel";
+import { ProjectAdmin } from "@/features/app/components/project/ProjectAdmin";
 
 const ProjectRoute = () => {
-  return <ProjectPanel />;
+  return <ProjectAdmin />;
 };
 
 export const Route = createFileRoute("/_app/project/$slug")({

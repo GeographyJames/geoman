@@ -65,6 +65,11 @@ export default function ProjectListItem({ item }: { item: Project }) {
               }}
             />
           </li>
+          <li>
+            <Link to="/project/$slug" params={{ slug: item.slug }}>
+              admin
+            </Link>
+          </li>
         </ActionsDropdown>
       </div>
     </li>

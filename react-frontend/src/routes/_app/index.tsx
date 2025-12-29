@@ -1,14 +1,6 @@
-import ProjectsMap from "@/features/projects/components/ProjectsMap";
-import { useProjects } from "@/hooks/api/projects/useProjects";
+import { App } from "@/features/app/components/App";
 import { createFileRoute } from "@tanstack/react-router";
 
-const ProjectsRoute = () => {
-  const { data } = useProjects();
-  if (data) {
-    return <ProjectsMap />;
-  }
-};
-
 export const Route = createFileRoute("/_app/")({
-  component: ProjectsRoute,
+  component: App,
 });
