@@ -10,6 +10,7 @@ import { Visibility, VisibilityConfig } from "@/domain/types";
 import { useForm, Controller } from "react-hook-form";
 import { useAppSettings } from "@/hooks/api/useAppSettings";
 import { useCurrentUser } from "@/hooks/api/useCurrentUser";
+import { useEffect } from "react";
 
 interface CreateProjectFormData {
   projectName: string;
@@ -40,6 +41,20 @@ export const CreateProjectForm = () => {
 
   const projectName = watch("projectName");
   const slug = slugify(projectName);
+
+  // Update form defaults when user data loads
+  useEffect(() => {
+    if (currentUser) {
+      const defaultSrid = currentUser.operatingCountryId === "GB" ? 27700 : "";
+      reset({
+        projectName: "",
+        country: currentUser.operatingCountryId,
+        srid: defaultSrid,
+        visibility: Visibility.Private,
+        technologies: [],
+      });
+    }
+  }, [currentUser, reset]);
 
   const onSubmit = async (data: CreateProjectFormData) => {
     const dto: ProjectInputDTO = {

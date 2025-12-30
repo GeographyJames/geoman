@@ -25,7 +25,7 @@ export function Search() {
   return (
     <div
       id="search-bar"
-      className="flex flex-col min-h-0 w-full sm:max-w-[28rem] pointer-events-auto"
+      className="flex flex-col min-h-0 h-full w-full sm:max-w-[28rem] pointer-events-auto"
     >
       <div className="bg-base-100 shadow-lg rounded-full">
         <SearchBar
@@ -39,14 +39,14 @@ export function Search() {
         />
       </div>
       <div
-        className={`grid transition-all duration-200 ease-out ${
+        className={`grid transition-all duration-300 ease-in-out min-h-0 ${
           searchOpen
-            ? "grid-rows-[1fr] opacity-100 [content-visibility:visible]"
-            : "grid-rows-[0fr] opacity-0 [content-visibility:hidden]"
+            ? "grid-rows-[1fr] opacity-100 pt-2"
+            : "grid-rows-[0fr] opacity-0"
         }`}
       >
-        <div className="overflow-hidden">
-          <div className="bg-base-100 shadow-lg rounded-box pt-2 mt-2">
+        <div className="overflow-hidden min-h-0 rounded-box">
+          <div className="bg-base-100 shadow-lg rounded-box pt-2 h-full flex flex-col">
             <SearchResultsBox
               selectedTab={selectedTab}
               setSelectedTab={setSelectedTab}

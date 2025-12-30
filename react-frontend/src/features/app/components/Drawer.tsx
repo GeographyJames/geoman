@@ -1,4 +1,5 @@
 import BaseMap from "@/features/app/components/map/BaseMap";
+import ProjectsMap from "@/features/projects/components/ProjectsMap";
 
 import { useMapContext } from "@/features/app/contexts/MapRefContext";
 import { Sidebar } from "./Sidebar";
@@ -32,7 +33,7 @@ const DrawerMain = () => {
         containerRef={containerRef}
         onMouseDown={() => setSearchOpen(false)}
       />
-
+      <ProjectsMap />
       <OverlayPanels />
     </div>
   );
