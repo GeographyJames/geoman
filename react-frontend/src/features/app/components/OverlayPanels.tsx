@@ -17,10 +17,17 @@ export const OverlayPanels = () => {
       >
         <Search />
 
-        {projects &&
-          data
-            .filter((p) => loadedProjects.includes(p.slug))
-            .map((p) => <ProjectPanel key={p.slug} project={p} />)}
+        {projects && (
+          <div
+            className={`flex flex-col gap-2 overflow-y-auto ${isOpen ? "max-h-[50vh]" : ""}`}
+          >
+            {data
+              .filter((p) => loadedProjects.includes(p.slug))
+              .map((p) => (
+                <ProjectPanel key={p.slug} project={p} />
+              ))}
+          </div>
+        )}
 
         <Outlet />
       </div>
