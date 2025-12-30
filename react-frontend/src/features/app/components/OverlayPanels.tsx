@@ -13,7 +13,7 @@ export const OverlayPanels = () => {
     return (
       <div
         id="overlay-panels"
-        className="flex flex-col absolute top-0 p-4  pointer-events-none w-full min-w-0 min-h-0 gap-2"
+        className="flex flex-col absolute top-0 p-4  pointer-events-none w-full min-w-0 min-h-0 gap-2 h-full"
       >
         <Search />
 

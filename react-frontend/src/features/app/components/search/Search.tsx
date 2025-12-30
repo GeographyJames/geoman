@@ -25,7 +25,7 @@ export function Search() {
   return (
     <div
       id="search-bar"
-      className="flex flex-col min-h-0 h-full w-full sm:max-w-[28rem] pointer-events-auto"
+      className="flex flex-col min-h-0 w-full sm:max-w-[28rem] pointer-events-auto"
     >
       <div className="bg-base-100 shadow-lg rounded-full">
         <SearchBar
