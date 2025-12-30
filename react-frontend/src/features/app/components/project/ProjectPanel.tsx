@@ -25,7 +25,7 @@ export const ProjectPanel = ({ project }: { project: Project }) => {
 
   return (
     <details
-      className="collapse collapse-arrow flex-shrink-0 pointer-events-auto bg-base-100 min-w-0 w-full max-w-[600px] shadow-lg rounded-box relative"
+      className="collapse collapse-arrow  bg-base-100 min-w-0 w-full max-w-[600px] shadow-lg rounded-box relative"
       open={defaultExpanded}
     >
       <summary className="collapse-title after:start-5 after:end-auto ps-12 text-l font-bold pr-4 flex justify-between items-center py-2">

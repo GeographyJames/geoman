@@ -28,12 +28,12 @@ export default function ProjectListItem({ item }: { item: Project }) {
 
   return (
     <li key={item.id}>
-      <div className="flex">
+      <div className="flex p-0 pr-2">
         <Link
           from={"/"}
           search={{ projects: newProjects }}
           onClick={handleClick}
-          className="flex justify-start flex-1"
+          className="flex justify-start flex-1 py-2 pl-2 items-center"
         >
           <div
             className={`flex gap-2 ${
