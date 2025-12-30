@@ -48,17 +48,24 @@ export const OverlayPanels = () => {
           />
         </div>
 
-        {searchOpen && (
-          <SearchResultsBox
-            selectedTab={selectedTab}
-            setSelectedTab={setSelectedTab}
-            highlightedSearchIndexState={highlightedSearchIndexState}
-            searchText={searchText}
-            filterSate={[filteredItems, setFilteredItems]}
-            handleSelect={handleSelect}
-            inputRef={inputRef}
-          />
-        )}
+        <div
+          className={`grid transition-all duration-300 ease-in-out ${
+            searchOpen ? "grid-rows-[1fr] opacity-100 min-h-56" : "grid-rows-[0fr] opacity-0 min-h-0"
+          }`}
+          style={{ flex: "0 1 auto" }}
+        >
+          <div className="overflow-hidden min-h-0 flex flex-col">
+            <SearchResultsBox
+              selectedTab={selectedTab}
+              setSelectedTab={setSelectedTab}
+              highlightedSearchIndexState={highlightedSearchIndexState}
+              searchText={searchText}
+              filterSate={[filteredItems, setFilteredItems]}
+              handleSelect={handleSelect}
+              inputRef={inputRef}
+            />
+          </div>
+        </div>
 
         {projectsToShow.length > 0 && (
           <div className="flex flex-col shadow-lg rounded-box gap-2 max-w-[600px] pointer-events-auto min-h-12 overflow-y-auto ">
