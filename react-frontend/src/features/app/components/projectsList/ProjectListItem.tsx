@@ -36,12 +36,12 @@ export default function ProjectListItem({ item }: { item: Project }) {
           className="flex justify-start flex-1 py-2 pl-2 items-center"
         >
           <div
-            className={`flex gap-2 ${
+            className={`flex gap-2 min-w-0 ${
               item.status === "ARCHIVED" && "text-base-content/50"
             }`}
           >
-            <span className="w-6 flex items-center font-bold">{item.id}</span>
-            {item.name}
+            <span className="w-6 flex items-center font-bold flex-shrink-0">{item.id}</span>
+            <span className="break-all min-w-0">{item.name}</span>
           </div>
 
           <div className="flex ml-auto">

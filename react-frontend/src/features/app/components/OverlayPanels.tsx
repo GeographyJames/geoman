@@ -1,5 +1,5 @@
-import { Outlet, useNavigate, useSearch } from "@tanstack/react-router";
-import { Search } from "./search/Search";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+
 import { ProjectPanel } from "./project/ProjectPanel";
 import { useProjects } from "@/hooks/api/projects/useProjects";
 import { useSearchbar } from "../contexts/SearchbarContext";
@@ -61,7 +61,7 @@ export const OverlayPanels = () => {
         )}
 
         {projectsToShow.length > 0 && (
-          <div className="flex flex-col shadow-lg rounded-box gap-2 max-w-[600px] pointer-events-auto overflow-y-auto [scrollbar-gutter:stable]">
+          <div className="flex flex-col shadow-lg rounded-box gap-2 max-w-[600px] pointer-events-auto min-h-12 overflow-y-auto ">
             {<ProjectPanels projects={projectsToShow} />}
           </div>
         )}
