@@ -52,7 +52,7 @@ export const OverlayPanels = () => {
           className={`grid transition-all duration-300 ease-in-out ${
             searchOpen
               ? "grid-rows-[1fr] opacity-100 min-h-56"
-              : "grid-rows-[0fr] opacity-0 min-h-0"
+              : "grid-rows-[0fr] opacity-0 min-h-0 -mb-2"
           }`}
           style={{ flex: "0 1 auto" }}
         >
