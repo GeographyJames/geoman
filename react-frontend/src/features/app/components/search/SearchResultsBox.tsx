@@ -43,7 +43,7 @@ export default function SearchResultsBox({
 
   return (
     <div
-      className="sm:max-w-[28rem] flex flex-col rounded-box pointer-events-auto min-h-56 bg-orange-200 pt-2"
+      className="sm:max-w-[28rem] flex flex-col rounded-box pointer-events-auto min-h-56 bg-base-100 pt-2 shadow-lg"
       onClick={() => inputRef.current?.blur()}
       onTouchStart={() => inputRef.current?.blur()}
     >

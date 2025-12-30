@@ -12,7 +12,6 @@ export const OverlayPanels = () => {
   const { projects } = useSearch({ from: "/_app/" });
   const { data } = useProjects();
   const { setIsOpen: setSearchOpen, isOpen: searchOpen } = useSearchbar();
-  const {} = useSearchbar();
   const loadedProjects = projects ? projects.split(",") : [];
   const projectsToShow = data
     ? data.filter((p) => loadedProjects.includes(p.slug))
@@ -35,7 +34,7 @@ export const OverlayPanels = () => {
     return (
       <div
         id="overlay-panels"
-        className="flex flex-col absolute top-0 p-4  pointer-events-none w-full min-w-0 min-h-0 gap-2 bg-yellow-200 bottom-0"
+        className="flex flex-col absolute top-0 p-4  pointer-events-none w-full min-w-0 min-h-0 gap-2 bottom-0"
       >
         <div className="pointer-events-auto">
           <SearchBar
@@ -62,7 +61,9 @@ export const OverlayPanels = () => {
         )}
 
         {projectsToShow.length > 0 && (
-          <ProjectPanels projects={projectsToShow} />
+          <div className="flex flex-col shadow-lg rounded-box gap-2 max-w-[600px] pointer-events-auto overflow-y-auto [scrollbar-gutter:stable]">
+            {<ProjectPanels projects={projectsToShow} />}
+          </div>
         )}
       </div>
     );
@@ -71,11 +72,5 @@ export const OverlayPanels = () => {
 };
 
 const ProjectPanels = ({ projects }: { projects: Project[] }) => {
-  return (
-    <div className=" flex flex-col gap-2 bg-green-200 pointer-events-auto">
-      {projects.map((p) => (
-        <ProjectPanel key={p.slug} project={p} />
-      ))}
-    </div>
-  );
+  return projects.map((p) => <ProjectPanel key={p.slug} project={p} />);
 };
