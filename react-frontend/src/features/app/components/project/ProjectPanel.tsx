@@ -2,10 +2,14 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 
 import { CloseButton } from "@/components/Buttons";
 import type Project from "@/domain/project/entity";
+import { useProjectCollections } from "@/hooks/api/useProjectCollections";
 
 export const ProjectPanel = ({ project }: { project: Project }) => {
   const navigate = useNavigate();
   const search = useSearch({ from: "/_app/" });
+  const { data: collectionsData, isLoading } = useProjectCollections({
+    projectId: project.id,
+  });
 
   // Default to expanded on medium screens and up (sm breakpoint is 640px)
   const defaultExpanded = window.matchMedia("(min-width: 640px)").matches;
@@ -36,8 +40,21 @@ export const ProjectPanel = ({ project }: { project: Project }) => {
       </summary>
 
       <div className="collapse-content">
-        <div className="flex h-96">
-          <p>Project details will go here</p>
+        <div className="flex flex-col gap-2">
+          <h3 className="font-semibold">Collections</h3>
+          {isLoading ? (
+            <span className="loading loading-spinner loading-sm"></span>
+          ) : collectionsData?.collections && collectionsData.collections.length > 0 ? (
+            <ul className="menu bg-base-200 rounded-box">
+              {collectionsData.collections.map((collection) => (
+                <li key={collection.id}>
+                  <a>{collection.title}</a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-base-content/70">No collections found</p>
+          )}
         </div>
       </div>
     </details>
