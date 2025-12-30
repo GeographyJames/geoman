@@ -65,7 +65,7 @@ export const ExpandButton = ({
     <button type="button" onClick={onClick} className={CIRCLE_BUTTON_STYLE}>
       <MdChevronRight
         size={24}
-        className={`transition-transform ${expanded ? "rotate-90" : ""}`}
+        className={`transition-transform ${expanded ? "rotate-270" : "rotate-90"}`}
       />
     </button>
   );

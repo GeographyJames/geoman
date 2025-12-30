@@ -25,28 +25,40 @@ export function Search() {
   return (
     <div
       id="search-bar"
-      className={`overflow-hidden gap-2 flex flex-col min-h-0 w-full sm:max-w-[28rem] bg-base-100 shadow-lg pointer-events-auto ${searchOpen ? "rounded-box" : "rounded-full"}`}
+      className="flex flex-col min-h-0 w-full sm:max-w-[28rem] pointer-events-auto"
     >
-      <SearchBar
-        highlightedSearchIndexState={highlightedSearchIndexState}
-        searchText={searchText}
-        handleSelect={handleSelect}
-        inputRef={inputRef}
-        setSelectedTab={setSelectedTab}
-        setSearchText={setSearchText}
-        filteredItems={filteredItems}
-      />
-      {searchOpen && (
-        <SearchResultsBox
-          selectedTab={selectedTab}
-          setSelectedTab={setSelectedTab}
+      <div className="bg-base-100 shadow-lg rounded-full">
+        <SearchBar
           highlightedSearchIndexState={highlightedSearchIndexState}
           searchText={searchText}
-          filterSate={[filteredItems, setFilteredItems]}
           handleSelect={handleSelect}
           inputRef={inputRef}
+          setSelectedTab={setSelectedTab}
+          setSearchText={setSearchText}
+          filteredItems={filteredItems}
         />
-      )}
+      </div>
+      <div
+        className={`grid transition-all duration-200 ease-out ${
+          searchOpen
+            ? "grid-rows-[1fr] opacity-100 [content-visibility:visible]"
+            : "grid-rows-[0fr] opacity-0 [content-visibility:hidden]"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="bg-base-100 shadow-lg rounded-box pt-2 mt-2">
+            <SearchResultsBox
+              selectedTab={selectedTab}
+              setSelectedTab={setSelectedTab}
+              highlightedSearchIndexState={highlightedSearchIndexState}
+              searchText={searchText}
+              filterSate={[filteredItems, setFilteredItems]}
+              handleSelect={handleSelect}
+              inputRef={inputRef}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import { App } from "@/features/app/components/App";
 import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
 import { useAuth } from "@clerk/clerk-react";
 import { useRef, useEffect } from "react";
