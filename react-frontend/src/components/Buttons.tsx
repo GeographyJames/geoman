@@ -47,9 +47,9 @@ export const CreateButton = ({
   onClick: () => void;
 }) => {
   return (
-    <button className={"btn btn-primary btn-sm"} onClick={onClick}>
+    <button className={"btn btn-primary btn-sm w-32"} onClick={onClick}>
       <FaPlus />
-      {`Create ${text}`}
+      {text}
     </button>
   );
 };

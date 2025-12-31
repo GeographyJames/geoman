@@ -37,7 +37,7 @@ export default function ProjectsList({ projects }: Props) {
       <div className="px-4 flex flex-col gap-4">
         <div className="flex justify-between flex-wrap gap-2">
           <CreateButton
-            text="project"
+            text="Create project"
             onClick={() => {
               const el = document.getElementById("create_project");
               if (el instanceof HTMLDialogElement) {

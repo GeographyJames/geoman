@@ -1,8 +1,11 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 
-import { CloseButton } from "@/components/Buttons";
+import { CloseButton, CreateButton } from "@/components/Buttons";
 import type Project from "@/domain/project/entity";
 import { useProjectCollections } from "@/hooks/api/useProjectCollections";
+import { SiteDataDropdown } from "./siteDataDropdown";
+import { ProjectIcons } from "./ProjectIcons";
+import { ProjectActionsDropdown } from "./ProjectActionsDropdown";
 
 export const ProjectPanel = ({ project }: { project: Project }) => {
   const navigate = useNavigate();
@@ -34,24 +37,22 @@ export const ProjectPanel = ({ project }: { project: Project }) => {
     >
       <summary className="collapse-title after:start-5 after:end-auto ps-12 text-l font-bold pr-4 flex justify-between items-center py-2">
         {project.name}
-        <div className="">
+        <div className="flex items-center gap-2">
+          <ProjectIcons project={project} />
+          <ProjectActionsDropdown item={project} />
           <CloseButton onClick={handleClose} />
         </div>
       </summary>
 
       <div className="collapse-content">
         <div className="flex flex-col gap-2">
-          <h3 className="font-semibold">Collections</h3>
           {isLoading ? (
             <span className="loading loading-spinner loading-sm"></span>
-          ) : collectionsData?.collections && collectionsData.collections.length > 0 ? (
-            <ul className="menu bg-base-200 rounded-box">
-              {collectionsData.collections.map((collection) => (
-                <li key={collection.id}>
-                  <a>{collection.title}</a>
-                </li>
-              ))}
-            </ul>
+          ) : collectionsData?.collections &&
+            collectionsData.collections.length > 0 ? (
+            collectionsData.collections.map((collection) => (
+              <SiteDataDropdown collection={collection} />
+            ))
           ) : (
             <p className="text-sm text-base-content/70">No collections found</p>
           )}
