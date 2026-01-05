@@ -1,11 +1,14 @@
 import type { Collection } from "@/hooks/api/useProjectCollections";
 import ShowArchivedToggle from "../ShowArchivedToggle";
 import { useState } from "react";
+import { ProjectCollection } from "./ProjectCollection";
 
 export const SiteDataDropdown = ({
   collection,
+  projectId,
 }: {
   collection: Collection;
+  projectId: number;
 }) => {
   const [showArchived, setShowArchived] = useState<boolean>(false);
   return (
@@ -18,8 +21,7 @@ export const SiteDataDropdown = ({
         />
       </summary>
       <div className="collapse-content text-sm">
-        Click the "Sign Up" button in the top right corner and follow the
-        registration process.
+        <ProjectCollection collectionId={collection.id} projectId={projectId} />
       </div>
     </details>
   );

@@ -8,7 +8,7 @@ export interface CollectionsResponse {
 
 export interface Collection {
      title: string
-     id: string
+     id: number
 }
 
 export function useProjectCollections({projectId}: {projectId: number}) {

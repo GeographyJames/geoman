@@ -1,6 +1,6 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 
-import { CloseButton, CreateButton } from "@/components/Buttons";
+import { CloseButton } from "@/components/Buttons";
 import type Project from "@/domain/project/entity";
 import { useProjectCollections } from "@/hooks/api/useProjectCollections";
 import { SiteDataDropdown } from "./siteDataDropdown";
@@ -51,7 +51,10 @@ export const ProjectPanel = ({ project }: { project: Project }) => {
           ) : collectionsData?.collections &&
             collectionsData.collections.length > 0 ? (
             collectionsData.collections.map((collection) => (
-              <SiteDataDropdown collection={collection} />
+              <SiteDataDropdown
+                collection={collection}
+                projectId={project.id}
+              />
             ))
           ) : (
             <p className="text-sm text-base-content/70">No collections found</p>
