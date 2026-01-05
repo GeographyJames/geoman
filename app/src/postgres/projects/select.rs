@@ -10,6 +10,7 @@ use crate::{
 
 use domain::{
     ProjectId,
+    enums::Status,
     project::{Project, ProjectName, Properties},
 };
 use sqlx::{prelude::FromRow, types::Json};
@@ -106,14 +107,16 @@ impl SelectAllWithParams for Project {
             crs,
             _bbox: _,
             _bbox_crs: _,
+            status,
         } = params;
         let rows: Vec<ProjectRow> = sqlx::query_as(&format!(
-            "{}         WHERE p.status != 'DELETED'
+            "{}         WHERE p.status = ANY($2)
             ORDER BY id
-                 LIMIT $2",
+                 LIMIT $3",
             project_query()
         ))
         .bind(crs.as_srid())
+        .bind(status.unwrap_or(vec![Status::Active]))
         .bind(limit.map(|l| l as i32))
         .fetch_all(executor)
         .await?;

@@ -49,7 +49,7 @@ utoipa-swagger-ui = { version = "7", features = [
 [dev-dependencies]
 
 app = { path = ".", features = ["test-utils"] }
-reqwest = "0.12"
+reqwest = { version = "0.13", features = ["json", "query"] }
 rstest = "0.26"
 tokio = { version = "1.48", features = ["sync"] }
 uuid = { workspace = true }

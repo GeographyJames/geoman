@@ -5,6 +5,7 @@ import type { FeatureCollection, Point } from "geojson";
 import type { ProjectProperties } from "@/domain/project/properties";
 import { CACHE_KEY_PROJECTS } from "@/cache_keys";
 import Project from "@/domain/project/entity";
+import { Status } from "@/domain/types";
 
 export interface ProjectsResponse extends FeatureCollection<Point | null, ProjectProperties> {
   features: ProjectOutputDTO[];
@@ -12,7 +13,7 @@ export interface ProjectsResponse extends FeatureCollection<Point | null, Projec
 
 export function useProjects() {
   const apiRequest = useApiRequest();
-  const url = __URLS__.ogc_api.base + __URLS__.ogc_api.collections + "/projects/items";
+  const url = `${__URLS__.ogc_api.base}${__URLS__.ogc_api.collections}/projects/items?status=${Status.Active},${Status.Archived}`;
 
   return useQuery({
     queryKey: CACHE_KEY_PROJECTS,

@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 /// The features in the collection
 use crate::{
     URLS,
@@ -16,7 +18,11 @@ use actix_web::{
     web::{self},
 };
 
-use domain::{GisDataTable, IntoOGCFeature, enums::CollectionId, project::Project};
+use domain::{
+    GisDataTable, IntoOGCFeature,
+    enums::{CollectionId, Status},
+    project::Project,
+};
 use ogcapi_types::common::media_type::GEO_JSON;
 
 #[utoipa::path(
@@ -50,11 +56,18 @@ pub async fn get_features(
     response_builder.content_type(GEO_JSON);
     let mut response = match collection_id {
         CollectionId::Projects => {
+            let status: Option<Vec<Status>> = query.status.as_ref().map(|statuses| {
+                statuses
+                    .iter()
+                    .filter_map(|s| Status::from_str(s).ok())
+                    .collect()
+            });
             let params = project::SelectAllParams {
                 limit: query.limit,
                 crs: &query.crs,
                 _bbox: query.bbox.as_ref(),
                 _bbox_crs: query.bbox_crs.as_ref(),
+                status,
             };
             let (projects, _) = repo.select_all_with_params::<Project>(params).await?;
             let features: Vec<ogc::Feature> = projects

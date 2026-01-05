@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use ogcapi_types::common::Crs;
 use serde::{Deserialize, Serialize};
-use serde_with::DisplayFromStr;
+use serde_with::{DisplayFromStr, StringWithSeparator, formats::CommaSeparator};
 use utoipa::{IntoParams, ToSchema};
 
 #[serde_with::serde_as]
@@ -55,4 +55,6 @@ pub struct Query {
     /// the extent or all relevant temporal properties.
     #[param(style = Form, value_type = Option<String>, required = false)]
     pub datetime: Option<DateTime<Utc>>,
+    #[serde_as(as = "Option<StringWithSeparator::<CommaSeparator, String>>")]
+    pub status: Option<Vec<String>>,
 }

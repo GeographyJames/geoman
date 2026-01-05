@@ -1,4 +1,6 @@
 pub mod project {
+
+    use domain::enums::Status;
     use ogcapi_types::common::Crs;
 
     pub struct SelectOneParams<'a> {
@@ -10,6 +12,7 @@ pub mod project {
         pub crs: &'a Crs,
         pub _bbox: Option<&'a ogcapi_types::common::Bbox>,
         pub _bbox_crs: Option<&'a Crs>,
+        pub status: Option<Vec<Status>>,
     }
 }
 

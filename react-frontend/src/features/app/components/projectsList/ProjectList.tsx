@@ -6,16 +6,17 @@ import { CreateButton } from "../../../../components/Buttons";
 import ProjectListItem from "./ProjectListItem";
 import SortBy, { SORT_OPTIONS } from "./SortBy";
 import ShowArchivedToggle from "../ShowArchivedToggle";
+import { useShowArchivedProjects } from "@/features/app/contexts/ShowArchivedProjectsContext";
 
 interface Props {
   projects: Project[];
 }
 
 export default function ProjectsList({ projects }: Props) {
-  const [showArchived, setShowArchived] = useState<boolean>(false);
+  const { showArchivedProjects, setShowArchivedProjects } = useShowArchivedProjects();
   const [sortBy, setSortBy] = useState(SORT_OPTIONS.NAME_ASCENDING);
   const sortedProjects = projects
-    .filter((a) => showArchived || !a.archived)
+    .filter((a) => showArchivedProjects || !a.archived)
     .slice()
     .sort((a, b) => {
       switch (sortBy) {
@@ -50,8 +51,8 @@ export default function ProjectsList({ projects }: Props) {
 
         <div className="flex justify-between">
           <ShowArchivedToggle
-            showArchived={showArchived}
-            setShowArchived={setShowArchived}
+            showArchived={showArchivedProjects}
+            setShowArchived={setShowArchivedProjects}
           />
 
           <span className="flex ml-auto text-xs text-gray-500">{`showing ${sortedProjects.length}`}</span>
