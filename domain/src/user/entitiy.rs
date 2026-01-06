@@ -3,7 +3,7 @@ use sqlx::prelude::FromRow;
 
 use crate::{Team, UserId};
 
-#[derive(Serialize, Deserialize, Debug, sqlx::Type, FromRow)]
+#[derive(Serialize, Deserialize, Debug, sqlx::Type, FromRow, Default)]
 pub struct User {
     pub id: UserId,
     pub first_name: String,
@@ -13,7 +13,7 @@ pub struct User {
     pub operating_country_code: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, sqlx::Type, Debug)]
+#[derive(Serialize, Deserialize, sqlx::Type, Debug, Default)]
 #[sqlx(type_name = "app.user")]
 pub struct AddedBy {
     #[serde(rename = "added_by_id")]
@@ -28,7 +28,7 @@ pub struct AddedBy {
     team: Team,
 }
 
-#[derive(Serialize, Deserialize, sqlx::Type, Debug)]
+#[derive(Serialize, Deserialize, sqlx::Type, Debug, Default)]
 #[sqlx(type_name = "app.user")]
 pub struct Owner {
     #[serde(rename = "owner_id")]
@@ -43,7 +43,7 @@ pub struct Owner {
     team: Team,
 }
 
-#[derive(Serialize, Deserialize, sqlx::Type, Debug)]
+#[derive(Serialize, Deserialize, sqlx::Type, Debug, Default)]
 #[sqlx(type_name = "app.user")]
 pub struct LastUpdatedBy {
     #[serde(rename = "last_updated_by_id")]

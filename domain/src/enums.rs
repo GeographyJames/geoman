@@ -3,11 +3,12 @@ use serde::{Deserialize, Deserializer, Serialize};
 use sqlx::prelude::Type;
 use strum::{Display, EnumString};
 
-#[derive(Serialize, Deserialize, Debug, Type, EnumString, Display, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Type, EnumString, Display, PartialEq, Clone, Default)]
 #[sqlx(type_name = "app.status", rename_all = "UPPERCASE")]
 #[serde(rename_all = "UPPERCASE")]
 #[strum(serialize_all = "UPPERCASE")]
 pub enum Status {
+    #[default]
     Active,
     Archived,
     Deleted,

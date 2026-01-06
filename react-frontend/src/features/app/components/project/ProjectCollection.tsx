@@ -1,5 +1,11 @@
+import type { ProjectCollectionItem } from "@/domain/projectCollectionItems/outputDTO";
 import { useProjectCollectionItems } from "@/hooks/api/useProjectCollectionItems";
-import type { Collection } from "@/hooks/api/useProjectCollections";
+
+import type { ReactNode } from "react";
+import UserInitials from "../UserInitials";
+import SetPrimaryRadio from "./SetPrimaryRadio";
+
+import { FeatureActionsDropdown } from "./features/FeatureActionsDropdown";
 
 export const ProjectCollection = ({
   collectionId,
@@ -9,5 +15,83 @@ export const ProjectCollection = ({
   projectId: number;
 }) => {
   const { data } = useProjectCollectionItems({ projectId, collectionId });
-  if (data) return <>{data.features.map((f) => f.id).join(",")}</>;
+  if (data)
+    return (
+      <table className="table table-fixed">
+        <SiteDataTableHeadings>
+          <></>
+        </SiteDataTableHeadings>
+        <tbody>
+          {data.features.map((f) => (
+            <SiteDataTableRow key={f.id} item={f}>
+              <></>
+            </SiteDataTableRow>
+          ))}
+        </tbody>
+      </table>
+    );
 };
+
+export function SiteDataTableHeadings({ children }: { children: ReactNode }) {
+  return (
+    <thead>
+      <tr>
+        <th className="w-12 p-0">Id</th>
+        <th className="w-6 p-0 text-center"></th>
+        <th className="p-0">Name</th>
+        {children}
+        <th className="w-11 p-0 text-center">Primary</th>
+        <th className="w-8"></th>
+        <th className="w-8"></th>
+      </tr>
+    </thead>
+  );
+}
+
+export function SiteDataTableRow({
+  children,
+  item,
+}: {
+  children: ReactNode;
+  item: ProjectCollectionItem;
+}) {
+  return (
+    <tr
+      className={item.properties.status === "ARCHIVED" ? "text-base-300" : ""}
+      key={item.id}
+    >
+      <td className="p-0">{item.id}</td>
+      <td className="p-0">
+        <div className="flex">
+          <input
+            id={`c${item.properties.collection_id}item${item.id}`}
+            name="show-ellipse-checkbox"
+            type="checkbox"
+            className="checkbox checkbox-sm bg-base-100"
+          ></input>
+        </div>
+      </td>
+      <td className="p-0 text-wrap break-words">
+        <label htmlFor={`c${item.properties.collection_id}item${item.id}`}>
+          {item.properties.name}
+        </label>
+      </td>
+      {children}
+
+      <td className="p-0">
+        <div className="flex justify-center">
+          <SetPrimaryRadio item={item} />
+        </div>
+      </td>
+      <td className="p-0 text-center">
+        <UserInitials
+          firstName={item.properties.added_by_first_name}
+          lastName={item.properties.added_by_last_name}
+        />
+      </td>
+      <td className="px-0 py-2 text-right">
+        <FeatureActionsDropdown item={item} />
+      </td>
+    </tr>
+  );
+}

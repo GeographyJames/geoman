@@ -9,6 +9,8 @@ export interface CollectionsResponse {
 export interface Collection {
      title: string
      id: number
+     geometry_type: string
+
 }
 
 export function useProjectCollections({projectId}: {projectId: number}) {

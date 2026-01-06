@@ -1,8 +1,10 @@
-use crate::IntoOGCFeature;
+use crate::{AddedBy, IntoOGCFeature, LastUpdatedBy, enums::Status};
 use anyhow::{Context, anyhow};
+use chrono::{DateTime, Utc};
 use ogcapi_types::common::Crs;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, from_value, json};
+use sqlx::prelude::FromRow;
 
 pub struct ProjectFeature {
     pub id: i32,
@@ -11,21 +13,21 @@ pub struct ProjectFeature {
     pub geometry: geojson::Geometry,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, FromRow)]
 pub struct Properties {
     pub collection_id: i32,
     pub project_id: i32,
     pub name: String,
-    pub storage_crs: Crs,
+    pub storage_crs_srid: i32,
     pub is_primary: bool,
-}
-
-#[derive(Deserialize)]
-struct PropertiesHelper {
+    pub status: Status,
+    pub added: DateTime<Utc>,
     #[serde(flatten)]
-    properties: Properties,
+    pub added_by: AddedBy,
+    pub last_updated: DateTime<Utc>,
     #[serde(flatten)]
-    extra: Map<String, Value>,
+    pub last_updated_by: LastUpdatedBy,
+    pub collection_title: String,
 }
 
 impl IntoOGCFeature for ProjectFeature {
@@ -48,17 +50,45 @@ impl TryFrom<ogc::Feature> for ProjectFeature {
     fn try_from(ogc_feature: ogc::Feature) -> Result<Self, Self::Error> {
         let ogc::Feature {
             id,
-            properties,
+            mut properties,
             geometry,
             ..
         } = ogc_feature;
 
-        let helper: PropertiesHelper = serde_json::from_value(Value::Object(properties))
-            .context("Failed to deserialize properties")?;
+        // Extract system properties
+        let properties_struct: Properties =
+            serde_json::from_value(Value::Object(properties.clone()))
+                .context("Failed to deserialize system properties")?;
+
+        // Remove all known system fields from properties map to leave only user-defined fields
+        // This includes base fields and flattened added_by/last_updated_by fields
+        let system_fields = [
+            "collection_id",
+            "project_id",
+            "name",
+            "storage_crs_srid",
+            "is_primary",
+            "status",
+            "added",
+            "last_updated",
+            "added_by_id",
+            "added_by_first_name",
+            "added_by_last_name",
+            "added_by_team",
+            "last_updated_by_id",
+            "last_updated_by_first_name",
+            "last_updated_by_last_name",
+            "last_updated_by_team",
+        ];
+
+        for field in system_fields {
+            properties.remove(field);
+        }
+
         Ok(Self {
             id,
-            properties: helper.properties,
-            properties_map: helper.extra,
+            properties: properties_struct,
+            properties_map: properties,
             geometry: geometry.ok_or(anyhow!("feature has no geometry"))?,
         })
     }

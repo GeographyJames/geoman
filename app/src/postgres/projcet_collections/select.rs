@@ -1,4 +1,7 @@
-use domain::{ProjectCollection, ProjectCollectionId, SupportedCrs, enums::CollectionId};
+use domain::{
+    ProjectCollection, ProjectCollectionId, SupportedCrs,
+    enums::{CollectionId, GeometryType},
+};
 use ogcapi_types::common::{Bbox, Crs, SpatialExtent};
 
 use crate::repo::{
@@ -13,6 +16,7 @@ struct CollectionRow {
     pub description: Option<String>,
     pub storage_crs_srid: Option<i32>,
     pub extent: Option<Vec<f64>>,
+    pub geometry_type: GeometryType,
 }
 
 impl CollectionRow {
@@ -23,6 +27,7 @@ impl CollectionRow {
             description,
             storage_crs_srid,
             extent,
+            geometry_type,
         } = self;
         let bbox: Option<Bbox> = extent.and_then(|bbox| Bbox::try_from(bbox.as_slice()).ok());
         let storage_crs = storage_crs_srid.map(Crs::from_srid);
@@ -34,6 +39,7 @@ impl CollectionRow {
             description,
             supported_crs,
             storage_crs,
+            geometry_type,
             extent: bbox.map(|bbox| SpatialExtent {
                 bbox: vec![bbox],
                 crs: extent_crs,
@@ -59,6 +65,7 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
             SELECT id,
                    title,
                    description,
+                   geometry_type as "geometry_type: GeometryType",
                    (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(fo.geom)) = 1
                            THEN MIN(ST_SRID(fo.geom))::int
                            ELSE NULL
@@ -127,6 +134,7 @@ impl SelectAllWithParams for ProjectCollection {
             SELECT id,
                    title,
                    description,
+                   geometry_type AS "geometry_type: GeometryType",
                    (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(fo.geom)) = 1
                            THEN MIN(ST_SRID(fo.geom))::int
                            ELSE NULL

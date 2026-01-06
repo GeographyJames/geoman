@@ -4,15 +4,16 @@ import { IoMdArrowDropdown } from "react-icons/io";
 interface Props {
   id: string | number;
   children: ReactNode;
+  style?: string;
 }
 
-export const ActionsDropdown = ({ id, children }: Props) => {
+export const ActionsDropdown = ({ id, children, style }: Props) => {
   const popoverId = `actions-popover-${id}`;
   const anchorName = `--actions-anchor-${id}`;
   return (
     <>
       <button
-        className="btn btn-xs"
+        className={`btn btn-xs ${style}`}
         popoverTarget={popoverId}
         style={{ anchorName } as React.CSSProperties}
       >

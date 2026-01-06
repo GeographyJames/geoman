@@ -1,4 +1,8 @@
-use domain::{ProjectFeature, ProjectFeatureId, poject_feature::Properties};
+use chrono::{DateTime, Utc};
+use domain::{
+    AddedBy, LastUpdatedBy, ProjectFeature, ProjectFeatureId, enums::Status,
+    poject_feature::Properties,
+};
 use futures::{Stream, StreamExt};
 use geojson::Geometry;
 use ogcapi_types::common::Crs;
@@ -23,6 +27,12 @@ struct ProjectFeatureRow {
     pub is_primary: bool,
     pub storage_crs_srid: i32,
     pub number_matched: i64,
+    pub status: Status,
+    pub added: DateTime<Utc>,
+    pub added_by: AddedBy,
+    pub last_updated: DateTime<Utc>,
+    pub last_updated_by: LastUpdatedBy,
+    pub collection_title: String,
 }
 
 impl TryInto<ProjectFeature> for ProjectFeatureRow {
@@ -37,6 +47,12 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
             collection_id,
             project_id,
             storage_crs_srid,
+            status,
+            added,
+            added_by,
+            last_updated,
+            last_updated_by,
+            collection_title,
             ..
         } = self;
         let properties = match properties {
@@ -50,8 +66,13 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
                 collection_id,
                 project_id,
                 name,
-
-                storage_crs: Crs::from_srid(storage_crs_srid),
+                status,
+                last_updated,
+                last_updated_by,
+                added,
+                added_by,
+                collection_title,
+                storage_crs_srid,
                 is_primary,
             },
             geometry: geometry.0,
@@ -79,15 +100,25 @@ impl SelectOneWithParams<&ProjectFeatureId> for ProjectFeature {
             SELECT f.id,
                 f.name,
                 f.collection_id,
+                c.title AS "collection_title!",
                 f.project_id,
                 f.is_primary,
                 ST_AsGeoJSON(ST_Transform(fo.geom, $3))::jsonb as "geometry!: Json<Geometry>",
                 ST_SRID(geom) AS "storage_crs_srid!",
                 f.properties,
+                f.status as "status: Status",
+                f.added,
+                ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t_ab.id, t_ab.name)::app.team))::app.user AS "added_by!: AddedBy",
+                f.last_updated,
+                ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name)::app.team))::app.user AS "last_updated_by!: LastUpdatedBy",
                 1 as "number_matched!"
             FROM app.project_features f
             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
             JOIN app.collections c ON f.collection_id = c.id
+            JOIN app.users ab ON f.added_by = ab.id
+            JOIN app.teams t_ab ON ab.team_id = t_ab.id
+            JOIN app.users ub ON f.added_by = ub.id
+            JOIN app.teams t_ub ON ub.team_id = t_ub.id
             WHERE f.id = $1
             AND c.id = $2
             AND ($4::int IS NULL OR f.project_id = $4)
@@ -132,17 +163,26 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             SELECT 
                 f.id,
                 f.collection_id,
+                c.title AS "collection_title!",
                 f.project_id,
                 ST_AsGeoJSON(ST_Transform(fo.geom, $1))::jsonb as "geometry!: Json<Geometry>",
                 ST_SRID(geom) AS "storage_crs_srid!",
                 f.is_primary,
                 f.name,
                 f.properties,
+                f.status as "status: Status",
+                f.added,
+                ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t_ab.id, t_ab.name)::app.team))::app.user AS "added_by!: AddedBy",
+                f.last_updated,
+                ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name)::app.team))::app.user AS "last_updated_by!: LastUpdatedBy",
                 COUNT(*) OVER() as "number_matched!"
-
             FROM app.project_features f
             JOIN app.collections c ON c.id = f.collection_id
             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
+            JOIN app.users ab ON f.added_by = ab.id
+            JOIN app.teams t_ab ON ab.team_id = t_ab.id
+            JOIN app.users ub ON f.added_by = ub.id
+            JOIN app.teams t_ub ON ub.team_id = t_ub.id
             WHERE c.id = $2
             AND status = 'ACTIVE'
             AND ($3::int IS NULL OR f.project_id = $3)
@@ -199,6 +239,12 @@ mod tests {
                 1., 1.,
             ]))),
             is_primary: true,
+            collection_title: Default::default(),
+            status: Default::default(),
+            added: Default::default(),
+            added_by: Default::default(),
+            last_updated: Default::default(),
+            last_updated_by: Default::default(),
         };
         let _feature: ProjectFeature = row.try_into().expect("failed to convert row to feature");
     }

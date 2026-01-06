@@ -8,7 +8,8 @@ use crate::common::{
 
 pub fn check_ogc_feature_is_project_feature<P: DeserializeOwned>(ogc_feature: ogc::Feature) {
     let project_feature = ProjectFeature::try_from(ogc_feature)
-        .expect("failed to convert ogc featuer to project feature");
+        .expect("failed to convert ogc feature to project feature");
+
     let _props: P =
         serde_json::from_value(serde_json::Value::Object(project_feature.properties_map))
             .expect("failed to deserialise feature properties to properties struct");

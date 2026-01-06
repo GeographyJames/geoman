@@ -14,13 +14,21 @@ export const SiteDataDropdown = ({
   return (
     <details className="collapse collapse-arrow bg-base-200 border-base-300 border">
       <summary className="flex justify-between collapse-title font-semibold after:start-5 after:end-auto p-2 pe-4 ps-12">
-        {collection.title}
-        <ShowArchivedToggle
-          setShowArchived={setShowArchived}
-          showArchived={showArchived}
-        />
+        <div>
+          {collection.title}{" "}
+          <span className="text-sm font-normal">
+            {`(${collection.geometry_type})`}
+          </span>
+        </div>
+        <div className="font-normal">
+          <ShowArchivedToggle
+            setShowArchived={setShowArchived}
+            showArchived={showArchived}
+          />
+          {}
+        </div>
       </summary>
-      <div className="collapse-content text-sm">
+      <div className="collapse-content text-sm pb-0">
         <ProjectCollection collectionId={collection.id} projectId={projectId} />
       </div>
     </details>

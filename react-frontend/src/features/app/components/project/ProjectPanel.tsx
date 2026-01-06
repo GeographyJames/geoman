@@ -37,14 +37,14 @@ export const ProjectPanel = ({ project }: { project: Project }) => {
     >
       <summary className="collapse-title after:start-5 after:end-auto ps-12 text-l font-bold pr-4 flex justify-between items-center py-2">
         {project.name}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 font-normal">
           <ProjectIcons project={project} />
           <ProjectActionsDropdown item={project} />
           <CloseButton onClick={handleClose} />
         </div>
       </summary>
 
-      <div className="collapse-content">
+      <div className="collapse-content ">
         <div className="flex flex-col gap-2">
           {isLoading ? (
             <span className="loading loading-spinner loading-sm"></span>

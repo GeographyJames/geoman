@@ -7,7 +7,7 @@ import { Link } from "@tanstack/react-router";
 export const ProjectActionsDropdown = ({ item }: { item: Project }) => {
   const { mutate: patchProject } = usePatchProject();
   return (
-    <ActionsDropdown id={item.id}>
+    <ActionsDropdown id={`p${item.id}`}>
       <li>
         <ToggleArchivedStatus
           archived={item.archived}
