@@ -45,7 +45,7 @@ export default function ProjectListItem({ item }: { item: Project }) {
             {item instanceof Project && <ProjectIcons project={item} />}
           </div>
         </Link>
-        <ProjectActionsDropdown item={item} />
+        <ProjectActionsDropdown item={item} id={`li-p-${item.id}`} />
       </div>
     </li>
   );

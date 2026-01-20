@@ -39,7 +39,10 @@ export const ProjectPanel = ({ project }: { project: Project }) => {
         {project.name}
         <div className="flex items-center gap-2 font-normal">
           <ProjectIcons project={project} />
-          <ProjectActionsDropdown item={project} />
+          <ProjectActionsDropdown
+            item={project}
+            id={`{panel-p-${project.id}}`}
+          />
           <CloseButton onClick={handleClose} />
         </div>
       </summary>

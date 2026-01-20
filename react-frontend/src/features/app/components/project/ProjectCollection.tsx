@@ -1,5 +1,7 @@
-import type { ProjectCollectionItem } from "@/domain/projectCollectionItems/outputDTO";
-import { useProjectCollectionItems } from "@/hooks/api/useProjectCollectionItems";
+import type {
+  ProjectCollectionItem,
+  ProjectCollectionItems,
+} from "@/domain/projectCollectionItems/outputDTO";
 
 import type { ReactNode } from "react";
 import UserInitials from "../UserInitials";
@@ -8,28 +10,24 @@ import SetPrimaryRadio from "./SetPrimaryRadio";
 import { FeatureActionsDropdown } from "./features/FeatureActionsDropdown";
 
 export const ProjectCollection = ({
-  collectionId,
-  projectId,
+  data,
 }: {
-  collectionId: number;
-  projectId: number;
+  data: ProjectCollectionItems;
 }) => {
-  const { data } = useProjectCollectionItems({ projectId, collectionId });
-  if (data)
-    return (
-      <table className="table table-fixed">
-        <SiteDataTableHeadings>
-          <></>
-        </SiteDataTableHeadings>
-        <tbody>
-          {data.features.map((f) => (
-            <SiteDataTableRow key={f.id} item={f}>
-              <></>
-            </SiteDataTableRow>
-          ))}
-        </tbody>
-      </table>
-    );
+  return (
+    <table className="table table-fixed">
+      <SiteDataTableHeadings>
+        <></>
+      </SiteDataTableHeadings>
+      <tbody>
+        {data.features.map((f) => (
+          <SiteDataTableRow key={f.id} item={f}>
+            <></>
+          </SiteDataTableRow>
+        ))}
+      </tbody>
+    </table>
+  );
 };
 
 export function SiteDataTableHeadings({ children }: { children: ReactNode }) {
@@ -72,7 +70,10 @@ export function SiteDataTableRow({
         </div>
       </td>
       <td className="p-0 text-wrap break-words">
-        <label htmlFor={`c${item.properties.collection_id}item${item.id}`}>
+        <label
+          htmlFor={`c${item.properties.collection_id}item${item.id}`}
+          className="cursor-pointer"
+        >
           {item.properties.name}
         </label>
       </td>
@@ -87,6 +88,7 @@ export function SiteDataTableRow({
         <UserInitials
           firstName={item.properties.added_by_first_name}
           lastName={item.properties.added_by_last_name}
+          message={`added by: ${item.properties.added_by_first_name} ${item.properties.added_by_last_name}`}
         />
       </td>
       <td className="px-0 py-2 text-right">

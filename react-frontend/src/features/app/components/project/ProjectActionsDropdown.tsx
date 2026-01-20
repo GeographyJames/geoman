@@ -4,10 +4,16 @@ import type Project from "@/domain/project/entity";
 import { usePatchProject } from "@/hooks/api/projects/usePatchProject";
 import { Link } from "@tanstack/react-router";
 
-export const ProjectActionsDropdown = ({ item }: { item: Project }) => {
+export const ProjectActionsDropdown = ({
+  item,
+  id,
+}: {
+  item: Project;
+  id: string;
+}) => {
   const { mutate: patchProject } = usePatchProject();
   return (
-    <ActionsDropdown id={`p${item.id}`}>
+    <ActionsDropdown id={id}>
       <li>
         <ToggleArchivedStatus
           archived={item.archived}

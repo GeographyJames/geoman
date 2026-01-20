@@ -13,7 +13,8 @@ interface Props {
 }
 
 export default function ProjectsList({ projects }: Props) {
-  const { showArchivedProjects, setShowArchivedProjects } = useShowArchivedProjects();
+  const { showArchivedProjects, setShowArchivedProjects } =
+    useShowArchivedProjects();
   const [sortBy, setSortBy] = useState(SORT_OPTIONS.NAME_ASCENDING);
   const sortedProjects = projects
     .filter((a) => showArchivedProjects || !a.archived)
@@ -55,7 +56,7 @@ export default function ProjectsList({ projects }: Props) {
             setShowArchived={setShowArchivedProjects}
           />
 
-          <span className="flex ml-auto text-xs text-gray-500">{`showing ${sortedProjects.length}`}</span>
+          <span className="flex ml-auto text-xs text-base-content/70">{`showing ${sortedProjects.length}`}</span>
         </div>
       </div>
       <div className="flex flex-col  overflow-y-auto scroll-gutter-stable scroll-panel py-1">
