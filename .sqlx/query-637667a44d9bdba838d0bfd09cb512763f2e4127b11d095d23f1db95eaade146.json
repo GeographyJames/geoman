@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE app.project_features\n        SET status = COALESCE($1, status),\n            last_updated = NOW(),\n            last_updated_by = $2\n        WHERE id= $3\n        AND collection_id = $4\n        AND project_id = $5\n        RETURNING id, collection_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "collection_id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "app.status",
+            "kind": {
+              "Enum": [
+                "ACTIVE",
+                "ARCHIVED",
+                "DELETED"
+              ]
+            }
+          }
+        },
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "637667a44d9bdba838d0bfd09cb512763f2e4127b11d095d23f1db95eaade146"
+}

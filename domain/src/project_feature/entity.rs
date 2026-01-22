@@ -1,7 +1,6 @@
 use crate::{AddedBy, IntoOGCFeature, LastUpdatedBy, enums::Status};
 use anyhow::{Context, anyhow};
 use chrono::{DateTime, Utc};
-use ogcapi_types::common::Crs;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, from_value, json};
 use sqlx::prelude::FromRow;
@@ -79,6 +78,7 @@ impl TryFrom<ogc::Feature> for ProjectFeature {
             "last_updated_by_first_name",
             "last_updated_by_last_name",
             "last_updated_by_team",
+            "collection_title",
         ];
 
         for field in system_fields {

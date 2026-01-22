@@ -1,0 +1,208 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT f.id,\n                f.name,\n                f.collection_id,\n                c.title AS \"collection_title!\",\n                f.project_id,\n                f.is_primary,\n                ST_AsGeoJSON(ST_Transform(fo.geom, $3))::jsonb as \"geometry!: Json<Geometry>\",\n                ST_SRID(geom) AS \"storage_crs_srid!\",\n                f.properties,\n                f.status as \"status: Status\",\n                f.added,\n                ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t_ab.id, t_ab.name)::app.team))::app.user AS \"added_by!: AddedBy\",\n                f.last_updated,\n                ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name)::app.team))::app.user AS \"last_updated_by!: LastUpdatedBy\",\n                1 as \"number_matched!\"\n            FROM app.project_features f\n            JOIN app.feature_objects fo ON fo.project_feature_id = f.id\n            JOIN app.collections c ON f.collection_id = c.id\n            JOIN app.users ab ON f.added_by = ab.id\n            JOIN app.teams t_ab ON ab.team_id = t_ab.id\n            JOIN app.users ub ON f.added_by = ub.id\n            JOIN app.teams t_ub ON ub.team_id = t_ub.id\n            WHERE f.id = $1\n            AND c.id = $2\n            AND ($4::int IS NULL OR f.project_id = $4)\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "collection_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "collection_title!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "project_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_primary",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "geometry!: Json<Geometry>",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 7,
+        "name": "storage_crs_srid!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "properties",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 9,
+        "name": "status: Status",
+        "type_info": {
+          "Custom": {
+            "name": "app.status",
+            "kind": {
+              "Enum": [
+                "ACTIVE",
+                "ARCHIVED",
+                "DELETED"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "added",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "added_by!: AddedBy",
+        "type_info": {
+          "Custom": {
+            "name": "app.\"user\"",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Int4"
+                ],
+                [
+                  "first_name",
+                  "Text"
+                ],
+                [
+                  "last_name",
+                  "Text"
+                ],
+                [
+                  "clerk_id",
+                  "Text"
+                ],
+                [
+                  "team",
+                  {
+                    "Custom": {
+                      "name": "app.team",
+                      "kind": {
+                        "Composite": [
+                          [
+                            "id",
+                            "Int4"
+                          ],
+                          [
+                            "name",
+                            "Text"
+                          ]
+                        ]
+                      }
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "last_updated",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "last_updated_by!: LastUpdatedBy",
+        "type_info": {
+          "Custom": {
+            "name": "app.\"user\"",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Int4"
+                ],
+                [
+                  "first_name",
+                  "Text"
+                ],
+                [
+                  "last_name",
+                  "Text"
+                ],
+                [
+                  "clerk_id",
+                  "Text"
+                ],
+                [
+                  "team",
+                  {
+                    "Custom": {
+                      "name": "app.team",
+                      "kind": {
+                        "Composite": [
+                          [
+                            "id",
+                            "Int4"
+                          ],
+                          [
+                            "name",
+                            "Text"
+                          ]
+                        ]
+                      }
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "number_matched!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      false,
+      false,
+      false,
+      null,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "f1f14afddf25337a5038c575aacc0c8bb86864fa4e2bfe1247f993805e358671"
+}
