@@ -101,6 +101,9 @@ pub fn ogc_routes(cfg: &mut web::ServiceConfig, run_environment: GeoManEnvironme
         GeoManEnvironment::Production => {
             cfg.service(scp.wrap(middleware::from_fn(dual_auth_middleware)));
         }
+        GeoManEnvironment::Development => {
+            cfg.service(scp.wrap(middleware::from_fn(mock_auth_middlewear)));
+        }
         _ => {
             cfg.service(scp);
         }
@@ -122,7 +125,8 @@ pub fn project_ogc_routes(cfg: &mut web::ServiceConfig) {
                     .service(ogc_api::get_project_collections)
                     .service(ogc_api::get_project_collection)
                     .service(ogc_api::get_project_features)
-                    .service(ogc_api::get_project_feature),
+                    .service(ogc_api::get_project_feature)
+                    .service(ogc_api::patch_project_feature),
             ),
     );
 }

@@ -1,11 +1,10 @@
 use chrono::{DateTime, Utc};
 use domain::{
     AddedBy, LastUpdatedBy, ProjectFeature, ProjectFeatureId, enums::Status,
-    poject_feature::Properties,
+    project_feature::Properties,
 };
 use futures::{Stream, StreamExt};
 use geojson::Geometry;
-use ogcapi_types::common::Crs;
 use serde::Deserialize;
 use serde_json::Value;
 use sqlx::types::Json;
@@ -222,7 +221,7 @@ mod tests {
     use domain::ProjectFeature;
     use serde_json::json;
 
-    use crate::postgres::project_features::ProjectFeatureRow;
+    use crate::postgres::project_features::get::ProjectFeatureRow;
 
     #[test]
     fn project_feature_row_converts_to_project_feature() {

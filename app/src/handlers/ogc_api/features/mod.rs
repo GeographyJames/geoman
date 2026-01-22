@@ -1,7 +1,5 @@
 mod common;
-pub mod get_feature;
-pub mod get_features;
-pub mod get_project_feature;
-pub mod get_project_features;
+pub mod get;
 mod query;
 pub use query::Query;
+pub mod patch;

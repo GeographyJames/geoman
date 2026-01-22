@@ -1,7 +1,7 @@
 use crate::handlers::ogc_api::{
     collections::{__path_get_collection, __path_get_collections},
     conformance::__path_get_conformance_declaration,
-    features::{get_feature::__path_get_feature, get_features::__path_get_features},
+    features::get::{feature::__path_get_feature, features::__path_get_features},
     landing_page::__path_get_landing_page,
 };
 use ogc::{Collection, Collections, ConformanceDeclaration, LandingPage};

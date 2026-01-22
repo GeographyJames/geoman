@@ -6,7 +6,7 @@ use crate::common::{
 };
 
 use app::URLS;
-use domain::{ProjectCollectionId, ProjectId, enums::CollectionId};
+use domain::{ProjectCollectionId, ProjectFeatureId, ProjectId, enums::CollectionId};
 use reqwest::{RequestBuilder, Response};
 use serde::Serialize;
 
@@ -270,6 +270,27 @@ impl OgcService {
             "{}{}/{}/queryables",
             URLS.ogc_api.base, URLS.ogc_api.collections, collection
         ));
+        auth_request(req, auth).send().await.expect(REQUEST_FAILED)
+    }
+    pub async fn patch_project_feature<B: Serialize>(
+        &self,
+        client: &HttpClient,
+        body: &B,
+        project_id: ProjectId,
+        feature_id: ProjectFeatureId,
+        auth: Option<&Auth>,
+    ) -> Response {
+        let req = client
+            .patch(format!(
+                "{}{}/{}{}/{}/items/{}",
+                URLS.ogc_api.base,
+                URLS.ogc_api.project,
+                project_id.0,
+                URLS.ogc_api.collections,
+                feature_id.collection_id,
+                feature_id.id
+            ))
+            .json(body);
         auth_request(req, auth).send().await.expect(REQUEST_FAILED)
     }
 }
