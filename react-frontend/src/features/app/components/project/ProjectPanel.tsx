@@ -55,6 +55,7 @@ export const ProjectPanel = ({ project }: { project: Project }) => {
             collectionsData.collections.length > 0 ? (
             collectionsData.collections.map((collection) => (
               <SiteDataDropdown
+                key={collection.id}
                 collection={collection}
                 projectId={project.id}
               />

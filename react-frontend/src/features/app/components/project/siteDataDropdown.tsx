@@ -12,6 +12,7 @@ export const SiteDataDropdown = ({
   projectId: number;
 }) => {
   const [showArchived, setShowArchived] = useState<boolean>(false);
+
   const { data } = useProjectCollectionItems({
     projectId,
     collectionId: collection.id,

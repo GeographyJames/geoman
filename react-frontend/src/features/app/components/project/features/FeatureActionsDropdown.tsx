@@ -1,12 +1,14 @@
 import { ActionsDropdown } from "@/components/ActionsDropdown";
 import { ToggleArchivedStatus } from "@/components/ToggleArchivedStatus";
 import type { ProjectCollectionItem } from "@/domain/projectCollectionItems/outputDTO";
+import { usePatchProjectFeature } from "@/hooks/api/projectFeature.ts/usePatchProjectFeature";
 
 export const FeatureActionsDropdown = ({
   item,
 }: {
   item: ProjectCollectionItem;
 }) => {
+  const { mutate: patchProjectFeature } = usePatchProjectFeature();
   return (
     <ActionsDropdown
       id={`c${item.properties.collection_id}-item${item.id}`}
@@ -19,8 +21,18 @@ export const FeatureActionsDropdown = ({
         <ToggleArchivedStatus
           archived={item.properties.status === "ARCHIVED"}
           onClick={(e) => {
+            console.log("here");
+            patchProjectFeature({
+              projectId: item.properties.project_id,
+              collectionId: item.properties.collection_id.toString(),
+              id: item.id,
+              dto: {
+                status:
+                  item.properties.status === "ARCHIVED" ? "ACTIVE" : "ARCHIVED",
+              },
+            });
             const popover = (e.currentTarget as HTMLElement).closest(
-              "[popover]"
+              "[popover]",
             ) as HTMLElement | null;
             popover?.hidePopover();
           }}

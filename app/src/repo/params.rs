@@ -17,7 +17,7 @@ pub mod project {
 }
 
 pub mod project_features {
-    use domain::{ProjectCollectionId, ProjectId};
+    use domain::{ProjectCollectionId, ProjectId, enums::Status};
     use ogcapi_types::common::Crs;
 
     #[derive(Clone)]
@@ -29,6 +29,7 @@ pub mod project_features {
         pub bbox: Option<ogcapi_types::common::Bbox>,
         pub bbox_crs: Option<Crs>,
         pub offset: Option<usize>,
+        pub status: Option<Vec<Status>>,
     }
 
     #[derive(Clone)]

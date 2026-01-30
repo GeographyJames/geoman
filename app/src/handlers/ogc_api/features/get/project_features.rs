@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::{
     URLS,
     handlers::{
@@ -15,7 +17,8 @@ use actix_web::{
 };
 
 use domain::{
-    ProjectCollection, ProjectCollectionId, ProjectFeature, ProjectId, project::ProjectName,
+    ProjectCollection, ProjectCollectionId, ProjectFeature, ProjectId, enums::Status,
+    project::ProjectName,
 };
 
 use ogcapi_types::common::media_type::GEO_JSON;
@@ -47,6 +50,12 @@ pub async fn get_project_features(
         "{}{}{}/{}/collections/{}",
         base_url, URLS.ogc_api.base, URLS.ogc_api.project, project_id, collection_id
     );
+    let status: Option<Vec<Status>> = query.status.as_ref().map(|statuses| {
+        statuses
+            .iter()
+            .filter_map(|s| Status::from_str(s).ok())
+            .collect()
+    });
 
     let params = SelectAllParams {
         limit: query.limit,
@@ -56,6 +65,7 @@ pub async fn get_project_features(
         bbox: query.bbox.clone(),
         bbox_crs: query.bbox_crs.clone(),
         offset: query.offset,
+        status,
     };
 
     let features = repo.select_all_with_params_streaming::<ProjectFeature>(params);

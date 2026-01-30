@@ -21,7 +21,6 @@ export function usePatchProject() {
       });
     },
     onSuccess: () => {
-      console.log("here")
       queryClient.invalidateQueries({ queryKey: CACHE_KEY_PROJECTS });
     },
   });

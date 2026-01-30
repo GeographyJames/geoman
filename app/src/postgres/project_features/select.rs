@@ -149,6 +149,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             bbox_crs,
             collection_id,
             offset,
+            status,
             ..
         } = params;
         let bbox = bbox.map(|bbox| match bbox {
@@ -183,7 +184,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             JOIN app.users ub ON f.added_by = ub.id
             JOIN app.teams t_ub ON ub.team_id = t_ub.id
             WHERE c.id = $2
-            AND status = 'ACTIVE'
+            AND status = ANY($11)
             AND ($3::int IS NULL OR f.project_id = $3)
             AND ($4::float IS NULL OR (
                 fo.geom && ST_Transform(ST_MakeEnvelope($4, $5, $6, $7, $8), ST_SRID(fo.geom))
@@ -201,7 +202,8 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             bbox.map(|bbox| bbox[3]),
             bbox_crs.unwrap_or_default().as_srid() as i32,
             limit.map(|l| l as i64),
-            offset.unwrap_or(0) as i32
+            offset.unwrap_or(0) as i32,
+            status.unwrap_or(vec![Status::Active]) as Vec<Status>
         )
         .fetch(executor)
         .map(|res| {
@@ -221,7 +223,7 @@ mod tests {
     use domain::ProjectFeature;
     use serde_json::json;
 
-    use crate::postgres::project_features::get::ProjectFeatureRow;
+    use crate::postgres::project_features::select::ProjectFeatureRow;
 
     #[test]
     fn project_feature_row_converts_to_project_feature() {

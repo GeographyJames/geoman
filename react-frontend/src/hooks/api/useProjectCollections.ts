@@ -8,7 +8,7 @@ export interface CollectionsResponse {
 
 export interface Collection {
      title: string
-     id: number
+     id: string
      geometry_type: string
 
 }
