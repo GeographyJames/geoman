@@ -20,6 +20,7 @@ export const FeatureActionsDropdown = ({
         <button>edit</button>
         <ToggleArchivedStatus
           archived={item.properties.status === "ARCHIVED"}
+          disabled={item.properties.is_primary}
           onClick={(e) => {
             console.log("here");
             patchProjectFeature({
