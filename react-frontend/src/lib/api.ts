@@ -33,9 +33,28 @@ export function useApiRequest() {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `API request failed: ${response.statusText} (${response.status})`
-      );
+      let message = `${response.statusText} (${response.status})`;
+      const contentType = response.headers.get("content-type");
+
+      if (contentType?.includes("application/json")) {
+        try {
+          const errorJson = await response.json();
+          if (typeof errorJson?.message === "string") {
+            message = errorJson.message;
+          }
+        } catch {
+          // ignore
+        }
+      } else {
+        try {
+          const text = await response.text();
+          if (text) message = text;
+        } catch {
+          // ignore
+        }
+      }
+
+      throw new Error(message);
     }
     if (response.status === 204) {
       return undefined

@@ -3,7 +3,9 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { ProjectPanel } from "./project/ProjectPanel";
 import { useProjects } from "@/hooks/api/projects/useProjects";
 import { useSearchbar } from "../contexts/SearchbarContext";
+import { useFlash } from "../contexts/FlashMessageContext";
 import SearchResultsBox from "./search/SearchResultsBox";
+import { FlashAlert } from "@/components/FlashAlert";
 import type Project from "@/domain/project/entity";
 import { SearchBar } from "./search/SearchBar";
 import { useRef, useState } from "react";
@@ -12,6 +14,7 @@ export const OverlayPanels = () => {
   const { projects } = useSearch({ from: "/_app/" });
   const { data } = useProjects();
   const { setIsOpen: setSearchOpen, isOpen: searchOpen } = useSearchbar();
+  const { messages, removeFlash } = useFlash();
   const loadedProjects = projects ? projects.split(",") : [];
   const projectsToShow = data
     ? data.filter((p) => loadedProjects.includes(p.slug))
@@ -22,7 +25,7 @@ export const OverlayPanels = () => {
   const highlightedSearchIndexState = useState<number>(0);
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState<"projects" | "search-sites">(
-    "projects"
+    "projects",
   );
   const handleSelect = (project: Project) => {
     setSearchText("");
@@ -36,6 +39,18 @@ export const OverlayPanels = () => {
         id="overlay-panels"
         className="flex flex-col absolute top-0 p-4  pointer-events-none w-full min-w-0 min-h-0 gap-2 bottom-0"
       >
+        {messages.length > 0 && (
+          <div className="flex flex-col gap-2 pointer-events-auto">
+            {messages.map((m) => (
+              <FlashAlert
+                key={m.id}
+                message={m.message}
+                type={m.type}
+                onClose={() => removeFlash(m.id)}
+              />
+            ))}
+          </div>
+        )}
         <div className="pointer-events-auto">
           <SearchBar
             highlightedSearchIndexState={highlightedSearchIndexState}

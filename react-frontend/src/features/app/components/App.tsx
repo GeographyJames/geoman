@@ -4,6 +4,7 @@ import { Drawer } from "./Drawer";
 import { SidebarProvider } from "@/features/app/contexts/SidebarContext";
 import { SearchbarProvider } from "@/features/app/contexts/SearchbarContext";
 import { ShowArchivedProjectsProvider } from "@/features/app/contexts/ShowArchivedProjectsContext";
+import { FlashMessageProvider } from "@/features/app/contexts/FlashMessageContext";
 
 const CreateProjectForm = lazy(() =>
   import("@/features/app/components/forms/CreateProject").then((module) => ({
@@ -14,17 +15,19 @@ const CreateProjectForm = lazy(() =>
 export const App = () => {
   return (
     <>
-      <SidebarProvider>
-        <SearchbarProvider>
-          <ShowArchivedProjectsProvider>
-            <Drawer />
+      <FlashMessageProvider>
+        <SidebarProvider>
+          <SearchbarProvider>
+            <ShowArchivedProjectsProvider>
+              <Drawer />
 
-            <Suspense fallback={null}>
-              <CreateProjectForm />
-            </Suspense>
-          </ShowArchivedProjectsProvider>
-        </SearchbarProvider>
-      </SidebarProvider>
+              <Suspense fallback={null}>
+                <CreateProjectForm />
+              </Suspense>
+            </ShowArchivedProjectsProvider>
+          </SearchbarProvider>
+        </SidebarProvider>
+      </FlashMessageProvider>
     </>
   );
 };

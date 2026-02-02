@@ -13,7 +13,7 @@ export const ToggleArchivedStatus = ({
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled}
+      // disabled={disabled}
       className={disabled ? "text-base-content/50" : ""}
     >
       {archived ? "restore" : "archive"}
