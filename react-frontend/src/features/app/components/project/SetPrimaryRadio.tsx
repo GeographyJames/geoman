@@ -31,7 +31,9 @@ function SetPrimaryRadio({ item }: { item: ProjectCollectionItem }) {
       className={`${
         item.properties.status === "ARCHIVED" ? "tooltip tooltip-left flex" : ""
       } flex`}
-      data-tip={`Unable to set an archived ${item.properties.collection_id} as primary`}
+      data-tip={`Unable to set archived ${
+        item.properties.collection_title
+      } as primary`}
     >
       <input
         onChange={handleClick}

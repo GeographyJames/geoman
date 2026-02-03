@@ -59,11 +59,16 @@ export function SiteDataTableRow({
   item: ProjectCollectionItem;
 }) {
   return (
-    <tr
-      className={item.properties.status === "ARCHIVED" ? "text-base-300" : ""}
-      key={item.id}
-    >
-      <td className="p-0">{item.id}</td>
+    <tr key={item.id}>
+      <td className="p-0">
+        <span
+          className={
+            item.properties.status === "ARCHIVED" ? "text-base-content/50" : ""
+          }
+        >
+          {item.id}
+        </span>
+      </td>
       <td className="p-0">
         <div className="flex">
           <input
@@ -74,12 +79,21 @@ export function SiteDataTableRow({
           ></input>
         </div>
       </td>
-      <td className="p-0 text-wrap break-words">
+      <td className="p-0 text-wrap break-words ">
         <label
           htmlFor={`c${item.properties.collection_id}item${item.id}`}
           className="cursor-pointer"
         >
-          {item.properties.name}
+          {" "}
+          <span
+            className={
+              item.properties.status === "ARCHIVED"
+                ? "text-base-content/50"
+                : ""
+            }
+          >
+            {item.properties.name}
+          </span>
         </label>
       </td>
       {children}
