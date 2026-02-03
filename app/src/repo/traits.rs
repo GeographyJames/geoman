@@ -64,8 +64,8 @@ pub trait Insert {
 
 pub trait Update {
     type Id;
-    async fn update<'a, E>(&self, executor: &'a E) -> Result<Self::Id, RepositoryError>
+    async fn update<'a, A>(&self, conn: A) -> Result<Self::Id, RepositoryError>
     where
         Self: Sized,
-        &'a E: sqlx::PgExecutor<'a>;
+        A: Acquire<'a, Database = Postgres>;
 }

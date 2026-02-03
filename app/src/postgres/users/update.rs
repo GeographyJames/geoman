@@ -1,14 +1,16 @@
 use domain::{TeamId, UserId, UserInputDto};
+use sqlx::{Acquire, Postgres};
 
 use crate::{AuthenticatedUser, repo::traits::Update};
 
 impl<'b> Update for UserInputDto<'b> {
     type Id = AuthenticatedUser;
 
-    async fn update<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>
+    async fn update<'a, E>(&self, conn: E) -> Result<Self::Id, crate::repo::RepositoryError>
     where
-        &'a E: sqlx::PgExecutor<'a>,
+        E: Acquire<'a, Database = Postgres>,
     {
+        let mut executor = conn.acquire().await?;
         sqlx::query_as!(
             AuthenticatedUser,
             r#"UPDATE app.users SET
@@ -22,7 +24,7 @@ impl<'b> Update for UserInputDto<'b> {
             self.auth_id
 
         )
-        .fetch_one(executor)
+        .fetch_one(&mut *executor)
         .await
         .map_err(Into::into)
     }

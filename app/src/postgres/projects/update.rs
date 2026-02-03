@@ -1,16 +1,18 @@
 use domain::{ProjectId, UserId, enums::Status, project::ProjectUpdateDto};
+use sqlx::{Acquire, Postgres};
 
 use crate::repo::traits::Update;
 
 impl Update for (&ProjectUpdateDto, UserId) {
     type Id = ProjectId;
 
-    async fn update<'a, E>(&self, executor: &'a E) -> Result<Self::Id, crate::repo::RepositoryError>
+    async fn update<'a, E>(&self, conn: E) -> Result<Self::Id, crate::repo::RepositoryError>
     where
         Self: Sized,
-        &'a E: sqlx::PgExecutor<'a>,
+        E: Acquire<'a, Database = Postgres>,
     {
         let (dto, user_id) = self;
+        let mut executor = conn.acquire().await?;
 
         let result = sqlx::query!(
             r#"
@@ -26,7 +28,7 @@ impl Update for (&ProjectUpdateDto, UserId) {
             user_id.0,
             dto.id.0
         )
-        .fetch_one(executor)
+        .fetch_one(&mut *executor)
         .await?;
 
         Ok(ProjectId(result.id))
