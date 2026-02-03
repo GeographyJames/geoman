@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        UPDATE app.project_features\n        SET status = COALESCE($1, status),\n            last_updated = NOW(),\n            last_updated_by = $2\n        WHERE id= $3\n        AND collection_id = $4\n        AND project_id = $5\n        RETURNING id, collection_id",
+  "query": "\n        UPDATE app.project_features\n        SET status = COALESCE($1, status),\n            is_primary = COALESCE($2, is_primary),\n            last_updated = NOW(),\n            last_updated_by = $3\n        WHERE id= $4\n        AND collection_id = $5\n        AND project_id = $6\n        RETURNING id, collection_id",
   "describe": {
     "columns": [
       {
@@ -28,6 +28,7 @@
             }
           }
         },
+        "Bool",
         "Int4",
         "Int4",
         "Int4",
@@ -39,5 +40,5 @@
       false
     ]
   },
-  "hash": "637667a44d9bdba838d0bfd09cb512763f2e4127b11d095d23f1db95eaade146"
+  "hash": "bb9a2e8a345f322f1f929fd68d150e9ff745cfcb481e6c79933ab748c7d69261"
 }
