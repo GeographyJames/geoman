@@ -3,6 +3,7 @@ import { VisibilityConfig } from "@/domain/types";
 import { GiWindTurbine } from "react-icons/gi";
 import UserInitials from "../UserInitials";
 import { FaLocationDot } from "react-icons/fa6";
+import { dateFormat } from "@/constants";
 
 export function ProjectIcons({ project }: { project: Project }) {
   const vis = VisibilityConfig[project.visibility];
@@ -32,7 +33,7 @@ export function ProjectIcons({ project }: { project: Project }) {
       </div>
       <div className="flex w-8 items-center justify-center">
         <UserInitials
-          message={`project owner: ${project.ownerFirstName} ${project.ownerLastName}`}
+          message={`project owner: ${project.ownerFirstName} ${project.ownerLastName}, added: ${dateFormat.format(project.added)}`}
           firstName={project.ownerFirstName}
           lastName={project.ownerLastName}
         />

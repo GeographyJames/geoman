@@ -8,6 +8,7 @@ import UserInitials from "../UserInitials";
 import SetPrimaryRadio from "./SetPrimaryRadio";
 
 import { FeatureActionsDropdown } from "./features/FeatureActionsDropdown";
+import { dateFormat } from "@/constants";
 
 export const ProjectCollection = ({
   data,
@@ -92,7 +93,10 @@ export function SiteDataTableRow({
                 : ""
             }
           >
-            {item.properties.name}
+            {item.properties.name}{" "}
+            {item.properties.status === "ARCHIVED" && (
+              <span className="text-xs">(archived)</span>
+            )}
           </span>
         </label>
       </td>
@@ -107,7 +111,7 @@ export function SiteDataTableRow({
         <UserInitials
           firstName={item.properties.added_by_first_name}
           lastName={item.properties.added_by_last_name}
-          message={`added by: ${item.properties.added_by_first_name} ${item.properties.added_by_last_name}`}
+          message={`added by: ${item.properties.added_by_first_name} ${item.properties.added_by_last_name} ${dateFormat.format(new Date(item.properties.added))}`}
         />
       </td>
       <td className="px-0 py-2 text-right">
