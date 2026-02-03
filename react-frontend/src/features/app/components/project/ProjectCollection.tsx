@@ -11,16 +11,21 @@ import { FeatureActionsDropdown } from "./features/FeatureActionsDropdown";
 
 export const ProjectCollection = ({
   data,
+  showArchived,
 }: {
   data: ProjectCollectionItems;
+  showArchived: boolean;
 }) => {
+  const features = showArchived
+    ? data.features
+    : data.features.filter((f) => f.properties.status !== "ARCHIVED");
   return (
     <table className="table table-fixed">
       <SiteDataTableHeadings>
         <></>
       </SiteDataTableHeadings>
       <tbody>
-        {data.features.map((f) => (
+        {features.map((f) => (
           <SiteDataTableRow key={f.id} item={f}>
             <></>
           </SiteDataTableRow>

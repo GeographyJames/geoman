@@ -35,7 +35,7 @@ export const SiteDataDropdown = ({
         </div>
       </summary>
       <div className="collapse-content text-sm pb-0">
-        {data && <ProjectCollection data={data} />}
+        {data && <ProjectCollection data={data} showArchived={showArchived} />}
       </div>
     </details>
   );
