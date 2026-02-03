@@ -36,13 +36,15 @@ export const ProjectPanel = ({ project }: { project: Project }) => {
       open={defaultExpanded}
     >
       <summary className="collapse-title after:start-5 after:end-auto ps-12 text-l font-bold pr-4 flex justify-between items-center py-2">
-        {project.name}
+        <p>
+          {project.name}{" "}
+          <span className="text-sm font-normal text-base-content/70">
+            {project.archived && "(archived)"}
+          </span>
+        </p>
         <div className="flex items-center gap-2 font-normal">
           <ProjectIcons project={project} />
-          <ProjectActionsDropdown
-            item={project}
-            id={`{panel-p-${project.id}}`}
-          />
+          <ProjectActionsDropdown item={project} id={`panel-p-${project.id}`} />
           <CloseButton onClick={handleClose} />
         </div>
       </summary>
