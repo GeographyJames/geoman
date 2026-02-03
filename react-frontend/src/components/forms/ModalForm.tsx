@@ -11,6 +11,8 @@ interface ModalFormProps<T> {
   onClose?: () => void;
   onReset?: () => void;
   children: React.ReactNode;
+  submitButtonText?: string;
+  submitButtonColour?: string;
 }
 
 export const ModalForm = <T,>({
@@ -20,6 +22,8 @@ export const ModalForm = <T,>({
   onClose,
   onReset,
   children,
+  submitButtonText,
+  submitButtonColour,
 }: ModalFormProps<T>) => {
   const formRef = useRef<HTMLFormElement>(null);
   const [errors, setErrors] = useState<{ id: string; message: string }[]>([]);
@@ -89,7 +93,7 @@ export const ModalForm = <T,>({
 
           <div className="modal-action">
             <CancelButton onClick={handleCancel} />
-            <SubmitButton />
+            <SubmitButton text={submitButtonText} colour={submitButtonColour} />
           </div>
         </form>
       </div>

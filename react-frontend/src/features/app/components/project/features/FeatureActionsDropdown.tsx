@@ -3,6 +3,7 @@ import { ToggleArchivedStatus } from "@/components/ToggleArchivedStatus";
 import type { ProjectCollectionItem } from "@/domain/projectCollectionItems/outputDTO";
 import { usePatchProjectFeature } from "@/hooks/api/projectFeature.ts/usePatchProjectFeature";
 import { useFlash } from "@/features/app/contexts/FlashMessageContext";
+import { DeleteFeatureButton } from "./DeleteFeatureButton";
 
 export const FeatureActionsDropdown = ({
   item,
@@ -11,7 +12,8 @@ export const FeatureActionsDropdown = ({
 }) => {
   const { mutate: patchProjectFeature } = usePatchProjectFeature();
   const { addFlash } = useFlash();
-  const action = item.properties.status === "ARCHIVED" ? "unarchive" : "archive";
+  const action =
+    item.properties.status === "ARCHIVED" ? "unarchive" : "archive";
   return (
     <ActionsDropdown
       id={`c${item.properties.collection_id}-item${item.id}`}
@@ -32,12 +34,17 @@ export const FeatureActionsDropdown = ({
                 id: item.id,
                 dto: {
                   status:
-                    item.properties.status === "ARCHIVED" ? "ACTIVE" : "ARCHIVED",
+                    item.properties.status === "ARCHIVED"
+                      ? "ACTIVE"
+                      : "ARCHIVED",
                 },
               },
               {
                 onError: (error) => {
-                  addFlash(`Unable to ${action} feature: ${error.message}`, "error");
+                  addFlash(
+                    `Unable to ${action} feature: ${error.message}`,
+                    "error",
+                  );
                 },
               },
             );
@@ -49,7 +56,7 @@ export const FeatureActionsDropdown = ({
         />
       </li>
       <li>
-        <button>delete</button>
+        <DeleteFeatureButton feature={item} />
       </li>
     </ActionsDropdown>
   );

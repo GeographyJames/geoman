@@ -31,10 +31,16 @@ export const CloseButton = ({
   );
 };
 
-export const SubmitButton = () => {
+export const SubmitButton = ({
+  text,
+  colour,
+}: {
+  text?: string;
+  colour?: string;
+}) => {
   return (
-    <button type="submit" className="btn btn-primary">
-      Submit
+    <button type="submit" className={`btn ${colour ? colour : "btn-primary"}`}>
+      {text ? text : "Submit"}
     </button>
   );
 };

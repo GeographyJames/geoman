@@ -4,27 +4,25 @@ import { useFlash } from "../../contexts/FlashMessageContext";
 import { usePatchProjectFeature } from "@/hooks/api/projectFeature.ts/usePatchProjectFeature";
 
 function SetPrimaryRadio({ item }: { item: ProjectCollectionItem }) {
-  const { mutate: patchProject } = usePatchProjectFeature();
+  const { mutate: patchFeature } = usePatchProjectFeature();
   const { addFlash } = useFlash();
   const handleClick = () => {
-    {
-      patchProject(
-        {
-          projectId: item.properties.project_id,
-          collectionId: item.properties.collection_id.toString(),
-          id: item.id,
-          dto: { primary: true },
+    patchFeature(
+      {
+        projectId: item.properties.project_id,
+        collectionId: item.properties.collection_id.toString(),
+        id: item.id,
+        dto: { primary: true },
+      },
+      {
+        onError: (error) => {
+          addFlash(
+            `Unable to set feature to primary: ${error.message}`,
+            "error",
+          );
         },
-        {
-          onError: (error) => {
-            addFlash(
-              `Unable to set feature to primary: ${error.message}`,
-              "error",
-            );
-          },
-        },
-      );
-    }
+      },
+    );
   };
   return (
     <div

@@ -35,15 +35,8 @@ export default class Project {
     get centroid(): GeoJSON.Point | null {
         return this.outputDto.geometry
     }
-    get hasWind(): boolean {
-        return true
-    }
-    get primaryLayoutTurbineCount(): number | null {
-        return 10
-    }
-    get private(): boolean {
-        return true
-    }
+
+
     get ownerFirstName(): string {
         return this.outputDto.properties.owner_first_name
     }
