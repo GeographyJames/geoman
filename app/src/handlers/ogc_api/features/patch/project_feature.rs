@@ -8,6 +8,7 @@ use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
 pub struct PatchProjectFeaturePayload {
     pub status: Option<Status>,
     pub primary: Option<bool>,
+    pub name: Option<String>,
 }
 
 #[patch("/{collectionId}/items/{featureId}")]

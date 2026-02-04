@@ -3,6 +3,7 @@ import { ToggleArchivedStatus } from "@/components/ToggleArchivedStatus";
 import type { ProjectCollectionItem } from "@/domain/projectCollectionItems/outputDTO";
 import { usePatchProjectFeature } from "@/hooks/api/projectFeature.ts/usePatchProjectFeature";
 import { useFlash } from "@/features/app/contexts/FlashMessageContext";
+import { useEditFeature } from "@/features/app/contexts/EditFeatureContext";
 import { DeleteFeatureButton } from "./DeleteFeatureButton";
 
 export const FeatureActionsDropdown = ({
@@ -12,6 +13,7 @@ export const FeatureActionsDropdown = ({
 }) => {
   const { mutate: patchProjectFeature } = usePatchProjectFeature();
   const { addFlash } = useFlash();
+  const { requestEdit } = useEditFeature();
   const action =
     item.properties.status === "ARCHIVED" ? "unarchive" : "archive";
   return (
@@ -22,7 +24,7 @@ export const FeatureActionsDropdown = ({
       <li>
         <button>download shapefile</button>
         <button>duplicate</button>
-        <button>edit</button>
+        <button onClick={() => requestEdit(item)}>edit</button>
         <ToggleArchivedStatus
           archived={item.properties.status === "ARCHIVED"}
           disabled={item.properties.is_primary}

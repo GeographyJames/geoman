@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 interface PatchProjectFeatureDTO {
     status?: "ACTIVE" | "ARCHIVED" | "DELETED"
     primary?: boolean
+    name?: string
 }
 
 export function usePatchProjectFeature() {

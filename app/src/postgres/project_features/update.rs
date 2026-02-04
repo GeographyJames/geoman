@@ -44,14 +44,16 @@ impl Update
         UPDATE app.project_features
         SET status = COALESCE($1, status),
             is_primary = COALESCE($2, is_primary),
+            name = COALESCE($3, name),
             last_updated = NOW(),
-            last_updated_by = $3
-        WHERE id= $4
-        AND collection_id = $5
-        AND project_id = $6
+            last_updated_by = $4
+        WHERE id= $5
+        AND collection_id = $6
+        AND project_id = $7
         RETURNING id, collection_id"#,
             &payload.status as &Option<Status>,
             payload.primary,
+            &payload.name as &Option<String>,
             user_id.0,
             feature_id.id,
             feature_id.collection_id.0,
