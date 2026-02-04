@@ -27,7 +27,7 @@ export const SiteDataDropdown = ({
           </span>
         </div>
         <div className="font-normal text-xs flex gap-2 items-center">
-          <span className="text-base-content/70">{`${data && data.features.length} features`}</span>
+          <span className="text-base-content/70">{data && `${showArchived ? data.features.length : data.features.filter((f) => f.properties.status !== "ARCHIVED").length} features`}</span>
           <ShowArchivedToggle
             setShowArchived={setShowArchived}
             showArchived={showArchived}

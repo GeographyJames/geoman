@@ -23,7 +23,6 @@ export const FeatureActionsDropdown = ({
     >
       <li>
         <button>download shapefile</button>
-        <button>duplicate</button>
         <button onClick={() => requestEdit(item)}>edit</button>
         <ToggleArchivedStatus
           archived={item.properties.status === "ARCHIVED"}
