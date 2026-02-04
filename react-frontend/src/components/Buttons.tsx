@@ -3,7 +3,7 @@ import { IoMenu } from "react-icons/io5";
 import { IoClose } from "react-icons/io5";
 import { MdChevronRight } from "react-icons/md";
 
-const CIRCLE_BUTTON_STYLE = "btn btn-ghost btn-circle btn-sm ";
+export const CIRCLE_BUTTON_STYLE = "btn btn-ghost btn-circle btn-sm ";
 
 export const CancelButton = ({ onClick }: { onClick: () => void }) => {
   return (
@@ -34,12 +34,18 @@ export const CloseButton = ({
 export const SubmitButton = ({
   text,
   colour,
+  disabled,
 }: {
   text?: string;
   colour?: string;
+  disabled?: boolean;
 }) => {
   return (
-    <button type="submit" className={`btn ${colour ? colour : "btn-primary"}`}>
+    <button
+      type="submit"
+      className={`btn ${colour ? colour : "btn-primary"}`}
+      disabled={disabled}
+    >
       {text ? text : "Submit"}
     </button>
   );

@@ -4,6 +4,12 @@ import { CACHE_KEY_PROJECTS } from "@/cache_keys";
 
 interface PatchProjectDTO {
   status?: "ACTIVE" | "ARCHIVED" | "DELETED";
+  name?: string;
+  visibility?: "PRIVATE" | "TEAM" | "PUBLIC";
+  country_code?: string;
+  crs_srid?: number | null;
+  slug?: string;
+  technologies?: number[];
 }
 
 export function usePatchProject() {

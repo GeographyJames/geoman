@@ -4,9 +4,19 @@ use domain::{
     project::{ProjectInputDto, ProjectNameInputDTO, ProjectSlugInputDto, ProjectUpdateDto},
 };
 use isocountry::CountryCode;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::{errors::ApiError, handlers::ProjectValidationError};
+
+/// Deserializes a field as `Some(Some(value))` when present with a value,
+/// `Some(None)` when explicitly `null`, and `None` when the field is missing.
+fn deserialize_optional_field<'de, T, D>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
+where
+    T: Deserialize<'de>,
+    D: Deserializer<'de>,
+{
+    Ok(Some(Option::deserialize(deserializer)?))
+}
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct PostProjectPayload {
@@ -46,11 +56,14 @@ impl TryInto<ProjectInputDto> for PostProjectPayload {
             .map_err(ProjectValidationError::InvalidProjectSlug)?;
         let name =
             ProjectNameInputDTO::parse(name).map_err(ProjectValidationError::InvalidProjectName)?;
+        let country_code = isocountry::CountryCode::for_alpha2(&country_code)
+            .map_err(ProjectValidationError::InvalidCountryCode)?;
+
         Ok(ProjectInputDto {
             slug,
             name,
             visibility: visibility.unwrap_or(Visibility::Private),
-            country_code: isocountry::CountryCode::for_alpha2(&country_code)?,
+            country_code,
             crs_srid,
             technologies,
         })
@@ -62,14 +75,55 @@ impl TryInto<ProjectInputDto> for PostProjectPayload {
 #[derive(Default, Serialize, Deserialize)]
 pub struct PatchProjectPayload {
     pub status: Option<Status>,
+    pub name: Option<String>,
+    pub visibility: Option<Visibility>,
+    pub country_code: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_optional_field")]
+    pub crs_srid: Option<Option<i32>>,
+    pub slug: Option<String>,
+    pub technologies: Option<Vec<TechnologyId>>,
 }
 
 impl PatchProjectPayload {
     pub fn try_into_dto(self, project_id: ProjectId) -> Result<ProjectUpdateDto, ApiError> {
-        let PatchProjectPayload { status } = self;
-        Ok(ProjectUpdateDto {
+        let PatchProjectPayload {
             status,
+            name,
+            visibility,
+            country_code,
+            crs_srid,
+            slug,
+            technologies,
+        } = self;
+
+        let name = name
+            .map(|n| {
+                ProjectNameInputDTO::parse(n).map_err(ProjectValidationError::InvalidProjectName)
+            })
+            .transpose()?;
+
+        let slug = slug
+            .map(|s| {
+                ProjectSlugInputDto::try_from(s).map_err(ProjectValidationError::InvalidProjectSlug)
+            })
+            .transpose()?;
+
+        let country_code = country_code
+            .map(|c| {
+                isocountry::CountryCode::for_alpha2(&c)
+                    .map_err(ProjectValidationError::InvalidCountryCode)
+            })
+            .transpose()?;
+
+        Ok(ProjectUpdateDto {
             id: project_id,
+            status,
+            name,
+            visibility,
+            country_code,
+            crs_srid,
+            slug,
+            technologies,
         })
     }
 }

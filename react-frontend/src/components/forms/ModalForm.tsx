@@ -13,6 +13,7 @@ interface ModalFormProps<T> {
   children: React.ReactNode;
   submitButtonText?: string;
   submitButtonColour?: string;
+  submitDisabled?: boolean;
 }
 
 export const ModalForm = <T,>({
@@ -24,6 +25,7 @@ export const ModalForm = <T,>({
   children,
   submitButtonText,
   submitButtonColour,
+  submitDisabled,
 }: ModalFormProps<T>) => {
   const formRef = useRef<HTMLFormElement>(null);
   const [errors, setErrors] = useState<{ id: string; message: string }[]>([]);
@@ -93,7 +95,7 @@ export const ModalForm = <T,>({
 
           <div className="modal-action">
             <CancelButton onClick={handleCancel} />
-            <SubmitButton text={submitButtonText} colour={submitButtonColour} />
+            <SubmitButton text={submitButtonText} colour={submitButtonColour} disabled={submitDisabled} />
           </div>
         </form>
       </div>

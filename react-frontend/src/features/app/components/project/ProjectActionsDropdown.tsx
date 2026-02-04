@@ -3,7 +3,7 @@ import { ToggleArchivedStatus } from "@/components/ToggleArchivedStatus";
 import type Project from "@/domain/project/entity";
 import { usePatchProject } from "@/hooks/api/projects/usePatchProject";
 import { useFlash } from "@/features/app/contexts/FlashMessageContext";
-import { Link } from "@tanstack/react-router";
+import { useEditProject } from "../../contexts/EditProjectContext";
 
 export const ProjectActionsDropdown = ({
   item,
@@ -15,6 +15,7 @@ export const ProjectActionsDropdown = ({
   const { mutate: patchProject } = usePatchProject();
   const { addFlash } = useFlash();
   const action = item.archived ? "unarchive" : "archive";
+  const { requestEdit } = useEditProject();
   return (
     <ActionsDropdown id={id}>
       <li>
@@ -28,22 +29,23 @@ export const ProjectActionsDropdown = ({
               },
               {
                 onError: (error) => {
-                  addFlash(`Unable to ${action} project: ${error.message}`, "error");
+                  addFlash(
+                    `Unable to ${action} project: ${error.message}`,
+                    "error",
+                  );
                 },
               },
             );
 
             const popover = (e.currentTarget as HTMLElement).closest(
-              "[popover]"
+              "[popover]",
             ) as HTMLElement | null;
             popover?.hidePopover();
           }}
         />
       </li>
       <li>
-        <Link to="/project/$slug" params={{ slug: item.slug }}>
-          admin
-        </Link>
+        <button onClick={() => requestEdit(item)}>edit</button>
       </li>
       <li>
         <button>add data</button>

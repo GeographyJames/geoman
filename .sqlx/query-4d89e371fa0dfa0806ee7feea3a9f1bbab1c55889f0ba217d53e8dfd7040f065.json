@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    INSERT INTO app.project_technologies (project_id, technology_id)\n                    SELECT $1, UNNEST($2::integer[])\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4d89e371fa0dfa0806ee7feea3a9f1bbab1c55889f0ba217d53e8dfd7040f065"
+}

@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE app.projects\n            SET\n                status = COALESCE($1, status),\n                name = COALESCE($2, name),\n                visibility = COALESCE($3, visibility),\n                country_code = COALESCE($4, country_code),\n                crs_srid = CASE WHEN $5 THEN $6 ELSE crs_srid END,\n                slug = COALESCE($7, slug),\n                last_updated = NOW(),\n                last_updated_by = $8\n            WHERE id = $9\n            RETURNING id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "app.status",
+            "kind": {
+              "Enum": [
+                "ACTIVE",
+                "ARCHIVED",
+                "DELETED"
+              ]
+            }
+          }
+        },
+        "Text",
+        {
+          "Custom": {
+            "name": "app.visibility",
+            "kind": {
+              "Enum": [
+                "PRIVATE",
+                "TEAM",
+                "PUBLIC"
+              ]
+            }
+          }
+        },
+        "Bpchar",
+        "Bool",
+        "Int4",
+        "Text",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "821ff10d70c13e0d4d6094c93b397086756e1151347b9bcb9666480c2d4f9e36"
+}
