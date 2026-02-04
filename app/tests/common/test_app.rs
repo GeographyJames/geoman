@@ -7,7 +7,7 @@ use crate::common::{
     },
 };
 use app::{
-    AppConfig, Application, DatabaseSettings, Password, URLS,
+    AppConfig, Application, AuthenticatedUser, DatabaseSettings, Password, URLS,
     constants::{GIS_DATA_SCHEMA, SITE_BOUNDARIES_COLLECTION_NAME},
     enums::GeoManEnvironment,
     get_config,
@@ -33,7 +33,7 @@ use std::{str::FromStr, sync::LazyLock};
 use uuid::Uuid;
 
 static TRACING: LazyLock<()> = LazyLock::new(|| {
-    let default_filter_level = "debug".to_string();
+    let default_filter_level = "info".to_string();
     let subscriber_name = "test".to_string();
     if std::env::var("TEST_LOG").is_ok() {
         let subscriber = get_subscriber(subscriber_name, default_filter_level, std::io::stdout);
@@ -443,5 +443,24 @@ impl TestApp<ClerkAuthService> {
         )
         .await
         .expect("failed to retrieve app settings ")
+    }
+    pub async fn generate_user(&self, admin: bool, team_id: TeamId) -> AuthenticatedUser {
+        let first_name = uuid::Uuid::new_v4().to_string();
+        let last_name = uuid::Uuid::new_v4().to_string();
+
+        let user_id = sqlx::query_scalar!(
+            "INSERT INTO app.users (first_name, last_name, admin, team_id) VALUES ($1, $2, $3, $4) RETURNING id",
+first_name, last_name,
+            admin,
+            team_id.0
+        ).fetch_one(&self.db_pool).await.unwrap();
+        AuthenticatedUser {
+            id: UserId(user_id),
+            first_name,
+            last_name,
+            username: None,
+            team_id,
+            admin,
+        }
     }
 }

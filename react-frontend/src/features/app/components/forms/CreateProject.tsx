@@ -24,7 +24,6 @@ export const CreateProjectForm = () => {
   const postProject = usePostProject();
   const { data: appSettings, isLoading: isLoadingSettings } = useAppSettings();
   const { data: currentUser, isLoading: isLoadingUser } = useCurrentUser();
-  console.log("form loaded");
   const isLoading = isLoadingSettings || isLoadingUser;
   const defautlSrid = currentUser?.operatingCountryId === "GB" ? 27700 : "";
 

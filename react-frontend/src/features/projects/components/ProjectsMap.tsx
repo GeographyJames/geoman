@@ -84,7 +84,6 @@ export default function ProjectsMap() {
 
     // Cleanup: remove layer when route unmounts (but keep map)
     return () => {
-      console.log("Removing projects layer");
       map?.removeLayer(vectorLayer);
     };
   }, [containerRef, mapRef, projects]);

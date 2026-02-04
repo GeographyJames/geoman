@@ -20,7 +20,9 @@ pub async fn patch_project_feature(
     body: web::Json<PatchProjectFeaturePayload>,
 ) -> Result<HttpResponse, ApiError> {
     let (project_id, collection_id, id) = path.into_inner();
+
     let feature = ProjectFeatureId { collection_id, id };
+
     repo.update(&(&body.into_inner(), user.id, project_id, feature))
         .await?;
     Ok(HttpResponse::NoContent().finish())

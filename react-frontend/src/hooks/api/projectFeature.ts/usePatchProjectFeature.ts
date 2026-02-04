@@ -23,7 +23,6 @@ export function usePatchProjectFeature() {
       });
     },
     onSuccess: (_, { projectId, collectionId }) => {
-      console.log("here??")
       queryClient.invalidateQueries({ queryKey: CACHE_KEY_PROJECT_COLLECTION_ITEMS(projectId, collectionId) });
     },
   });

@@ -1,4 +1,4 @@
-use app::{ErrorResponse, MockUserCredentials};
+use app::{AuthenticatedUser, ErrorResponse, MockUserCredentials};
 use rand::Rng;
 use reqwest::{RequestBuilder, Response};
 use serde::de::DeserializeOwned;
@@ -102,6 +102,10 @@ pub fn auth_request(req: RequestBuilder, auth: Option<&Auth>) -> RequestBuilder 
             Auth::MockToken(token) => req.header(
                 "X-Test-User",
                 json!(MockUserCredentials::Token(token.clone())).to_string(),
+            ),
+            Auth::MockUserCredentials(user) => req.header(
+                "X-Test-User",
+                json!(MockUserCredentials::User(user.clone())).to_string(),
             ),
         }
     } else {
