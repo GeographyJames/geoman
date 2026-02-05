@@ -1,5 +1,5 @@
 use domain::{
-    ProjectCollection, ProjectCollectionId, SupportedCrs,
+    CollectionListItem, ProjectCollection, ProjectCollectionId, SupportedCrs,
     enums::{CollectionId, GeometryType},
 };
 use ogcapi_types::common::{Bbox, Crs, SpatialExtent};
@@ -7,7 +7,7 @@ use ogcapi_types::common::{Bbox, Crs, SpatialExtent};
 use crate::repo::{
     RepositoryError,
     project_collections::{SelectAllParams, SelectOneParams},
-    traits::{SelectAllWithParams, SelectOneWithParams},
+    traits::{SelectAll, SelectAllWithParams, SelectOneWithParams},
 };
 
 struct CollectionRow {
@@ -180,5 +180,26 @@ impl SelectAllWithParams for ProjectCollection {
             items.push(row.into_collection(extent_crs.clone()));
         }
         Ok((items, ()))
+    }
+}
+
+impl SelectAll for CollectionListItem {
+    async fn select_all<'a, E>(executor: &'a E) -> Result<Vec<Self>, RepositoryError>
+    where
+        Self: Sized,
+        &'a E: sqlx::PgExecutor<'a>,
+    {
+        sqlx::query_as!(
+            CollectionListItem,
+            r#"SELECT id AS "id: ProjectCollectionId",
+                      title,
+                      description,
+                      geometry_type AS "geometry_type: GeometryType"
+               FROM app.collections
+               ORDER BY id"#
+        )
+        .fetch_all(executor)
+        .await
+        .map_err(Into::into)
     }
 }
