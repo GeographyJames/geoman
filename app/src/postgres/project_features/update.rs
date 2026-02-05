@@ -1,10 +1,7 @@
 use domain::{ProjectFeatureId, ProjectId, UserId, enums::Status};
 use sqlx::{Acquire, Postgres};
 
-use crate::{
-    handlers::ogc_api::features::patch::project_feature::PatchProjectFeaturePayload,
-    repo::traits::Update,
-};
+use crate::{handlers::api::features::patch::PatchProjectFeaturePayload, repo::traits::Update};
 
 impl Update
     for (

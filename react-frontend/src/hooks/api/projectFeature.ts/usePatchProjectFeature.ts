@@ -14,7 +14,7 @@ export function usePatchProjectFeature() {
 
   return useMutation<void, Error, {projectId: number, collectionId: string, id: number; dto: PatchProjectFeatureDTO }>({
     mutationFn: async ({ projectId, collectionId, id, dto }) => {
-      await apiRequest(`/ogcapi/project/${projectId}/collections/${collectionId}/items/${id}`, {
+      await apiRequest(`/api/features/${projectId}/${collectionId}/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

@@ -10,7 +10,6 @@ pub mod features;
 pub use features::{
     get::feature::get_feature, get::features::get_features,
     get::project_feature::get_project_feature, get::project_features::get_project_features,
-    patch::project_feature::patch_project_feature,
 };
 mod openapi;
 pub use openapi::get_openapi;

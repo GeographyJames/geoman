@@ -1,6 +1,5 @@
 import type Project from "@/domain/project/entity";
 import { VisibilityConfig } from "@/domain/types";
-import { GiWindTurbine } from "react-icons/gi";
 import UserInitials from "../UserInitials";
 import { FaLocationDot } from "react-icons/fa6";
 import { dateFormat } from "@/constants";

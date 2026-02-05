@@ -56,6 +56,9 @@ export const ProjectActionsDropdown = ({
         <button>create figure</button>
       </li>
       <li>
+        <button>manage project members</button>
+      </li>
+      <li>
         <button onClick={() => requestDelete(item)}>delete</button>
       </li>
     </ActionsDropdown>

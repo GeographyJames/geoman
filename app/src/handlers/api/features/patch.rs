@@ -11,7 +11,7 @@ pub struct PatchProjectFeaturePayload {
     pub name: Option<String>,
 }
 
-#[patch("/{collectionId}/items/{featureId}")]
+#[patch("{projectId}/{collectionId}/{featureId}")]
 #[tracing::instrument(skip(repo, path, user, body))]
 pub async fn patch_project_feature(
     path: web::Path<(ProjectId, ProjectCollectionId, i32)>,

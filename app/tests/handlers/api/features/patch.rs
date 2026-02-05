@@ -1,4 +1,4 @@
-use app::handlers::ogc_api::features::patch::project_feature::PatchProjectFeaturePayload;
+use app::handlers::api::features::patch::PatchProjectFeaturePayload;
 use domain::enums::Status;
 
 use crate::common::{
@@ -29,15 +29,18 @@ async fn patch_project_feature_works() {
     let mut payload = PatchProjectFeaturePayload::default();
     payload.status = Some(Status::Archived);
     let response = app
-        .ogc_service
-        .patch_project_feature(
+        .features_service
+        .patch_json(
             &app.api_client,
-            &payload,
-            project_id,
-            feature_id,
+            format!(
+                "{}/{}/{}",
+                project_id, feature_id.collection_id, feature_id.id
+            ),
             Some(&auth),
+            &payload,
         )
         .await;
+
     assert_status(&response, 204);
     let mut feature: ogc::Feature = handle_json_response(
         app.ogc_service

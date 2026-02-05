@@ -8,6 +8,7 @@ api:
   users: "/users"
   collections: "/collections"
   app_settings: "/app-settings"
+  project_features: "/features"
 
 docs:
   base: "/docs"
