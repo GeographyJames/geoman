@@ -1,4 +1,4 @@
-import AdminPage from "@/features/AdminPage";
+import AdminPage from "@/features/admin/AdminPage";
 import { useCurrentUser } from "@/hooks/api/useCurrentUser";
 import { createFileRoute } from "@tanstack/react-router";
 

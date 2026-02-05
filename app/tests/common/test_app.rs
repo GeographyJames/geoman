@@ -448,6 +448,7 @@ impl TestApp<ClerkAuthService> {
         .await
         .expect("failed to retrieve app settings ")
     }
+
     pub async fn _generate_user(&self, admin: bool, team_id: TeamId) -> AuthenticatedUser {
         let first_name = uuid::Uuid::new_v4().to_string();
         let last_name = uuid::Uuid::new_v4().to_string();
