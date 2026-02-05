@@ -7,6 +7,7 @@ export interface Collection {
     title: string
     geometry_type: string
     description: string | null
+    feature_count: number
 }
 
 export function useCollections() {

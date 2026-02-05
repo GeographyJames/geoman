@@ -1,4 +1,9 @@
-use crate::common::{AppBuilder, Auth, helpers::assert_ok};
+use domain::CollectionListItem;
+
+use crate::common::{
+    AppBuilder, Auth,
+    helpers::{assert_ok, handle_json_response},
+};
 
 #[actix_web::test]
 pub async fn get_collections_works() {
@@ -10,4 +15,5 @@ pub async fn get_collections_works() {
         .get(&app.api_client, Some(&auth))
         .await;
     assert_ok(&response);
+    let _collections: Vec<CollectionListItem> = handle_json_response(response).await.unwrap();
 }

@@ -101,6 +101,7 @@ export default function CollectionsSection() {
                 <tr>
                   <th>Title</th>
                   <th>Geometry Type</th>
+                  <th>Features</th>
                   <th>Description</th>
                 </tr>
               </thead>
@@ -117,6 +118,9 @@ export default function CollectionsSection() {
                       <div className="badge badge-outline badge-sm">
                         {collection.geometry_type}
                       </div>
+                    </td>
+                    <td className="text-sm">
+                      {collection.feature_count}
                     </td>
                     <td className="text-sm text-base-content/70">
                       {collection.description || (

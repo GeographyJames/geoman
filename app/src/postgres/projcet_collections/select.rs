@@ -191,12 +191,15 @@ impl SelectAll for CollectionListItem {
     {
         sqlx::query_as!(
             CollectionListItem,
-            r#"SELECT id AS "id: ProjectCollectionId",
-                      title,
-                      description,
-                      geometry_type AS "geometry_type: GeometryType"
-               FROM app.collections
-               ORDER BY id"#
+            r#"SELECT c.id AS "id: ProjectCollectionId",
+                      c.title,
+                      c.description,
+                      c.geometry_type AS "geometry_type: GeometryType",
+                      COUNT(f.id) AS "feature_count!"
+               FROM app.collections c
+               LEFT JOIN app.project_features f ON f.collection_id = c.id
+               GROUP BY c.id
+               ORDER BY c.id"#
         )
         .fetch_all(executor)
         .await
