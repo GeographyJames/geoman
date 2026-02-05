@@ -15,6 +15,7 @@ interface TextInputProps {
   defaultValue?: string;
   max?: number;
   min?: number;
+  autoFocus?: boolean;
 }
 
 export const TextInput = ({
@@ -31,6 +32,7 @@ export const TextInput = ({
   step,
   max,
   min,
+  autoFocus,
   onChange,
 }: TextInputProps) => {
   return (
@@ -50,6 +52,7 @@ export const TextInput = ({
           defaultValue={defaultValue}
           max={max}
           min={min}
+          autoFocus={autoFocus}
         />
         {children && children}
       </div>

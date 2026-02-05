@@ -5,7 +5,7 @@ use crate::{
         app_settings::get_app_settings,
         features::patch::patch_project_feature,
         keys::{generate_api_key, get_api_keys, renew_api_key, revoke_api_key},
-        project_collections::{get_collections, post_project_collection},
+        project_collections::{get_collections, patch_collection, post_project_collection},
         projects::{patch_project, post_project},
         users::{get_user, get_users},
     },
@@ -78,7 +78,8 @@ pub fn project_collection_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         scope(&URLS.api.collections)
             .service(get_collections)
-            .service(post_project_collection),
+            .service(post_project_collection)
+            .service(patch_collection),
     );
 }
 

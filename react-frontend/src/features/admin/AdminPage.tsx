@@ -1,9 +1,9 @@
 import { SignedIn, UserButton } from "@clerk/clerk-react";
 import { useState } from "react";
 import type User from "@/domain/user/entity";
-import ApiKeysSection from "./sections/ApiKeysSection";
+import ApiKeysSection from "./sections/apiKey/ApiKeysSection";
 import TeamsSection from "./sections/TeamsSection";
-import CollectionsSection from "./sections/CollectionsSection";
+import CollectionsSection from "./sections/collections/CollectionsSection";
 
 type Tab = "teams" | "collections" | "api-keys";
 
