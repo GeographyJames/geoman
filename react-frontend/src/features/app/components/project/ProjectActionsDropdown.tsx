@@ -4,6 +4,7 @@ import type Project from "@/domain/project/entity";
 import { usePatchProject } from "@/hooks/api/projects/usePatchProject";
 import { useFlash } from "@/features/app/contexts/FlashMessageContext";
 import { useEditProject } from "../../contexts/EditProjectContext";
+import { useDeleteProject } from "../../contexts/DeleteProjectContext";
 
 export const ProjectActionsDropdown = ({
   item,
@@ -16,6 +17,7 @@ export const ProjectActionsDropdown = ({
   const { addFlash } = useFlash();
   const action = item.archived ? "unarchive" : "archive";
   const { requestEdit } = useEditProject();
+  const { requestDelete } = useDeleteProject();
   return (
     <ActionsDropdown id={id}>
       <li>
@@ -52,6 +54,9 @@ export const ProjectActionsDropdown = ({
       </li>
       <li>
         <button>create figure</button>
+      </li>
+      <li>
+        <button onClick={() => requestDelete(item)}>delete</button>
       </li>
     </ActionsDropdown>
   );
