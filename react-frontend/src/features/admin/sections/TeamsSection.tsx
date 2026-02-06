@@ -1,13 +1,12 @@
 import { Users, AlertCircle } from "lucide-react";
 import { useUsers } from "@/hooks/api/useUsers";
 import type User from "@/domain/user/entity";
+import { useCurrentUser } from "@/hooks/api/useCurrentUser";
 
-interface Props {
-  currentUser: User;
-}
-
-export default function TeamsSection({ currentUser }: Props) {
+export default function TeamsSection() {
+  const { data: currentUser } = useCurrentUser();
   const { data: users = [] } = useUsers();
+  if (!currentUser) return <></>;
 
   const teamMembers = users.filter(
     (user) => user?.teamId === currentUser.teamId,

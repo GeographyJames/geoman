@@ -1,17 +1,13 @@
 import { SignedIn, UserButton } from "@clerk/clerk-react";
 import { useState } from "react";
-import type User from "@/domain/user/entity";
+
 import ApiKeysSection from "./sections/apiKey/ApiKeysSection";
 import TeamsSection from "./sections/TeamsSection";
 import CollectionsSection from "./sections/collections/CollectionsSection";
 
 type Tab = "teams" | "collections" | "api-keys";
 
-interface Props {
-  currentUser: User;
-}
-
-export default function AdminPage({ currentUser }: Props) {
+export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>("teams");
 
   return (
@@ -63,7 +59,7 @@ export default function AdminPage({ currentUser }: Props) {
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto p-6">
-        {activeTab === "teams" && <TeamsSection currentUser={currentUser} />}
+        {activeTab === "teams" && <TeamsSection />}
         {activeTab === "collections" && <CollectionsSection />}
         {activeTab === "api-keys" && <ApiKeysSection />}
       </div>
