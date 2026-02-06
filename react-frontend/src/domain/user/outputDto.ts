@@ -6,5 +6,6 @@ export interface UserOutputDto {
   last_name: string;
   clerk_id: string | null;
   team: TeamOutputDto;
-  operating_country_code: string
+  operating_country_code: string;
+  admin: boolean;
 }

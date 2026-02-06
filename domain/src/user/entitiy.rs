@@ -11,6 +11,7 @@ pub struct User {
     pub clerk_id: Option<String>,
     pub team: Team,
     pub operating_country_code: Option<String>,
+    pub admin: bool,
 }
 
 #[derive(Serialize, Deserialize, sqlx::Type, Debug, Default)]

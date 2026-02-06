@@ -1,5 +1,5 @@
 use domain::{
-    CollectionListItem, ProjectCollection, ProjectCollectionId, SupportedCrs,
+    AddedBy, CollectionListItem, ProjectCollection, ProjectCollectionId, SupportedCrs,
     enums::{CollectionId, GeometryType},
 };
 use ogcapi_types::common::{Bbox, Crs, SpatialExtent};
@@ -197,11 +197,15 @@ impl SelectAll for CollectionListItem {
                       c.description,
                       c.geometry_type AS "geometry_type: GeometryType",
                       COUNT(f.id) FILTER (WHERE f.status = 'ACTIVE') AS "active_feature_count!",
-                      COUNT(f.id) FILTER (WHERE f.status = 'ARCHIVED') AS "archived_feature_count!"
+                      COUNT(f.id) FILTER (WHERE f.status = 'ARCHIVED') AS "archived_feature_count!",
+                      c.added,
+                      ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t.id, t.name)::app.team))::app.user AS "added_by!: AddedBy"
                FROM app.collections c
                LEFT JOIN app.project_features f ON f.collection_id = c.id
+               JOIN app.users ab ON ab.id = c.added_by
+               JOIN app.teams t ON t.id = ab.team_id
                WHERE c.status = 'ACTIVE'
-               GROUP BY c.id
+               GROUP BY c.id, ab.id, t.id
                ORDER BY c.id"#
         )
         .fetch_all(executor)

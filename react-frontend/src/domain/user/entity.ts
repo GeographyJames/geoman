@@ -25,5 +25,7 @@ export default class User {
         return this.outputDto.id
     }
     get operatingCountryCode(): string | undefined {return this.outputDto.operating_country_code}
-
+    get isAdmin(): boolean {
+        return this.outputDto.admin
+    }
 }

@@ -2,6 +2,9 @@ import { Plus, AlertCircle, Layers, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useCollections, type Collection } from "@/hooks/api/useCollections";
 import { usePatchCollection } from "@/hooks/api/usePatchCollection";
+import { useCurrentUser } from "@/hooks/api/useCurrentUser";
+import UserInitials from "@/features/app/components/UserInitials";
+import { dateFormat } from "@/constants";
 
 import { NewCollectionForm } from "./NewCollectionForm";
 import { EditCollectionForm } from "./EditCollectionForm";
@@ -17,6 +20,7 @@ export default function CollectionsSection() {
   );
 
   const { data: collections = [], isLoading, error } = useCollections();
+  const { data: currentUser } = useCurrentUser();
   const patchCollection = usePatchCollection();
 
   const handleDelete = async () => {
@@ -95,6 +99,8 @@ export default function CollectionsSection() {
                   <th>Geometry Type</th>
                   <th>Active</th>
                   <th>Archived</th>
+                  <th>Added</th>
+                  <th>Added By</th>
                   <th>Description</th>
                   <th></th>
                 </tr>
@@ -115,6 +121,16 @@ export default function CollectionsSection() {
                     </td>
                     <td className="text-sm">{collection.active_feature_count}</td>
                     <td className="text-sm">{collection.archived_feature_count}</td>
+                    <td className="text-sm">
+                      {dateFormat.format(new Date(collection.added))}
+                    </td>
+                    <td>
+                      <UserInitials
+                        firstName={collection.added_by_first_name}
+                        lastName={collection.added_by_last_name}
+                        message={`${collection.added_by_first_name} ${collection.added_by_last_name}`}
+                      />
+                    </td>
                     <td className="text-sm text-base-content/70">
                       {collection.description || (
                         <span className="opacity-50">-</span>
@@ -124,14 +140,36 @@ export default function CollectionsSection() {
                       <div className="flex gap-1">
                         <button
                           onClick={() => setEditingCollection(collection)}
-                          className="btn btn-ghost btn-sm gap-1"
+                          className={`btn btn-ghost btn-sm gap-1 ${
+                            currentUser?.id !== collection.added_by_id &&
+                            !currentUser?.isAdmin
+                              ? "text-base-content/30"
+                              : ""
+                          }`}
+                          disabled={
+                            currentUser?.id !== collection.added_by_id &&
+                            !currentUser?.isAdmin
+                          }
                         >
                           <Pencil size={14} />
                           Edit
                         </button>
                         <button
                           onClick={() => setDeletingCollection(collection)}
-                          className="btn btn-ghost btn-sm gap-1 text-error"
+                          className={`btn btn-ghost btn-sm gap-1 ${
+                            collection.active_feature_count > 0 ||
+                            collection.archived_feature_count > 0 ||
+                            (currentUser?.id !== collection.added_by_id &&
+                              !currentUser?.isAdmin)
+                              ? "text-base-content/30"
+                              : "text-error"
+                          }`}
+                          disabled={
+                            collection.active_feature_count > 0 ||
+                            collection.archived_feature_count > 0 ||
+                            (currentUser?.id !== collection.added_by_id &&
+                              !currentUser?.isAdmin)
+                          }
                         >
                           <Trash2 size={14} />
                           Delete

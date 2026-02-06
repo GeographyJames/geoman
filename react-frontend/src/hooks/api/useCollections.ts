@@ -9,6 +9,14 @@ export interface Collection {
     description: string | null
     active_feature_count: number
     archived_feature_count: number
+    added: string
+    added_by_id: number
+    added_by_first_name: string
+    added_by_last_name: string
+    added_by_team: {
+        id: number
+        name: string
+    }
 }
 
 export function useCollections() {

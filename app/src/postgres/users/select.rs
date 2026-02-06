@@ -22,6 +22,7 @@ impl SelectAll for User {
                     u.last_name,
                     u.clerk_id,
                     u.operating_country_code,
+                    u.admin,
                     (ROW(t.id, t.name)::app.team) as "team!: Team"
                 FROM app.users u JOIN app.teams t ON t.id = u.team_id "#,
         )
@@ -44,6 +45,7 @@ impl SelectOne<UserId> for User {
                     u.last_name,
                     u.clerk_id,
                     u.operating_country_code,
+                    u.admin,
                     (ROW(t.id, t.name)::app.team) as "team!: Team"
                 FROM app.users u JOIN app.teams t ON t.id = u.team_id
                 WHERE u.id = $1 "#,

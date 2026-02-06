@@ -50,6 +50,8 @@ pub enum ApiError {
     InvalidCRSID,
     #[error("Cannot delete collection with active or archived features")]
     CollectionHasFeatures,
+    #[error("You can only edit or delete collections you have added")]
+    NotCollectionOwner,
 }
 
 impl From<RepositoryError> for ApiError {
@@ -94,6 +96,7 @@ impl ResponseError for ApiError {
             ApiError::ProjectValidation(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::InvalidCRSID => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::CollectionHasFeatures => StatusCode::CONFLICT,
+            ApiError::NotCollectionOwner => StatusCode::FORBIDDEN,
             ApiError::DuplicateCollectionName => StatusCode::CONFLICT,
         }
     }
