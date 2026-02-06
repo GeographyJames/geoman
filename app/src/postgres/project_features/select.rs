@@ -184,7 +184,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             JOIN app.users ub ON f.added_by = ub.id
             JOIN app.teams t_ub ON ub.team_id = t_ub.id
             WHERE c.id = $2
-            AND status = ANY($11)
+            AND f.status = ANY($11)
             AND ($3::int IS NULL OR f.project_id = $3)
             AND ($4::float IS NULL OR (
                 fo.geom && ST_Transform(ST_MakeEnvelope($4, $5, $6, $7, $8), ST_SRID(fo.geom))

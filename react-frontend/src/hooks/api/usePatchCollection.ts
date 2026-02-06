@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 interface PatchCollectionRequest {
     title?: string
     description?: string | null
+    status?: "ACTIVE" | "ARCHIVED" | "DELETED"
 }
 
 export const usePatchCollection = () => {

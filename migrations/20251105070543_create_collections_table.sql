@@ -2,6 +2,7 @@ CREATE TABLE app.collections (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     title text NOT NULL,
     description TEXT,
+    status app.status NOT NULL DEFAULT 'ACTIVE',
     geometry_type geometry_type NOT NULL,
     added_by integer NOT NULL REFERENCES app.users(id),
     added timestamptz NOT NULL DEFAULT now(),
@@ -16,10 +17,12 @@ INSERT INTO app.collections (
     title,
     geometry_type,
     added_by,
-    last_updated_by
+    last_updated_by,
+    description
 ) VALUES (
     'site boundaries',
     'MULTIPOLYGON',
    0,
-   0
+   0,
+   'the site boundaries'
 );

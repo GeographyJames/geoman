@@ -1,4 +1,4 @@
-use domain::{CollectionUpdateDto, ProjectCollectionId, UserId};
+use domain::{CollectionUpdateDto, ProjectCollectionId, UserId, enums::Status};
 use sqlx::{Acquire, Postgres};
 
 use crate::repo::traits::Update;
@@ -23,13 +23,15 @@ impl Update for (&CollectionUpdateDto, UserId) {
             SET
                 title = COALESCE($1, title),
                 description = CASE WHEN $2 THEN $3 ELSE description END,
-                last_updated_by = $4
-            WHERE id = $5
+                status = COALESCE($4, status),
+                last_updated_by = $5
+            WHERE id = $6
             RETURNING id AS "id: ProjectCollectionId"
             "#,
             dto.title,
             description_provided,
             description_value,
+            &dto.status as &Option<Status>,
             user_id.0,
             dto.id.0
         )

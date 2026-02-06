@@ -1,6 +1,7 @@
-import { Plus, AlertCircle, Layers, Pencil } from "lucide-react";
+import { Plus, AlertCircle, Layers, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useCollections, type Collection } from "@/hooks/api/useCollections";
+import { usePatchCollection } from "@/hooks/api/usePatchCollection";
 
 import { NewCollectionForm } from "./NewCollectionForm";
 import { EditCollectionForm } from "./EditCollectionForm";
@@ -11,8 +12,26 @@ export default function CollectionsSection() {
   const [editingCollection, setEditingCollection] = useState<Collection | null>(
     null,
   );
+  const [deletingCollection, setDeletingCollection] = useState<Collection | null>(
+    null,
+  );
 
   const { data: collections = [], isLoading, error } = useCollections();
+  const patchCollection = usePatchCollection();
+
+  const handleDelete = async () => {
+    if (!deletingCollection) return;
+    try {
+      await patchCollection.mutateAsync({
+        id: deletingCollection.id,
+        patch: { status: "DELETED" },
+      });
+      setDeletingCollection(null);
+    } catch (error) {
+      console.error("Failed to delete collection:", error);
+      alert("Failed to delete collection. Please try again.");
+    }
+  };
 
   return (
     <>
@@ -74,7 +93,8 @@ export default function CollectionsSection() {
                 <tr>
                   <th>Title</th>
                   <th>Geometry Type</th>
-                  <th>Features</th>
+                  <th>Active</th>
+                  <th>Archived</th>
                   <th>Description</th>
                   <th></th>
                 </tr>
@@ -93,20 +113,30 @@ export default function CollectionsSection() {
                         {collection.geometry_type}
                       </div>
                     </td>
-                    <td className="text-sm">{collection.feature_count}</td>
+                    <td className="text-sm">{collection.active_feature_count}</td>
+                    <td className="text-sm">{collection.archived_feature_count}</td>
                     <td className="text-sm text-base-content/70">
                       {collection.description || (
                         <span className="opacity-50">-</span>
                       )}
                     </td>
                     <td>
-                      <button
-                        onClick={() => setEditingCollection(collection)}
-                        className="btn btn-ghost btn-sm gap-1"
-                      >
-                        <Pencil size={14} />
-                        Edit
-                      </button>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => setEditingCollection(collection)}
+                          className="btn btn-ghost btn-sm gap-1"
+                        >
+                          <Pencil size={14} />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setDeletingCollection(collection)}
+                          className="btn btn-ghost btn-sm gap-1 text-error"
+                        >
+                          <Trash2 size={14} />
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -127,6 +157,47 @@ export default function CollectionsSection() {
           editingCollection={editingCollection}
           setEditingCollection={setEditingCollection}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingCollection && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4">Delete collection</h3>
+            <p className="text-base-content/70">
+              Are you sure you want to delete{" "}
+              <span className="font-medium text-base-content">
+                {deletingCollection.title}
+              </span>
+              ? This action cannot be undone.
+            </p>
+            <div className="modal-action">
+              <button
+                onClick={() => setDeletingCollection(null)}
+                className="btn"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={patchCollection.isPending}
+                className="btn btn-error"
+              >
+                {patchCollection.isPending ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </button>
+            </div>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setDeletingCollection(null)}>close</button>
+          </form>
+        </dialog>
       )}
     </>
   );

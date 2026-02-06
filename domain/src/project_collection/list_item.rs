@@ -7,5 +7,6 @@ pub struct CollectionListItem {
     pub title: String,
     pub description: Option<String>,
     pub geometry_type: GeometryType,
-    pub feature_count: i64,
+    pub active_feature_count: i64,
+    pub archived_feature_count: i64,
 }

@@ -162,7 +162,8 @@ impl SelectAllWithParams for ProjectCollection {
              AND f.project_id = $1
          ) extent_sub) as extent
   FROM app.collections c
-  WHERE EXISTS (
+  WHERE c.status = 'ACTIVE'
+  AND EXISTS (
       SELECT 1
       FROM app.project_features f
       WHERE f.collection_id = c.id
@@ -195,9 +196,11 @@ impl SelectAll for CollectionListItem {
                       c.title,
                       c.description,
                       c.geometry_type AS "geometry_type: GeometryType",
-                      COUNT(f.id) AS "feature_count!"
+                      COUNT(f.id) FILTER (WHERE f.status = 'ACTIVE') AS "active_feature_count!",
+                      COUNT(f.id) FILTER (WHERE f.status = 'ARCHIVED') AS "archived_feature_count!"
                FROM app.collections c
                LEFT JOIN app.project_features f ON f.collection_id = c.id
+               WHERE c.status = 'ACTIVE'
                GROUP BY c.id
                ORDER BY c.id"#
         )

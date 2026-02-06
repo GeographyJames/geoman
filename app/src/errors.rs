@@ -48,6 +48,8 @@ pub enum ApiError {
     DuplicateCollectionName,
     #[error("Invalid Coordinate Reference System ID")]
     InvalidCRSID,
+    #[error("Cannot delete collection with active or archived features")]
+    CollectionHasFeatures,
 }
 
 impl From<RepositoryError> for ApiError {
@@ -91,7 +93,7 @@ impl ResponseError for ApiError {
             ApiError::FeatureNotFound(_) => StatusCode::NOT_FOUND,
             ApiError::ProjectValidation(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::InvalidCRSID => StatusCode::UNPROCESSABLE_ENTITY,
-
+            ApiError::CollectionHasFeatures => StatusCode::CONFLICT,
             ApiError::DuplicateCollectionName => StatusCode::CONFLICT,
         }
     }

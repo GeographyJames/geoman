@@ -1,5 +1,5 @@
-use actix_web::{patch, web, HttpResponse};
-use domain::{CollectionUpdateDto, ProjectCollectionId};
+use actix_web::{HttpResponse, patch, web};
+use domain::{CollectionUpdateDto, ProjectCollectionId, enums::Status};
 use serde::Deserialize;
 
 use crate::{errors::ApiError, postgres::PostgresRepo, types::AuthenticatedUser};
@@ -17,6 +17,7 @@ pub struct PatchCollectionPayload {
     pub title: Option<String>,
     #[serde(default, deserialize_with = "deserialize_optional_field")]
     pub description: Option<Option<String>>,
+    pub status: Option<Status>,
 }
 
 #[patch("/{id}")]
@@ -27,11 +28,38 @@ pub async fn patch_collection(
     repo: web::Data<PostgresRepo>,
     user: web::ReqData<AuthenticatedUser>,
 ) -> Result<HttpResponse, ApiError> {
-    let payload = body.into_inner();
+    let mut payload = body.into_inner();
+    let collection_id = id.into_inner();
+
+    if let Some(ref status) = payload.status {
+        if status == &Status::Deleted {
+            // Check if collection has active or archived features
+            let feature_count: i64 = sqlx::query_scalar!(
+                r#"
+                SELECT COUNT(*) as "count!"
+                FROM app.project_features
+                WHERE collection_id = $1
+                AND status IN ('ACTIVE', 'ARCHIVED')
+                "#,
+                collection_id.0
+            )
+            .fetch_one(&repo.db_pool)
+            .await
+            .map_err(|e| ApiError::Unexpected(e.into()))?;
+
+            if feature_count > 0 {
+                return Err(ApiError::CollectionHasFeatures);
+            }
+
+            payload.title = Some(uuid::Uuid::new_v4().to_string())
+        }
+    }
+
     let dto = CollectionUpdateDto {
-        id: id.into_inner(),
+        id: collection_id,
         title: payload.title,
         description: payload.description,
+        status: payload.status,
     };
     repo.update(&(&dto, user.id)).await?;
     Ok(HttpResponse::NoContent().finish())
