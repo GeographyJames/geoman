@@ -15,5 +15,6 @@ pub async fn get_collections_works() {
         .get(&app.api_client, Some(&auth))
         .await;
     assert_ok(&response);
-    let _collections: Vec<CollectionListItem> = handle_json_response(response).await.unwrap();
+    let collections: Vec<CollectionListItem> = handle_json_response(response).await.unwrap();
+    assert_eq!(collections.len(), 2)
 }

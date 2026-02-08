@@ -1,6 +1,6 @@
 use actix_web::{HttpResponse, patch, web};
 use domain::{CollectionUpdateDto, ProjectCollectionId, enums::Status};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{errors::ApiError, postgres::PostgresRepo, types::AuthenticatedUser};
 
@@ -12,7 +12,7 @@ where
     Ok(Some(Option::deserialize(deserializer)?))
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default, Serialize)]
 pub struct PatchCollectionPayload {
     pub title: Option<String>,
     #[serde(default, deserialize_with = "deserialize_optional_field")]
