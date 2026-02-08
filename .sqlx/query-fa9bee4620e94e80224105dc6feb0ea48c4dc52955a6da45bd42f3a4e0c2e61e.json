@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT u.id AS \"id: UserId\",\n                    u.first_name,\n                    u.last_name,\n                    u.clerk_id,\n                    u.operating_country_code,\n                    (ROW(t.id, t.name)::app.team) as \"team!: Team\"\n                FROM app.users u JOIN app.teams t ON t.id = u.team_id\n                WHERE u.id = $1 ",
+  "query": "SELECT u.id AS \"id: UserId\",\n                    u.first_name,\n                    u.last_name,\n                    u.clerk_id,\n                    u.operating_country_code,\n                    u.admin,\n                    (ROW(t.id, t.name)::app.team) as \"team!: Team\"\n                FROM app.users u JOIN app.teams t ON t.id = u.team_id ",
   "describe": {
     "columns": [
       {
@@ -30,6 +30,11 @@
       },
       {
         "ordinal": 5,
+        "name": "admin",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
         "name": "team!: Team",
         "type_info": {
           "Custom": {
@@ -51,9 +56,7 @@
       }
     ],
     "parameters": {
-      "Left": [
-        "Int4"
-      ]
+      "Left": []
     },
     "nullable": [
       false,
@@ -61,8 +64,9 @@
       false,
       true,
       true,
+      false,
       null
     ]
   },
-  "hash": "f96d0373e9c57f4e1d07ea1ad9d5e797046cd8b5a8e5b0a969669bbc559120ba"
+  "hash": "fa9bee4620e94e80224105dc6feb0ea48c4dc52955a6da45bd42f3a4e0c2e61e"
 }

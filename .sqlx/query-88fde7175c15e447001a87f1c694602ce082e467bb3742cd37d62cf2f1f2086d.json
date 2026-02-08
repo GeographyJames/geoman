@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT COUNT(*) as \"count!\"\n                FROM app.project_features\n                WHERE collection_id = $1\n                AND status IN ('ACTIVE', 'ARCHIVED')\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "88fde7175c15e447001a87f1c694602ce082e467bb3742cd37d62cf2f1f2086d"
+}

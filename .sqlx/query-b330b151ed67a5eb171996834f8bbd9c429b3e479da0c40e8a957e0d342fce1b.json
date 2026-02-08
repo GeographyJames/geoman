@@ -1,0 +1,121 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.id AS \"id: ProjectCollectionId\",\n                      c.title,\n                      c.description,\n                      c.geometry_type AS \"geometry_type: GeometryType\",\n                      COUNT(f.id) FILTER (WHERE f.status = 'ACTIVE') AS \"active_feature_count!\",\n                      COUNT(f.id) FILTER (WHERE f.status = 'ARCHIVED') AS \"archived_feature_count!\",\n                      c.added,\n                      ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t.id, t.name)::app.team))::app.user AS \"added_by!: AddedBy\"\n               FROM app.collections c\n               LEFT JOIN app.project_features f ON f.collection_id = c.id\n               JOIN app.users ab ON ab.id = c.added_by\n               JOIN app.teams t ON t.id = ab.team_id\n               WHERE c.status = 'ACTIVE'\n               GROUP BY c.id, ab.id, t.id\n               ORDER BY c.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: ProjectCollectionId",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "geometry_type: GeometryType",
+        "type_info": {
+          "Custom": {
+            "name": "geometry_type",
+            "kind": {
+              "Enum": [
+                "POINT",
+                "LINESTRING",
+                "POLYGON",
+                "MULTIPOINT",
+                "MULTILINESTRING",
+                "MULTIPOLYGON",
+                "GEOMETRYCOLLECTION"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "active_feature_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "archived_feature_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "added",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "added_by!: AddedBy",
+        "type_info": {
+          "Custom": {
+            "name": "app.\"user\"",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Int4"
+                ],
+                [
+                  "first_name",
+                  "Text"
+                ],
+                [
+                  "last_name",
+                  "Text"
+                ],
+                [
+                  "clerk_id",
+                  "Text"
+                ],
+                [
+                  "team",
+                  {
+                    "Custom": {
+                      "name": "app.team",
+                      "kind": {
+                        "Composite": [
+                          [
+                            "id",
+                            "Int4"
+                          ],
+                          [
+                            "name",
+                            "Text"
+                          ]
+                        ]
+                      }
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      null,
+      null,
+      false,
+      null
+    ]
+  },
+  "hash": "b330b151ed67a5eb171996834f8bbd9c429b3e479da0c40e8a957e0d342fce1b"
+}

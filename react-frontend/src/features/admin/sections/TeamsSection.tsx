@@ -1,6 +1,5 @@
 import { Users, AlertCircle } from "lucide-react";
 import { useUsers } from "@/hooks/api/useUsers";
-import type User from "@/domain/user/entity";
 import { useCurrentUser } from "@/hooks/api/useCurrentUser";
 
 export default function TeamsSection() {

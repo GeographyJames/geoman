@@ -1,5 +1,6 @@
 import { SignedIn, UserButton } from "@clerk/clerk-react";
-import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { Route } from "@/routes/admin";
 
 import ApiKeysSection from "./sections/apiKey/ApiKeysSection";
 import TeamsSection from "./sections/TeamsSection";
@@ -8,7 +9,13 @@ import CollectionsSection from "./sections/collections/CollectionsSection";
 type Tab = "teams" | "collections" | "api-keys";
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<Tab>("teams");
+  const { tab } = Route.useSearch();
+  const navigate = useNavigate();
+  const activeTab: Tab = tab ?? "teams";
+
+  const setActiveTab = (newTab: Tab) => {
+    navigate({ to: "/admin", search: { tab: newTab } });
+  };
 
   return (
     <div className="min-h-screen bg-base-200">

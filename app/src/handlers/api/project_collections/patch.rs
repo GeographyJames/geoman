@@ -50,28 +50,28 @@ pub async fn patch_collection(
         }
     }
 
-    if let Some(ref status) = payload.status {
-        if status == &Status::Deleted {
-            // Check if collection has active or archived features
-            let feature_count: i64 = sqlx::query_scalar!(
-                r#"
+    if let Some(ref status) = payload.status
+        && status == &Status::Deleted
+    {
+        // Check if collection has active or archived features
+        let feature_count: i64 = sqlx::query_scalar!(
+            r#"
                 SELECT COUNT(*) as "count!"
                 FROM app.project_features
                 WHERE collection_id = $1
                 AND status IN ('ACTIVE', 'ARCHIVED')
                 "#,
-                collection_id.0
-            )
-            .fetch_one(&repo.db_pool)
-            .await
-            .map_err(|e| ApiError::Unexpected(e.into()))?;
+            collection_id.0
+        )
+        .fetch_one(&repo.db_pool)
+        .await
+        .map_err(|e| ApiError::Unexpected(e.into()))?;
 
-            if feature_count > 0 {
-                return Err(ApiError::CollectionHasFeatures);
-            }
-
-            payload.title = Some(uuid::Uuid::new_v4().to_string())
+        if feature_count > 0 {
+            return Err(ApiError::CollectionHasFeatures);
         }
+
+        payload.title = Some(uuid::Uuid::new_v4().to_string())
     }
 
     let dto = CollectionUpdateDto {
