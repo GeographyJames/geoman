@@ -36,7 +36,7 @@ use domain::{Feature, FeatureId, GisDataTable, IntoOGCFeature, ProjectId, enums:
 pub async fn get_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-    path: web::Path<(CollectionId, i32)>,
+    path: web::Path<(CollectionId, FeatureId)>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let (collection_id, feature_id) = path.into_inner();
@@ -50,7 +50,7 @@ pub async fn get_feature(
     let mut response = match collection_id {
         CollectionId::Projects => {
             let params = project_features::SelectOneParams {
-                project_id: ProjectId(feature_id),
+                project_id: ProjectId(feature_id.0),
                 crs: &crs,
             };
 
@@ -76,7 +76,7 @@ pub async fn get_feature(
                 table,
                 crs: crs.clone(),
             };
-            let feature_id = FeatureId(feature_id);
+
             let feature: Feature = repo
                 .select_one_with_params(feature_id, &params)
                 .await?

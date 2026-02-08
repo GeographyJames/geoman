@@ -17,7 +17,12 @@ async fn patch_project_feature_works() {
         .await;
     let mut feature: ogc::Feature = handle_json_response(
         app.ogc_service
-            .get_project_feature(&app.api_client, project_id, collection_id, feature_id.id)
+            .get_project_feature(
+                &app.api_client,
+                project_id,
+                collection_id,
+                feature_id.feature_id,
+            )
             .await,
     )
     .await
@@ -34,7 +39,7 @@ async fn patch_project_feature_works() {
             &app.api_client,
             format!(
                 "{}/{}/{}",
-                project_id, feature_id.collection_id, feature_id.id
+                project_id, feature_id.collection_id, feature_id.feature_id
             ),
             Some(&auth),
             &payload,
@@ -44,7 +49,12 @@ async fn patch_project_feature_works() {
     assert_status(&response, 204);
     let mut feature: ogc::Feature = handle_json_response(
         app.ogc_service
-            .get_project_feature(&app.api_client, project_id, collection_id, feature_id.id)
+            .get_project_feature(
+                &app.api_client,
+                project_id,
+                collection_id,
+                feature_id.feature_id,
+            )
             .await,
     )
     .await

@@ -21,7 +21,7 @@ use app::{
     telemetry::{get_subscriber, init_subscriber},
 };
 use domain::{
-    ProjectCollectionId, ProjectFeatureId, ProjectId, TableName, TeamId, UserId,
+    FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName, TeamId, UserId,
     enums::GeometryType,
 };
 use dotenvy::dotenv;
@@ -220,7 +220,7 @@ impl TestApp<ClerkAuthService> {
         .expect("failed to save feature to database");
         ProjectFeatureId {
             collection_id: ProjectCollectionId(record.collection_id),
-            id: record.project_feature_id,
+            feature_id: domain::FeatureId(record.project_feature_id),
         }
     }
 
@@ -265,7 +265,7 @@ impl TestApp<ClerkAuthService> {
         .expect("Failed to save feature in database");
         ProjectFeatureId {
             collection_id: ProjectCollectionId(record.collection_id),
-            id: record.project_feature_id,
+            feature_id: FeatureId(record.project_feature_id),
         }
     }
 
@@ -409,7 +409,7 @@ impl TestApp<ClerkAuthService> {
         tx.commit().await.unwrap();
         ProjectFeatureId {
             collection_id: ProjectCollectionId(collection_id),
-            id: feature_id,
+            feature_id: domain::FeatureId(feature_id),
         }
     }
 

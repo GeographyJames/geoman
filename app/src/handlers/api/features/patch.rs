@@ -1,5 +1,5 @@
 use actix_web::{HttpResponse, patch, web};
-use domain::{ProjectCollectionId, ProjectFeatureId, ProjectId, enums::Status};
+use domain::{FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, enums::Status};
 use serde::{Deserialize, Serialize};
 
 use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
@@ -14,14 +14,17 @@ pub struct PatchProjectFeaturePayload {
 #[patch("{projectId}/{collectionId}/{featureId}")]
 #[tracing::instrument(skip(repo, path, user, body))]
 pub async fn patch_project_feature(
-    path: web::Path<(ProjectId, ProjectCollectionId, i32)>,
+    path: web::Path<(ProjectId, ProjectCollectionId, FeatureId)>,
     repo: web::Data<PostgresRepo>,
     user: web::ReqData<AuthenticatedUser>,
     body: web::Json<PatchProjectFeaturePayload>,
 ) -> Result<HttpResponse, ApiError> {
-    let (project_id, collection_id, id) = path.into_inner();
+    let (project_id, collection_id, feature_id) = path.into_inner();
 
-    let feature = ProjectFeatureId { collection_id, id };
+    let feature = ProjectFeatureId {
+        collection_id,
+        feature_id,
+    };
 
     repo.update(&(&body.into_inner(), user.id, project_id, feature))
         .await?;

@@ -16,14 +16,14 @@ use actix_web::{
     web::{self},
 };
 
-use domain::{ProjectId, enums::CollectionId, project::ProjectName};
+use domain::{FeatureId, ProjectId, enums::CollectionId, project::ProjectName};
 
 #[get("/{collectionId}/items/{featureId}")]
 #[tracing::instrument(skip(repo, req, path, query))]
 pub async fn get_project_feature(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
-    path: web::Path<(ProjectId, CollectionId, i32)>,
+    path: web::Path<(ProjectId, CollectionId, FeatureId)>,
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let (project_id, collection_id, feature_id) = path.into_inner();

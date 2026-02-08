@@ -4,7 +4,7 @@ use std::fmt::Display;
 #[derive(Clone, Copy, Default, Debug)]
 pub struct ProjectFeatureId {
     pub collection_id: ProjectCollectionId,
-    pub id: i32,
+    pub feature_id: FeatureId,
 }
 #[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
 #[sqlx(transparent)]
@@ -47,7 +47,7 @@ impl Display for ProjectFeatureId {
         write!(
             f,
             "collection id: {}, feature id: {}",
-            self.collection_id, self.id
+            self.collection_id, self.feature_id
         )
     }
 }

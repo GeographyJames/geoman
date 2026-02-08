@@ -32,7 +32,7 @@ pub async fn crs_transform_works() {
             &app.api_client,
             project_id,
             collection_id,
-            feature_id.id,
+            feature_id.feature_id,
             &[("crs", &crs)],
         )
         .await;
@@ -70,7 +70,7 @@ pub async fn crs_transform_works() {
             &app.api_client,
             project_id.try_into().unwrap(),
             collection_id,
-            feature_id.id,
+            feature_id.feature_id,
             &[("crs", &crs)],
         )
         .await;

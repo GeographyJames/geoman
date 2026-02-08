@@ -9,7 +9,7 @@ use actix_web::{
 };
 
 use domain::{
-    IntoOGCFeature, ProjectFeature, ProjectFeatureId, ProjectId, enums::CollectionId,
+    FeatureId, IntoOGCFeature, ProjectFeature, ProjectFeatureId, ProjectId, enums::CollectionId,
     project::Project,
 };
 use ogcapi_types::common::Crs;
@@ -17,13 +17,13 @@ use ogcapi_types::common::Crs;
 pub async fn retrieve_feature_from_database<'a>(
     repo: &PostgresRepo,
     collection: CollectionId,
-    feature_id: i32,
+    feature_id: FeatureId,
     collection_url: String,
     params: &repo::project_features::SelectOneParams<'a>,
 ) -> Result<ogc::Feature, ApiError> {
     let feature = match collection {
         CollectionId::Projects => {
-            let project_id = ProjectId(feature_id);
+            let project_id = ProjectId(feature_id.0);
             let params = project::SelectOneParams { crs: params.crs };
             repo.select_one_with_params::<Project, _>(project_id, &params)
                 .await?
@@ -33,7 +33,7 @@ pub async fn retrieve_feature_from_database<'a>(
         CollectionId::ProjectCollection(collection_id) => {
             let id = ProjectFeatureId {
                 collection_id,
-                id: feature_id,
+                feature_id: feature_id,
             };
 
             repo.select_one_with_params::<ProjectFeature, _>(&id, params)

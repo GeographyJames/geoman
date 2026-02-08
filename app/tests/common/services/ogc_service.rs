@@ -6,7 +6,7 @@ use crate::common::{
 };
 
 use app::URLS;
-use domain::{ProjectCollectionId, ProjectId, enums::CollectionId};
+use domain::{FeatureId, ProjectCollectionId, ProjectId, enums::CollectionId};
 use reqwest::{RequestBuilder, Response};
 use serde::Serialize;
 
@@ -191,7 +191,7 @@ impl OgcService {
         client: &HttpClient,
         project: ProjectId,
         collection_id: ProjectCollectionId,
-        id: i32,
+        feature_id: FeatureId,
     ) -> RequestBuilder {
         client.get(format!(
             "{}{}/{}{}/{}/items/{}",
@@ -200,7 +200,7 @@ impl OgcService {
             project.0,
             URLS.ogc_api.collections,
             collection_id,
-            id
+            feature_id.0
         ))
     }
 
@@ -209,11 +209,11 @@ impl OgcService {
         client: &HttpClient,
         project: ProjectId,
         collection_id: ProjectCollectionId,
-        id: i32,
+        feature_id: FeatureId,
         params: &T,
     ) -> Response {
         let req = self
-            .get_project_feature_req(client, project, collection_id, id)
+            .get_project_feature_req(client, project, collection_id, feature_id)
             .query(params);
         req.send().await.expect(REQUEST_FAILED)
     }
@@ -223,9 +223,9 @@ impl OgcService {
         client: &HttpClient,
         project: ProjectId,
         collection_id: ProjectCollectionId,
-        id: i32,
+        feature_id: FeatureId,
     ) -> Response {
-        let req = self.get_project_feature_req(client, project, collection_id, id);
+        let req = self.get_project_feature_req(client, project, collection_id, feature_id);
         req.send().await.expect(REQUEST_FAILED)
     }
 

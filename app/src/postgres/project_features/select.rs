@@ -84,13 +84,16 @@ impl SelectOneWithParams<&ProjectFeatureId> for ProjectFeature {
     type Params<'a> = &'a SelectOneParams<'a>;
     async fn select_one_with_params<'a, E>(
         executor: &'a E,
-        feature_id: &ProjectFeatureId,
+        project_feature_id: &ProjectFeatureId,
         params: Self::Params<'a>,
     ) -> Result<Option<Self>, RepositoryError>
     where
         &'a E: sqlx::PgExecutor<'a>,
     {
-        let ProjectFeatureId { collection_id, id } = feature_id;
+        let ProjectFeatureId {
+            collection_id,
+            feature_id,
+        } = project_feature_id;
         let SelectOneParams { project_id, crs } = params;
 
         sqlx::query_as!(
@@ -122,7 +125,7 @@ impl SelectOneWithParams<&ProjectFeatureId> for ProjectFeature {
             AND c.id = $2
             AND ($4::int IS NULL OR f.project_id = $4)
             "#,
-            id,
+            feature_id.0,
             collection_id.0,
             crs.as_srid() as i32,
             project_id.0

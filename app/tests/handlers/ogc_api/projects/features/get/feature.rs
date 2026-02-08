@@ -1,4 +1,4 @@
-use domain::{ProjectFeature, ProjectId};
+use domain::{FeatureId, ProjectFeature, ProjectId};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 use crate::common::{
@@ -58,12 +58,12 @@ async fn get_feature_works() {
         .await;
     let response_1 = app
         .ogc_service
-        .get_project_feature(&app.api_client, project_id, collection_1_id, 1)
+        .get_project_feature(&app.api_client, project_id, collection_1_id, FeatureId(1))
         .await;
 
     let response_2 = app
         .ogc_service
-        .get_project_feature(&app.api_client, project_id, collection_2_id, 1)
+        .get_project_feature(&app.api_client, project_id, collection_2_id, FeatureId(1))
         .await;
 
     assert_ok(&response_1);
@@ -81,8 +81,8 @@ async fn get_feature_works() {
     check_ogc_feature_is_project_feature::<Properties>(ogc_feature_2.clone());
     let feature_1: domain::ProjectFeature = ogc_feature_1.try_into().unwrap();
     let feature_2: domain::ProjectFeature = ogc_feature_2.try_into().unwrap();
-    assert_eq!(feature_1.id, feature_1_id.id);
-    assert_eq!(feature_2.id, feature_2_id.id);
+    assert_eq!(feature_1.id, feature_1_id.feature_id.0);
+    assert_eq!(feature_2.id, feature_2_id.feature_id.0);
     assert_eq!(
         feature_1.properties.collection_id,
         feature_1_id.collection_id.0
@@ -109,7 +109,7 @@ async fn get_project_feature_returns_404_for_project_not_found() {
             &app.api_client,
             ProjectId::default(),
             collection_id,
-            feature_id.id,
+            feature_id.feature_id,
         )
         .await;
     assert_status(&response, 404);
@@ -132,7 +132,7 @@ async fn get_project_feature_returns_404_for_feature_belonging_to_different_proj
             &app.api_client,
             project_id.into(),
             collection_id,
-            feature_id.id,
+            feature_id.feature_id,
         )
         .await;
     assert_status(&response, 404);

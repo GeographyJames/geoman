@@ -52,7 +52,7 @@ impl Update
             payload.primary,
             &payload.name as &Option<String>,
             user_id.0,
-            feature_id.id,
+            feature_id.feature_id.0,
             feature_id.collection_id.0,
             project_id.0
         )
@@ -61,7 +61,7 @@ impl Update
         tx.commit().await?;
         Ok(ProjectFeatureId {
             collection_id: domain::ProjectCollectionId(result.collection_id),
-            id: (result.id),
+            feature_id: domain::FeatureId(result.id),
         })
     }
 }

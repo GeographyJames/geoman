@@ -89,7 +89,7 @@ impl Endpoint {
                         &app.api_client,
                         ProjectId::default(),
                         ProjectCollectionId::default(),
-                        0,
+                        domain::FeatureId(0),
                     )
                     .await
             }
