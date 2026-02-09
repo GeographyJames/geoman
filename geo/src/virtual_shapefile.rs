@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use actix_multipart::form::{MultipartForm, tempfile::TempFile};
 use anyhow::{Context, anyhow};
 use gdal::{

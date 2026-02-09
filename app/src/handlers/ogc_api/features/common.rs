@@ -33,7 +33,7 @@ pub async fn retrieve_feature_from_database<'a>(
         CollectionId::ProjectCollection(collection_id) => {
             let id = ProjectFeatureId {
                 collection_id,
-                feature_id: feature_id,
+                feature_id,
             };
 
             repo.select_one_with_params::<ProjectFeature, _>(&id, params)

@@ -12,7 +12,7 @@ async fn post_shapefile_works() {
         geometry_type: GeometryType::MultiPolygon,
         description: None,
     };
-    let collection_id: ProjectCollectionId = handle_json_response(
+    let _collection_id: ProjectCollectionId = handle_json_response(
         app.collections_service
             .post_json(&app.api_client, Some(&auth), &collection)
             .await,
