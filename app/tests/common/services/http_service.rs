@@ -54,4 +54,21 @@ impl HttpService {
         .await
         .expect(REQUEST_FAILED)
     }
+    pub async fn post_form(
+        &self,
+        client: &HttpClient,
+        form: reqwest::multipart::Form,
+        id: impl Display,
+        auth: Option<&Auth>,
+    ) -> Response {
+        auth_request(
+            client
+                .post(&format!("{}/{}", self.endpoint, id))
+                .multipart(form),
+            auth,
+        )
+        .send()
+        .await
+        .expect(REQUEST_FAILED)
+    }
 }

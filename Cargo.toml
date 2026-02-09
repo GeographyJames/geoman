@@ -18,7 +18,7 @@ futures = "0.3.15"
 serde = { version = "1.0", features = ["derive"] }
 geojson = "0.24"
 geo-types = "0.7"
-
+gdal = "0.19"
 utoipa = { version = "4.2.3", features = [
     "actix_extras",
 ] } # Cannot upgrade to 5 due to OpenAPI 3.1 breaking OGC test suit and incompatible with current ogcapi_types crate

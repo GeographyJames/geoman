@@ -1,7 +1,14 @@
 use app::handlers::api::project_collections::CollectionReqPayload;
 use domain::{ProjectCollectionId, enums::GeometryType};
+use gdal::vector::{LayerAccess, OGRwkbGeometryType};
 
-use crate::common::{AppBuilder, Auth, helpers::handle_json_response};
+use crate::common::{
+    AppBuilder, Auth,
+    helpers::{
+        add_layer, add_shapefile_to_form, assert_ok, create_gdal_multipolygon_bng,
+        create_shapefile_dataset, dataset_to_shapefile_data, handle_json_response,
+    },
+};
 
 #[actix_web::test]
 async fn post_shapefile_works() {
@@ -12,11 +19,31 @@ async fn post_shapefile_works() {
         geometry_type: GeometryType::MultiPolygon,
         description: None,
     };
-    let _collection_id: ProjectCollectionId = handle_json_response(
+    let collection_id: ProjectCollectionId = handle_json_response(
         app.collections_service
             .post_json(&app.api_client, Some(&auth), &collection)
             .await,
     )
     .await
     .unwrap();
+    let project_id = app.generate_project_id(Some(&auth)).await;
+    let mut form = reqwest::multipart::Form::new();
+    let input_geom = create_gdal_multipolygon_bng();
+    let (mut dataset, filename) = create_shapefile_dataset();
+    let mut layer = add_layer(&mut dataset, OGRwkbGeometryType::wkbMultiPolygon, 27700);
+    layer
+        .create_feature(input_geom.clone())
+        .expect("failed to add geom");
+    let shapefile_data = dataset_to_shapefile_data(dataset, &filename);
+    form = add_shapefile_to_form("test", shapefile_data, form);
+    let response = app
+        .features_service
+        .post_form(
+            &app.api_client,
+            form,
+            format!("{}/{}", project_id, collection_id,),
+            Some(&auth),
+        )
+        .await;
+    assert_ok(&response)
 }

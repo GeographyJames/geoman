@@ -1,1 +1,1 @@
-mod virtual_shapefile;
+pub mod virtual_shapefile;

@@ -46,10 +46,12 @@ uuid = { workspace = true }
 utoipa-swagger-ui = { version = "7", features = [
     "actix-web",
 ] } # Version 7 is latest version compatible with utoipa version 4.
-[dev-dependencies]
 
+[dev-dependencies]
+geo = { path = "../geo" }
+gdal = { workspace = true }
 app = { path = ".", features = ["test-utils"] }
-reqwest = { version = "0.13", features = ["json", "query"] }
+reqwest = { version = "0.13", features = ["json", "query", "multipart"] }
 rstest = "0.26"
 tokio = { version = "1.48", features = ["sync"] }
 uuid = { workspace = true }
