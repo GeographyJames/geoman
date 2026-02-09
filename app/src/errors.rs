@@ -3,13 +3,13 @@ use domain::{FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableN
 
 use isocountry::CountryCodeParseErr;
 use thiserror::Error;
+use utils::error_chain_fmt;
 
 use crate::{
     constants::db_constraints::{
         PROJECT_COLLECTIONS_TITLE_UNIQUE, PROJECT_CRS_ID_FKEY, PROJECT_NAME_UNIQUE,
         PROJECT_SLUG_UNIQUE,
     },
-    helpers::error_chain_fmt,
     repo::RepositoryError,
     types::ErrorResponse,
 };

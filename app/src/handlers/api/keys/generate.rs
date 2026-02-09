@@ -4,7 +4,8 @@ use crate::{
 use actix_web::{HttpResponse, post, web};
 use anyhow::Context;
 use domain::{ApiKeyInputDTO, KeyId};
-use rand::{Rng, distr::Alphanumeric};
+
+use rand::{RngExt, distr::Alphanumeric};
 use secrecy::{ExposeSecret, SecretBox};
 use serde::{Deserialize, Serialize};
 

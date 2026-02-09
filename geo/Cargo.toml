@@ -1,0 +1,16 @@
+[package]
+name = "geo"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+actix-web = { workspace = true }
+utils = { path = "../utils" }
+gdal = "0.19"
+actix-multipart = "0.7.2"
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
+
+[dev-dependencies]
+claims = "0.8"

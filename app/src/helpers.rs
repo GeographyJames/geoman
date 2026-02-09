@@ -21,19 +21,6 @@ pub fn get_base_url(req: &HttpRequest) -> String {
     format!("{}://{}", connection_info.scheme(), connection_info.host())
 }
 
-pub fn error_chain_fmt(
-    e: &impl std::error::Error,
-    f: &mut std::fmt::Formatter<'_>,
-) -> std::fmt::Result {
-    write!(f, "{}", e)?;
-    let mut current = e.source();
-    while let Some(cause) = current {
-        write!(f, "\ncaused by:\n\t{}", cause)?;
-        current = cause.source();
-    }
-    Ok(())
-}
-
 /// Hash an API key using SHA256 for database storage
 pub fn hash_api_key(api_key: &SecretBox<String>) -> KeyHash {
     let mut hasher = Sha256::new();

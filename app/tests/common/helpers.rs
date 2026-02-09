@@ -1,5 +1,5 @@
 use app::{ErrorResponse, MockUserCredentials};
-use rand::Rng;
+use rand::RngExt;
 use reqwest::{RequestBuilder, Response};
 use serde::de::DeserializeOwned;
 use serde_json::json;
