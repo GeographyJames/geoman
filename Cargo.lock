@@ -366,6 +366,7 @@ version = "0.1.0"
 dependencies = [
  "actix-files",
  "actix-http",
+ "actix-multipart",
  "actix-web",
  "actix-web-lab",
  "anyhow",
@@ -1086,6 +1087,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "claims",
+ "gdal",
  "geojson",
  "isocountry",
  "ogc",

@@ -18,6 +18,6 @@ isocountry = { workspace = true }
 slug = "0.1.6"
 unicode-segmentation = "1.12.0"
 utoipa = { workspace = true }
-
+gdal = { workspace = true }
 [dev-dependencies]
 claims = "0.8.0"

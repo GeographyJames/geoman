@@ -7,7 +7,7 @@ edition = "2024"
 actix-web = { workspace = true }
 utils = { path = "../utils" }
 gdal = { workspace = true }
-actix-multipart = "0.7.2"
+actix-multipart = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 uuid = { workspace = true }

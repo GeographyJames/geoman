@@ -1,6 +1,7 @@
 use actix_web::{ResponseError, http::StatusCode};
 use domain::{FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName};
 
+use geo::virtual_shapefile::ShapefileError;
 use isocountry::CountryCodeParseErr;
 use thiserror::Error;
 use utils::error_chain_fmt;
@@ -52,6 +53,8 @@ pub enum ApiError {
     CollectionHasFeatures,
     #[error("You can only edit or delete collections you have added")]
     NotCollectionOwner,
+    #[error(transparent)]
+    Shapefile(ShapefileError),
 }
 
 impl From<RepositoryError> for ApiError {
@@ -98,6 +101,7 @@ impl ResponseError for ApiError {
             ApiError::CollectionHasFeatures => StatusCode::CONFLICT,
             ApiError::NotCollectionOwner => StatusCode::FORBIDDEN,
             ApiError::DuplicateCollectionName => StatusCode::CONFLICT,
+            ApiError::Shapefile(_) => StatusCode::UNPROCESSABLE_ENTITY,
         }
     }
 
