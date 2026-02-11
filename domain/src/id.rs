@@ -25,7 +25,8 @@ pub struct UserId(pub i32);
 #[sqlx(transparent)]
 pub struct TeamId(pub i32);
 
-#[derive(Clone, Copy, Default, Debug, Deserialize)]
+#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type)]
+#[sqlx(transparent)]
 pub struct FeatureId(pub i32);
 
 #[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]

@@ -1,5 +1,5 @@
 use app::handlers::api::project_collections::CollectionReqPayload;
-use domain::{ProjectCollectionId, enums::GeometryType};
+use domain::{FeatureId, ProjectCollectionId, enums::GeometryType};
 use gdal::vector::{LayerAccess, OGRwkbGeometryType};
 
 use crate::common::{
@@ -35,7 +35,8 @@ async fn post_shapefile_works() {
         .create_feature(input_geom.clone())
         .expect("failed to add geom");
     let shapefile_data = dataset_to_shapefile_data(dataset, &filename);
-    form = add_shapefile_to_form("test", shapefile_data, form);
+    form = add_shapefile_to_form("test", shapefile_data, form)
+        .text("name", uuid::Uuid::new_v4().to_string());
     let response = app
         .features_service
         .post_form(
@@ -45,5 +46,12 @@ async fn post_shapefile_works() {
             Some(&auth),
         )
         .await;
-    assert_ok(&response)
+    assert_ok(&response);
+    let feature_id: FeatureId = handle_json_response(response).await.unwrap();
+    let response = app
+        .ogc_service
+        .get_project_feature(&app.api_client, project_id, collection_id, feature_id)
+        .await;
+    assert_ok(&response);
+    let _ogc_ft: ogc::features::Feature = handle_json_response(response).await.unwrap();
 }

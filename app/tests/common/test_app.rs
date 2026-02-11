@@ -179,51 +179,6 @@ impl TestApp<ClerkAuthService> {
             .expect("failed to retrieve collection id")
     }
 
-    pub async fn insert_project_feature_with_id<P: Serialize>(
-        &self,
-        id: i32,
-        project_id: ProjectId,
-        collection_id: ProjectCollectionId,
-        user_id: UserId,
-        properties: Option<P>,
-    ) -> ProjectFeatureId {
-        let record = sqlx::query!(
-            "WITH inserted_feature AS (
-                INSERT INTO app.project_features (
-                id,
-                    project_id,
-                    collection_id,
-                    name,
-                    added_by,
-                    last_updated_by,
-                    properties
-                ) 
-                VALUES ($1, $2, $3, $4, $5, $5, $6) RETURNING id
-             )
-            INSERT INTO app.feature_objects (
-                project_feature_id,
-                collection_id,
-                geom
-                )
-            SELECT id, $3, ST_GeomFromEWKT('SRID=27700;POINT(1 1)')
-            FROM inserted_feature
-            RETURNING project_feature_id, collection_id",
-            id,
-            project_id.0,
-            collection_id.0,
-            uuid::Uuid::new_v4().to_string(),
-            user_id.0,
-            json!(properties)
-        )
-        .fetch_one(&self.db_pool)
-        .await
-        .expect("failed to save feature to database");
-        ProjectFeatureId {
-            collection_id: ProjectCollectionId(record.collection_id),
-            feature_id: domain::FeatureId(record.project_feature_id),
-        }
-    }
-
     pub async fn insert_project_feature<P: Serialize>(
         &self,
         name: &str,

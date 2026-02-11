@@ -1,5 +1,6 @@
 pub struct FeatureInputDTO {
     pub name: String,
-    pub primary: bool,
-    pub geom: gdal::vector::Geometry,
+    pub primary: Option<bool>,
+    pub geom_wkb: Vec<u8>,
+    pub srid: i32,
 }

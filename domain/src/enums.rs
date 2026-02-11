@@ -1,4 +1,5 @@
 use crate::{ProjectCollectionId, TableName};
+use gdal::vector::OGRwkbGeometryType;
 use serde::{Deserialize, Deserializer, Serialize};
 use sqlx::prelude::Type;
 use strum::{Display, EnumString};
@@ -34,6 +35,20 @@ pub enum GeometryType {
     MultiLineString,
     MultiPolygon,
     GeometryCollection,
+}
+
+impl From<GeometryType> for OGRwkbGeometryType::Type {
+    fn from(value: GeometryType) -> Self {
+        match value {
+            GeometryType::Point => OGRwkbGeometryType::wkbPoint,
+            GeometryType::LineString => OGRwkbGeometryType::wkbLineString,
+            GeometryType::Polygon => OGRwkbGeometryType::wkbPolygon,
+            GeometryType::MultiPoint => OGRwkbGeometryType::wkbMultiPoint,
+            GeometryType::MultiLineString => OGRwkbGeometryType::wkbMultiLineString,
+            GeometryType::MultiPolygon => OGRwkbGeometryType::wkbMultiPolygon,
+            GeometryType::GeometryCollection => OGRwkbGeometryType::wkbGeometryCollection,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]

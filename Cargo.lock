@@ -370,7 +370,6 @@ dependencies = [
  "actix-web",
  "actix-web-lab",
  "anyhow",
- "app",
  "chrono",
  "clerk-rs",
  "config",

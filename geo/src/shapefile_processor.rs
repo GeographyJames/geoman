@@ -52,9 +52,7 @@ pub fn merge_geometries(
             merged
                 .add_geometry(valid)
                 .context("failed to add geometry")?;
-        } else if valid_type == multi
-            || valid_type == OGRwkbGeometryType::wkbGeometryCollection
-        {
+        } else if valid_type == multi || valid_type == OGRwkbGeometryType::wkbGeometryCollection {
             for i in 0..valid.geometry_count() {
                 let sub = valid.get_geometry(i);
                 let sub_type = sub.geometry_type();

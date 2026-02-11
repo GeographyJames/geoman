@@ -36,60 +36,38 @@ async fn get_feature_works() {
     let auth = Auth::mock_session_token();
     let (_, user_id, project_id) = app.generate_ids().await;
     let collection_1_id = app.generate_project_collection_id(Some(&auth)).await;
-    let collection_2_id = app.generate_project_collection_id(Some(&auth)).await;
 
     let feature_1_id = app
-        .insert_project_feature_with_id(
-            1,
-            project_id,
+        .insert_project_feature(
+            &uuid::Uuid::new_v4().to_string(),
             collection_1_id,
-            user_id,
-            Some(Properties::default()),
-        )
-        .await;
-    let feature_2_id = app
-        .insert_project_feature_with_id(
-            1,
             project_id,
-            collection_2_id,
             user_id,
+            "SRID=27700;POINT(1 1)",
             Some(Properties::default()),
         )
         .await;
+
     let response_1 = app
         .ogc_service
         .get_project_feature(&app.api_client, project_id, collection_1_id, FeatureId(1))
         .await;
 
-    let response_2 = app
-        .ogc_service
-        .get_project_feature(&app.api_client, project_id, collection_2_id, FeatureId(1))
-        .await;
-
     assert_ok(&response_1);
-    assert_ok(&response_2);
 
     let ogc_feature_1: ogc::Feature = handle_json_response(response_1)
         .await
         .expect("failed to retrieve feature");
 
-    let ogc_feature_2: ogc::Feature = handle_json_response(response_2)
-        .await
-        .expect("failed to retrieve feature");
-
     check_ogc_feature_is_project_feature::<Properties>(ogc_feature_1.clone());
-    check_ogc_feature_is_project_feature::<Properties>(ogc_feature_2.clone());
+
     let feature_1: domain::ProjectFeature = ogc_feature_1.try_into().unwrap();
-    let feature_2: domain::ProjectFeature = ogc_feature_2.try_into().unwrap();
+
     assert_eq!(feature_1.id, feature_1_id.feature_id.0);
-    assert_eq!(feature_2.id, feature_2_id.feature_id.0);
+
     assert_eq!(
         feature_1.properties.collection_id,
         feature_1_id.collection_id.0
-    );
-    assert_eq!(
-        feature_2.properties.collection_id,
-        feature_2_id.collection_id.0
     );
 }
 

@@ -1,5 +1,5 @@
 /// Appplication repository
-use domain::{KeyId, UserId};
+use domain::{KeyId, ProjectCollectionId, ProjectId, UserId, enums::GeometryType};
 use futures::Stream;
 use sqlx::PgPool;
 
@@ -132,5 +132,26 @@ impl PostgresRepo {
         .fetch_one(&self.db_pool)
         .await?;
         Ok(())
+    }
+
+    #[tracing::instrument(skip(self, id))]
+    pub async fn get_collection_geom_type(
+        &self,
+        id: ProjectCollectionId,
+    ) -> Result<GeometryType, RepositoryError> {
+        let geom = sqlx::query_scalar!(
+            r#"SELECT geometry_type as "geometry_type: GeometryType" FROM app.collections WHERE id = $1"#,
+            id.0
+        )
+        .fetch_one(&self.db_pool)
+        .await?;
+        Ok(geom)
+    }
+    #[tracing::instrument(skip(self, id))]
+    pub async fn get_project_srid(&self, id: ProjectId) -> Result<Option<i32>, RepositoryError> {
+        let srid = sqlx::query_scalar!("SELECT crs_srid FROM app.projects WHERE id = $1", id.0)
+            .fetch_one(&self.db_pool)
+            .await?;
+        Ok(srid)
     }
 }

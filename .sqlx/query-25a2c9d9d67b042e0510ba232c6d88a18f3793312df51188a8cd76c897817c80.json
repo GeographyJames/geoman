@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH inserted_feature AS (\n                INSERT INTO app.project_features (\n                            project_id,\n                            collection_id,\n                            name,\n                            added_by,\n                            last_updated_by\n                            )\n                            VALUES ($1, $2, $3, $4, $4) RETURNING id\n                            )\n     INSERT INTO app.feature_objects (\n                    project_feature_id,\n                    collection_id,\n                    geom\n                    ) \n                        SELECT id,\n                                $2,\n                                ST_GeomFromWKB($5, $6)\n                        FROM inserted_feature\n                    RETURNING project_feature_id AS \"feature_id: FeatureId\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "feature_id: FeatureId",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Text",
+        "Int4",
+        "Bytea",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "25a2c9d9d67b042e0510ba232c6d88a18f3793312df51188a8cd76c897817c80"
+}

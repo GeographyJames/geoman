@@ -52,7 +52,6 @@ gdal = { workspace = true }
 
 
 [dev-dependencies]
-app = { path = ".", features = ["test-utils"] }
 reqwest = { version = "0.13", features = ["json", "query", "multipart"] }
 rstest = "0.26"
 tokio = { version = "1.48", features = ["sync"] }
@@ -62,6 +61,3 @@ uuid = { workspace = true }
 unexpected_cfgs = { level = "warn", check-cfg = [
     'cfg(coverage,coverage_nightly)',
 ] }
-
-[features]
-test-utils = []
