@@ -1,16 +1,19 @@
 import { Plus, AlertCircle, Layers, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useCollections, type Collection } from "@/hooks/api/useCollections";
-import { usePatchCollection } from "@/hooks/api/usePatchCollection";
 import { useCurrentUser } from "@/hooks/api/useCurrentUser";
 import UserInitials from "@/features/app/components/UserInitials";
 import { dateFormat } from "@/constants";
 
 import { NewCollectionForm } from "./NewCollectionForm";
 import { EditCollectionForm } from "./EditCollectionForm";
+import { DeleteCollectionForm } from "./DeleteCollectionForm";
 
 export default function CollectionsSection() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const openCreateModal = () => {
+    const el = document.getElementById("new_collection");
+    if (el instanceof HTMLDialogElement) el.showModal();
+  };
 
   const [editingCollection, setEditingCollection] = useState<Collection | null>(
     null,
@@ -21,22 +24,6 @@ export default function CollectionsSection() {
 
   const { data: collections = [], isLoading, error } = useCollections();
   const { data: currentUser } = useCurrentUser();
-  const patchCollection = usePatchCollection();
-
-  const handleDelete = async () => {
-    if (!deletingCollection) return;
-    try {
-      await patchCollection.mutateAsync({
-        id: deletingCollection.id,
-        patch: { status: "DELETED" },
-      });
-      setDeletingCollection(null);
-    } catch (error) {
-      console.error("Failed to delete collection:", error);
-      alert("Failed to delete collection. Please try again.");
-    }
-  };
-
   return (
     <>
       {/* Page Header */}
@@ -49,7 +36,7 @@ export default function CollectionsSection() {
             </p>
           </div>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => openCreateModal()}
             className="btn btn-primary gap-2"
           >
             <Plus size={20} />
@@ -83,7 +70,7 @@ export default function CollectionsSection() {
               Get started by creating your first collection
             </p>
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => openCreateModal()}
               className="btn btn-sm btn-primary gap-2"
             >
               <Plus size={16} />
@@ -139,7 +126,11 @@ export default function CollectionsSection() {
                     <td>
                       <div className="flex gap-1">
                         <button
-                          onClick={() => setEditingCollection(collection)}
+                          onClick={() => {
+                            setEditingCollection(collection);
+                            const el = document.getElementById("edit_collection");
+                            if (el instanceof HTMLDialogElement) el.showModal();
+                          }}
                           className={`btn btn-ghost btn-sm gap-1 ${
                             currentUser?.id !== collection.added_by_id &&
                             !currentUser?.isAdmin
@@ -155,7 +146,11 @@ export default function CollectionsSection() {
                           Edit
                         </button>
                         <button
-                          onClick={() => setDeletingCollection(collection)}
+                          onClick={() => {
+                            setDeletingCollection(collection);
+                            const el = document.getElementById("delete_collection");
+                            if (el instanceof HTMLDialogElement) el.showModal();
+                          }}
                           className={`btn btn-ghost btn-sm gap-1 ${
                             collection.active_feature_count > 0 ||
                             collection.archived_feature_count > 0 ||
@@ -185,58 +180,19 @@ export default function CollectionsSection() {
       </div>
 
       {/* Create Collection Modal */}
-      {showCreateModal && (
-        <NewCollectionForm setShowCreateModal={setShowCreateModal} />
-      )}
+      <NewCollectionForm />
 
       {/* Edit Collection Modal */}
-      {editingCollection && (
-        <EditCollectionForm
-          editingCollection={editingCollection}
-          setEditingCollection={setEditingCollection}
-        />
-      )}
+      <EditCollectionForm
+        collection={editingCollection}
+        onClose={() => setEditingCollection(null)}
+      />
 
-      {/* Delete Confirmation Modal */}
-      {deletingCollection && (
-        <dialog className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg mb-4">Delete collection</h3>
-            <p className="text-base-content/70">
-              Are you sure you want to delete{" "}
-              <span className="font-medium text-base-content">
-                {deletingCollection.title}
-              </span>
-              ? This action cannot be undone.
-            </p>
-            <div className="modal-action">
-              <button
-                onClick={() => setDeletingCollection(null)}
-                className="btn"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={patchCollection.isPending}
-                className="btn btn-error"
-              >
-                {patchCollection.isPending ? (
-                  <>
-                    <span className="loading loading-spinner loading-sm"></span>
-                    Deleting...
-                  </>
-                ) : (
-                  "Delete"
-                )}
-              </button>
-            </div>
-          </div>
-          <form method="dialog" className="modal-backdrop">
-            <button onClick={() => setDeletingCollection(null)}>close</button>
-          </form>
-        </dialog>
-      )}
+      {/* Delete Collection Modal */}
+      <DeleteCollectionForm
+        collection={deletingCollection}
+        onClose={() => setDeletingCollection(null)}
+      />
     </>
   );
 }

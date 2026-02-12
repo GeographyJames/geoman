@@ -63,9 +63,9 @@ const CreateProjectInner = () => {
       onError: (error) => {
         const message =
           error instanceof ApiError && error.status === 500
-            ? "Unable to create project: internal server error"
+            ? "internal server error"
             : error.message;
-        addError(message);
+        addError(`Unable to create project: ${message}`);
       },
     });
   };

@@ -1,34 +1,20 @@
 import { Key, Plus, AlertCircle, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useApiKeys } from "@/hooks/api/useApiKeys";
-import { useRevokeApiKey } from "@/hooks/api/useRevokeApiKey";
+import { useApiKeys, type ApiKey } from "@/hooks/api/useApiKeys";
 import { useRenewApiKey } from "@/hooks/api/useRenewApiKey";
 import { CreateKeyForm } from "./CreateKeyForm";
+import { RevokeKeyForm } from "./RevokeKeyForm";
 
 export default function ApiKeysSection() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const openCreateModal = () => {
+    const el = document.getElementById("create_key");
+    if (el instanceof HTMLDialogElement) el.showModal();
+  };
+  const [revokingKey, setRevokingKey] = useState<ApiKey | null>(null);
   const queryClient = useQueryClient();
   const { data: apiKeys = [], isLoading, error } = useApiKeys();
-  const revokeApiKeyMutation = useRevokeApiKey();
   const renewApiKeyMutation = useRenewApiKey();
-  const handleRevokeKey = async (keyId: number) => {
-    if (
-      !confirm(
-        "Are you sure you want to revoke this API key? This action cannot be undone.",
-      )
-    ) {
-      return;
-    }
-
-    try {
-      await revokeApiKeyMutation.mutateAsync(keyId);
-      queryClient.invalidateQueries({ queryKey: ["apiKeys"] });
-    } catch (error) {
-      console.error("Failed to revoke API key:", error);
-      alert("Failed to revoke API key. Please try again.");
-    }
-  };
 
   const handleRenewKey = async (keyId: number) => {
     try {
@@ -66,7 +52,7 @@ export default function ApiKeysSection() {
             </p>
           </div>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => openCreateModal()}
             className="btn btn-primary gap-2"
           >
             <Plus size={20} />
@@ -165,7 +151,7 @@ export default function ApiKeysSection() {
                           disabled={renewApiKeyMutation.isPending}
                           className="btn btn-ghost btn-sm text-primary gap-1"
                         >
-                          {renewApiKeyMutation.isPending ? (
+                          {renewApiKeyMutation.isPending && renewApiKeyMutation.variables === key.id ? (
                             <span className="loading loading-spinner loading-xs"></span>
                           ) : (
                             <Plus size={14} />
@@ -173,15 +159,14 @@ export default function ApiKeysSection() {
                           Renew
                         </button>
                         <button
-                          onClick={() => handleRevokeKey(key.id)}
-                          disabled={revokeApiKeyMutation.isPending}
+                          onClick={() => {
+                            setRevokingKey(key);
+                            const el = document.getElementById("revoke_key");
+                            if (el instanceof HTMLDialogElement) el.showModal();
+                          }}
                           className="btn btn-ghost btn-sm text-error gap-1"
                         >
-                          {revokeApiKeyMutation.isPending ? (
-                            <span className="loading loading-spinner loading-xs"></span>
-                          ) : (
-                            <Trash2 size={14} />
-                          )}
+                          <Trash2 size={14} />
                           Revoke
                         </button>
                       </div>
@@ -207,9 +192,13 @@ export default function ApiKeysSection() {
       </div>
 
       {/* Create Key Modal */}
-      {showCreateModal && (
-        <CreateKeyForm setShowCreateModal={setShowCreateModal} />
-      )}
+      <CreateKeyForm />
+
+      {/* Revoke Key Modal */}
+      <RevokeKeyForm
+        apiKey={revokingKey}
+        onClose={() => setRevokingKey(null)}
+      />
     </>
   );
 }

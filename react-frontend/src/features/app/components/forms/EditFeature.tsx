@@ -38,9 +38,9 @@ const EditFeatureInner = () => {
         onError: (error) => {
           const message =
             error instanceof ApiError && error.status === 500
-              ? "Unable to update feature: internal server error"
+              ? "internal server error"
               : error.message;
-          addError(message);
+          addError(`Unable to update feature: ${message}`);
         },
       },
     );

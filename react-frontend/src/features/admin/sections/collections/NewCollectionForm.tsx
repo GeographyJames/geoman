@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { useCreateCollection } from "@/hooks/api/useCreateCollection";
+import { Modal, useModal } from "@/components/forms/Modal";
+import { CancelButton, SubmitButton } from "@/components/Buttons";
+import { ApiError } from "@/lib/api";
+
 const GEOMETRY_TYPES = [
   "Point",
   "LineString",
@@ -7,128 +11,113 @@ const GEOMETRY_TYPES = [
   "MultiPoint",
   "MultiLineString",
   "MultiPolygon",
-  "GeometryCollection",
 ] as const;
 
-export const NewCollectionForm = ({
-  setShowCreateModal,
-}: {
-  setShowCreateModal: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
-  const [newTitle, setNewTitle] = useState("");
-  const [newGeometryType, setNewGeometryType] = useState<string>("Point");
-  const [newDescription, setNewDescription] = useState("");
-  const createCollectionMutation = useCreateCollection();
+interface NewCollectionFormData {
+  title: string;
+  geometry_type: string;
+  description: string;
+}
 
-  const handleCreate = async () => {
-    try {
-      await createCollectionMutation.mutateAsync({
-        title: newTitle,
-        geometry_type: newGeometryType,
-        description: newDescription || undefined,
-      });
-      setShowCreateModal(false);
-      setNewTitle("");
-      setNewGeometryType("Point");
-      setNewDescription("");
-    } catch (error) {
-      console.error("Failed to create collection:", error);
-      alert("Failed to create collection. Please try again.");
-    }
+const NewCollectionInner = () => {
+  const { mutate: createCollection, isPending } = useCreateCollection();
+  const { addError, closeDialog } = useModal();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { isValid },
+  } = useForm<NewCollectionFormData>({
+    defaultValues: {
+      title: "",
+      geometry_type: "Point",
+      description: "",
+    },
+  });
+
+  const onSubmit = (data: NewCollectionFormData) => {
+    createCollection(
+      {
+        title: data.title,
+        geometry_type: data.geometry_type,
+        description: data.description || undefined,
+      },
+      {
+        onSuccess: () => {
+          reset();
+          closeDialog();
+        },
+        onError: (error) => {
+          const message =
+            error instanceof ApiError && error.status === 500
+              ? "internal server error"
+              : error.message;
+          addError(`Unable to create collection: ${message}`);
+        },
+      },
+    );
   };
+
+  const handleCancel = () => {
+    reset();
+    closeDialog();
+  };
+
   return (
-    <dialog className="modal modal-open">
-      <div className="modal-box">
-        <h3 className="font-bold text-lg mb-4">Create new collection</h3>
-        <p className="text-sm text-base-content/70 mb-4">
-          Define a new geospatial data collection.
-        </p>
-        <div className="form-control mb-4">
-          <label className="label">
-            <span className="label-text font-medium">Title</span>
-          </label>
-          <input
-            type="text"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            placeholder="e.g., Survey Sites"
-            className="input input-bordered"
-            autoFocus
-          />
-        </div>
-        <div className="form-control mb-4">
-          <label className="label">
-            <span className="label-text font-medium">Geometry Type</span>
-          </label>
-          <select
-            value={newGeometryType}
-            onChange={(e) => setNewGeometryType(e.target.value)}
-            className="select select-bordered"
-          >
-            {GEOMETRY_TYPES.map((type_) => (
-              <option key={type_} value={type_}>
-                {type_}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-control mb-6">
-          <label className="label">
-            <span className="label-text font-medium">
-              Description{" "}
-              <span className="text-base-content/50 font-normal">
-                (optional)
-              </span>
-            </span>
-          </label>
-          <textarea
-            value={newDescription}
-            onChange={(e) => setNewDescription(e.target.value)}
-            placeholder="Describe this collection..."
-            className="textarea textarea-bordered"
-            rows={3}
-          />
-        </div>
-        <div className="modal-action">
-          <button
-            onClick={() => {
-              setShowCreateModal(false);
-              setNewTitle("");
-              setNewGeometryType("Point");
-              setNewDescription("");
-            }}
-            className="btn"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleCreate}
-            disabled={!newTitle.trim() || createCollectionMutation.isPending}
-            className="btn btn-primary"
-          >
-            {createCollectionMutation.isPending ? (
-              <>
-                <span className="loading loading-spinner loading-sm"></span>
-                Creating...
-              </>
-            ) : (
-              "Create collection"
-            )}
-          </button>
-        </div>
-      </div>
-      <form method="dialog" className="modal-backdrop">
-        <button
-          onClick={() => {
-            setShowCreateModal(false);
-            setNewTitle("");
-            setNewGeometryType("Point");
-            setNewDescription("");
-          }}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <fieldset className="fieldset w-full">
+        <legend className="fieldset-legend">Title</legend>
+        <input
+          type="text"
+          {...register("title", { required: true })}
+          placeholder="e.g., Survey Sites"
+          className="input input-bordered w-full"
+          autoFocus
+        />
+      </fieldset>
+      <fieldset className="fieldset w-full">
+        <legend className="fieldset-legend">Geometry Type</legend>
+        <select
+          {...register("geometry_type")}
+          className="select select-bordered w-full"
         >
-          close
-        </button>
-      </form>
-    </dialog>
+          {GEOMETRY_TYPES.map((type_) => (
+            <option key={type_} value={type_}>
+              {type_}
+            </option>
+          ))}
+        </select>
+      </fieldset>
+      <fieldset className="fieldset w-full">
+        <legend className="fieldset-legend">
+          Description{" "}
+          <span className="text-base-content/50 font-normal">(optional)</span>
+        </legend>
+        <textarea
+          {...register("description")}
+          placeholder="Describe this collection..."
+          className="textarea textarea-bordered w-full"
+          rows={3}
+        />
+      </fieldset>
+      <div className="modal-action">
+        <CancelButton onClick={handleCancel} disabled={isPending} />
+        <SubmitButton
+          text="Create collection"
+          loadingText="Creating..."
+          loading={isPending}
+          disabled={!isValid}
+        />
+      </div>
+    </form>
+  );
+};
+
+export const NewCollectionForm = () => {
+  return (
+    <Modal id="new_collection" title="Create new collection">
+      <NewCollectionInner />
+    </Modal>
   );
 };

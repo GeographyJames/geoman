@@ -77,9 +77,9 @@ const EditProjectInner = () => {
         onError: (error) => {
           const message =
             error instanceof ApiError && error.status === 500
-              ? "Unable to edit project: internal server error"
+              ? "internal server error"
               : error.message;
-          addError(message);
+          addError(`Unable to update project: ${message}`);
         },
       },
     );
@@ -126,7 +126,11 @@ const EditProjectInner = () => {
 
 export const EditProjectForm = () => {
   return (
-    <Modal id="edit_project" title="Edit project" onClose={useEditProject().clear}>
+    <Modal
+      id="edit_project"
+      title="Edit project"
+      onClose={useEditProject().clear}
+    >
       <EditProjectInner />
     </Modal>
   );

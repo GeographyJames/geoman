@@ -1,104 +1,117 @@
 import { useForm } from "react-hook-form";
 import type { Collection } from "@/hooks/api/useCollections";
 import { usePatchCollection } from "@/hooks/api/usePatchCollection";
+import { Modal, useModal } from "@/components/forms/Modal";
+import { CancelButton, SubmitButton } from "@/components/Buttons";
+import { ApiError } from "@/lib/api";
 
 interface EditFormData {
   title: string;
   description: string;
 }
 
-export const EditCollectionForm = ({
-  editingCollection,
-  setEditingCollection,
+const EditCollectionInner = ({
+  collection,
+  onClose,
 }: {
-  editingCollection: Collection;
-  setEditingCollection: React.Dispatch<React.SetStateAction<Collection | null>>;
+  collection: Collection | null;
+  onClose: () => void;
 }) => {
-  const patchCollectionMutation = usePatchCollection();
+  const { mutate: patchCollection, isPending } = usePatchCollection();
+  const { addError, closeDialog } = useModal();
 
-  const { register, handleSubmit, formState: { isDirty, dirtyFields } } = useForm<EditFormData>({
-    defaultValues: {
-      title: editingCollection.title,
-      description: editingCollection.description ?? "",
-    },
+  const {
+    register,
+    handleSubmit,
+    formState: { isDirty, dirtyFields },
+  } = useForm<EditFormData>({
+    values: collection
+      ? {
+          title: collection.title,
+          description: collection.description ?? "",
+        }
+      : undefined,
   });
 
-  const close = () => setEditingCollection(null);
-
-  const onSubmit = async (data: EditFormData) => {
-    try {
-      await patchCollectionMutation.mutateAsync({
-        id: editingCollection.id,
+  const onSubmit = (data: EditFormData) => {
+    if (!collection) return;
+    patchCollection(
+      {
+        id: collection.id,
         patch: {
           title: dirtyFields.title ? data.title : undefined,
           description: dirtyFields.description
             ? data.description || null
             : undefined,
         },
-      });
-      close();
-    } catch (error) {
-      console.error("Failed to update collection:", error);
-      alert("Failed to update collection. Please try again.");
-    }
+      },
+      {
+        onSuccess: () => {
+          closeDialog();
+          onClose();
+        },
+        onError: (error) => {
+          const message =
+            error instanceof ApiError && error.status === 500
+              ? "internal server error"
+              : error.message;
+          addError(`Unable to update collection: ${message}`);
+        },
+      },
+    );
+  };
+
+  const handleCancel = () => {
+    closeDialog();
+    onClose();
   };
 
   return (
-    <dialog className="modal modal-open">
-      <div className="modal-box">
-        <h3 className="font-bold text-lg mb-4">Edit collection</h3>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="form-control mb-4">
-            <label className="label">
-              <span className="label-text font-medium">Title</span>
-            </label>
-            <input
-              type="text"
-              {...register("title", { required: true })}
-              className="input input-bordered"
-              autoFocus
-            />
-          </div>
-          <div className="form-control mb-6">
-            <label className="label">
-              <span className="label-text font-medium">
-                Description{" "}
-                <span className="text-base-content/50 font-normal">
-                  (optional)
-                </span>
-              </span>
-            </label>
-            <textarea
-              {...register("description")}
-              placeholder="Describe this collection..."
-              className="textarea textarea-bordered"
-              rows={3}
-            />
-          </div>
-          <div className="modal-action">
-            <button type="button" onClick={close} className="btn">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!isDirty || patchCollectionMutation.isPending}
-              className="btn btn-primary"
-            >
-              {patchCollectionMutation.isPending ? (
-                <>
-                  <span className="loading loading-spinner loading-sm"></span>
-                  Saving...
-                </>
-              ) : (
-                "Save changes"
-              )}
-            </button>
-          </div>
-        </form>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <fieldset className="fieldset w-full">
+        <legend className="fieldset-legend">Title</legend>
+        <input
+          type="text"
+          {...register("title", { required: true })}
+          className="input input-bordered w-full"
+          autoFocus
+        />
+      </fieldset>
+      <fieldset className="fieldset w-full">
+        <legend className="fieldset-legend">
+          Description{" "}
+          <span className="text-base-content/50 font-normal">(optional)</span>
+        </legend>
+        <textarea
+          {...register("description")}
+          placeholder="Describe this collection..."
+          className="textarea textarea-bordered w-full"
+          rows={3}
+        />
+      </fieldset>
+      <div className="modal-action">
+        <CancelButton onClick={handleCancel} disabled={isPending} />
+        <SubmitButton
+          text="Save changes"
+          loadingText="Saving..."
+          loading={isPending}
+          disabled={!isDirty}
+        />
       </div>
-      <form method="dialog" className="modal-backdrop">
-        <button onClick={close}>close</button>
-      </form>
-    </dialog>
+    </form>
+  );
+};
+
+export const EditCollectionForm = ({
+  collection,
+  onClose,
+}: {
+  collection: Collection | null;
+  onClose: () => void;
+}) => {
+  return (
+    <Modal id="edit_collection" title="Edit collection" onClose={onClose}>
+      <EditCollectionInner collection={collection} onClose={onClose} />
+    </Modal>
   );
 };
