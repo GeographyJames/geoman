@@ -5,9 +5,15 @@ import { MdChevronRight } from "react-icons/md";
 
 export const CIRCLE_BUTTON_STYLE = "btn btn-ghost btn-circle btn-sm ";
 
-export const CancelButton = ({ onClick }: { onClick: () => void }) => {
+export const CancelButton = ({
+  onClick,
+  disabled,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+}) => {
   return (
-    <button type="button" className="btn" onClick={onClick}>
+    <button type="button" className="btn" onClick={onClick} disabled={disabled}>
       Cancel
     </button>
   );
@@ -35,18 +41,31 @@ export const SubmitButton = ({
   text,
   colour,
   disabled,
+  loading,
+  loadingText,
 }: {
   text?: string;
   colour?: string;
   disabled?: boolean;
+  loading?: boolean;
+  loadingText?: string;
 }) => {
   return (
     <button
       type="submit"
       className={`btn ${colour ? colour : "btn-primary"}`}
-      disabled={disabled}
+      disabled={disabled || loading}
     >
-      {text ? text : "Submit"}
+      {loading ? (
+        <>
+          <span className="loading loading-spinner loading-sm"></span>
+          {loadingText}
+        </>
+      ) : text ? (
+        text
+      ) : (
+        "Submit"
+      )}
     </button>
   );
 };

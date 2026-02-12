@@ -1,39 +1,45 @@
-import { ModalForm } from "@/components/forms/ModalForm";
+import { Modal, useModal } from "@/components/forms/Modal";
+import { CancelButton, SubmitButton } from "@/components/Buttons";
 import { useDeleteProject } from "@/features/app/contexts/DeleteProjectContext";
 import { usePatchProject } from "@/hooks/api/projects/usePatchProject";
-import { useFlash } from "../../contexts/FlashMessageContext";
+import { ApiError } from "@/lib/api";
 
-export const DeleteProjectForm = () => {
+const DeleteProjectInner = () => {
   const { project, clear } = useDeleteProject();
-  const { mutate: patchProject } = usePatchProject();
-  const { addFlash } = useFlash();
+  const { mutate: patchProject, isPending } = usePatchProject();
+  const { addError, closeDialog } = useModal();
 
-  const handleSubmit = () => {
-    if (project) {
-      patchProject(
-        {
-          id: project.id,
-          dto: { status: "DELETED" },
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!project) return;
+    patchProject(
+      {
+        id: project.id,
+        dto: { status: "DELETED" },
+      },
+      {
+        onSuccess: () => {
+          closeDialog();
+          clear();
         },
-        {
-          onError: (error) => {
-            addFlash(`Unable to delete project: ${error.message}`, "error");
-          },
+        onError: (error) => {
+          const message =
+            error instanceof ApiError && error.status === 500
+              ? "internal server error"
+              : error.message;
+          addError(`Unable to delete project: ${message}`);
         },
-      );
-    }
+      },
+    );
+  };
+
+  const handleCancel = () => {
+    closeDialog();
+    clear();
   };
 
   return (
-    <ModalForm
-      id="delete_project"
-      title="Delete"
-      onSubmit={handleSubmit}
-      onReset={handleSubmit}
-      onClose={clear}
-      submitButtonText="Delete"
-      submitButtonColour="btn-error"
-    >
+    <form onSubmit={handleSubmit} className="space-y-4">
       {project && (
         <p>
           Are you sure you want to permanently delete{" "}
@@ -43,6 +49,23 @@ export const DeleteProjectForm = () => {
       <p>
         <span className="font-bold">This action cannot be undone.</span>
       </p>
-    </ModalForm>
+      <div className="modal-action">
+        <CancelButton onClick={handleCancel} disabled={isPending} />
+        <SubmitButton
+          text="Delete"
+          colour="btn-error"
+          loadingText="Deleting..."
+          loading={isPending}
+        />
+      </div>
+    </form>
+  );
+};
+
+export const DeleteProjectForm = () => {
+  return (
+    <Modal id="delete_project" title="Delete" onClose={useDeleteProject().clear}>
+      <DeleteProjectInner />
+    </Modal>
   );
 };

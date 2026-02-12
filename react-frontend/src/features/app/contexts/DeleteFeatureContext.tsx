@@ -18,7 +18,7 @@ export function DeleteFeatureProvider({ children }: { children: ReactNode }) {
     setFeature(feature);
     const el = document.getElementById("delete_feature");
     if (el instanceof HTMLDialogElement) {
-      el.show();
+      el.showModal();
     }
   };
 

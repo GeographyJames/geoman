@@ -7,13 +7,5 @@ export const DeleteFeatureButton = ({
   feature: ProjectCollectionItem;
 }) => {
   const { requestDelete } = useDeleteFeature();
-  return (
-    <button
-      onClick={() => requestDelete(feature)}
-      disabled={feature.properties.is_primary}
-      className={feature.properties.is_primary ? "text-base-content/50" : ""}
-    >
-      delete
-    </button>
-  );
+  return <button onClick={() => requestDelete(feature)}>delete</button>;
 };

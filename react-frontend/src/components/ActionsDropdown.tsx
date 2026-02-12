@@ -21,7 +21,7 @@ export const ActionsDropdown = ({ id, children, style }: Props) => {
       </button>
 
       <ul
-        className="dropdown dropdown-end menu w-52 rounded-box bg-base-100 shadow-sm"
+        className="dropdown dropdown-end menu w-52 rounded-box bg-base-100 shadow-sm overflow-visible"
         popover="auto"
         id={popoverId}
         style={{ positionAnchor: anchorName } as React.CSSProperties}

@@ -1,5 +1,13 @@
 import { useAuth } from "@clerk/clerk-react";
 
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
 /**
  * Simple hook that returns an API request function.
  * If the user is signed in, automatically includes the auth token.
@@ -54,7 +62,7 @@ export function useApiRequest() {
         }
       }
 
-      throw new Error(message);
+      throw new ApiError(message, response.status);
     }
     if (response.status === 204) {
       return undefined

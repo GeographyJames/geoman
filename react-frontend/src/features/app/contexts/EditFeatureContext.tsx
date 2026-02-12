@@ -16,7 +16,7 @@ export function EditFeatureProvider({ children }: { children: ReactNode }) {
     setFeature(feature);
     const el = document.getElementById("edit_feature");
     if (el instanceof HTMLDialogElement) {
-      el.show();
+      el.showModal();
     }
   };
 

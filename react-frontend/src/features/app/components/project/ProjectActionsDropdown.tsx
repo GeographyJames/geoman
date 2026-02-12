@@ -50,7 +50,16 @@ export const ProjectActionsDropdown = ({
         <button onClick={() => requestEdit(item)}>edit</button>
       </li>
       <li>
-        <button>add data</button>
+        <button
+          onClick={() => {
+            const el = document.getElementById("add_site_feature");
+            if (el instanceof HTMLDialogElement) {
+              el.showModal();
+            }
+          }}
+        >
+          add feature
+        </button>
       </li>
       <li>
         <button>create figure</button>

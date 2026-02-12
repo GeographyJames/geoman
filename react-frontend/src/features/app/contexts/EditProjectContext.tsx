@@ -16,7 +16,7 @@ export function EditProjectProvider({ children }: { children: ReactNode }) {
     setProject(project);
     const el = document.getElementById("edit_project");
     if (el instanceof HTMLDialogElement) {
-      el.show();
+      el.showModal();
     }
   };
 

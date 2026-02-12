@@ -115,6 +115,7 @@ async fn validate_clerk_auth<B: MessageBody>(
     let user: AuthenticatedUser = match repo
         .select_one::<AuthenticatedUser, _>(jwt.sub.as_str())
         .await
+        .context("failed to retrive user from database")
         .map_err(ErrorInternalServerError)?
     {
         // User found, check the details

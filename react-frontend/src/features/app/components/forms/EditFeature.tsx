@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
-import { ModalForm } from "@/components/forms/ModalForm";
+import { Modal, useModal } from "@/components/forms/Modal";
+import { CancelButton, SubmitButton } from "@/components/Buttons";
 import { TextInput } from "@/components/forms/components/TextInput";
 import { useEditFeature } from "@/features/app/contexts/EditFeatureContext";
 import { usePatchProjectFeature } from "@/hooks/api/projectFeature.ts/usePatchProjectFeature";
-import { useFlash } from "../../contexts/FlashMessageContext";
+import { ApiError } from "@/lib/api";
 
-export const EditFeatureForm = () => {
+const EditFeatureInner = () => {
   const { feature, clear } = useEditFeature();
-  const { mutateAsync: patchFeature } = usePatchProjectFeature();
-  const { addFlash } = useFlash();
+  const { mutate: patchFeature, isPending } = usePatchProjectFeature();
+  const { addError, closeDialog } = useModal();
   const [name, setName] = useState("");
   const [primary, setPrimary] = useState(false);
 
@@ -19,9 +20,10 @@ export const EditFeatureForm = () => {
     }
   }, [feature]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (!feature) return;
-    await patchFeature(
+    patchFeature(
       {
         projectId: feature.properties.project_id,
         collectionId: feature.properties.collection_id.toString(),
@@ -29,26 +31,30 @@ export const EditFeatureForm = () => {
         dto: { name, primary },
       },
       {
+        onSuccess: () => {
+          closeDialog();
+          clear();
+        },
         onError: (error) => {
-          addFlash(`Unable to update feature: ${error.message}`, "error");
+          const message =
+            error instanceof ApiError && error.status === 500
+              ? "Unable to update feature: internal server error"
+              : error.message;
+          addError(message);
         },
       },
     );
   };
 
-  const handleReset = () => {
+  const handleCancel = () => {
     setName(feature?.properties.name ?? "");
     setPrimary(feature?.properties.is_primary ?? false);
+    closeDialog();
+    clear();
   };
 
   return (
-    <ModalForm
-      id="edit_feature"
-      title="Edit feature"
-      onSubmit={handleSubmit}
-      onReset={handleReset}
-      onClose={clear}
-    >
+    <form onSubmit={handleSubmit} className="space-y-4">
       {feature && (
         <>
           <TextInput
@@ -69,6 +75,30 @@ export const EditFeatureForm = () => {
           </label>
         </>
       )}
-    </ModalForm>
+      <div className="modal-action">
+        <CancelButton onClick={handleCancel} disabled={isPending} />
+        <SubmitButton
+          disabled={
+            name === feature?.properties.name &&
+            primary === feature?.properties.is_primary
+          }
+          text="Save changes"
+          loadingText="Saving..."
+          loading={isPending}
+        />
+      </div>
+    </form>
+  );
+};
+
+export const EditFeatureForm = () => {
+  return (
+    <Modal
+      id="edit_feature"
+      title="Edit feature"
+      onClose={useEditFeature().clear}
+    >
+      <EditFeatureInner />
+    </Modal>
   );
 };
