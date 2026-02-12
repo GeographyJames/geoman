@@ -25,7 +25,6 @@ const CreateProjectInner = () => {
         country: currentUser?.operatingCountryId || "",
         srid: currentUser?.operatingCountryId === "GB" ? 27700 : "",
         visibility: Visibility.Private,
-        technologies: [],
       },
     });
 
@@ -40,7 +39,6 @@ const CreateProjectInner = () => {
         country: currentUser.operatingCountryId,
         srid: defaultSrid,
         visibility: Visibility.Private,
-        technologies: [],
       });
     }
   }, [currentUser, reset]);
@@ -50,7 +48,7 @@ const CreateProjectInner = () => {
       name: data.projectName,
       slug: slug,
       country_code: data.country,
-      technologies: data.technologies,
+
       visibility: data.visibility,
       crs_srid: data.srid !== "" ? data.srid : undefined,
     };
@@ -89,12 +87,7 @@ const CreateProjectInner = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <ProjectForm
-        control={control}
-        watch={watch}
-        setValue={setValue}
-        technologies={appSettings.technologies}
-      />
+      <ProjectForm control={control} watch={watch} setValue={setValue} />
       <div className="modal-action">
         <CancelButton onClick={handleCancel} disabled={isPending} />
         <SubmitButton

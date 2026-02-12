@@ -14,7 +14,6 @@ pub struct Properties {
     pub owner: Owner,
     #[serde(flatten)]
     pub added_by: AddedBy,
-    pub technologies: Vec<String>,
     pub country_code: String, // ISO 3166-1-ALPHA-2
     pub subdivisions: Vec<String>,
     pub status: Status,

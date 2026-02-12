@@ -69,20 +69,13 @@ fn project_query() -> String {
             {user_row_added_by},
             {user_row_last_updated_by},
             COALESCE(subdivisions, ARRAY[]::text[]) AS subdivisions,
-            COALESCE(technologies.technologies, ARRAY[]::text[]) AS technologies,
             ST_AsGeoJson(ST_Transform(pb.centroid, $1))::json AS geom
         FROM app.projects p
         {user_join_owner}
         {user_join_added_by}
         {user_join_last_updated_by}
         LEFT JOIN primary_boundary_centroid pb ON pb.project_id = p.id
-
-        LEFT JOIN LATERAL (
-            SELECT array_agg(t.name) AS technologies
-              FROM app.project_technologies pt
-              JOIN app.technologies t ON t.id = pt.technology_id
-             WHERE pt.project_id = p.id
-        ) technologies ON true"#,
+        "#,
         user_row_owner = user_row_fragment("o", "owner"),
         user_row_added_by = user_row_fragment("a", "added_by"),
         user_row_last_updated_by = user_row_fragment("l", "last_updated_by"),

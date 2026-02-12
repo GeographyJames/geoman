@@ -16,7 +16,7 @@ impl Update for (&ProjectUpdateDto, UserId) {
         E: Acquire<'a, Database = Postgres>,
     {
         let (dto, user_id) = self;
-        let mut tx = conn.begin().await?;
+        let mut conn = conn.acquire().await?;
 
         let name = dto.name.as_ref().map(|n| n.as_ref());
         let slug = dto.slug.as_ref().map(|s| s.as_ref());
@@ -50,36 +50,8 @@ impl Update for (&ProjectUpdateDto, UserId) {
             user_id.0,
             dto.id.0
         )
-        .fetch_one(&mut *tx)
+        .fetch_one(&mut *conn)
         .await?;
-
-        if let Some(techs) = &dto.technologies {
-            sqlx::query!(
-                r#"
-                DELETE FROM app.project_technologies
-                WHERE project_id = $1
-                "#,
-                dto.id.0
-            )
-            .execute(&mut *tx)
-            .await?;
-
-            if !techs.is_empty() {
-                let tech_ids: Vec<i32> = techs.iter().map(|t| t.0).collect();
-                sqlx::query!(
-                    r#"
-                    INSERT INTO app.project_technologies (project_id, technology_id)
-                    SELECT $1, UNNEST($2::integer[])
-                    "#,
-                    dto.id.0,
-                    &tech_ids as &[i32]
-                )
-                .execute(&mut *tx)
-                .await?;
-            }
-        }
-
-        tx.commit().await?;
 
         Ok(ProjectId(result.id))
     }

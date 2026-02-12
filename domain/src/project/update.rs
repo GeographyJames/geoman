@@ -1,5 +1,5 @@
 use crate::{
-    ProjectId, TechnologyId,
+    ProjectId,
     enums::{Status, Visibility},
 };
 
@@ -13,5 +13,4 @@ pub struct ProjectUpdateDto {
     pub country_code: Option<isocountry::CountryCode>,
     pub crs_srid: Option<Option<i32>>,
     pub slug: Option<ProjectSlugInputDto>,
-    pub technologies: Option<Vec<TechnologyId>>,
 }

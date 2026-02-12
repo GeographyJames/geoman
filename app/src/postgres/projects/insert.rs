@@ -10,7 +10,7 @@ impl Insert for (&ProjectInputDto, UserId) {
     where
         A: Acquire<'a, Database = Postgres>,
     {
-        let mut tx = conn.begin().await?;
+        let mut conn = conn.acquire().await?;
         let (dto, id) = self;
         let project_id = sqlx::query_scalar!(
             r#"
@@ -36,25 +36,8 @@ impl Insert for (&ProjectInputDto, UserId) {
             id.0,
             dto.slug.as_ref()
         )
-        .fetch_one(&mut *tx)
+        .fetch_one(&mut *conn)
         .await?;
-
-        if let Some(techs) = &dto.technologies {
-            let tech_ids: Vec<i32> = techs.iter().map(|t| t.0).collect();
-            // Insert technologies
-            sqlx::query!(
-                r#"
-      INSERT INTO app.project_technologies (project_id, technology_id)
-      SELECT $1, UNNEST($2::integer[])
-      "#,
-                project_id.0,
-                &tech_ids as &[i32]
-            )
-            .execute(&mut *tx)
-            .await?;
-        }
-
-        tx.commit().await?;
 
         Ok(project_id)
     }

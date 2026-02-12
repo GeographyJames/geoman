@@ -5,7 +5,6 @@ import { CountrySelect } from "@/components/forms/components/CountrySelector";
 import { Select } from "@/components/forms/components/Select";
 import { FaCircleInfo } from "react-icons/fa6";
 import { Visibility, VisibilityConfig } from "@/domain/types";
-import type { TechnologyOutputDto } from "@/domain/technology/outputDto";
 import { slugify } from "@/lib/slugify";
 
 export interface ProjectFormData {
@@ -13,22 +12,15 @@ export interface ProjectFormData {
   country: string;
   srid: number | "";
   visibility: Visibility;
-  technologies: number[];
 }
 
 interface ProjectFormProps {
   control: Control<ProjectFormData>;
   watch: UseFormWatch<ProjectFormData>;
   setValue: UseFormSetValue<ProjectFormData>;
-  technologies: TechnologyOutputDto[];
 }
 
-export const ProjectForm = ({
-  control,
-  watch,
-  setValue,
-  technologies,
-}: ProjectFormProps) => {
+export const ProjectForm = ({ control, watch, setValue }: ProjectFormProps) => {
   const projectName = watch("projectName");
   const slug = slugify(projectName);
 
@@ -139,38 +131,6 @@ export const ProjectForm = ({
               {`${priv.label} (${priv.description})`}
             </option>
           </Select>
-        )}
-      />
-
-      <Controller
-        name="technologies"
-        control={control}
-        render={({ field }) => (
-          <fieldset className="fieldset bg-base-100 border-base-300 rounded-box border p-4">
-            <legend className="fieldset-legend">Technologies</legend>
-            {technologies.map((t) => (
-              <label
-                key={t.id}
-                className="label cursor-pointer justify-start gap-2"
-              >
-                <input
-                  type="checkbox"
-                  className="checkbox checkbox-sm"
-                  checked={field.value.includes(t.id)}
-                  onChange={(e) => {
-                    const updatedValue = e.target.checked
-                      ? [...field.value, t.id]
-                      : field.value.filter((id) => id !== t.id);
-                    field.onChange(updatedValue);
-                  }}
-                />
-                <span className="label-text">{t.name}</span>
-              </label>
-            ))}
-            <p className="text-sm text-base-content/70 mt-2">
-              Select all that apply
-            </p>
-          </fieldset>
         )}
       />
     </div>

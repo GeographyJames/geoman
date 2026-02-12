@@ -2,7 +2,7 @@ import { Modal, useModal } from "@/components/forms/Modal";
 import { CancelButton, SubmitButton } from "@/components/Buttons";
 import { slugify } from "@/lib/slugify";
 import { useForm } from "react-hook-form";
-import { useAppSettings } from "@/hooks/api/useAppSettings";
+
 import { useEffect } from "react";
 import { usePatchProject } from "@/hooks/api/projects/usePatchProject";
 import { useEditProject } from "../../contexts/EditProjectContext";
@@ -12,7 +12,7 @@ import { ApiError } from "@/lib/api";
 const EditProjectInner = () => {
   const { project, clear } = useEditProject();
   const { mutate: patchProject, isPending } = usePatchProject();
-  const { data: appSettings, isLoading } = useAppSettings();
+
   const { addError, closeDialog } = useModal();
 
   const {
@@ -28,7 +28,6 @@ const EditProjectInner = () => {
       country: "",
       srid: "",
       visibility: "PRIVATE",
-      technologies: [],
     },
   });
 
@@ -36,22 +35,15 @@ const EditProjectInner = () => {
   const slug = slugify(projectName);
 
   useEffect(() => {
-    if (project && appSettings) {
-      const techIds = appSettings.technologies
-        .filter((t) =>
-          project.outputDto.properties.technologies.includes(t.name),
-        )
-        .map((t) => t.id);
-
+    if (project) {
       reset({
         projectName: project.name,
         country: project.outputDto.properties.country_code,
         srid: project.outputDto.properties.crs_srid ?? "",
         visibility: project.visibility,
-        technologies: techIds,
       });
     }
-  }, [project, appSettings, reset]);
+  }, [project, reset]);
 
   const onSubmit = (data: ProjectFormData) => {
     if (!project) return;
@@ -63,7 +55,7 @@ const EditProjectInner = () => {
           name: data.projectName,
           slug: slug,
           country_code: data.country,
-          technologies: data.technologies,
+
           visibility: data.visibility,
           crs_srid: data.srid !== "" ? data.srid : null,
         },
@@ -91,26 +83,9 @@ const EditProjectInner = () => {
     clear();
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
-
-  if (!appSettings) {
-    return null;
-  }
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <ProjectForm
-        control={control}
-        watch={watch}
-        setValue={setValue}
-        technologies={appSettings.technologies}
-      />
+      <ProjectForm control={control} watch={watch} setValue={setValue} />
       <div className="modal-action">
         <CancelButton onClick={handleCancel} disabled={isPending} />
         <SubmitButton
