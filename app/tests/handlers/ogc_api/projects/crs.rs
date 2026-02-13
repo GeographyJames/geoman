@@ -1,7 +1,8 @@
 use crate::common::{
     Auth, TestApp,
-    helpers::{generate_random_bng_point_ewkt, handle_json_response},
+    helpers::{generate_random_bng_point_wkt, handle_json_response},
 };
+use gdal::vector::Geometry;
 use ogc::FeatureCollection;
 use ogcapi_types::common::Crs;
 
@@ -9,22 +10,16 @@ use ogcapi_types::common::Crs;
 pub async fn crs_transform_works() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, user_id, project_id) = app.generate_ids().await;
+    let (_, _, project_id) = app.generate_ids().await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
-    let (easting, northing, ewkt) = generate_random_bng_point_ewkt();
-    let feature_id = app
-        .insert_project_feature(
-            &uuid::Uuid::new_v4().to_string(),
-            collection_id,
-            project_id,
-            user_id,
-            &ewkt,
-            Some({}),
-        )
-        .await;
     let srid = 27700;
+    let (easting, northing, wkt) = generate_random_bng_point_wkt();
+    let geom = Geometry::from_wkt(&wkt).expect("failed to generate geometry");
+    let feature_id = app
+        .insert_project_feature(collection_id, project_id, geom, srid, Some(&auth), None)
+        .await;
 
-    let crs = Crs::from_epsg(srid).to_string();
+    let crs = Crs::from_epsg(srid as i32).to_string();
 
     let response = app
         .ogc_service

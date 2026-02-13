@@ -105,7 +105,7 @@ impl SelectOneWithParams<&ProjectFeatureId> for ProjectFeature {
                 c.title AS "collection_title!",
                 f.project_id,
                 f.is_primary,
-                ST_AsGeoJSON(ST_Transform(fo.geom, $3))::jsonb as "geometry!: Json<Geometry>",
+                ST_AsGeoJSON(ST_Transform(f.geom, $3))::jsonb as "geometry!: Json<Geometry>",
                 ST_SRID(geom) AS "storage_crs_srid!",
                 f.properties,
                 f.status as "status: Status",
@@ -115,7 +115,6 @@ impl SelectOneWithParams<&ProjectFeatureId> for ProjectFeature {
                 ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name)::app.team))::app.user AS "last_updated_by!: LastUpdatedBy",
                 1 as "number_matched!"
             FROM app.project_features f
-            JOIN app.feature_objects fo ON fo.project_feature_id = f.id
             JOIN app.collections c ON f.collection_id = c.id
             JOIN app.users ab ON f.added_by = ab.id
             JOIN app.teams t_ab ON ab.team_id = t_ab.id
@@ -168,7 +167,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
                 f.collection_id,
                 c.title AS "collection_title!",
                 f.project_id,
-                ST_AsGeoJSON(ST_Transform(fo.geom, $1))::jsonb as "geometry!: Json<Geometry>",
+                ST_AsGeoJSON(ST_Transform(f.geom, $1))::jsonb as "geometry!: Json<Geometry>",
                 ST_SRID(geom) AS "storage_crs_srid!",
                 f.is_primary,
                 f.name,
@@ -181,7 +180,6 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
                 COUNT(*) OVER() as "number_matched!"
             FROM app.project_features f
             JOIN app.collections c ON c.id = f.collection_id
-            JOIN app.feature_objects fo ON fo.project_feature_id = f.id
             JOIN app.users ab ON f.added_by = ab.id
             JOIN app.teams t_ab ON ab.team_id = t_ab.id
             JOIN app.users ub ON f.added_by = ub.id
@@ -190,7 +188,7 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
             AND f.status = ANY($11)
             AND ($3::int IS NULL OR f.project_id = $3)
             AND ($4::float IS NULL OR (
-                fo.geom && ST_Transform(ST_MakeEnvelope($4, $5, $6, $7, $8), ST_SRID(fo.geom))
+                f.geom && ST_Transform(ST_MakeEnvelope($4, $5, $6, $7, $8), ST_SRID(f.geom))
                 ))
             ORDER BY f.id
             LIMIT $9

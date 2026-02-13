@@ -1,14 +1,17 @@
 use crate::common::{
     Auth, configure_database,
     constants::REQUEST_FAILED,
-    helpers::{generate_random_bng_point_ewkt, handle_json_response},
+    helpers::{
+        add_layer, add_shapefile_to_form, create_gdal_multipolygon_bng, create_gdal_point_bng,
+        create_shapefile_dataset, dataset_to_shapefile_data, handle_json_response,
+    },
     services::{
         ApiKeysService, AuthService, ClerkAuthService, HttpClient, HttpService, OgcService,
     },
 };
 use app::{
     AppConfig, Application, AuthenticatedUser, DatabaseSettings, Password, URLS,
-    constants::{GIS_DATA_SCHEMA, SITE_BOUNDARIES_COLLECTION_NAME},
+    constants::GIS_DATA_SCHEMA,
     enums::GeoManEnvironment,
     get_config,
     handlers::{
@@ -25,9 +28,9 @@ use domain::{
     enums::GeometryType,
 };
 use dotenvy::dotenv;
+use gdal::vector::{Geometry, LayerAccess};
 use secrecy::ExposeSecret;
-use serde::Serialize;
-use serde_json::json;
+
 use sqlx::{Connection, PgConnection, PgPool};
 use std::{str::FromStr, sync::LazyLock};
 use uuid::Uuid;
@@ -179,68 +182,54 @@ impl TestApp<ClerkAuthService> {
             .expect("failed to retrieve collection id")
     }
 
-    pub async fn insert_project_feature<P: Serialize>(
+    pub async fn insert_project_feature(
         &self,
-        name: &str,
         collection_id: ProjectCollectionId,
         project_id: ProjectId,
-        user_id: UserId,
-        geom_ewkt: &str,
-        properties: Option<P>,
+        geom: Geometry,
+        srid: u32,
+        auth: Option<&Auth>,
+        is_primary: Option<bool>,
     ) -> ProjectFeatureId {
-        let record = sqlx::query!(
-            "WITH inserted_feature AS (
-                INSERT INTO app.project_features (
-                    project_id,
-                    collection_id,
-                    name,
-                    added_by,
-                    last_updated_by,
-                    properties
-                ) 
-                VALUES ($1, $2, $3, $5, $5, $6) RETURNING id
-             )
-            INSERT INTO app.feature_objects (
-                project_feature_id,
-                collection_id,
-                geom
-                )
-            SELECT id, $2, ST_GeomFromEWKT($4)
-            FROM inserted_feature
-            RETURNING project_feature_id, collection_id",
-            project_id.0,
-            collection_id.0,
-            name,
-            geom_ewkt,
-            user_id.0,
-            json!(properties)
-        )
-        .fetch_one(&self.db_pool)
-        .await
-        .expect("Failed to save feature in database");
+        let mut form = reqwest::multipart::Form::new();
+        let (mut dataset, filename) = create_shapefile_dataset();
+        let mut layer = add_layer(&mut dataset, geom.geometry_type(), srid);
+        layer
+            .create_feature(geom.clone())
+            .expect("failed to add geom");
+        let shapefile_data = dataset_to_shapefile_data(dataset, &filename);
+        form = add_shapefile_to_form("test", shapefile_data, form)
+            .text("name", uuid::Uuid::new_v4().to_string());
+        let form = if let Some(is_primary) = is_primary {
+            form.text("primary", is_primary.to_string())
+        } else {
+            form
+        };
+        let response = self
+            .features_service
+            .post_form(
+                &self.api_client,
+                form,
+                format!("{}/{}", project_id, collection_id,),
+                auth,
+            )
+            .await;
+        let feature_id: FeatureId = handle_json_response(response).await.unwrap();
         ProjectFeatureId {
-            collection_id: ProjectCollectionId(record.collection_id),
-            feature_id: FeatureId(record.project_feature_id),
+            collection_id,
+            feature_id,
         }
     }
 
-    pub async fn generate_project_feature_id<P: Serialize>(
+    pub async fn generate_project_feature_id(
         &self,
         collection_id: ProjectCollectionId,
         project_id: ProjectId,
-        user_id: UserId,
-        properties: Option<P>,
+        auth: Option<&Auth>,
     ) -> ProjectFeatureId {
-        let (_, _, geom_wkt) = generate_random_bng_point_ewkt();
-        self.insert_project_feature(
-            &uuid::Uuid::new_v4().to_string(),
-            collection_id,
-            project_id,
-            user_id,
-            &geom_wkt,
-            properties,
-        )
-        .await
+        let geom = create_gdal_point_bng();
+        self.insert_project_feature(collection_id, project_id, geom, 27700, auth, None)
+            .await
     }
 
     pub async fn drop_database(&self) {
@@ -326,46 +315,18 @@ impl TestApp<ClerkAuthService> {
     pub async fn generate_primary_boundary_id(
         &self,
         project_id: ProjectId,
-        user_id: UserId,
+        auth: Option<&Auth>,
     ) -> ProjectFeatureId {
-        let mut tx = self.db_pool.begin().await.unwrap();
-        let collection_id = sqlx::query_scalar!(
-            "SELECT id FROM app.collections c WHERE c.title = $1",
-            SITE_BOUNDARIES_COLLECTION_NAME
+        let polygon = create_gdal_multipolygon_bng();
+        self.insert_project_feature(
+            ProjectCollectionId(1),
+            project_id,
+            polygon,
+            27700,
+            auth,
+            Some(true),
         )
-        .fetch_one(&mut *tx)
         .await
-        .unwrap();
-        let feature_id = sqlx::query_scalar!(
-            "INSERT INTO app.project_features (
-                    project_id,
-                    collection_id,
-                    name,
-                    added_by,
-                    last_updated_by,
-                    is_primary
-            ) VALUES (
-                     $1, $2, $3, $4, $4, true
-                     )
-            RETURNING id",
-            project_id.0,
-            collection_id,
-            uuid::Uuid::new_v4().to_string(),
-            user_id.0
-        )
-        .fetch_one(&mut *tx)
-        .await
-        .unwrap();
-        let _object_id = sqlx::query_scalar!(
-            "INSERT INTO app.feature_objects (collection_id, project_feature_id, geom) VALUES ($1, $2, ST_GeomFromEwkt('SRID=27700;MULTIPOLYGON (((30 10, 40 40, 20 40, 10 20, 30 10)))')) RETURNING id",
-            collection_id,
-            feature_id
-        ).fetch_one(&mut *tx).await.unwrap();
-        tx.commit().await.unwrap();
-        ProjectFeatureId {
-            collection_id: ProjectCollectionId(collection_id),
-            feature_id: domain::FeatureId(feature_id),
-        }
     }
 
     pub async fn generate_api_key(

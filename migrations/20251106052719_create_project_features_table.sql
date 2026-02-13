@@ -1,7 +1,7 @@
 CREATE SEQUENCE app.project_features_id_seq;
 
 CREATE TABLE app.project_features (
-    id integer NOT NULL DEFAULT nextval('app.project_features_id_seq'),
+    id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     project_id integer NOT NULL REFERENCES app.projects(id),
     collection_id integer NOT NULL REFERENCES app.collections(id),
     name text NOT NULL,
@@ -12,8 +12,8 @@ CREATE TABLE app.project_features (
     added timestamptz NOT NULL DEFAULT now(),
     last_updated_by integer NOT NULL REFERENCES app.users(id),
     last_updated timestamptz NOT NULL DEFAULT now(),
-    -- Composite primary key to support legacy database migration
-    PRIMARY KEY (collection_id, id),
+    geom geometry(GEOMETRY) NOT NULL CHECK (ST_IsValid(geom)),
+
     CHECK (NOT (is_primary AND status IN ('DELETED', 'ARCHIVED')))
 );
 

@@ -66,42 +66,38 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
                    title,
                    description,
                    geometry_type as "geometry_type: GeometryType",
-                   (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(fo.geom)) = 1
-                           THEN MIN(ST_SRID(fo.geom))::int
+                   (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(f.geom)) = 1
+                           THEN MIN(ST_SRID(f.geom))::int
                            ELSE NULL
                        END
                       FROM app.project_features f
-                      JOIN app.feature_objects fo ON fo.project_feature_id = f.id
                      WHERE f.collection_id = c.id
-                     AND f.project_id = $1
-                      ) as storage_crs_srid,
-                        (SELECT CASE
-                                    WHEN bbox IS NOT NULL THEN
-                 ARRAY[
-                     ST_XMin(bbox),
-                     ST_YMin(bbox),
-                     ST_XMax(bbox),
-                     ST_YMax(bbox)
-                 ]
-             ELSE NULL
-         END
-         FROM (
-             SELECT ST_Extent(ST_Transform(fo.geom, $3))::geometry as bbox
-             FROM app.project_features f
-             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
-             WHERE f.collection_id = c.id
-             AND f.project_id = $1
-         ) extent_sub) as extent
-
-
+                       AND f.project_id = $1
+                   ) as storage_crs_srid,
+                   (SELECT CASE
+                               WHEN bbox IS NOT NULL THEN
+                                   ARRAY[
+                                       ST_XMin(bbox),
+                                       ST_YMin(bbox),
+                                       ST_XMax(bbox),
+                                       ST_YMax(bbox)
+                                   ]
+                               ELSE NULL
+                           END
+                    FROM (
+                        SELECT ST_Extent(ST_Transform(f.geom, $3))::geometry as bbox
+                        FROM app.project_features f
+                        WHERE f.collection_id = c.id
+                          AND f.project_id = $1
+                    ) extent_sub) as extent
               FROM app.collections c
-  WHERE EXISTS (
-      SELECT 1
-      FROM app.project_features f
-      WHERE f.collection_id = c.id
-      AND f.project_id =  $1
-  )
-  AND c.id = $2"#,
+             WHERE EXISTS (
+                 SELECT 1
+                 FROM app.project_features f
+                 WHERE f.collection_id = c.id
+                   AND f.project_id = $1
+             )
+               AND c.id = $2"#,
             params.project_id.0,
             id.0,
             extent_crs.as_srid() as i32
@@ -135,32 +131,30 @@ impl SelectAllWithParams for ProjectCollection {
                    title,
                    description,
                    geometry_type AS "geometry_type: GeometryType",
-                   (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(fo.geom)) = 1
-                           THEN MIN(ST_SRID(fo.geom))::int
+                   (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(f.geom)) = 1
+                           THEN MIN(ST_SRID(f.geom))::int
                            ELSE NULL
                        END
                       FROM app.project_features f
-                      JOIN app.feature_objects fo ON fo.project_feature_id = f.id
                      WHERE f.collection_id = c.id
                        AND f.project_id = $1
-                ) as storage_crs_srid,
-                        (SELECT CASE
-                                    WHEN bbox IS NOT NULL THEN
-                 ARRAY[
-                     ST_XMin(bbox),
-                     ST_YMin(bbox),
-                     ST_XMax(bbox),
-                     ST_YMax(bbox)
-                 ]
-             ELSE NULL
-         END
-         FROM (
-             SELECT ST_Extent(ST_Transform(fo.geom, $2))::geometry as bbox
-             FROM app.project_features f
-             JOIN app.feature_objects fo ON fo.project_feature_id = f.id
-             WHERE f.collection_id = c.id
-             AND f.project_id = $1
-         ) extent_sub) as extent
+                   ) as storage_crs_srid,
+                   (SELECT CASE
+                               WHEN bbox IS NOT NULL THEN
+                                   ARRAY[
+                                       ST_XMin(bbox),
+                                       ST_YMin(bbox),
+                                       ST_XMax(bbox),
+                                       ST_YMax(bbox)
+                                   ]
+                               ELSE NULL
+                           END
+                    FROM (
+                        SELECT ST_Extent(ST_Transform(f.geom, $2))::geometry as bbox
+                        FROM app.project_features f
+                        WHERE f.collection_id = c.id
+                          AND f.project_id = $1
+                    ) extent_sub) as extent
   FROM app.collections c
   WHERE c.status = 'ACTIVE'
   AND EXISTS (

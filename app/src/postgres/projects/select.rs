@@ -43,11 +43,8 @@ impl TryInto<Project> for ProjectRow {
 fn project_query() -> String {
     format!(
         r#"WITH primary_boundary_centroid AS (
-            SELECT pf.project_id, ST_Centroid(fo.geom) AS centroid
+            SELECT pf.project_id, ST_Centroid(pf.geom) AS centroid
               FROM app.project_features pf
-              JOIN app.feature_objects fo
-                ON fo.collection_id = pf.collection_id
-               AND fo.project_feature_id = pf.id
               JOIN app.collections c
                 ON c.id = pf.collection_id
              WHERE pf.is_primary = true

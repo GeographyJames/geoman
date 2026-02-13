@@ -84,11 +84,15 @@ pub async fn handle_json_response<T: DeserializeOwned>(
     ))
 }
 
-pub fn generate_random_bng_point_ewkt() -> (f32, f32, String) {
+pub fn generate_random_bng_point_wkt() -> (f32, f32, String) {
     let mut rng = rand::rng();
     let easting: f32 = rng.random_range(0.0..700_000.);
     let northing: f32 = rng.random_range(0.0..1_300_000.);
-    (easting, northing, generate_point(easting, northing, 27700))
+    (
+        easting,
+        northing,
+        format!("POINT({} {})", easting, northing),
+    )
 }
 
 pub fn generate_point(x: f32, y: f32, srid: u32) -> String {
@@ -170,8 +174,15 @@ pub fn dataset_to_shapefile_data(mut dataset: Dataset, filename: &str) -> Shapef
     ShapefileData::try_from_gdal_vsi_mem_file(filename).expect("failed to create shapefile data")
 }
 
-pub fn _create_gdal_point_bng() -> Geometry {
+pub fn create_gdal_point_bng() -> Geometry {
     let geom = Geometry::from_wkt("POINT(123456 654321)").expect("failed to create poient");
+    assert!(geom.is_valid(), "invalid geometry");
+    assert!(!geom.is_empty(), "geometry empty");
+    geom
+}
+
+pub fn create_gdal_point_wgs84() -> Geometry {
+    let geom = Geometry::from_wkt("POINT(-3 52)").expect("failed to create poient");
     assert!(geom.is_valid(), "invalid geometry");
     assert!(!geom.is_empty(), "geometry empty");
     geom

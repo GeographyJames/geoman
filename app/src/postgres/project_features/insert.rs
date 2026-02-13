@@ -14,31 +14,24 @@ impl Insert for (&FeatureInputDTO, ProjectId, ProjectCollectionId, UserId) {
         let (dto, project_id, collection_id, user_id) = self;
         let feature_id: FeatureId = sqlx::query_scalar!(
             r#"
-        WITH inserted_feature AS (
+
                 INSERT INTO app.project_features (
                             project_id,
                             collection_id,
                             name,
                             added_by,
-                            last_updated_by
+                            last_updated_by,
+                            is_primary,
+                            geom
                             )
-                            VALUES ($1, $2, $3, $4, $4) RETURNING id
-                            )
-     INSERT INTO app.feature_objects (
-                    project_feature_id,
-                    collection_id,
-                    geom
-                    ) 
-                        SELECT id,
-                                $2,
-                                ST_GeomFromWKB($5, $6)
-                        FROM inserted_feature
-                    RETURNING project_feature_id AS "feature_id: FeatureId"
+                            VALUES ($1, $2, $3, $4, $4, COALESCE($5, false), ST_GeomFromWKB($6, $7)) RETURNING id AS "id: FeatureId"
+
         "#,
             project_id.0,
             collection_id.0,
             dto.name,
             user_id.0,
+            dto.primary,
             dto.geom_wkb,
             dto.srid
         )

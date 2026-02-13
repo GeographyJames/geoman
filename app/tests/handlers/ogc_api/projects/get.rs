@@ -74,8 +74,11 @@ async fn get_projects_works_with_limit() {
 #[actix_web::test]
 async fn get_project_has_centroid() {
     let app = TestApp::spawn_with_db().await;
-    let (_, user_id, project_id) = app.generate_ids().await;
-    let _boundary_id = app.generate_primary_boundary_id(project_id, user_id).await;
+    let (_, _, project_id) = app.generate_ids().await;
+    let auth = Auth::mock_session_token();
+    let _boundary_id = app
+        .generate_primary_boundary_id(project_id, Some(&auth))
+        .await;
     let response = app
         .ogc_service
         .get_feature(

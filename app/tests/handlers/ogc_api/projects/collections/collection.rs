@@ -2,31 +2,22 @@ use domain::ProjectId;
 
 use crate::common::{
     Auth, TestApp,
-    helpers::{
-        assert_ok, assert_status, generate_random_bng_point_ewkt, generate_random_wgs84_point_ewkt,
-    },
+    helpers::{assert_ok, assert_status, create_gdal_point_bng, create_gdal_point_wgs84},
 };
 
 #[actix_web::test]
 async fn get_project_collection_has_correct_storage_crs() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, user_id, project_one_id) = app.generate_ids().await;
+    let (_, _, project_one_id) = app.generate_ids().await;
     let project_two_id = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
-    let (_, _, bng_ewkt) = generate_random_bng_point_ewkt();
-    let (_, _, wges84_ewkt) = generate_random_wgs84_point_ewkt();
+    let bng = create_gdal_point_bng();
+    let wgs84 = create_gdal_point_wgs84();
 
     // Insert a feature for project one
     let _ = app
-        .insert_project_feature(
-            &uuid::Uuid::new_v4().to_string(),
-            collection_id,
-            project_one_id,
-            user_id,
-            &bng_ewkt,
-            Some({}),
-        )
+        .insert_project_feature(collection_id, project_one_id, bng, 27700, Some(&auth), None)
         .await;
 
     // Retrieve the collection
@@ -44,12 +35,12 @@ async fn get_project_collection_has_correct_storage_crs() {
     // Insert a second feature in a different crs to another project
     let _ = app
         .insert_project_feature(
-            &uuid::Uuid::new_v4().to_string(),
             collection_id,
             project_two_id,
-            user_id,
-            &wges84_ewkt,
-            Some({}),
+            wgs84.clone(),
+            4326,
+            Some(&auth),
+            None,
         )
         .await;
 
@@ -80,12 +71,12 @@ async fn get_project_collection_has_correct_storage_crs() {
     // Finally lets add a feature in anothe crs to for project one
     let _ = app
         .insert_project_feature(
-            &uuid::Uuid::new_v4().to_string(),
             collection_id,
             project_one_id,
-            user_id,
-            &wges84_ewkt,
-            Some({}),
+            wgs84,
+            4326,
+            Some(&auth),
+            None,
         )
         .await;
     let collection = app
@@ -101,10 +92,10 @@ async fn get_project_collection_has_correct_storage_crs() {
 async fn get_project_collection_works() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, user_id, project_id) = app.generate_ids().await;
+    let (_, _, project_id) = app.generate_ids().await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let _feature_id = app
-        .generate_project_feature_id(collection_id, project_id, user_id, Some({}))
+        .generate_project_feature_id(collection_id, project_id, Some(&auth))
         .await;
     let response = app
         .ogc_service
@@ -129,11 +120,11 @@ async fn get_project_collection_returns_404_for_project_not_found() {
 async fn get_project_collection_returns_404_for_collection_with_no_features() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, user_id, project_id) = app.generate_ids().await;
+    let (_, _, project_id) = app.generate_ids().await;
     let another_project = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let _feature = app
-        .generate_project_feature_id(collection_id, another_project, user_id, Some({}))
+        .generate_project_feature_id(collection_id, another_project, Some(&auth))
         .await;
     let response = app
         .ogc_service
@@ -146,10 +137,10 @@ async fn get_project_collection_returns_404_for_collection_with_no_features() {
 async fn get_project_collection_has_correct_crs_list() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, user_id, project_id) = app.generate_ids().await;
+    let (_, _, project_id) = app.generate_ids().await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let _feature_id = app
-        .generate_project_feature_id(collection_id, project_id, user_id, Some({}))
+        .generate_project_feature_id(collection_id, project_id, Some(&auth))
         .await;
 
     let collection = app
@@ -159,12 +150,12 @@ async fn get_project_collection_has_correct_crs_list() {
 
     assert_eq!(collection.crs.len(), 2);
     app.insert_project_feature(
-        &uuid::Uuid::new_v4().to_string(),
         collection_id,
         project_id,
-        user_id,
-        "SRID=4326;POINT(3.2084370 55.945968)",
-        Some({}),
+        create_gdal_point_wgs84(),
+        4326,
+        Some(&auth),
+        None,
     )
     .await;
     let collection = app
