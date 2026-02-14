@@ -20,8 +20,6 @@ export interface ProjectProperties {
     added_by_team: TeamOutputDto;
     // Core properties
     technologies: string[];
-    country_code: string; // ISO 3166-1-ALPHA-2
-    subdivisions: string[];
     status: Status;
     visibility: Visibility;
     crs_srid: number | null;

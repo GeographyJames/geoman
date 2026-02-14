@@ -19,13 +19,11 @@ const EditProjectInner = () => {
     handleSubmit,
     watch,
     reset,
-    setValue,
     control,
     formState: { isDirty },
   } = useForm<ProjectFormData>({
     defaultValues: {
       projectName: "",
-      country: "",
       srid: "",
       visibility: "PRIVATE",
     },
@@ -38,7 +36,6 @@ const EditProjectInner = () => {
     if (project) {
       reset({
         projectName: project.name,
-        country: project.outputDto.properties.country_code,
         srid: project.outputDto.properties.crs_srid ?? "",
         visibility: project.visibility,
       });
@@ -54,8 +51,6 @@ const EditProjectInner = () => {
         dto: {
           name: data.projectName,
           slug: slug,
-          country_code: data.country,
-
           visibility: data.visibility,
           crs_srid: data.srid !== "" ? data.srid : null,
         },
@@ -85,7 +80,7 @@ const EditProjectInner = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <ProjectForm control={control} watch={watch} setValue={setValue} />
+      <ProjectForm control={control} watch={watch} />
       <div className="modal-action">
         <CancelButton onClick={handleCancel} disabled={isPending} />
         <SubmitButton

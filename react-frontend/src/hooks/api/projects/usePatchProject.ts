@@ -6,7 +6,6 @@ interface PatchProjectDTO {
   status?: "ACTIVE" | "ARCHIVED" | "DELETED";
   name?: string;
   visibility?: "PRIVATE" | "TEAM" | "PUBLIC";
-  country_code?: string;
   crs_srid?: number | null;
   slug?: string;
   technologies?: number[];

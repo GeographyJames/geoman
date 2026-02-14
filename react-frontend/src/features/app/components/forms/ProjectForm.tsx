@@ -1,7 +1,6 @@
-import type { Control, UseFormSetValue, UseFormWatch } from "react-hook-form";
+import type { Control, UseFormWatch } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import { TextInput } from "@/components/forms/components/TextInput";
-import { CountrySelect } from "@/components/forms/components/CountrySelector";
 import { Select } from "@/components/forms/components/Select";
 import { FaCircleInfo } from "react-icons/fa6";
 import { Visibility, VisibilityConfig } from "@/domain/types";
@@ -9,7 +8,6 @@ import { slugify } from "@/lib/slugify";
 
 export interface ProjectFormData {
   projectName: string;
-  country: string;
   srid: number | "";
   visibility: Visibility;
 }
@@ -17,10 +15,9 @@ export interface ProjectFormData {
 interface ProjectFormProps {
   control: Control<ProjectFormData>;
   watch: UseFormWatch<ProjectFormData>;
-  setValue: UseFormSetValue<ProjectFormData>;
 }
 
-export const ProjectForm = ({ control, watch, setValue }: ProjectFormProps) => {
+export const ProjectForm = ({ control, watch }: ProjectFormProps) => {
   const projectName = watch("projectName");
   const slug = slugify(projectName);
 
@@ -56,31 +53,12 @@ export const ProjectForm = ({ control, watch, setValue }: ProjectFormProps) => {
       />
 
       <Controller
-        name="country"
-        control={control}
-        render={({ field }) => (
-          <CountrySelect
-            name="country"
-            value={field.value}
-            onChange={(val) => {
-              field.onChange(val);
-              if (val === "GB") {
-                setValue("srid", 27700);
-              } else {
-                setValue("srid", "");
-              }
-            }}
-          />
-        )}
-      />
-
-      <Controller
         name="srid"
         control={control}
         render={({ field }) => (
           <TextInput
             name="srid"
-            label="Coordinate Reference System ID"
+            label="Coordinate Reference System EPSG ID"
             placeholder="Optional (recommended)"
             type="number"
             step={1}

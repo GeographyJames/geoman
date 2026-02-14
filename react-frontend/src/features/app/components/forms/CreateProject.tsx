@@ -7,7 +7,6 @@ import { Visibility } from "@/domain/types";
 import { useForm } from "react-hook-form";
 import { useAppSettings } from "@/hooks/api/useAppSettings";
 import { useCurrentUser } from "@/hooks/api/useCurrentUser";
-import { useEffect } from "react";
 import { ProjectForm, type ProjectFormData } from "./ProjectForm";
 import { ApiError } from "@/lib/api";
 
@@ -18,12 +17,11 @@ const CreateProjectInner = () => {
   const isLoading = isLoadingSettings || isLoadingUser;
   const { addError, closeDialog } = useModal();
 
-  const { handleSubmit, watch, reset, setValue, control } =
+  const { handleSubmit, watch, reset, control } =
     useForm<ProjectFormData>({
       defaultValues: {
         projectName: "",
-        country: currentUser?.operatingCountryId || "",
-        srid: currentUser?.operatingCountryId === "GB" ? 27700 : "",
+        srid: 27700,
         visibility: Visibility.Private,
       },
     });
@@ -31,24 +29,11 @@ const CreateProjectInner = () => {
   const projectName = watch("projectName");
   const slug = slugify(projectName);
 
-  useEffect(() => {
-    if (currentUser) {
-      const defaultSrid = currentUser.operatingCountryId === "GB" ? 27700 : "";
-      reset({
-        projectName: "",
-        country: currentUser.operatingCountryId,
-        srid: defaultSrid,
-        visibility: Visibility.Private,
-      });
-    }
-  }, [currentUser, reset]);
 
   const onSubmit = (data: ProjectFormData) => {
     const dto: ProjectInputDTO = {
       name: data.projectName,
       slug: slug,
-      country_code: data.country,
-
       visibility: data.visibility,
       crs_srid: data.srid !== "" ? data.srid : undefined,
     };
@@ -87,7 +72,7 @@ const CreateProjectInner = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <ProjectForm control={control} watch={watch} setValue={setValue} />
+      <ProjectForm control={control} watch={watch} />
       <div className="modal-action">
         <CancelButton onClick={handleCancel} disabled={isPending} />
         <SubmitButton
