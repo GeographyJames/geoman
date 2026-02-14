@@ -5,6 +5,7 @@ import { usePatchProject } from "@/hooks/api/projects/usePatchProject";
 import { useFlash } from "@/features/app/contexts/FlashMessageContext";
 import { useEditProject } from "../../contexts/EditProjectContext";
 import { useDeleteProject } from "../../contexts/DeleteProjectContext";
+import { useAddFeature } from "../../contexts/AddFeatureContext";
 
 export const ProjectActionsDropdown = ({
   item,
@@ -18,6 +19,7 @@ export const ProjectActionsDropdown = ({
   const action = item.archived ? "unarchive" : "archive";
   const { requestEdit } = useEditProject();
   const { requestDelete } = useDeleteProject();
+  const { requestAddFeature } = useAddFeature();
   return (
     <ActionsDropdown id={id}>
       <li>
@@ -50,16 +52,7 @@ export const ProjectActionsDropdown = ({
         <button onClick={() => requestEdit(item)}>edit</button>
       </li>
       <li>
-        <button
-          onClick={() => {
-            const el = document.getElementById("add_site_feature");
-            if (el instanceof HTMLDialogElement) {
-              el.showModal();
-            }
-          }}
-        >
-          add feature
-        </button>
+        <button onClick={() => requestAddFeature(item)}>add feature</button>
       </li>
       <li>
         <button>create figure</button>

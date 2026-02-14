@@ -4,6 +4,7 @@ import { ErrorAlert } from "../Alert";
 
 interface ModalContextValue {
   addError: (message: string) => void;
+  clearErrors: () => void;
   closeDialog: () => void;
 }
 
@@ -54,7 +55,7 @@ export const Modal = ({ id, children, title, onClose }: Props) => {
             onClose={() => removeError(e.id)}
           />
         ))}
-        <ModalContext.Provider value={{ addError, closeDialog }}>
+        <ModalContext.Provider value={{ addError, clearErrors: () => setErrors([]), closeDialog }}>
           {children}
         </ModalContext.Provider>
       </div>
