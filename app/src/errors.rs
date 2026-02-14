@@ -1,7 +1,6 @@
 use actix_web::{ResponseError, http::StatusCode};
 use domain::{FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName};
 use geo::virtual_shapefile::ShapefileError;
-use isocountry::CountryCodeParseErr;
 use thiserror::Error;
 use utils::error_chain_fmt;
 
@@ -121,8 +120,6 @@ impl std::fmt::Debug for ApiError {
 
 #[derive(Error)]
 pub enum ProjectValidationError {
-    #[error("Invalid country code: {0}")]
-    InvalidCountryCode(#[from] CountryCodeParseErr),
     #[error("Invalid project name: {0}")]
     InvalidProjectName(String),
     #[error("Invalid url: {0}")]

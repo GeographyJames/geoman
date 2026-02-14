@@ -14,7 +14,6 @@ anyhow = { workspace = true }
 ogcapi-types = { workspace = true, features = ["features"] }
 strum = { workspace = true }
 chrono = { workspace = true }
-isocountry = { workspace = true }
 slug = "0.1.6"
 unicode-segmentation = "1.12.0"
 utoipa = { workspace = true }

@@ -54,7 +54,6 @@ fn project_query() -> String {
             p.id,
             p.name,
             p.added,
-            p.country_code,
             p.status,
             p.crs_srid,
             p.last_updated,
@@ -65,7 +64,6 @@ fn project_query() -> String {
             {user_row_owner},
             {user_row_added_by},
             {user_row_last_updated_by},
-            COALESCE(subdivisions, ARRAY[]::text[]) AS subdivisions,
             ST_AsGeoJson(ST_Transform(pb.centroid, $1))::json AS geom
         FROM app.projects p
         {user_join_owner}

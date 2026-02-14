@@ -20,7 +20,6 @@ impl Update for (&ProjectUpdateDto, UserId) {
 
         let name = dto.name.as_ref().map(|n| n.as_ref());
         let slug = dto.slug.as_ref().map(|s| s.as_ref());
-        let country_code = dto.country_code.as_ref().map(|c| c.alpha2());
 
         let crs_srid_provided = dto.crs_srid.is_some();
         let crs_srid_value = dto.crs_srid.flatten();
@@ -32,18 +31,16 @@ impl Update for (&ProjectUpdateDto, UserId) {
                 status = COALESCE($1, status),
                 name = COALESCE($2, name),
                 visibility = COALESCE($3, visibility),
-                country_code = COALESCE($4, country_code),
-                crs_srid = CASE WHEN $5 THEN $6 ELSE crs_srid END,
-                slug = COALESCE($7, slug),
+                crs_srid = CASE WHEN $4 THEN $5 ELSE crs_srid END,
+                slug = COALESCE($6, slug),
                 last_updated = NOW(),
-                last_updated_by = $8
-            WHERE id = $9
+                last_updated_by = $7
+            WHERE id = $8
             RETURNING id
             "#,
             &dto.status as &Option<Status>,
             name,
             &dto.visibility as &Option<Visibility>,
-            country_code,
             crs_srid_provided,
             crs_srid_value,
             slug,

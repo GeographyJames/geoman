@@ -21,8 +21,6 @@ mod api_key;
 pub use api_key::{ApiKey, ApiKeyInputDTO, KeyHash};
 mod id;
 pub use id::*;
-mod subdivision;
-pub use subdivision::Subdivision;
 mod user;
 pub use user::*;
 mod team;

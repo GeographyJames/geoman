@@ -40,7 +40,6 @@ serde_urlencoded = "0.7.1"
 rand = "0.10"
 sha2 = "0.10.9"
 hex = "0.4.3"
-isocountry = { workspace = true }
 actix-http = "3.11.2"
 uuid = { workspace = true }
 utoipa-swagger-ui = { version = "7", features = [

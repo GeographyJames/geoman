@@ -17,7 +17,6 @@ impl Insert for (&ProjectInputDto, UserId) {
             INSERT INTO app.projects (
                 name,
                 visibility,
-                country_code,
                 crs_srid,
                 owner,
                 added_by,
@@ -25,13 +24,12 @@ impl Insert for (&ProjectInputDto, UserId) {
                 slug,
                 team_id
             )
-            VALUES( $1, $2, $3, $4, $5, $5, $5, $6, (SELECT team_id from app.users WHERE id =$5 ))
+            VALUES( $1, $2, $3, $4, $4, $4, $5, (SELECT team_id from app.users WHERE id =$4 ))
 
             RETURNING id AS "id: ProjectId"
             "#,
             dto.name.as_ref(),
             &dto.visibility as &Visibility,
-            dto.country_code.alpha2(),
             dto.crs_srid,
             id.0,
             dto.slug.as_ref()

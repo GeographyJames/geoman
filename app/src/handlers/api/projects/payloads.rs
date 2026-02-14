@@ -3,7 +3,6 @@ use domain::{
     enums::{Status, Visibility},
     project::{ProjectInputDto, ProjectNameInputDTO, ProjectSlugInputDto, ProjectUpdateDto},
 };
-use isocountry::CountryCode;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::{errors::ApiError, handlers::ProjectValidationError};
@@ -22,7 +21,6 @@ where
 pub struct PostProjectPayload {
     pub name: String,
     pub visibility: Option<Visibility>,
-    pub country_code: String,
     pub crs_srid: Option<i32>,
     pub slug: String,
 }
@@ -34,7 +32,6 @@ impl Default for PostProjectPayload {
             slug: name.clone(),
             name,
             visibility: Default::default(),
-            country_code: CountryCode::GBR.alpha2().to_string(),
             crs_srid: Default::default(),
         }
     }
@@ -45,7 +42,6 @@ impl TryInto<ProjectInputDto> for PostProjectPayload {
         let PostProjectPayload {
             name,
             visibility,
-            country_code,
             crs_srid,
             slug,
         } = self;
@@ -53,14 +49,11 @@ impl TryInto<ProjectInputDto> for PostProjectPayload {
             .map_err(ProjectValidationError::InvalidProjectSlug)?;
         let name =
             ProjectNameInputDTO::parse(name).map_err(ProjectValidationError::InvalidProjectName)?;
-        let country_code = isocountry::CountryCode::for_alpha2(&country_code)
-            .map_err(ProjectValidationError::InvalidCountryCode)?;
 
         Ok(ProjectInputDto {
             slug,
             name,
             visibility: visibility.unwrap_or(Visibility::Private),
-            country_code,
             crs_srid,
         })
     }
@@ -73,7 +66,6 @@ pub struct PatchProjectPayload {
     pub status: Option<Status>,
     pub name: Option<String>,
     pub visibility: Option<Visibility>,
-    pub country_code: Option<String>,
     #[serde(default, deserialize_with = "deserialize_optional_field")]
     pub crs_srid: Option<Option<i32>>,
     pub slug: Option<String>,
@@ -85,7 +77,6 @@ impl PatchProjectPayload {
             status,
             name,
             visibility,
-            country_code,
             crs_srid,
             slug,
         } = self;
@@ -102,19 +93,11 @@ impl PatchProjectPayload {
             })
             .transpose()?;
 
-        let country_code = country_code
-            .map(|c| {
-                isocountry::CountryCode::for_alpha2(&c)
-                    .map_err(ProjectValidationError::InvalidCountryCode)
-            })
-            .transpose()?;
-
         Ok(ProjectUpdateDto {
             id: project_id,
             status,
             name,
             visibility,
-            country_code,
             crs_srid,
             slug,
         })
