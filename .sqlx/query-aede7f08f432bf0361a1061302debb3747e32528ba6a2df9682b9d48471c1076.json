@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n\n                INSERT INTO app.project_features (\n                            project_id,\n                            collection_id,\n                            name,\n                            added_by,\n                            last_updated_by,\n                            is_primary,\n                            geom\n                            )\n                            VALUES ($1, $2, $3, $4, $4, COALESCE($5, false), ST_GeomFromWKB($6, $7)) RETURNING id AS \"id: FeatureId\"\n\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: FeatureId",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Text",
+        "Int4",
+        "Bool",
+        "Bytea",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "aede7f08f432bf0361a1061302debb3747e32528ba6a2df9682b9d48471c1076"
+}
