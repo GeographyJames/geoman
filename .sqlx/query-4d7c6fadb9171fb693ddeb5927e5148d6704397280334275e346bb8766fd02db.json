@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            UPDATE app.projects\n            SET\n                status = COALESCE($1, status),\n                name = COALESCE($2, name),\n                visibility = COALESCE($3, visibility),\n                country_code = COALESCE($4, country_code),\n                crs_srid = CASE WHEN $5 THEN $6 ELSE crs_srid END,\n                slug = COALESCE($7, slug),\n                last_updated = NOW(),\n                last_updated_by = $8\n            WHERE id = $9\n            RETURNING id\n            ",
+  "query": "\n            UPDATE app.projects\n            SET\n                status = COALESCE($1, status),\n                name = COALESCE($2, name),\n                visibility = COALESCE($3, visibility),\n                crs_srid = CASE WHEN $4 THEN $5 ELSE crs_srid END,\n                slug = COALESCE($6, slug),\n                last_updated = NOW(),\n                last_updated_by = $7\n            WHERE id = $8\n            RETURNING id\n            ",
   "describe": {
     "columns": [
       {
@@ -36,7 +36,6 @@
             }
           }
         },
-        "Bpchar",
         "Bool",
         "Int4",
         "Text",
@@ -48,5 +47,5 @@
       false
     ]
   },
-  "hash": "821ff10d70c13e0d4d6094c93b397086756e1151347b9bcb9666480c2d4f9e36"
+  "hash": "4d7c6fadb9171fb693ddeb5927e5148d6704397280334275e346bb8766fd02db"
 }
