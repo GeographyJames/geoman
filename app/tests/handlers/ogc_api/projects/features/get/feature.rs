@@ -14,7 +14,7 @@ pub fn check_ogc_feature_is_project_feature(ogc_feature: ogc::Feature) {
 async fn get_feature_works() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
 
     let feature_id = app
@@ -45,7 +45,7 @@ async fn get_feature_works() {
 async fn get_project_feature_returns_404_for_project_not_found() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let feature_id = app
         .generate_project_feature_id(collection_id, project_id, Some(&auth))
@@ -67,7 +67,7 @@ async fn get_project_feature_returns_404_for_project_not_found() {
 async fn get_project_feature_returns_404_for_feature_belonging_to_different_project() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let another_project = app.generate_project_id(Some(&auth)).await;
     let feature_id = app

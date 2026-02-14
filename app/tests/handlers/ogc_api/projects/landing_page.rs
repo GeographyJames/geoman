@@ -1,14 +1,14 @@
 use ogcapi_types::common::LandingPage;
 
 use crate::common::{
-    TestApp,
+    Auth, TestApp,
     helpers::{assert_ok, handle_json_response},
 };
 
 #[actix_web::test]
 async fn get_project_landing_page_works() {
     let app = TestApp::spawn_with_db().await;
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&Auth::mock_session_token())).await;
 
     let response = app
         .ogc_service

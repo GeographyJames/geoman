@@ -9,7 +9,7 @@ use crate::common::{
 async fn get_project_collection_has_correct_storage_crs() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, _, project_one_id) = app.generate_ids().await;
+    let project_one_id = app.generate_project_id(Some(&auth)).await;
     let project_two_id = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let bng = create_gdal_point_bng();
@@ -92,7 +92,7 @@ async fn get_project_collection_has_correct_storage_crs() {
 async fn get_project_collection_works() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let _feature_id = app
         .generate_project_feature_id(collection_id, project_id, Some(&auth))
@@ -120,7 +120,7 @@ async fn get_project_collection_returns_404_for_project_not_found() {
 async fn get_project_collection_returns_404_for_collection_with_no_features() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&auth)).await;
     let another_project = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let _feature = app
@@ -137,7 +137,7 @@ async fn get_project_collection_returns_404_for_collection_with_no_features() {
 async fn get_project_collection_has_correct_crs_list() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let _feature_id = app
         .generate_project_feature_id(collection_id, project_id, Some(&auth))

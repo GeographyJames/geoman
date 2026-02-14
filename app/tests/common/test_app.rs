@@ -253,15 +253,6 @@ impl TestApp<ClerkAuthService> {
         .expect("failed to drop database");
     }
 
-    pub async fn generate_ids(&self) -> (TeamId, UserId, ProjectId) {
-        let team_id = TeamId(0);
-        let user_id = UserId(0);
-        let project_id = self
-            .generate_project_id(Some(&Auth::mock_session_token()))
-            .await;
-        (team_id, user_id, project_id)
-    }
-
     pub async fn create_gis_data_table(
         &self,
         table_name: &TableName,

@@ -7,7 +7,7 @@ use crate::common::{Auth, TestApp, helpers::handle_json_response};
 pub async fn bbox_works() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let srid = 27700;
     let feature_1 = format!("POINT({} {})", 1, 1);

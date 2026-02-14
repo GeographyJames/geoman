@@ -9,7 +9,7 @@ use crate::common::{
 #[actix_web::test]
 async fn get_projects_works() {
     let app = TestApp::spawn_with_db().await;
-    let _ids = app.generate_ids().await;
+    let _project_id = app.generate_project_id(Some(&Auth::mock_session_token())).await;
     let response = app
         .ogc_service
         .get_features(&app.api_client, &CollectionId::Projects.to_string())
@@ -28,7 +28,7 @@ async fn get_projects_works() {
 #[actix_web::test]
 async fn get_project_works() {
     let app = TestApp::spawn_with_db().await;
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&Auth::mock_session_token())).await;
     let response = app
         .ogc_service
         .get_feature(
@@ -74,8 +74,8 @@ async fn get_projects_works_with_limit() {
 #[actix_web::test]
 async fn get_project_has_centroid() {
     let app = TestApp::spawn_with_db().await;
-    let (_, _, project_id) = app.generate_ids().await;
     let auth = Auth::mock_session_token();
+    let project_id = app.generate_project_id(Some(&auth)).await;
     let _boundary_id = app
         .generate_primary_boundary_id(project_id, Some(&auth))
         .await;

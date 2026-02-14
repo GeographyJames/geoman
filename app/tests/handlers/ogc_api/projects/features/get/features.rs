@@ -10,7 +10,7 @@ use crate::common::{
 async fn get_project_features_works() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let another_project = app.generate_project_id(Some(&auth)).await;
     let _feature_id = app
@@ -34,7 +34,7 @@ async fn get_project_features_works() {
 async fn get_projct_features_returns_404_for_project_not_found() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let _feature_id = app
         .generate_project_feature_id(collection_id, project_id, Some(&auth))
@@ -50,7 +50,7 @@ async fn get_projct_features_returns_404_for_project_not_found() {
 async fn get_project_features_works_with_limit() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     for _ in 0..10 {
         let _f = app

@@ -7,7 +7,7 @@ use crate::common::{
 async fn get_project_collections_works() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
 
     let _feature_id = app
@@ -28,7 +28,7 @@ async fn get_project_collections_works() {
 async fn get_project_collections_only_returns_collections_that_contain_items_for_the_project() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&auth)).await;
     let another_project = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let _feature_id = app

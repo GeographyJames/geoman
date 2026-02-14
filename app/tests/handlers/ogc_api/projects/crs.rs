@@ -10,7 +10,7 @@ use ogcapi_types::common::Crs;
 pub async fn crs_transform_works() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let (_, _, project_id) = app.generate_ids().await;
+    let project_id = app.generate_project_id(Some(&auth)).await;
     let collection_id = app.generate_project_collection_id(Some(&auth)).await;
     let srid = 27700;
     let (easting, northing, wkt) = generate_random_bng_point_wkt();
