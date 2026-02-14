@@ -64,7 +64,11 @@ const DeleteProjectInner = () => {
 
 export const DeleteProjectForm = () => {
   return (
-    <Modal id="delete_project" title="Delete" onClose={useDeleteProject().clear}>
+    <Modal
+      id="delete_project"
+      title="Delete project"
+      onClose={useDeleteProject().clear}
+    >
       <DeleteProjectInner />
     </Modal>
   );

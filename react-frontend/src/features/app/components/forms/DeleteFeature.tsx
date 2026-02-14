@@ -69,7 +69,7 @@ export const DeleteFeatureForm = () => {
   return (
     <Modal
       id="delete_feature"
-      title="Delete"
+      title="Delete project feature"
       onClose={useDeleteFeature().clear}
     >
       <DeleteFeatureInner />

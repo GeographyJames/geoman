@@ -53,7 +53,7 @@ impl TryInto<ProjectInputDto> for PostProjectPayload {
         Ok(ProjectInputDto {
             slug,
             name,
-            visibility: visibility.unwrap_or(Visibility::Private),
+            visibility: visibility.unwrap_or(Visibility::Public),
             crs_srid,
         })
     }

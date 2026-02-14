@@ -22,7 +22,7 @@ const CreateProjectInner = () => {
       defaultValues: {
         projectName: "",
         srid: 27700,
-        visibility: Visibility.Private,
+        visibility: Visibility.Public,
       },
     });
 
