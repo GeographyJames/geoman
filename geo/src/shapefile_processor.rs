@@ -1,8 +1,5 @@
 use anyhow::Context;
-use gdal::{
-    cpl::CslStringList,
-    vector::{Geometry, LayerAccess, OGRwkbGeometryType, geometry_type_to_name},
-};
+use gdal::vector::{Geometry, LayerAccess, OGRwkbGeometryType, geometry_type_to_name};
 
 #[derive(thiserror::Error, Debug)]
 pub enum ProcessingError {
@@ -20,8 +17,10 @@ pub enum ProcessingError {
     MultipleGeometries { expected: String, count: usize },
     #[error("unsupported geometry type: {0}")]
     UnsupportedGeometryType(String),
-    #[error("invalid geometry: {0}")]
-    InvaldGeometry(anyhow::Error),
+    #[error("feature {index} has invalid geometry")]
+    InvalidGeometry { index: usize },
+    #[error("merged geometry is invalid")]
+    InvalidMergedGeometry,
     #[error(transparent)]
     Unexpected(#[from] anyhow::Error),
 }
@@ -39,46 +38,39 @@ pub fn merge_geometries(
         let Some(geom) = feature.geometry() else {
             continue;
         };
-        let valid = geom
-            .make_valid(&CslStringList::new())
-            .context("failed to make geometry valid")
-            .map_err(ProcessingError::InvaldGeometry)?;
-        if valid.is_empty() {
+        if geom.is_empty() {
             continue;
         }
-        let valid_type = valid.geometry_type();
+        if !geom.is_valid() {
+            return Err(ProcessingError::InvalidGeometry { index });
+        }
+        let geom_type = geom.geometry_type();
 
-        if valid_type == single {
+        if geom_type == single {
             merged
-                .add_geometry(valid)
+                .add_geometry(geom.clone())
                 .context("failed to add geometry")?;
-        } else if valid_type == multi || valid_type == OGRwkbGeometryType::wkbGeometryCollection {
-            for i in 0..valid.geometry_count() {
-                let sub = valid.get_geometry(i);
-                let sub_type = sub.geometry_type();
-                if sub_type == single {
-                    merged
-                        .add_geometry(sub.clone())
-                        .context("failed to add sub-geometry")?;
-                } else if sub_type == multi {
-                    for j in 0..sub.geometry_count() {
-                        merged
-                            .add_geometry(sub.get_geometry(j).clone())
-                            .context("failed to add sub-geometry")?;
-                    }
-                }
+        } else if geom_type == multi {
+            for i in 0..geom.geometry_count() {
+                merged
+                    .add_geometry(geom.get_geometry(i).clone())
+                    .context("failed to add sub-geometry")?;
             }
         } else {
             return Err(ProcessingError::IncompatibleType {
                 index,
                 expected: geometry_type_to_name(expected_type),
-                found: geometry_type_to_name(valid_type),
+                found: geometry_type_to_name(geom_type),
             });
         }
     }
 
     if merged.is_empty() {
         return Err(ProcessingError::NoFeaturesWithGeometry);
+    }
+
+    if !merged.is_valid() {
+        return Err(ProcessingError::InvalidMergedGeometry);
     }
 
     if is_single && merged.geometry_count() > 1 {

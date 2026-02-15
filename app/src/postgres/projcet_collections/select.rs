@@ -73,6 +73,7 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
                       FROM app.project_features f
                      WHERE f.collection_id = c.id
                        AND f.project_id = $1
+                       AND f.status = 'ACTIVE'
                    ) as storage_crs_srid,
                    (SELECT CASE
                                WHEN bbox IS NOT NULL THEN
@@ -89,6 +90,7 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
                         FROM app.project_features f
                         WHERE f.collection_id = c.id
                           AND f.project_id = $1
+                          AND f.status = 'ACTIVE'
                     ) extent_sub) as extent
               FROM app.collections c
              WHERE EXISTS (
@@ -96,6 +98,7 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
                  FROM app.project_features f
                  WHERE f.collection_id = c.id
                    AND f.project_id = $1
+                   AND f.status = 'ACTIVE'
              )
                AND c.id = $2"#,
             params.project_id.0,
@@ -138,6 +141,7 @@ impl SelectAllWithParams for ProjectCollection {
                       FROM app.project_features f
                      WHERE f.collection_id = c.id
                        AND f.project_id = $1
+                       AND f.status = 'ACTIVE'
                    ) as storage_crs_srid,
                    (SELECT CASE
                                WHEN bbox IS NOT NULL THEN
@@ -154,6 +158,7 @@ impl SelectAllWithParams for ProjectCollection {
                         FROM app.project_features f
                         WHERE f.collection_id = c.id
                           AND f.project_id = $1
+                          AND f.status = 'ACTIVE'
                     ) extent_sub) as extent
   FROM app.collections c
   WHERE c.status = 'ACTIVE'

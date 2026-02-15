@@ -2,9 +2,11 @@ import { useAuth } from "@clerk/clerk-react";
 
 export class ApiError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  long_message: string
+  constructor(message: string, status: number, long_message: string) {
     super(message);
     this.status = status;
+    this.long_message = long_message
   }
 }
 
@@ -44,11 +46,15 @@ export function useApiRequest() {
       let message = `${response.statusText} (${response.status})`;
       const contentType = response.headers.get("content-type");
 
+      let long_message = "";
       if (contentType?.includes("application/json")) {
         try {
           const errorJson = await response.json();
           if (typeof errorJson?.message === "string") {
             message = errorJson.message;
+          }
+          if (typeof errorJson?.long_message === "string") {
+            long_message = errorJson.long_message;
           }
         } catch {
           // ignore
@@ -62,7 +68,7 @@ export function useApiRequest() {
         }
       }
 
-      throw new ApiError(message, response.status);
+      throw new ApiError(message, response.status, long_message);
     }
     if (response.status === 204) {
       return undefined

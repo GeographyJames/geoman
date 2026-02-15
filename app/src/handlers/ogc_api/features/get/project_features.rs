@@ -32,6 +32,7 @@ pub async fn get_project_features(
     query: web::Query<Query>,
 ) -> Result<HttpResponse, ApiError> {
     let (project_id, collection_id) = path.into_inner();
+    tracing::info!("\n\nselecting all features in {}\n\n", query.crs);
     let _project: ProjectName = repo
         .select_one(project_id)
         .await?

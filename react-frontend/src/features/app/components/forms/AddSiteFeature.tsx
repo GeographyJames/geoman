@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Shapefile } from "@/lib/shapefile";
 import { usePostProjectFeature } from "@/hooks/api/usePostProjectFeature";
 import { useAddFeature } from "../../contexts/AddFeatureContext";
+import { ApiError } from "@/lib/api";
 import type { FeatureCollection } from "geojson";
 import { parseShp, parseDbf, combine } from "shpjs";
 
@@ -30,7 +31,10 @@ const AddSiteFeatureInner = () => {
   const name = watch("name") as string;
   const [geojson, setGeojson] = useState<FeatureCollection | null>(null);
   const [prjText, setPrjText] = useState<string | null>(null);
-  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
+  const [nullGeometryCount, setNullGeometryCount] = useState(0);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     if (collections?.length && !selectedCollectionId) {
@@ -38,8 +42,12 @@ const AddSiteFeatureInner = () => {
     }
   }, [collections, selectedCollectionId]);
 
-  const selectedCollection = collections?.find((c) => String(c.id) === selectedCollectionId);
+  const selectedCollection = collections?.find(
+    (c) => String(c.id) === selectedCollectionId,
+  );
   const shapefileGeometryType = geojson?.features[0]?.geometry.type ?? null;
+
+  const emptyShapefile = geojson !== null && geojson.features.length === 0;
 
   const geometryMismatch = useMemo(() => {
     if (!selectedCollection || !shapefileGeometryType) return null;
@@ -67,12 +75,17 @@ const AddSiteFeatureInner = () => {
         onSuccess: () => {
           reset();
           setGeojson(null);
+          setNullGeometryCount(0);
           setPrjText(null);
           closeDialog();
           clear();
         },
         onError: (error) => {
-          addError(`Unable to add feature: ${error.message}`);
+          if (error instanceof ApiError && error.long_message) {
+            addError(error.long_message);
+          } else {
+            addError(`Unable to add feature: ${error.message}`);
+          }
         },
       },
     );
@@ -86,6 +99,7 @@ const AddSiteFeatureInner = () => {
         addError(result);
         setValue("name", null);
         setGeojson(null);
+          setNullGeometryCount(0);
         setPrjText(null);
         return;
       }
@@ -95,22 +109,34 @@ const AddSiteFeatureInner = () => {
         result.shp.arrayBuffer(),
         result.dbf.arrayBuffer(),
         result.prj.text(),
-      ]).then(([shp, dbf, prj]) => {
-        return [combine([parseShp(shp, prj), parseDbf(dbf)]), prj] as const;
-      }).then(([fc, prj]) => {
-        setGeojson(fc as FeatureCollection);
-        setPrjText(prj);
-      }).catch(() => {
-        setGeojson(null);
-        setPrjText(null);
-        addError("Failed to parse shapefile for preview");
-      });
+      ])
+        .then(([shp, dbf, prj]) => {
+          return [combine([parseShp(shp, prj), parseDbf(dbf)]), prj] as const;
+        })
+        .then(([fc, prj]) => {
+          const withGeometry = fc.features.filter((f) => f.geometry != null);
+          setNullGeometryCount(fc.features.length - withGeometry.length);
+          setGeojson({ ...fc, features: withGeometry } as FeatureCollection);
+          setPrjText(prj);
+        })
+        .catch(() => {
+          setGeojson(null);
+          setNullGeometryCount(0);
+          setPrjText(null);
+          addError("Failed to parse shapefile for preview");
+        });
     }
   }, [files]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Select name="collection" label="Select collection" required={true} onChange={setSelectedCollectionId} value={selectedCollectionId ?? undefined}>
+      <Select
+        name="collection"
+        label="Select collection"
+        required={true}
+        onChange={setSelectedCollectionId}
+        value={selectedCollectionId ?? undefined}
+      >
         {collections?.map((c) => (
           <option key={c.id} value={c.id}>
             {`${c.title} (${c.geometry_type})`}
@@ -127,7 +153,12 @@ const AddSiteFeatureInner = () => {
           required
         />
       </fieldset>
-      <ShapefilePreview geojson={geojson} prj={prjText} />
+      <ShapefilePreview geojson={geojson} prj={prjText} nullGeometryCount={nullGeometryCount} />
+      {emptyShapefile && (
+        <div role="alert" className="alert alert-warning text-sm">
+          Shapefile contains no features
+        </div>
+      )}
       {geometryMismatch && (
         <div role="alert" className="alert alert-warning text-sm">
           {geometryMismatch}
@@ -145,8 +176,25 @@ const AddSiteFeatureInner = () => {
         </div>
       </fieldset>
       <div className="modal-action">
-        <CancelButton onClick={() => { reset(); setGeojson(null); setPrjText(null); closeDialog(); clear(); }} disabled={isPending} />
-        <SubmitButton text="Add feature" loadingText="Adding..." loading={isPending} disabled={!geojson || !name?.trim() || !!geometryMismatch} />
+        <CancelButton
+          onClick={() => {
+            reset();
+            setGeojson(null);
+          setNullGeometryCount(0);
+            setPrjText(null);
+            closeDialog();
+            clear();
+          }}
+          disabled={isPending}
+        />
+        <SubmitButton
+          text="Add feature"
+          loadingText="Adding..."
+          loading={isPending}
+          disabled={
+            !geojson || !name?.trim() || !!geometryMismatch || emptyShapefile
+          }
+        />
       </div>
     </form>
   );

@@ -43,6 +43,7 @@ export function SiteDataTableHeadings({ children }: { children: ReactNode }) {
         <th className="w-12 p-0">Id</th>
         <th className="w-6 p-0 text-center"></th>
         <th className="p-0">Name</th>
+        <th className="w-16 p-0">CRS</th>
         {children}
         <th className="w-11 p-0 text-center">Primary</th>
         <th className="w-8"></th>
@@ -99,6 +100,9 @@ export function SiteDataTableRow({
             )}
           </span>
         </label>
+      </td>
+      <td className="p-0 text-sm">
+        EPSG:{item.properties.storage_crs_srid}
       </td>
       {children}
 

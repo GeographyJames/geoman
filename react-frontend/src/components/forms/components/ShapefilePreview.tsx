@@ -7,12 +7,14 @@ import OSM from "ol/source/OSM";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import GeoJSON from "ol/format/GeoJSON";
+import { isEmpty } from "ol/extent";
 import { Style, Stroke, Fill, Circle } from "ol/style";
 import "ol/ol.css";
 
 interface ShapefilePreviewProps {
   geojson: FeatureCollection | null;
   prj: string | null;
+  nullGeometryCount: number;
 }
 
 function parseCrsName(prj: string): string {
@@ -20,7 +22,7 @@ function parseCrsName(prj: string): string {
   return match ? match[1] : prj.slice(0, 40);
 }
 
-export function ShapefilePreview({ geojson, prj }: ShapefilePreviewProps) {
+export function ShapefilePreview({ geojson, prj, nullGeometryCount }: ShapefilePreviewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<Map | null>(null);
 
@@ -60,7 +62,9 @@ export function ShapefilePreview({ geojson, prj }: ShapefilePreviewProps) {
     });
 
     const extent = vectorSource.getExtent();
-    map.getView().fit(extent, { padding: [40, 40, 40, 40], maxZoom: 18 });
+    if (!isEmpty(extent)) {
+      map.getView().fit(extent, { padding: [40, 40, 40, 40], maxZoom: 18 });
+    }
 
     mapInstanceRef.current = map;
 
@@ -82,9 +86,15 @@ export function ShapefilePreview({ geojson, prj }: ShapefilePreviewProps) {
         className="w-full rounded-lg border border-base-300 overflow-hidden"
         style={{ height: 300 }}
       />
-      <div className="flex gap-4 text-sm bg-base-200 rounded-lg px-3 py-2">
+      <div className="flex flex-wrap gap-4 text-sm bg-base-200 rounded-lg px-3 py-2">
         <span><span className="font-semibold">CRS:</span> {crs}</span>
         <span><span className="font-semibold">Geometry:</span> {geometryType}</span>
+        <span><span className="font-semibold">Features:</span> {geojson.features.length}</span>
+        {nullGeometryCount > 0 && (
+          <span className="text-warning font-semibold">
+            {nullGeometryCount} feature{nullGeometryCount > 1 ? "s" : ""} without geometry will be filtered out
+          </span>
+        )}
       </div>
     </div>
   );
