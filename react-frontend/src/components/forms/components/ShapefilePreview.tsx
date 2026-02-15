@@ -11,18 +11,22 @@ import { isEmpty } from "ol/extent";
 import { Style, Stroke, Fill, Circle } from "ol/style";
 import "ol/ol.css";
 
+interface CrsInfo {
+  srid: number;
+  name: string | null;
+}
+
 interface ShapefilePreviewProps {
   geojson: FeatureCollection | null;
-  prj: string | null;
+  crs: CrsInfo | null;
   nullGeometryCount: number;
 }
 
-function parseCrsName(prj: string): string {
-  const match = prj.match(/^[A-Z]+\["([^"]+)"/);
-  return match ? match[1] : prj.slice(0, 40);
-}
-
-export function ShapefilePreview({ geojson, prj, nullGeometryCount }: ShapefilePreviewProps) {
+export function ShapefilePreview({
+  geojson,
+  crs,
+  nullGeometryCount,
+}: ShapefilePreviewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<Map | null>(null);
 
@@ -77,7 +81,9 @@ export function ShapefilePreview({ geojson, prj, nullGeometryCount }: ShapefileP
   if (!geojson) return null;
 
   const geometryType = geojson.features[0]?.geometry.type ?? "Unknown";
-  const crs = prj ? parseCrsName(prj) : "Unknown";
+  const crsLabel = crs
+    ? `EPSG:${crs.srid}${crs.name ? ` — ${crs.name}` : ""}`
+    : "Unknown";
 
   return (
     <div className="space-y-2">
@@ -87,12 +93,20 @@ export function ShapefilePreview({ geojson, prj, nullGeometryCount }: ShapefileP
         style={{ height: 300 }}
       />
       <div className="flex flex-wrap gap-4 text-sm bg-base-200 rounded-lg px-3 py-2">
-        <span><span className="font-semibold">CRS:</span> {crs}</span>
-        <span><span className="font-semibold">Geometry:</span> {geometryType}</span>
-        <span><span className="font-semibold">Features:</span> {geojson.features.length}</span>
+        <span>
+          <span className="font-semibold">CRS:</span> {crsLabel}
+        </span>
+        <span>
+          <span className="font-semibold">Geometry:</span> {geometryType}
+        </span>
+        <span>
+          <span className="font-semibold">Features:</span>{" "}
+          {geojson.features.length}
+        </span>
         {nullGeometryCount > 0 && (
           <span className="text-warning font-semibold">
-            {nullGeometryCount} feature{nullGeometryCount > 1 ? "s" : ""} without geometry will be filtered out
+            {nullGeometryCount} feature{nullGeometryCount > 1 ? "s" : ""}{" "}
+            without geometry will be filtered out
           </span>
         )}
       </div>

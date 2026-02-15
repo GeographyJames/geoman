@@ -1,6 +1,6 @@
 use actix_web::{ResponseError, http::StatusCode};
 use domain::{FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName};
-use geo::virtual_shapefile::ShapefileError;
+use geo::{shapefile_processor::ProcessingError, virtual_shapefile::ShapefileError};
 use thiserror::Error;
 use utils::error_chain_fmt;
 
@@ -52,6 +52,8 @@ pub enum ApiError {
     #[error("You can only edit or delete collections you have added")]
     NotCollectionOwner,
     #[error("Error processing shapefile")]
+    ShapefileProcessing(#[from] ProcessingError),
+    #[error("Error processing shapefile")]
     Shapefile(#[from] ShapefileError),
 }
 
@@ -99,6 +101,7 @@ impl ResponseError for ApiError {
             ApiError::CollectionHasFeatures => StatusCode::CONFLICT,
             ApiError::NotCollectionOwner => StatusCode::FORBIDDEN,
             ApiError::DuplicateCollectionName => StatusCode::CONFLICT,
+            ApiError::ShapefileProcessing(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::Shapefile(_) => StatusCode::UNPROCESSABLE_ENTITY,
         }
     }

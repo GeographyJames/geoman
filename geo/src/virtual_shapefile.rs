@@ -219,6 +219,78 @@ impl Drop for VirtualFile {
     }
 }
 
+/// Extract the EPSG code from a .prj WKT string.
+/// Creates a minimal virtual shapefile with the .prj content so GDAL's shapefile driver
+/// can apply its full CRS matching logic (including FindMatches), which handles
+/// Esri-style WKT that lacks AUTHORITY tags.
+pub struct CrsInfo {
+    pub srid: i32,
+    pub name: Option<String>,
+}
+
+pub fn get_epsg_from_prj(prj: &str) -> Result<CrsInfo, ShapefileError> {
+    use gdal::vector::LayerOptions;
+
+    let file_id = Uuid::new_v4();
+    let filename = format!("/vsimem/{}", file_id);
+
+    // Create a minimal empty shapefile with a layer so GDAL writes valid .shp/.shx/.dbf
+    let driver = gdal::DriverManager::get_driver_by_name("ESRI Shapefile")
+        .context("failed to get shapefile driver")
+        .map_err(ShapefileError::UnexpectedError)?;
+    let mut ds = driver
+        .create_vector_only(format!("{filename}.shp"))
+        .context("failed to create virtual dataset")
+        .map_err(ShapefileError::UnexpectedError)?;
+    ds.create_layer(LayerOptions {
+        name: "dummy",
+        ty: gdal::vector::OGRwkbGeometryType::wkbPoint,
+        ..Default::default()
+    })
+    .context("failed to create layer")
+    .map_err(ShapefileError::UnexpectedError)?;
+    ds.flush_cache()
+        .context("failed to flush dataset")
+        .map_err(ShapefileError::UnexpectedError)?;
+    ds.close()
+        .context("failed to close dataset")
+        .map_err(ShapefileError::UnexpectedError)?;
+
+    // Write the real .prj content over the generated one
+    let prj_path = format!("{filename}.prj");
+    let _ = vsi::unlink_mem_file(&prj_path);
+    vsi::create_mem_file(&prj_path, prj.as_bytes().to_vec())
+        .context("failed to create virtual .prj file")
+        .map_err(ShapefileError::UnexpectedError)?;
+
+    // Re-open the shapefile - GDAL's driver will read our .prj and apply full CRS matching
+    let ds = gdal::Dataset::open(format!("{filename}.shp"))
+        .context("failed to open virtual shapefile")
+        .map_err(ShapefileError::UnexpectedError)?;
+    let layer = ds
+        .layers()
+        .next()
+        .context("no layers on virtual shapefile")
+        .map_err(ShapefileError::UnexpectedError)?;
+    let srs = layer
+        .spatial_ref()
+        .context("no spatial reference on layer")
+        .map_err(ShapefileError::InvalidData)?;
+    let code = srs
+        .auth_code()
+        .context("failed to extract EPSG code")
+        .map_err(ShapefileError::InvalidData)?;
+    let name = srs.name();
+
+    // Cleanup virtual files
+    let _ = vsi::unlink_mem_file(&format!("{filename}.shp"));
+    let _ = vsi::unlink_mem_file(&format!("{filename}.shx"));
+    let _ = vsi::unlink_mem_file(&format!("{filename}.dbf"));
+    let _ = vsi::unlink_mem_file(&prj_path);
+
+    Ok(CrsInfo { srid: code, name })
+}
+
 #[cfg(test)]
 mod tests {
     use std::fs;
@@ -226,6 +298,24 @@ mod tests {
     use super::*;
     use claims::{assert_err, assert_ok};
     use gdal::{Dataset, vector::LayerAccess};
+
+    #[test]
+    fn get_epsg_from_esri_style_prj_works() {
+        let prj = fs::read_to_string("../test-data/shapefiles/3_valid_polygon_osgb36.prj")
+            .expect("failed to read .prj file");
+        let crs = get_epsg_from_prj(&prj).expect("failed to extract EPSG code");
+        assert_eq!(crs.srid, 27700);
+        assert_eq!(crs.name.as_deref(), Some("OSGB36 / British National Grid"));
+    }
+
+    #[test]
+    fn get_epsg_from_standard_wkt_works() {
+        let srs = gdal::spatial_ref::SpatialRef::from_epsg(4326)
+            .expect("failed to create spatial ref");
+        let wkt = srs.to_wkt().expect("failed to convert to WKT");
+        let crs = get_epsg_from_prj(&wkt).expect("failed to extract EPSG code");
+        assert_eq!(crs.srid, 4326);
+    }
 
     #[test]
     fn virtual_file_works() {

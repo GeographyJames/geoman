@@ -1,4 +1,5 @@
 pub mod app_settings;
+pub mod epsg;
 pub mod features;
 pub mod keys;
 pub mod project_collections;

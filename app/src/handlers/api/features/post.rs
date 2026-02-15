@@ -64,9 +64,8 @@ pub async fn post_project_feature_shapefile(
     let target_srid = projcet_srid.unwrap_or(srid);
     let geom_type = repo.get_collection_geom_type(collection_id).await?;
     let expected_type: OGRwkbGeometryType::Type = geom_type.into();
-    let geom = merge_geometries(&ds, expected_type)
-        .context("failed to merge geometries")
-        .map_err(ShapefileError::InvalidData)?;
+    let geom = merge_geometries(&ds, expected_type)?;
+
     let input_dto = FeatureInputDTO {
         name: name.0,
         primary: primary.map(|p| p.0),

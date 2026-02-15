@@ -9,6 +9,7 @@ api:
   collections: "/collections"
   app_settings: "/app-settings"
   project_features: "/features"
+  epsg: "/epsg"
 
 docs:
   base: "/docs"

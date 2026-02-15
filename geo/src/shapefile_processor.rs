@@ -17,7 +17,7 @@ pub enum ProcessingError {
     MultipleGeometries { expected: String, count: usize },
     #[error("unsupported geometry type: {0}")]
     UnsupportedGeometryType(String),
-    #[error("feature {index} has invalid geometry")]
+    #[error("feature with invalid geometry. Try fixing the geometries and try again.")]
     InvalidGeometry { index: usize },
     #[error("merged geometry is invalid")]
     InvalidMergedGeometry,

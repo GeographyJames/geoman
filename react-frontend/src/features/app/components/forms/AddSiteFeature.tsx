@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { useEffect, useMemo, useState } from "react";
 import { Shapefile } from "@/lib/shapefile";
 import { usePostProjectFeature } from "@/hooks/api/usePostProjectFeature";
+import { usePostEpsg, type CrsInfo } from "@/hooks/api/usePostEpsg";
 import { useAddFeature } from "../../contexts/AddFeatureContext";
 import { ApiError } from "@/lib/api";
 import type { FeatureCollection } from "geojson";
@@ -28,13 +29,15 @@ const AddSiteFeatureInner = () => {
   const { data: collections } = useCollections();
   const { addError, clearErrors, closeDialog } = useModal();
   const { mutate: postFeature, isPending } = usePostProjectFeature();
+  const { mutate: postEpsg } = usePostEpsg();
   const { register, watch, setValue, reset } = useForm();
   const files = watch("files") as FileList;
   const name = watch("name") as string;
   const [geojson, setGeojson] = useState<FeatureCollection | null>(null);
-  const [prjText, setPrjText] = useState<string | null>(null);
   const [nullGeometryCount, setNullGeometryCount] = useState(0);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [shapefileCrs, setShapefileCrs] = useState<CrsInfo | null>(null);
+  const [crsError, setCrsError] = useState(false);
   const [selectedCollectionId, setSelectedCollectionId] = useState<
     string | null
   >(null);
@@ -51,6 +54,12 @@ const AddSiteFeatureInner = () => {
   const shapefileGeometryType = geojson?.features[0]?.geometry.type ?? null;
 
   const emptyShapefile = geojson !== null && geojson.features.length === 0;
+
+  const projectSrid = project?.outputDto.properties.crs_srid ?? null;
+  const willReproject =
+    projectSrid !== null &&
+    shapefileCrs !== null &&
+    projectSrid !== shapefileCrs.srid;
 
   const tooManyFeatures =
     selectedCollection != null &&
@@ -85,8 +94,9 @@ const AddSiteFeatureInner = () => {
           reset();
           setGeojson(null);
           setNullGeometryCount(0);
-          setPrjText(null);
           setFileError(null);
+          setShapefileCrs(null);
+        setCrsError(false);
           closeDialog();
           clear();
         },
@@ -111,7 +121,8 @@ const AddSiteFeatureInner = () => {
         setValue("name", null);
         setGeojson(null);
         setNullGeometryCount(0);
-        setPrjText(null);
+        setShapefileCrs(null);
+        setCrsError(false);
         return;
       }
       setValue("name", result.filename);
@@ -128,12 +139,22 @@ const AddSiteFeatureInner = () => {
           const withGeometry = fc.features.filter((f) => f.geometry != null);
           setNullGeometryCount(fc.features.length - withGeometry.length);
           setGeojson({ ...fc, features: withGeometry } as FeatureCollection);
-          setPrjText(prj);
+          postEpsg(prj, {
+            onSuccess: (crs) => {
+              setShapefileCrs(crs);
+              setCrsError(false);
+            },
+            onError: () => {
+              setShapefileCrs(null);
+              setCrsError(true);
+            },
+          });
         })
         .catch(() => {
           setGeojson(null);
           setNullGeometryCount(0);
-          setPrjText(null);
+          setShapefileCrs(null);
+        setCrsError(false);
           setFileError("Failed to parse shapefile");
         });
     }
@@ -171,7 +192,7 @@ const AddSiteFeatureInner = () => {
       )}
       <ShapefilePreview
         geojson={geojson}
-        prj={prjText}
+        crs={shapefileCrs}
         nullGeometryCount={nullGeometryCount}
       />
       {emptyShapefile && (
@@ -186,7 +207,20 @@ const AddSiteFeatureInner = () => {
       )}
       {tooManyFeatures && (
         <div role="alert" className="alert alert-warning text-sm">
-          Shapefile has {geojson?.features.length} features but {selectedCollection?.geometry_type} collections only accept a single feature
+          Shapefile has {geojson?.features.length} features but{" "}
+          {selectedCollection?.geometry_type} collections only accept a single
+          feature
+        </div>
+      )}
+      {willReproject && (
+        <div role="alert" className="alert alert-success text-sm">
+          Features will be reprojected from EPSG:{shapefileCrs?.srid} to project
+          CRS EPSG:{projectSrid}
+        </div>
+      )}
+      {crsError && (
+        <div role="alert" className="alert alert-warning text-sm">
+          Unable to identify shapefile CRS
         </div>
       )}
       <fieldset className="fieldset w-full">
@@ -206,8 +240,9 @@ const AddSiteFeatureInner = () => {
             reset();
             setGeojson(null);
             setNullGeometryCount(0);
-            setPrjText(null);
-            setFileError(null);
+              setFileError(null);
+            setShapefileCrs(null);
+        setCrsError(false);
             closeDialog();
             clear();
           }}
@@ -222,6 +257,7 @@ const AddSiteFeatureInner = () => {
             !name?.trim() ||
             !!geometryMismatch ||
             !!fileError ||
+            crsError ||
             emptyShapefile ||
             tooManyFeatures
           }
