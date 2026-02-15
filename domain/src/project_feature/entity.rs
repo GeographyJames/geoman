@@ -16,6 +16,7 @@ pub struct ProjectFeature {
 pub struct Properties {
     pub collection_id: i32,
     pub project_id: i32,
+    pub id: i32,
     pub name: String,
     pub storage_crs_srid: i32,
     pub is_primary: bool,

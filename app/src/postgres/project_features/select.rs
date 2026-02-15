@@ -62,6 +62,7 @@ impl TryInto<ProjectFeature> for ProjectFeatureRow {
         Ok(ProjectFeature {
             id,
             properties: Properties {
+                id,
                 collection_id,
                 project_id,
                 name,

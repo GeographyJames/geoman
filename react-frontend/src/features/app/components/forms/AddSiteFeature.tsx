@@ -12,11 +12,6 @@ import { ApiError } from "@/lib/api";
 import type { FeatureCollection } from "geojson";
 import { parseShp, parseDbf, combine } from "shpjs";
 
-function parseEpsgCode(prj: string): number | null {
-  const match = prj.match(/AUTHORITY\["EPSG","(\d+)"\]/);
-  return match ? Number(match[1]) : null;
-}
-
 const COMPATIBLE_GEOMETRY: Record<string, string[]> = {
   Point: ["Point"],
   MultiPoint: ["Point", "MultiPoint"],
@@ -39,6 +34,7 @@ const AddSiteFeatureInner = () => {
   const [geojson, setGeojson] = useState<FeatureCollection | null>(null);
   const [prjText, setPrjText] = useState<string | null>(null);
   const [nullGeometryCount, setNullGeometryCount] = useState(0);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [selectedCollectionId, setSelectedCollectionId] = useState<
     string | null
   >(null);
@@ -55,14 +51,6 @@ const AddSiteFeatureInner = () => {
   const shapefileGeometryType = geojson?.features[0]?.geometry.type ?? null;
 
   const emptyShapefile = geojson !== null && geojson.features.length === 0;
-
-  const projectSrid = project?.outputDto.properties.crs_srid ?? null;
-  const shapefileSrid = prjText ? parseEpsgCode(prjText) : null;
-  console.log(`project crs = ${projectSrid} shapefile crs = ${shapefileSrid}`);
-  const willReproject =
-    projectSrid !== null &&
-    shapefileSrid !== null &&
-    projectSrid !== shapefileSrid;
 
   const tooManyFeatures =
     selectedCollection != null &&
@@ -87,7 +75,7 @@ const AddSiteFeatureInner = () => {
     const name = formData.get("name") as string;
     const shapefile = Shapefile.fromFieldValues({ files });
     if (typeof shapefile === "string") {
-      addError(shapefile);
+      setFileError(shapefile);
       return;
     }
     postFeature(
@@ -98,6 +86,7 @@ const AddSiteFeatureInner = () => {
           setGeojson(null);
           setNullGeometryCount(0);
           setPrjText(null);
+          setFileError(null);
           closeDialog();
           clear();
         },
@@ -114,10 +103,11 @@ const AddSiteFeatureInner = () => {
 
   useEffect(() => {
     if (files instanceof FileList && files.length > 0) {
+      setFileError(null);
       clearErrors();
       const result = Shapefile.fromFilesList(files);
       if (typeof result === "string") {
-        addError(result);
+        setFileError(result);
         setValue("name", null);
         setGeojson(null);
         setNullGeometryCount(0);
@@ -144,7 +134,7 @@ const AddSiteFeatureInner = () => {
           setGeojson(null);
           setNullGeometryCount(0);
           setPrjText(null);
-          addError("Failed to parse shapefile for preview");
+          setFileError("Failed to parse shapefile");
         });
     }
   }, [files]);
@@ -174,6 +164,11 @@ const AddSiteFeatureInner = () => {
           required
         />
       </fieldset>
+      {fileError && (
+        <div role="alert" className="alert alert-warning text-sm">
+          {fileError}
+        </div>
+      )}
       <ShapefilePreview
         geojson={geojson}
         prj={prjText}
@@ -194,12 +189,6 @@ const AddSiteFeatureInner = () => {
           Shapefile has {geojson?.features.length} features but {selectedCollection?.geometry_type} collections only accept a single feature
         </div>
       )}
-      {willReproject && (
-        <div role="alert" className="alert alert-info text-sm">
-          Features will be reprojected from EPSG:{shapefileSrid} to project CRS
-          EPSG:{projectSrid}
-        </div>
-      )}
       <fieldset className="fieldset w-full">
         <legend className="fieldset-legend">Name</legend>
         <div className="flex items-center gap-2">
@@ -218,6 +207,7 @@ const AddSiteFeatureInner = () => {
             setGeojson(null);
             setNullGeometryCount(0);
             setPrjText(null);
+            setFileError(null);
             closeDialog();
             clear();
           }}
@@ -231,6 +221,7 @@ const AddSiteFeatureInner = () => {
             !geojson ||
             !name?.trim() ||
             !!geometryMismatch ||
+            !!fileError ||
             emptyShapefile ||
             tooManyFeatures
           }
