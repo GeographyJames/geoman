@@ -12,6 +12,11 @@ import { ApiError } from "@/lib/api";
 import type { FeatureCollection } from "geojson";
 import { parseShp, parseDbf, combine } from "shpjs";
 
+function parseEpsgCode(prj: string): number | null {
+  const match = prj.match(/AUTHORITY\["EPSG","(\d+)"\]/);
+  return match ? Number(match[1]) : null;
+}
+
 const COMPATIBLE_GEOMETRY: Record<string, string[]> = {
   Point: ["Point"],
   MultiPoint: ["Point", "MultiPoint"],
@@ -20,6 +25,8 @@ const COMPATIBLE_GEOMETRY: Record<string, string[]> = {
   Polygon: ["Polygon"],
   MultiPolygon: ["Polygon", "MultiPolygon"],
 };
+
+const SINGLE_GEOMETRY_TYPES = ["Point", "LineString", "Polygon"];
 
 const AddSiteFeatureInner = () => {
   const { project, clear } = useAddFeature();
@@ -48,6 +55,20 @@ const AddSiteFeatureInner = () => {
   const shapefileGeometryType = geojson?.features[0]?.geometry.type ?? null;
 
   const emptyShapefile = geojson !== null && geojson.features.length === 0;
+
+  const projectSrid = project?.outputDto.properties.crs_srid ?? null;
+  const shapefileSrid = prjText ? parseEpsgCode(prjText) : null;
+  console.log(`project crs = ${projectSrid} shapefile crs = ${shapefileSrid}`);
+  const willReproject =
+    projectSrid !== null &&
+    shapefileSrid !== null &&
+    projectSrid !== shapefileSrid;
+
+  const tooManyFeatures =
+    selectedCollection != null &&
+    geojson != null &&
+    SINGLE_GEOMETRY_TYPES.includes(selectedCollection.geometry_type) &&
+    geojson.features.length > 1;
 
   const geometryMismatch = useMemo(() => {
     if (!selectedCollection || !shapefileGeometryType) return null;
@@ -99,7 +120,7 @@ const AddSiteFeatureInner = () => {
         addError(result);
         setValue("name", null);
         setGeojson(null);
-          setNullGeometryCount(0);
+        setNullGeometryCount(0);
         setPrjText(null);
         return;
       }
@@ -153,7 +174,11 @@ const AddSiteFeatureInner = () => {
           required
         />
       </fieldset>
-      <ShapefilePreview geojson={geojson} prj={prjText} nullGeometryCount={nullGeometryCount} />
+      <ShapefilePreview
+        geojson={geojson}
+        prj={prjText}
+        nullGeometryCount={nullGeometryCount}
+      />
       {emptyShapefile && (
         <div role="alert" className="alert alert-warning text-sm">
           Shapefile contains no features
@@ -162,6 +187,17 @@ const AddSiteFeatureInner = () => {
       {geometryMismatch && (
         <div role="alert" className="alert alert-warning text-sm">
           {geometryMismatch}
+        </div>
+      )}
+      {tooManyFeatures && (
+        <div role="alert" className="alert alert-warning text-sm">
+          Shapefile has {geojson?.features.length} features but {selectedCollection?.geometry_type} collections only accept a single feature
+        </div>
+      )}
+      {willReproject && (
+        <div role="alert" className="alert alert-info text-sm">
+          Features will be reprojected from EPSG:{shapefileSrid} to project CRS
+          EPSG:{projectSrid}
         </div>
       )}
       <fieldset className="fieldset w-full">
@@ -180,7 +216,7 @@ const AddSiteFeatureInner = () => {
           onClick={() => {
             reset();
             setGeojson(null);
-          setNullGeometryCount(0);
+            setNullGeometryCount(0);
             setPrjText(null);
             closeDialog();
             clear();
@@ -192,7 +228,11 @@ const AddSiteFeatureInner = () => {
           loadingText="Adding..."
           loading={isPending}
           disabled={
-            !geojson || !name?.trim() || !!geometryMismatch || emptyShapefile
+            !geojson ||
+            !name?.trim() ||
+            !!geometryMismatch ||
+            emptyShapefile ||
+            tooManyFeatures
           }
         />
       </div>

@@ -24,7 +24,8 @@ impl Insert for (&FeatureInputDTO, ProjectId, ProjectCollectionId, UserId) {
                             is_primary,
                             geom
                             )
-                            VALUES ($1, $2, $3, $4, $4, COALESCE($5, false), ST_GeomFromWKB($6, $7)) RETURNING id AS "id: FeatureId"
+                            VALUES ($1, $2, $3, $4, $4, COALESCE($5, false), ST_Transform(ST_GeomFromWKB($6, $7), $8::int))
+                            RETURNING id AS "id: FeatureId"
 
         "#,
             project_id.0,
@@ -33,7 +34,8 @@ impl Insert for (&FeatureInputDTO, ProjectId, ProjectCollectionId, UserId) {
             user_id.0,
             dto.primary,
             dto.geom_wkb,
-            dto.srid
+            dto.srid,
+            dto.target_srid
         )
         .fetch_one(&mut *conn)
         .await?;

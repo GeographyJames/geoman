@@ -39,7 +39,9 @@ export const ProjectPanel = ({ project }: { project: Project }) => {
         <p>
           {project.name}{" "}
           <span className="text-sm font-normal text-base-content/70">
-            {project.archived && "(archived)"}
+            {project.outputDto.properties.crs_srid &&
+              `EPSG:${project.outputDto.properties.crs_srid}`}
+            {project.archived && " (archived)"}
           </span>
         </p>
         <div className="flex items-center gap-2 font-normal">

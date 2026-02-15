@@ -61,14 +61,7 @@ pub async fn post_project_feature_shapefile(
         .auth_code()
         .context("failed to retrive spatial ref auth code")
         .map_err(ShapefileError::InvalidData)?;
-    if let Some(p_srid) = projcet_srid
-        && srid != p_srid
-    {
-        return Err(ShapefileError::InvalidData(anyhow::anyhow!(
-            "spatial ref does not match project spatial ref"
-        ))
-        .into());
-    }
+    let target_srid = projcet_srid.unwrap_or(srid);
     let geom_type = repo.get_collection_geom_type(collection_id).await?;
     let expected_type: OGRwkbGeometryType::Type = geom_type.into();
     let geom = merge_geometries(&ds, expected_type)
@@ -82,6 +75,7 @@ pub async fn post_project_feature_shapefile(
             .context("failed to create WKB")
             .map_err(ShapefileError::UnexpectedError)?,
         srid,
+        target_srid,
     };
     let feature_id = repo
         .insert(&(&input_dto, project_id, collection_id, user.id))
