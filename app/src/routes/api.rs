@@ -3,7 +3,7 @@ use crate::{
     enums::GeoManEnvironment,
     handlers::api::{
         app_settings::get_app_settings,
-        epsg::post_epsg,
+        epsg::{post_epsg, post_epsg_from_shz},
         features::{patch::patch_project_feature, post::post_project_feature_shapefile},
         keys::{generate_api_key, get_api_keys, renew_api_key, revoke_api_key},
         project_collections::{get_collections, patch_collection, post_project_collection},
@@ -94,5 +94,9 @@ pub fn project_features_routes(cfg: &mut web::ServiceConfig) {
 }
 
 pub fn epsg_routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(scope(&URLS.api.epsg).service(post_epsg));
+    cfg.service(
+        scope(&URLS.api.epsg)
+            .service(post_epsg)
+            .service(post_epsg_from_shz),
+    );
 }

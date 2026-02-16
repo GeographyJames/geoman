@@ -8,10 +8,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Shapefile } from "@/lib/shapefile";
 import { usePostProjectFeature } from "@/hooks/api/usePostProjectFeature";
 import { usePostEpsg, type CrsInfo } from "@/hooks/api/usePostEpsg";
+import { usePostEpsgFromShz } from "@/hooks/api/usePostEpsgFromShz";
 import { useAddFeature } from "../../contexts/AddFeatureContext";
 import { ApiError } from "@/lib/api";
 import type { FeatureCollection } from "geojson";
-import { parseShp, parseDbf, combine } from "shpjs";
+import { parseShp, parseDbf, combine, parseZip } from "shpjs";
 
 const COMPATIBLE_GEOMETRY: Record<string, string[]> = {
   Point: ["Point"],
@@ -30,6 +31,7 @@ const AddSiteFeatureInner = () => {
   const { addError, clearErrors, closeDialog } = useModal();
   const { mutate: postFeature, isPending } = usePostProjectFeature();
   const { mutate: postEpsg } = usePostEpsg();
+  const { mutate: postEpsgFromShz } = usePostEpsgFromShz();
   const { register, watch, setValue, reset } = useForm();
   const files = watch("files") as FileList;
   const name = watch("name") as string;
@@ -111,6 +113,24 @@ const AddSiteFeatureInner = () => {
     );
   };
 
+  const fetchCrs = (result: Shapefile) => {
+    const crsCallbacks = {
+      onSuccess: (crs: CrsInfo) => {
+        setShapefileCrs(crs);
+        setCrsError(false);
+      },
+      onError: () => {
+        setShapefileCrs(null);
+        setCrsError(true);
+      },
+    };
+    if (result.isZipped) {
+      postEpsgFromShz(result.shz!, crsCallbacks);
+    } else {
+      result.prj!.text().then((prj) => postEpsg(prj, crsCallbacks));
+    }
+  };
+
   useEffect(() => {
     if (files instanceof FileList && files.length > 0) {
       setFileError(null);
@@ -127,34 +147,31 @@ const AddSiteFeatureInner = () => {
       }
       setValue("name", result.filename);
 
-      Promise.all([
-        result.shp.arrayBuffer(),
-        result.dbf.arrayBuffer(),
-        result.prj.text(),
-      ])
-        .then(([shp, dbf, prj]) => {
-          return [combine([parseShp(shp, prj), parseDbf(dbf)]), prj] as const;
-        })
-        .then(([fc, prj]) => {
+      const parsePromise: Promise<FeatureCollection> = result.isZipped
+        ? result.shz!.arrayBuffer().then(async (buf) => {
+            const parsed = await parseZip(buf);
+            return (Array.isArray(parsed) ? parsed[0] : parsed) as FeatureCollection;
+          })
+        : Promise.all([
+            result.shp!.arrayBuffer(),
+            result.dbf!.arrayBuffer(),
+            result.prj!.text(),
+          ]).then(([shp, dbf, prj]) =>
+            combine([parseShp(shp, prj), parseDbf(dbf)]) as FeatureCollection,
+          );
+
+      parsePromise
+        .then((fc) => {
           const withGeometry = fc.features.filter((f) => f.geometry != null);
           setNullGeometryCount(fc.features.length - withGeometry.length);
           setGeojson({ ...fc, features: withGeometry } as FeatureCollection);
-          postEpsg(prj, {
-            onSuccess: (crs) => {
-              setShapefileCrs(crs);
-              setCrsError(false);
-            },
-            onError: () => {
-              setShapefileCrs(null);
-              setCrsError(true);
-            },
-          });
+          fetchCrs(result);
         })
         .catch(() => {
           setGeojson(null);
           setNullGeometryCount(0);
           setShapefileCrs(null);
-        setCrsError(false);
+          setCrsError(false);
           setFileError("Failed to parse shapefile");
         });
     }
