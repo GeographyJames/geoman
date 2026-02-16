@@ -1,8 +1,8 @@
 CREATE TABLE app.collections (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     title text NOT NULL,
-    slug text NOT NULL,
-    description TEXT CHECK (slug ~ '[a-z]' AND slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
+    slug text NOT NULL CHECK (slug ~ '[a-z]' AND slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
+    description TEXT,
     status app.status NOT NULL DEFAULT 'ACTIVE',
     geometry_type geometry_type NOT NULL,
     added_by integer NOT NULL REFERENCES app.users(id),

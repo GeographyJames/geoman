@@ -1,4 +1,4 @@
-mod error;
+pub mod error;
 pub mod traits;
 pub use error::RepositoryError;
 mod pool_wrapper;

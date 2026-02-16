@@ -9,7 +9,10 @@ use crate::{
         PROJECT_COLLECTION_SLUG_UNIQUE, PROJECT_COLLECTIONS_TITLE_UNIQUE, PROJECT_CRS_ID_FKEY,
         PROJECT_NAME_UNIQUE, PROJECT_SLUG_UNIQUE,
     },
-    repo::RepositoryError,
+    repo::{
+        RepositoryError,
+        error::{CheckKey, ForeignKey, UniqueKey},
+    },
     types::ErrorResponse,
 };
 
@@ -57,6 +60,12 @@ pub enum ApiError {
     ShapefileProcessing(#[from] ProcessingError),
     #[error("Error processing shapefile")]
     Shapefile(#[from] ShapefileError),
+    #[error("Database check constraint violation: {0}")]
+    DatabaseCheckConstraintViolation(CheckKey),
+    #[error("Database uniques violation: {0}")]
+    DatabaseUniqueViolation(UniqueKey),
+    #[error("Foregin key violation: {0}")]
+    DatabaseForeignKeyViolation(ForeignKey),
 }
 
 impl From<RepositoryError> for ApiError {
@@ -65,20 +74,24 @@ impl From<RepositoryError> for ApiError {
             RepositoryError::UnexpectedSqlx(_) => Self::UnexpectedDatabase(value),
             RepositoryError::RowNotFound => Self::ResourceNotFound(value),
             RepositoryError::UnknownUniqueViolation(_) => Self::Conflict(value),
-            RepositoryError::UniqueKeyViolation(ref unique_key) => match unique_key.as_str() {
+            RepositoryError::UniqueKeyViolation(unique_key) => match unique_key.as_str() {
                 PROJECT_NAME_UNIQUE => ApiError::DuplicateProjectName,
                 PROJECT_SLUG_UNIQUE => ApiError::DuplicateProjectSlug,
                 PROJECT_COLLECTIONS_TITLE_UNIQUE => ApiError::DuplicateCollectionName,
                 PROJECT_COLLECTION_SLUG_UNIQUE => ApiError::DuplicateCollectionSlug,
-                _ => ApiError::Conflict(value),
+                _ => Self::DatabaseUniqueViolation(unique_key),
             },
-            RepositoryError::ForeignKeyViolation(ref fkey, error) => match fkey.as_str() {
+            RepositoryError::ForeignKeyViolation(fkey, _) => match fkey.as_str() {
                 PROJECT_CRS_ID_FKEY => ApiError::InvalidCRSID,
-                _ => ApiError::UnexpectedDatabase(error.into()),
+                _ => Self::DatabaseForeignKeyViolation(fkey),
             },
             RepositoryError::UnknownForeignKeyViolation(error) => {
                 ApiError::UnexpectedDatabase(error.into())
             }
+            RepositoryError::CheckConstraintViolation(check_key) => {
+                ApiError::DatabaseCheckConstraintViolation(check_key)
+            }
+            RepositoryError::UnknowConstraintViolation(_) => ApiError::UnexpectedDatabase(value),
         }
     }
 }
@@ -107,6 +120,9 @@ impl ResponseError for ApiError {
             ApiError::DuplicateCollectionSlug => StatusCode::CONFLICT,
             ApiError::ShapefileProcessing(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::Shapefile(_) => StatusCode::UNPROCESSABLE_ENTITY,
+            ApiError::DatabaseCheckConstraintViolation(_) => StatusCode::UNPROCESSABLE_ENTITY,
+            ApiError::DatabaseUniqueViolation(_) => StatusCode::CONFLICT,
+            ApiError::DatabaseForeignKeyViolation(_) => StatusCode::UNPROCESSABLE_ENTITY,
         }
     }
 

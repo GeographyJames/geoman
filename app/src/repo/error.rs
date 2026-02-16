@@ -16,6 +16,10 @@ pub enum RepositoryError {
     ForeignKeyViolation(ForeignKey, sqlx::Error),
     #[error("{0}")]
     UnknownForeignKeyViolation(sqlx::Error),
+    #[error("check constraint violation: {0}")]
+    CheckConstraintViolation(CheckKey),
+    #[error("{0}")]
+    UnknowConstraintViolation(sqlx::Error),
 }
 
 impl From<sqlx::Error> for RepositoryError {
@@ -33,6 +37,13 @@ impl From<sqlx::Error> for RepositoryError {
                 match key {
                     Some(key) => RepositoryError::ForeignKeyViolation(key, error),
                     None => RepositoryError::UnknownForeignKeyViolation(error),
+                }
+            }
+            sqlx::Error::Database(ref db_err) if db_err.is_check_violation() => {
+                let key = db_err.constraint().map(|s| CheckKey(s.to_string()));
+                match key {
+                    Some(key) => RepositoryError::CheckConstraintViolation(key),
+                    None => RepositoryError::UnknowConstraintViolation(error),
                 }
             }
             sqlx::Error::RowNotFound => RepositoryError::RowNotFound,
@@ -65,6 +76,21 @@ impl Display for ForeignKey {
 }
 
 impl ForeignKey {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct CheckKey(pub String);
+
+impl Display for CheckKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl CheckKey {
     pub fn as_str(&self) -> &str {
         self.0.as_str()
     }
