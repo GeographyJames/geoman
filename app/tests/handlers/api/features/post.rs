@@ -8,9 +8,8 @@ use gdal::{
 use crate::common::{
     AppBuilder, Auth,
     helpers::{
-        add_layer, add_shapefile_to_form, add_shz_to_form, assert_ok,
-        create_gdal_multipolygon_bng, create_shapefile_dataset, dataset_to_shapefile_data,
-        handle_json_response,
+        add_layer, add_shapefile_to_form, add_shz_to_form, assert_ok, create_gdal_multipolygon_bng,
+        create_shapefile_dataset, dataset_to_shapefile_data, handle_json_response,
     },
 };
 
@@ -90,8 +89,7 @@ async fn post_shapefile_works_with_shz() {
         .expect("failed to add geom");
     dataset.flush_cache().expect("failed to flush cache");
     dataset.close().expect("failed to close dataset");
-    let shz_bytes =
-        get_vsi_mem_file_bytes_owned(&shz_filename).expect("failed to read shz bytes");
+    let shz_bytes = get_vsi_mem_file_bytes_owned(&shz_filename).expect("failed to read shz bytes");
     let form = add_shz_to_form(shz_bytes, reqwest::multipart::Form::new())
         .text("name", uuid::Uuid::new_v4().to_string());
     let response = app

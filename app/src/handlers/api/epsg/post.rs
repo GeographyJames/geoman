@@ -1,7 +1,7 @@
 use actix_multipart::form::{MultipartForm, tempfile::TempFile};
 use actix_web::{post, web::Json};
 use anyhow::Context;
-use gdal::{vsi, vector::LayerAccess};
+use gdal::{vector::LayerAccess, vsi};
 use geo::virtual_shapefile::{ShapefileError, get_epsg_from_prj};
 use serde::{Deserialize, Serialize};
 use std::io::Read;

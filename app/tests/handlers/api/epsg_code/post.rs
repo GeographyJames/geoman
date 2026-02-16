@@ -1,8 +1,6 @@
 use crate::common::{
-    helpers::{
-        add_layer, assert_ok, create_gdal_multipolygon_bng, handle_json_response,
-    },
     AppBuilder, Auth,
+    helpers::{add_layer, assert_ok, create_gdal_multipolygon_bng, handle_json_response},
 };
 use gdal::vector::{LayerAccess, OGRwkbGeometryType};
 use gdal::vsi::get_vsi_mem_file_bytes_owned;
@@ -38,8 +36,7 @@ pub async fn returns_epsg_code_for_esri_style_prj() {
 pub async fn returns_epsg_code_for_standard_wkt() {
     let app = AppBuilder::new().build().await;
     let auth = Auth::mock_session_token();
-    let srs =
-        gdal::spatial_ref::SpatialRef::from_epsg(4326).expect("failed to create spatial ref");
+    let srs = gdal::spatial_ref::SpatialRef::from_epsg(4326).expect("failed to create spatial ref");
     let prj = srs.to_wkt().expect("failed to convert to WKT");
     let body = EpsgRequest { prj };
     let response = app
@@ -63,13 +60,10 @@ pub async fn returns_epsg_code_from_shz() {
         .create_vector_only(&shz_filename)
         .expect("failed to create shz dataset");
     let mut layer = add_layer(&mut dataset, OGRwkbGeometryType::wkbMultiPolygon, 27700);
-    layer
-        .create_feature(geom)
-        .expect("failed to add geom");
+    layer.create_feature(geom).expect("failed to add geom");
     dataset.flush_cache().expect("failed to flush cache");
     dataset.close().expect("failed to close dataset");
-    let shz_bytes =
-        get_vsi_mem_file_bytes_owned(&shz_filename).expect("failed to read shz bytes");
+    let shz_bytes = get_vsi_mem_file_bytes_owned(&shz_filename).expect("failed to read shz bytes");
     let form = reqwest::multipart::Form::new().part(
         "shz",
         reqwest::multipart::Part::bytes(shz_bytes)

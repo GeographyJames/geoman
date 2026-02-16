@@ -43,7 +43,10 @@ fn dataset_from_shz(mut shz: TempFile) -> Result<Dataset, ShapefileError> {
     let ds = Dataset::open(&path)
         .context("failed to open shz dataset")
         .map_err(ShapefileError::UnexpectedError)?;
-    let layer = ds.layers().next().context("no layers in shz file")
+    let layer = ds
+        .layers()
+        .next()
+        .context("no layers in shz file")
         .map_err(ShapefileError::UnexpectedError)?;
     // Force GDAL to read the spatial ref before unlinking
     let _srs = layer.spatial_ref();

@@ -283,9 +283,9 @@ pub fn get_epsg_from_prj(prj: &str) -> Result<CrsInfo, ShapefileError> {
     let name = srs.name();
 
     // Cleanup virtual files
-    let _ = vsi::unlink_mem_file(&format!("{filename}.shp"));
-    let _ = vsi::unlink_mem_file(&format!("{filename}.shx"));
-    let _ = vsi::unlink_mem_file(&format!("{filename}.dbf"));
+    let _ = vsi::unlink_mem_file(format!("{filename}.shp"));
+    let _ = vsi::unlink_mem_file(format!("{filename}.shx"));
+    let _ = vsi::unlink_mem_file(format!("{filename}.dbf"));
     let _ = vsi::unlink_mem_file(&prj_path);
 
     Ok(CrsInfo { srid: code, name })
