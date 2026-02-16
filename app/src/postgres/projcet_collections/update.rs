@@ -29,7 +29,7 @@ impl Update for (&CollectionUpdateDto, UserId) {
             WHERE id = $7
             RETURNING id AS "id: ProjectCollectionId"
             "#,
-            dto.title,
+            dto.title.as_ref().map(|t| t.as_ref()),
             dto.slug,
             description_provided,
             description_value,

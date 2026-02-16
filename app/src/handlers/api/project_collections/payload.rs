@@ -1,4 +1,4 @@
-use domain::{ProjectCollectionInputDto, enums::GeometryType, slugify};
+use domain::{ProjectCollectionInputDto, enums::GeometryType, name::NameInputDTO, slugify};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -18,19 +18,21 @@ impl Default for CollectionReqPayload {
     }
 }
 
-impl From<CollectionReqPayload> for ProjectCollectionInputDto {
-    fn from(value: CollectionReqPayload) -> ProjectCollectionInputDto {
+impl TryFrom<CollectionReqPayload> for ProjectCollectionInputDto {
+    fn try_from(value: CollectionReqPayload) -> Result<ProjectCollectionInputDto, String> {
         let CollectionReqPayload {
             title,
             geometry_type,
             description,
         } = value;
         let slug = slugify(&title);
-        ProjectCollectionInputDto {
-            title,
+        Ok(ProjectCollectionInputDto {
+            title: NameInputDTO::parse(title)?,
             slug,
             description,
             geometry_type,
-        }
+        })
     }
+
+    type Error = String;
 }

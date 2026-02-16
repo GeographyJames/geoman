@@ -66,6 +66,8 @@ pub enum ApiError {
     DatabaseUniqueViolation(UniqueKey),
     #[error("Foregin key violation: {0}")]
     DatabaseForeignKeyViolation(ForeignKey),
+    #[error("Invalid collection title: {0}")]
+    InvalidCollectionTitle(String),
 }
 
 impl From<RepositoryError> for ApiError {
@@ -123,6 +125,7 @@ impl ResponseError for ApiError {
             ApiError::DatabaseCheckConstraintViolation(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::DatabaseUniqueViolation(_) => StatusCode::CONFLICT,
             ApiError::DatabaseForeignKeyViolation(_) => StatusCode::UNPROCESSABLE_ENTITY,
+            ApiError::InvalidCollectionTitle(_) => StatusCode::UNPROCESSABLE_ENTITY,
         }
     }
 

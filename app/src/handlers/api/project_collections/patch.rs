@@ -1,5 +1,7 @@
 use actix_web::{HttpResponse, patch, web};
-use domain::{CollectionUpdateDto, ProjectCollectionId, enums::Status, slugify};
+use domain::{
+    CollectionUpdateDto, ProjectCollectionId, enums::Status, name::NameInputDTO, slugify,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{errors::ApiError, postgres::PostgresRepo, types::AuthenticatedUser};
@@ -77,7 +79,11 @@ pub async fn patch_collection(
     let slug = payload.title.as_deref().map(slugify);
     let dto = CollectionUpdateDto {
         id: collection_id,
-        title: payload.title,
+        title: payload
+            .title
+            .map(|t| NameInputDTO::parse(t))
+            .transpose()
+            .map_err(|e| ApiError::InvalidCollectionTitle(e))?,
         slug,
         description: payload.description,
         status: payload.status,

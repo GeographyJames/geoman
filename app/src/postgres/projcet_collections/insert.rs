@@ -18,7 +18,7 @@ impl Insert for (&ProjectCollectionInputDto, UserId) {
             VALUES ($1, $2, $3, $4, $5, $5)
             RETURNING id AS "id: ProjectCollectionId"
             "#,
-            collection.title,
+            collection.title.as_ref(),
             collection.slug,
             collection.description,
             &collection.geometry_type as &GeometryType,
