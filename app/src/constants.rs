@@ -11,4 +11,5 @@ pub mod db_constraints {
     pub const PROJECT_SLUG_UNIQUE: &str = "projects_slug_key";
     pub const PROJECT_COLLECTIONS_TITLE_UNIQUE: &str = "project_collections_title_key";
     pub const PROJECT_CRS_ID_FKEY: &str = "projects_crs_srid_fkey";
+    pub const PROJECT_COLLECTION_SLUG_UNIQUE: &str = "project_collections_slug_key";
 }

@@ -11,6 +11,7 @@ use crate::{
 pub struct ProjectCollection {
     pub id: CollectionId,
     pub title: String,
+    pub slug: String,
     pub description: Option<String>,
     pub storage_crs: Option<Crs>,
     pub extent: Option<SpatialExtent>,
@@ -28,12 +29,16 @@ impl IntoOGCCollection for ProjectCollection {
             id,
             extent,
             geometry_type,
+            slug,
         } = self;
         let links = ogcapi_types::common::Collection::create_links(collections_url, &id);
-        let additional_properties = Map::from_iter([(
-            "geometry_type".to_string(),
-            serde_json::json!(geometry_type),
-        )]);
+        let additional_properties = Map::from_iter([
+            (
+                "geometry_type".to_string(),
+                serde_json::json!(geometry_type),
+            ),
+            ("slug".to_string(), serde_json::json!(slug)),
+        ]);
 
         ogcapi_types::common::Collection {
             id: id.to_string(),

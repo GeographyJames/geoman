@@ -6,8 +6,8 @@ use utils::error_chain_fmt;
 
 use crate::{
     constants::db_constraints::{
-        PROJECT_COLLECTIONS_TITLE_UNIQUE, PROJECT_CRS_ID_FKEY, PROJECT_NAME_UNIQUE,
-        PROJECT_SLUG_UNIQUE,
+        PROJECT_COLLECTION_SLUG_UNIQUE, PROJECT_COLLECTIONS_TITLE_UNIQUE, PROJECT_CRS_ID_FKEY,
+        PROJECT_NAME_UNIQUE, PROJECT_SLUG_UNIQUE,
     },
     repo::RepositoryError,
     types::ErrorResponse,
@@ -45,6 +45,8 @@ pub enum ApiError {
     NotFound,
     #[error("A collection with this name already exists")]
     DuplicateCollectionName,
+    #[error("This name is too similair to existing collection name")]
+    DuplicateCollectionSlug,
     #[error("Invalid Coordinate Reference System ID")]
     InvalidCRSID,
     #[error("Cannot delete collection with active or archived features")]
@@ -67,6 +69,7 @@ impl From<RepositoryError> for ApiError {
                 PROJECT_NAME_UNIQUE => ApiError::DuplicateProjectName,
                 PROJECT_SLUG_UNIQUE => ApiError::DuplicateProjectSlug,
                 PROJECT_COLLECTIONS_TITLE_UNIQUE => ApiError::DuplicateCollectionName,
+                PROJECT_COLLECTION_SLUG_UNIQUE => ApiError::DuplicateCollectionSlug,
                 _ => ApiError::Conflict(value),
             },
             RepositoryError::ForeignKeyViolation(ref fkey, error) => match fkey.as_str() {
@@ -101,6 +104,7 @@ impl ResponseError for ApiError {
             ApiError::CollectionHasFeatures => StatusCode::CONFLICT,
             ApiError::NotCollectionOwner => StatusCode::FORBIDDEN,
             ApiError::DuplicateCollectionName => StatusCode::CONFLICT,
+            ApiError::DuplicateCollectionSlug => StatusCode::CONFLICT,
             ApiError::ShapefileProcessing(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::Shapefile(_) => StatusCode::UNPROCESSABLE_ENTITY,
         }

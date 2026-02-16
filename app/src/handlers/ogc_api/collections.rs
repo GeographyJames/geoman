@@ -199,6 +199,7 @@ fn project_collection(collections_url: &str) -> ogcapi_types::common::Collection
         id: CollectionId::Projects,
         storage_crs: None,
         title: "Projects".to_string(),
+        slug: "projects".to_string(),
         extent: None,
         description: None,
         supported_crs: SupportedCrs::new(None),

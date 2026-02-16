@@ -1,4 +1,4 @@
-use domain::{ProjectCollectionInputDto, enums::GeometryType};
+use domain::{ProjectCollectionInputDto, enums::GeometryType, slugify};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -25,8 +25,10 @@ impl From<CollectionReqPayload> for ProjectCollectionInputDto {
             geometry_type,
             description,
         } = value;
+        let slug = slugify(&title);
         ProjectCollectionInputDto {
             title,
+            slug,
             description,
             geometry_type,
         }

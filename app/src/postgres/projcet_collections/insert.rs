@@ -14,11 +14,12 @@ impl Insert for (&ProjectCollectionInputDto, UserId) {
         let mut executor = conn.acquire().await?;
         sqlx::query_scalar!(
             r#"
-            INSERT INTO app.collections (title, description, geometry_type, added_by, last_updated_by)
-            VALUES ($1, $2, $3, $4, $4)
+            INSERT INTO app.collections (title, slug, description, geometry_type, added_by, last_updated_by)
+            VALUES ($1, $2, $3, $4, $5, $5)
             RETURNING id AS "id: ProjectCollectionId"
             "#,
             collection.title,
+            collection.slug,
             collection.description,
             &collection.geometry_type as &GeometryType,
             id.0

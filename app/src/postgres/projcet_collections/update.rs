@@ -22,13 +22,15 @@ impl Update for (&CollectionUpdateDto, UserId) {
             UPDATE app.collections
             SET
                 title = COALESCE($1, title),
-                description = CASE WHEN $2 THEN $3 ELSE description END,
-                status = COALESCE($4, status),
-                last_updated_by = $5
-            WHERE id = $6
+                slug = COALESCE($2, slug),
+                description = CASE WHEN $3 THEN $4 ELSE description END,
+                status = COALESCE($5, status),
+                last_updated_by = $6
+            WHERE id = $7
             RETURNING id AS "id: ProjectCollectionId"
             "#,
             dto.title,
+            dto.slug,
             description_provided,
             description_value,
             &dto.status as &Option<Status>,

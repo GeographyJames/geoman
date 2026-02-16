@@ -18,11 +18,16 @@ impl Update for (&ProjectUpdateDto, UserId) {
         let (dto, user_id) = self;
         let mut conn = conn.acquire().await?;
 
-        let name = dto.name.as_ref().map(|n| n.as_ref());
+        let mut name = dto.name.as_ref().map(|n| n.as_ref().to_string());
         let slug = dto.slug.as_ref().map(|s| s.as_ref());
 
         let crs_srid_provided = dto.crs_srid.is_some();
         let crs_srid_value = dto.crs_srid.flatten();
+        if let Some(ref status) = dto.status
+            && status == &Status::Deleted
+        {
+            name = Some(uuid::Uuid::new_v4().to_string())
+        }
 
         let result = sqlx::query!(
             r#"

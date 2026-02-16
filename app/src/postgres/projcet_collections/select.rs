@@ -12,6 +12,7 @@ use crate::repo::{
 
 struct CollectionRow {
     pub id: i32,
+    pub slug: String,
     pub title: String,
     pub description: Option<String>,
     pub storage_crs_srid: Option<i32>,
@@ -24,6 +25,7 @@ impl CollectionRow {
         let Self {
             id,
             title,
+            slug,
             description,
             storage_crs_srid,
             extent,
@@ -36,6 +38,7 @@ impl CollectionRow {
         ProjectCollection {
             id: CollectionId::ProjectCollection(ProjectCollectionId(id)),
             title,
+            slug,
             description,
             supported_crs,
             storage_crs,
@@ -64,6 +67,7 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
             r#"
             SELECT id,
                    title,
+                   slug,
                    description,
                    geometry_type as "geometry_type: GeometryType",
                    (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(f.geom)) = 1
@@ -132,6 +136,7 @@ impl SelectAllWithParams for ProjectCollection {
             r#"
             SELECT id,
                    title,
+                   slug,
                    description,
                    geometry_type AS "geometry_type: GeometryType",
                    (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(f.geom)) = 1
