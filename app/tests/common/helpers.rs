@@ -188,6 +188,16 @@ pub fn create_gdal_point_wgs84() -> Geometry {
     geom
 }
 
+pub fn add_shz_to_form(shz_bytes: Vec<u8>, form: Form) -> Form {
+    form.part(
+        "shz",
+        Part::bytes(shz_bytes)
+            .file_name("shapefile.shz")
+            .mime_str("application/octet-stream")
+            .expect("failed to add shz part"),
+    )
+}
+
 pub fn add_shapefile_to_form(filename: &str, data: ShapefileData, form: Form) -> Form {
     let mime = "application/octet-stream";
     form.part(

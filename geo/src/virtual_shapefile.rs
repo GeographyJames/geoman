@@ -264,7 +264,7 @@ pub fn get_epsg_from_prj(prj: &str) -> Result<CrsInfo, ShapefileError> {
         .map_err(ShapefileError::UnexpectedError)?;
 
     // Re-open the shapefile - GDAL's driver will read our .prj and apply full CRS matching
-    let ds = gdal::Dataset::open(format!("{filename}.shp"))
+    let mut ds = gdal::Dataset::open(format!("{filename}.shp"))
         .context("failed to open virtual shapefile")
         .map_err(ShapefileError::UnexpectedError)?;
     let layer = ds
@@ -310,8 +310,8 @@ mod tests {
 
     #[test]
     fn get_epsg_from_standard_wkt_works() {
-        let srs = gdal::spatial_ref::SpatialRef::from_epsg(4326)
-            .expect("failed to create spatial ref");
+        let srs =
+            gdal::spatial_ref::SpatialRef::from_epsg(4326).expect("failed to create spatial ref");
         let wkt = srs.to_wkt().expect("failed to convert to WKT");
         let crs = get_epsg_from_prj(&wkt).expect("failed to extract EPSG code");
         assert_eq!(crs.srid, 4326);
