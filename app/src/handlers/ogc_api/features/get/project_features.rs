@@ -38,10 +38,18 @@ pub async fn get_project_features(
         .await?
         .ok_or_else(|| ApiError::ProjectNotFound(project_id))?;
     let request_crs = query.crs.clone();
-
+    let status: Option<Vec<Status>> = query.status.as_ref().map(|statuses| {
+        statuses
+            .iter()
+            .filter_map(|s| Status::from_str(s).ok())
+            .collect()
+    });
     repo.select_one_with_params::<ProjectCollection, _>(
         collection_id,
-        &project_collections::SelectOneParams { project_id },
+        &project_collections::SelectOneParams {
+            project_id,
+            status: status.clone(),
+        },
     )
     .await?
     .ok_or_else(|| ApiError::ProjectCollectionNotFound(collection_id))?;
@@ -51,12 +59,6 @@ pub async fn get_project_features(
         "{}{}{}/{}/collections/{}",
         base_url, URLS.ogc_api.base, URLS.ogc_api.project, project_id, collection_id
     );
-    let status: Option<Vec<Status>> = query.status.as_ref().map(|statuses| {
-        statuses
-            .iter()
-            .filter_map(|s| Status::from_str(s).ok())
-            .collect()
-    });
 
     let params = SelectAllParams {
         limit: query.limit,

@@ -1,9 +1,15 @@
+use std::str::FromStr;
+
 use actix_web::{HttpRequest, get, web};
 use domain::{
     Collections, GisDataTable, IntoOGCCollection, ProjectCollection, ProjectCollectionId,
-    ProjectId, SupportedCrs, enums::CollectionId, project::ProjectName,
+    ProjectId, SupportedCrs,
+    enums::{CollectionId, Status},
+    project::ProjectName,
 };
 use ogcapi_types::common::Link;
+use serde::Deserialize;
+use serde_with::{StringWithSeparator, formats::CommaSeparator};
 
 use crate::{
     URLS,
@@ -12,6 +18,13 @@ use crate::{
     postgres::PostgresRepo,
     repo::project_collections::{SelectAllParams, SelectOneParams},
 };
+
+#[serde_with::serde_as]
+#[derive(Deserialize)]
+pub struct QueryParams {
+    #[serde_as(as = "Option<StringWithSeparator::<CommaSeparator, String>>")]
+    status: Option<Vec<String>>,
+}
 
 /// The feature collections in the dataset.
 #[utoipa::path(
@@ -70,18 +83,26 @@ pub async fn get_collections(
 }
 
 #[get("")]
-#[tracing::instrument(skip(repo, req, project_id))]
+#[tracing::instrument(skip(repo, req, project_id, query))]
 pub async fn get_project_collections(
     req: HttpRequest,
     repo: web::Data<PostgresRepo>,
+    query: web::Query<QueryParams>,
     project_id: web::Path<ProjectId>,
 ) -> Result<web::Json<ogcapi_types::common::Collections>, ApiError> {
     let _project: ProjectName = repo
         .select_one(*project_id)
         .await?
         .ok_or(ApiError::ProjectNotFound(*project_id))?;
+    let status: Option<Vec<Status>> = query.status.as_ref().map(|statuses| {
+        statuses
+            .iter()
+            .filter_map(|s| Status::from_str(s).ok())
+            .collect()
+    });
     let params = SelectAllParams {
         project_id: *project_id,
+        status,
     };
     let base_url = get_base_url(&req);
     let collections_url = format!(
@@ -164,11 +185,12 @@ pub async fn get_collection(
 }
 
 #[get("/{collectionId}")]
-#[tracing::instrument(skip(repo, req, path))]
+#[tracing::instrument(skip(repo, req, path, query))]
 pub async fn get_project_collection(
     req: HttpRequest,
     path: web::Path<(ProjectId, ProjectCollectionId)>,
     repo: web::Data<PostgresRepo>,
+    query: web::Query<QueryParams>,
 ) -> Result<web::Json<ogcapi_types::common::Collection>, ApiError> {
     let (project_id, collection_id) = path.into_inner();
     let _project: ProjectName = repo
@@ -180,9 +202,15 @@ pub async fn get_project_collection(
         "{}{}{}/{}/collections",
         base_url, URLS.ogc_api.base, URLS.ogc_api.project, project_id
     );
+    let status: Option<Vec<Status>> = query.status.as_ref().map(|statuses| {
+        statuses
+            .iter()
+            .filter_map(|s| Status::from_str(s).ok())
+            .collect()
+    });
 
     // Fetch collection from database
-    let params = SelectOneParams { project_id };
+    let params = SelectOneParams { project_id, status };
     let collection = repo
         .select_one_with_params::<ProjectCollection, _>(collection_id, &params)
         .await?

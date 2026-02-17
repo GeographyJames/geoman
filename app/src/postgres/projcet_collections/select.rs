@@ -1,6 +1,6 @@
 use domain::{
     AddedBy, CollectionListItem, ProjectCollection, ProjectCollectionId, SupportedCrs,
-    enums::{CollectionId, GeometryType},
+    enums::{CollectionId, GeometryType, Status},
 };
 use ogcapi_types::common::{Bbox, Crs, SpatialExtent};
 
@@ -77,7 +77,7 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
                       FROM app.project_features f
                      WHERE f.collection_id = c.id
                        AND f.project_id = $1
-                       AND f.status = 'ACTIVE'
+                       AND f.status = ANY($4)
                    ) as storage_crs_srid,
                    (SELECT CASE
                                WHEN bbox IS NOT NULL THEN
@@ -94,7 +94,7 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
                         FROM app.project_features f
                         WHERE f.collection_id = c.id
                           AND f.project_id = $1
-                          AND f.status = 'ACTIVE'
+                          AND f.status = ANY($4)
                     ) extent_sub) as extent
               FROM app.collections c
              WHERE EXISTS (
@@ -102,12 +102,14 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
                  FROM app.project_features f
                  WHERE f.collection_id = c.id
                    AND f.project_id = $1
-                   AND f.status = 'ACTIVE'
+                   AND f.status = ANY($4)
+
              )
                AND c.id = $2"#,
             params.project_id.0,
             id.0,
-            extent_crs.as_srid() as i32
+            extent_crs.as_srid() as i32,
+            params.status.clone().unwrap_or(vec![Status::Active]) as Vec<Status>
         )
         .fetch_optional(executor)
         .await?;
@@ -146,7 +148,7 @@ impl SelectAllWithParams for ProjectCollection {
                       FROM app.project_features f
                      WHERE f.collection_id = c.id
                        AND f.project_id = $1
-                       AND f.status = 'ACTIVE'
+                       AND f.status = ANY($3)
                    ) as storage_crs_srid,
                    (SELECT CASE
                                WHEN bbox IS NOT NULL THEN
@@ -163,7 +165,7 @@ impl SelectAllWithParams for ProjectCollection {
                         FROM app.project_features f
                         WHERE f.collection_id = c.id
                           AND f.project_id = $1
-                          AND f.status = 'ACTIVE'
+                          AND f.status = ANY($3)
                     ) extent_sub) as extent
   FROM app.collections c
   WHERE c.status = 'ACTIVE'
@@ -171,11 +173,13 @@ impl SelectAllWithParams for ProjectCollection {
       SELECT 1
       FROM app.project_features f
       WHERE f.collection_id = c.id
+      AND f.status = ANY($3)
       AND f.project_id =  $1
   )
   ORDER BY id"#,
             params.project_id.0,
-            extent_crs.as_srid() as i32
+            extent_crs.as_srid() as i32,
+            params.status.clone().unwrap_or(vec![Status::Active]) as Vec<Status>
         )
         .fetch_all(executor)
         .await?;

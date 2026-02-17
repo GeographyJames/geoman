@@ -40,14 +40,16 @@ pub mod project_features {
 }
 
 pub mod project_collections {
-    use domain::ProjectId;
+    use domain::{ProjectId, enums::Status};
 
     pub struct SelectOneParams {
         pub project_id: ProjectId,
+        pub status: Option<Vec<Status>>,
     }
 
     pub struct SelectAllParams {
         pub project_id: ProjectId,
+        pub status: Option<Vec<Status>>,
     }
 }
 

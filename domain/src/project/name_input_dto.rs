@@ -1,6 +1,5 @@
 use serde::Serialize;
-
-use crate::name::validate_name;
+use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Debug, Serialize)]
 pub struct ProjectNameInputDTO(String);
@@ -25,6 +24,23 @@ impl AsRef<str> for ProjectNameInputDTO {
     fn as_ref(&self) -> &str {
         &self.0
     }
+}
+
+pub fn validate_name(s: &str) -> Result<(), String> {
+    if s.trim().is_empty() {
+        return Err("name cannot be empty".to_string());
+    }
+    let max_chars = 256;
+    if s.graphemes(true).count() > max_chars {
+        return Err(format!(
+            "name is greater than max of {max_chars} characters"
+        ));
+    }
+    let forbidden_characters = ['/', '(', ')', '"', '<', '>', '\\', '{', '}'];
+    if let Some(char) = s.chars().find(|char| forbidden_characters.contains(char)) {
+        return Err(format!("name contains forbidden character: '{char}'"));
+    }
+    Ok(())
 }
 
 #[cfg(test)]
