@@ -6,7 +6,7 @@ import { useCollections } from "@/hooks/api/useCollections";
 import { useForm } from "react-hook-form";
 import { useEffect, useMemo, useState } from "react";
 import { Shapefile } from "@/lib/shapefile";
-import { usePostProjectFeature } from "@/hooks/api/usePostProjectFeature";
+import { usePostProjectFeature } from "@/hooks/api/projectFeature.ts/usePostProjectFeature";
 import { usePostEpsg, type CrsInfo } from "@/hooks/api/usePostEpsg";
 import { usePostEpsgFromShz } from "@/hooks/api/usePostEpsgFromShz";
 import { useAddFeature } from "../../contexts/AddFeatureContext";
@@ -98,7 +98,7 @@ const AddSiteFeatureInner = () => {
           setNullGeometryCount(0);
           setFileError(null);
           setShapefileCrs(null);
-        setCrsError(false);
+          setCrsError(false);
           closeDialog();
           clear();
         },
@@ -150,14 +150,17 @@ const AddSiteFeatureInner = () => {
       const parsePromise: Promise<FeatureCollection> = result.isZipped
         ? result.shz!.arrayBuffer().then(async (buf) => {
             const parsed = await parseZip(buf);
-            return (Array.isArray(parsed) ? parsed[0] : parsed) as FeatureCollection;
+            return (
+              Array.isArray(parsed) ? parsed[0] : parsed
+            ) as FeatureCollection;
           })
         : Promise.all([
             result.shp!.arrayBuffer(),
             result.dbf!.arrayBuffer(),
             result.prj!.text(),
-          ]).then(([shp, dbf, prj]) =>
-            combine([parseShp(shp, prj), parseDbf(dbf)]) as FeatureCollection,
+          ]).then(
+            ([shp, dbf, prj]) =>
+              combine([parseShp(shp, prj), parseDbf(dbf)]) as FeatureCollection,
           );
 
       parsePromise
@@ -257,9 +260,9 @@ const AddSiteFeatureInner = () => {
             reset();
             setGeojson(null);
             setNullGeometryCount(0);
-              setFileError(null);
+            setFileError(null);
             setShapefileCrs(null);
-        setCrsError(false);
+            setCrsError(false);
             closeDialog();
             clear();
           }}
