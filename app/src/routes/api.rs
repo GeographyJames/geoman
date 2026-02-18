@@ -4,7 +4,10 @@ use crate::{
     handlers::api::{
         app_settings::get_app_settings,
         epsg::{post_epsg, post_epsg_from_shz},
-        features::{patch::patch_project_feature, post::post_project_feature_shapefile},
+        features::{
+            get::get_project_feature_shapefile, patch::patch_project_feature,
+            post::post_project_feature_shapefile,
+        },
         keys::{generate_api_key, get_api_keys, renew_api_key, revoke_api_key},
         project_collections::{get_collections, patch_collection, post_project_collection},
         projects::{patch_project, post_project},
@@ -89,7 +92,8 @@ pub fn project_features_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         scope(&URLS.api.project_features)
             .service(patch_project_feature)
-            .service(post_project_feature_shapefile),
+            .service(post_project_feature_shapefile)
+            .service(get_project_feature_shapefile),
     );
 }
 

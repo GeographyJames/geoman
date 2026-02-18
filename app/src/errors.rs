@@ -48,7 +48,7 @@ pub enum ApiError {
     NotFound,
     #[error("A collection with this name already exists")]
     DuplicateCollectionName,
-    #[error("This name is too similair to existing collection name")]
+    #[error("Title is too similair to existing collection title")]
     DuplicateCollectionSlug,
     #[error("Invalid Coordinate Reference System ID")]
     InvalidCRSID,
@@ -62,7 +62,7 @@ pub enum ApiError {
     Shapefile(#[from] ShapefileError),
     #[error("Database check constraint violation: {0}")]
     DatabaseCheckConstraintViolation(CheckKey),
-    #[error("Database uniques violation: {0}")]
+    #[error("Database unique violation: {0}")]
     DatabaseUniqueViolation(UniqueKey),
     #[error("Foregin key violation: {0}")]
     DatabaseForeignKeyViolation(ForeignKey),

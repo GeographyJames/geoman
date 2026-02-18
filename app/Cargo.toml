@@ -48,6 +48,7 @@ utoipa-swagger-ui = { version = "7", features = [
 actix-multipart = { workspace = true }
 geo = { path = "../geo" }
 gdal = { workspace = true }
+slug = "0.1.6"
 
 
 [dev-dependencies]

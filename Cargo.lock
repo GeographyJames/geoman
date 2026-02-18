@@ -392,6 +392,7 @@ dependencies = [
  "serde_urlencoded",
  "serde_with 3.16.0",
  "sha2",
+ "slug",
  "sqlx",
  "strum",
  "thiserror 2.0.18",
