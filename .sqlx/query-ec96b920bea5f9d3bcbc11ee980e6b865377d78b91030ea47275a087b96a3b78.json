@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            INSERT INTO app.collections (title, description, geometry_type, added_by, last_updated_by)\n            VALUES ($1, $2, $3, $4, $4)\n            RETURNING id AS \"id: ProjectCollectionId\"\n            ",
+  "query": "\n            INSERT INTO app.collections (title, slug, description, geometry_type, added_by, last_updated_by)\n            VALUES ($1, $2, $3, $4, $5, $5)\n            RETURNING id AS \"id: ProjectCollectionId\"\n            ",
   "describe": {
     "columns": [
       {
@@ -11,6 +11,7 @@
     ],
     "parameters": {
       "Left": [
+        "Text",
         "Text",
         "Text",
         {
@@ -36,5 +37,5 @@
       false
     ]
   },
-  "hash": "b26790164a0ef568a82ce303f07b855825748188c5c29804ff0d3c2835d9d14e"
+  "hash": "ec96b920bea5f9d3bcbc11ee980e6b865377d78b91030ea47275a087b96a3b78"
 }
