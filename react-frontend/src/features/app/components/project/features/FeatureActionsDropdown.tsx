@@ -2,6 +2,7 @@ import { ActionsDropdown } from "@/components/ActionsDropdown";
 import { ToggleArchivedStatus } from "@/components/ToggleArchivedStatus";
 import type { ProjectCollectionItem } from "@/domain/projectCollectionItems/outputDTO";
 import { usePatchProjectFeature } from "@/hooks/api/projectFeature.ts/usePatchProjectFeature";
+import { useDownloadFeatureShapefile } from "@/hooks/api/projectFeature.ts/useDownloadFeatureShapefile";
 import { useFlash } from "@/features/app/contexts/FlashMessageContext";
 import { useEditFeature } from "@/features/app/contexts/EditFeatureContext";
 import { DeleteFeatureButton } from "./DeleteFeatureButton";
@@ -12,6 +13,7 @@ export const FeatureActionsDropdown = ({
   item: ProjectCollectionItem;
 }) => {
   const { mutate: patchProjectFeature } = usePatchProjectFeature();
+  const { download, isLoading: isDownloading } = useDownloadFeatureShapefile();
   const { addFlash } = useFlash();
   const { requestEdit } = useEditFeature();
   const action =
@@ -22,7 +24,18 @@ export const FeatureActionsDropdown = ({
       style="bg-base-100"
     >
       <li>
-        <button>download shapefile</button>
+        <button
+          disabled={isDownloading}
+          onClick={async (e) => {
+            const popover = (e.currentTarget as HTMLElement).closest(
+              "[popover]",
+            ) as HTMLElement | null;
+            await download(item.id);
+            popover?.hidePopover();
+          }}
+        >
+          {isDownloading ? "downloading..." : "download shapefile"}
+        </button>
       </li>
       <li>
         <button onClick={() => requestEdit(item)}>edit</button>
