@@ -79,9 +79,9 @@ pub async fn patch_collection(
         id: collection_id,
         title: payload
             .title
-            .map(|t| NameInputDTO::parse(t))
+            .map(NameInputDTO::parse)
             .transpose()
-            .map_err(|e| ApiError::InvalidCollectionTitle(e))?,
+            .map_err(ApiError::InvalidCollectionTitle)?,
         slug,
         description: payload.description,
         status: payload.status,

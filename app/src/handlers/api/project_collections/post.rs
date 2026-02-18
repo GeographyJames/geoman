@@ -20,7 +20,7 @@ pub async fn post_project_collection(
     let collection_input_dto: ProjectCollectionInputDto = payload
         .into_inner()
         .try_into()
-        .map_err(|e| ApiError::InvalidCollectionTitle(e))?;
+        .map_err(ApiError::InvalidCollectionTitle)?;
     let collection_id = repo.insert(&(&collection_input_dto, user.id)).await?;
     Ok(Json(collection_id))
 }
