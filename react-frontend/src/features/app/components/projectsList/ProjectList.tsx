@@ -1,23 +1,22 @@
 import { useState } from "react";
 
-import Project from "@/domain/project/entity";
-
 import { CreateButton } from "../../../../components/Buttons";
 import ProjectListItem from "./ProjectListItem";
 import SortBy, { SORT_OPTIONS } from "./SortBy";
 import ShowArchivedToggle from "../ShowArchivedToggle";
-import { useShowArchivedProjects } from "@/features/app/contexts/ShowArchivedProjectsContext";
+import { useProjectsFilter } from "@/features/app/contexts/ProjectsFilterContext";
+
+import type Project from "@/domain/project/entity";
 
 interface Props {
-  projects: Project[];
+  projects?: Project[];
 }
 
-export default function ProjectsList({ projects }: Props) {
-  const { showArchivedProjects, setShowArchivedProjects } =
-    useShowArchivedProjects();
+export default function ProjectsList({ projects: projectsProp }: Props = {}) {
+  const { projects: contextProjects, showArchivedProjects, setShowArchivedProjects } =
+    useProjectsFilter();
   const [sortBy, setSortBy] = useState(SORT_OPTIONS.NAME_ASCENDING);
-  const sortedProjects = projects
-    .filter((a) => showArchivedProjects || !a.archived)
+  const sortedProjects = (projectsProp ?? contextProjects)
     .slice()
     .sort((a, b) => {
       switch (sortBy) {

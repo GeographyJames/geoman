@@ -3,7 +3,6 @@ import { lazy, Suspense } from "react";
 import { Drawer } from "./Drawer";
 import { SidebarProvider } from "@/features/app/contexts/SidebarContext";
 import { SearchbarProvider } from "@/features/app/contexts/SearchbarContext";
-import { ShowArchivedProjectsProvider } from "@/features/app/contexts/ShowArchivedProjectsContext";
 import { FlashMessageProvider } from "@/features/app/contexts/FlashMessageContext";
 import { DeleteFeatureProvider } from "@/features/app/contexts/DeleteFeatureContext";
 import { EditFeatureProvider } from "@/features/app/contexts/EditFeatureContext";
@@ -28,27 +27,25 @@ export const App = () => {
       <FlashMessageProvider>
         <SidebarProvider>
           <SearchbarProvider>
-            <ShowArchivedProjectsProvider>
-              <DeleteFeatureProvider>
-                <EditFeatureProvider>
-                  <EditProjectProvider>
-                    <DeleteProjectProvider>
-                      <AddFeatureProvider>
-                        <Drawer />
-                        <Suspense fallback={null}>
-                          <CreateProjectForm />
-                          <DeleteFeatureForm />
-                          <EditFeatureForm />
-                          <EditProjectForm />
-                          <AddSiteFeatureForm />
-                          <DeleteProjectForm />
-                        </Suspense>
-                      </AddFeatureProvider>
-                    </DeleteProjectProvider>
-                  </EditProjectProvider>
-                </EditFeatureProvider>
-              </DeleteFeatureProvider>
-            </ShowArchivedProjectsProvider>
+            <DeleteFeatureProvider>
+              <EditFeatureProvider>
+                <EditProjectProvider>
+                  <DeleteProjectProvider>
+                    <AddFeatureProvider>
+                      <Drawer />
+                      <Suspense fallback={null}>
+                        <CreateProjectForm />
+                        <DeleteFeatureForm />
+                        <EditFeatureForm />
+                        <EditProjectForm />
+                        <AddSiteFeatureForm />
+                        <DeleteProjectForm />
+                      </Suspense>
+                    </AddFeatureProvider>
+                  </DeleteProjectProvider>
+                </EditProjectProvider>
+              </EditFeatureProvider>
+            </DeleteFeatureProvider>
           </SearchbarProvider>
         </SidebarProvider>
       </FlashMessageProvider>

@@ -1,7 +1,9 @@
 import BaseMap from "@/features/app/components/map/BaseMap";
 import ProjectsMap from "@/features/projects/components/ProjectsMap";
-
-import { useMapContext } from "@/features/app/contexts/MapRefContext";
+import { useProjects } from "@/hooks/api/projects/useProjects";
+import { ProjectsFilterProvider } from "@/features/app/contexts/ProjectsFilterContext";
+import { fromLonLat } from "ol/proj";
+import { boundingExtent } from "ol/extent";
 import { Sidebar } from "./Sidebar";
 import { OverlayPanels } from "./OverlayPanels";
 import { useSidebar } from "@/features/app/contexts/SidebarContext";
@@ -26,16 +28,35 @@ export const Drawer = () => {
 
 const DrawerMain = () => {
   const { setIsOpen: setSearchOpen } = useSearchbar();
-  const { containerRef } = useMapContext();
+  const { data: projects, isLoading } = useProjects();
+
+  if (isLoading || !projects) {
+    return (
+      <div className="drawer-content h-full flex items-center justify-center">
+        <span className="loading loading-spinner loading-lg" />
+      </div>
+    );
+  }
+
+  const coordinates = projects
+    .filter((p) => p.centroid)
+    .map((p) => fromLonLat(p.centroid!.coordinates));
+
+  const initialExtent = coordinates.length > 0
+    ? boundingExtent(coordinates)
+    : undefined;
+
   return (
-    <div className="drawer-content h-full">
-      <BaseMap
-        containerRef={containerRef}
-        onMouseDown={() => setSearchOpen(false)}
-      />
-      <ProjectsMap />
-      <OverlayPanels />
-    </div>
+    <ProjectsFilterProvider allProjects={projects}>
+      <div className="drawer-content h-full">
+        <BaseMap
+          initialExtent={initialExtent}
+          onMouseDown={() => setSearchOpen(false)}
+        />
+        <ProjectsMap />
+        <OverlayPanels />
+      </div>
+    </ProjectsFilterProvider>
   );
 };
 

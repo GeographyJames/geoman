@@ -9,18 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as DocsRouteImport } from './routes/docs'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppProjectSlugRouteImport } from './routes/_app/project.$slug'
 
-const DocsRoute = DocsRouteImport.update({
-  id: '/docs',
-  path: '/docs',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -49,14 +43,12 @@ const AppProjectSlugRoute = AppProjectSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
-  '/docs': typeof DocsRoute
   '/': typeof AppIndexRoute
   '/project/$slug': typeof AppProjectSlugRoute
 }
 export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
-  '/docs': typeof DocsRoute
   '/': typeof AppIndexRoute
   '/project/$slug': typeof AppProjectSlugRoute
 }
@@ -65,21 +57,19 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
-  '/docs': typeof DocsRoute
   '/_app/': typeof AppIndexRoute
   '/_app/project/$slug': typeof AppProjectSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/about' | '/admin' | '/docs' | '/' | '/project/$slug'
+  fullPaths: '/about' | '/admin' | '/' | '/project/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/about' | '/admin' | '/docs' | '/' | '/project/$slug'
+  to: '/about' | '/admin' | '/' | '/project/$slug'
   id:
     | '__root__'
     | '/_app'
     | '/about'
     | '/admin'
-    | '/docs'
     | '/_app/'
     | '/_app/project/$slug'
   fileRoutesById: FileRoutesById
@@ -88,18 +78,10 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
-  DocsRoute: typeof DocsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/docs': {
-      id: '/docs'
-      path: '/docs'
-      fullPath: '/docs'
-      preLoaderRoute: typeof DocsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -154,7 +136,6 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
-  DocsRoute: DocsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
