@@ -5,30 +5,24 @@ import { usePostProject } from "../../../../hooks/api/projects/usePostProject";
 import { slugify } from "@/lib/slugify";
 import { Visibility } from "@/domain/types";
 import { useForm } from "react-hook-form";
-import { useAppSettings } from "@/hooks/api/useAppSettings";
-import { useCurrentUser } from "@/hooks/api/useCurrentUser";
 import { ProjectForm, type ProjectFormData } from "./ProjectForm";
 import { ApiError } from "@/lib/api";
 
 const CreateProjectInner = () => {
   const { mutate: postProject, isPending } = usePostProject();
-  const { data: appSettings, isLoading: isLoadingSettings } = useAppSettings();
-  const { data: currentUser, isLoading: isLoadingUser } = useCurrentUser();
-  const isLoading = isLoadingSettings || isLoadingUser;
+
   const { addError, closeDialog } = useModal();
 
-  const { handleSubmit, watch, reset, control } =
-    useForm<ProjectFormData>({
-      defaultValues: {
-        projectName: "",
-        srid: 27700,
-        visibility: Visibility.Public,
-      },
-    });
+  const { handleSubmit, watch, reset, control } = useForm<ProjectFormData>({
+    defaultValues: {
+      projectName: "",
+      srid: 27700,
+      visibility: Visibility.Public,
+    },
+  });
 
   const projectName = watch("projectName");
   const slug = slugify(projectName);
-
 
   const onSubmit = (data: ProjectFormData) => {
     const dto: ProjectInputDTO = {
@@ -57,18 +51,6 @@ const CreateProjectInner = () => {
     reset();
     closeDialog();
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
-
-  if (!currentUser || !appSettings) {
-    return null;
-  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

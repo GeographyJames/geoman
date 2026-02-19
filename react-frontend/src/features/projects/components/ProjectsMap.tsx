@@ -94,6 +94,8 @@ export default function ProjectsMap() {
       source: new VectorSource({ features }),
       style: (feature) =>
         feature.get("archived") ? archivedStyles[0] : activeStyles[0],
+      updateWhileAnimating: true,
+      updateWhileInteracting: true,
     });
 
     function animateScale(feature: Feature, from: number, to: number) {
@@ -184,7 +186,8 @@ export default function ProjectsMap() {
       map.removeOverlay(overlay);
       map.un("click", handleClick);
       map.un("pointermove", handlePointerMove);
-      map.getTargetElement().style.cursor = "";
+      const target = map.getTargetElement();
+      if (target) target.style.cursor = "";
     };
   }, [mapRef, projects]);
 

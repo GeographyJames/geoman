@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import Project from "@/domain/project/entity";
 import SidebarList from "../projectsList/ProjectList";
-import { useProjects } from "@/hooks/api/projects/useProjects";
+import { useProjectsFilter } from "@/features/app/contexts/ProjectsFilterContext";
 
 interface Props {
   searchText: string;
@@ -27,7 +27,7 @@ export default function SearchResultsBox({
   filterSate: [filteredItems, setFilteredItems],
   inputRef,
 }: Props) {
-  const { data: projects } = useProjects();
+  const { projects } = useProjectsFilter();
   useEffect(() => {
     if (!projects) return;
     if (searchText.trim() !== "") {
