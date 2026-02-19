@@ -2,12 +2,14 @@ import Project from "@/domain/project/entity";
 
 import { Link, useSearch } from "@tanstack/react-router";
 import { useSearchbar } from "@/features/app/contexts/SearchbarContext";
+import { useProjectsFilter } from "@/features/app/contexts/ProjectsFilterContext";
 
 import { ProjectIcons } from "../project/ProjectIcons";
 import { ProjectActionsDropdown } from "../project/ProjectActionsDropdown";
 
 export default function ProjectListItem({ item }: { item: Project }) {
   const { setIsOpen: setSearchOpen } = useSearchbar();
+  const { setHoveredProjectId } = useProjectsFilter();
 
   const { projects } = useSearch({ from: "/_app/" });
 
@@ -22,7 +24,11 @@ export default function ProjectListItem({ item }: { item: Project }) {
     : [...projectsArray, item.slug].join(",");
 
   return (
-    <li key={item.id}>
+    <li
+      key={item.id}
+      onMouseEnter={() => setHoveredProjectId(item.id)}
+      onMouseLeave={() => setHoveredProjectId(null)}
+    >
       <div className="flex p-0 pr-2">
         <Link
           from={"/"}

@@ -5,6 +5,8 @@ interface ProjectsFilterContextType {
   projects: Project[];
   showArchivedProjects: boolean;
   setShowArchivedProjects: (value: boolean) => void;
+  hoveredProjectId: number | null;
+  setHoveredProjectId: (id: number | null) => void;
 }
 
 const ProjectsFilterContext = createContext<ProjectsFilterContextType | undefined>(undefined);
@@ -17,6 +19,7 @@ export function ProjectsFilterProvider({
   children: ReactNode;
 }) {
   const [showArchivedProjects, setShowArchivedProjects] = useState(false);
+  const [hoveredProjectId, setHoveredProjectId] = useState<number | null>(null);
 
   const projects = useMemo(
     () => allProjects.filter((p) => showArchivedProjects || !p.archived),
@@ -25,7 +28,7 @@ export function ProjectsFilterProvider({
 
   return (
     <ProjectsFilterContext.Provider
-      value={{ projects, showArchivedProjects, setShowArchivedProjects }}
+      value={{ projects, showArchivedProjects, setShowArchivedProjects, hoveredProjectId, setHoveredProjectId }}
     >
       {children}
     </ProjectsFilterContext.Provider>
