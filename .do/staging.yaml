@@ -40,9 +40,6 @@ services:
         scope: RUN_TIME
         type: SECRET
         value: ""
-      - key: VITE_CLERK_PUBLISHABLE_KEY
-        scope: BUILD_TIME
-        value: ""
 
 databases:
   - name: postgres-db

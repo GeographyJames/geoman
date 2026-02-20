@@ -29,7 +29,6 @@ COPY react-frontend/package.json react-frontend/
 COPY react-frontend/package-lock.json react-frontend/
 RUN npm ci --prefix react-frontend
 COPY react-frontend react-frontend
-ARG VITE_CLERK_PUBLISHABLE_KEY
 RUN npm run build --prefix react-frontend
 
 # Runtime stage
