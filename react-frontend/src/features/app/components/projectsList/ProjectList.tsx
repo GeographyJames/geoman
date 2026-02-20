@@ -36,7 +36,7 @@ export default function ProjectsList({ projects: projectsProp }: Props = {}) {
   return (
     <div className="flex flex-col min-h-0 h-full pb-2 pt-4 gap-2">
       <div className="px-4 flex flex-col gap-4">
-        <div className="flex justify-between flex-wrap gap-2">
+        <div className="flex justify-between items-center gap-2">
           <CreateButton
             text="Create project"
             onClick={() => {

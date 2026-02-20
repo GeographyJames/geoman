@@ -26,8 +26,8 @@ export const SiteDataDropdown = ({
             {`(${collection.geometry_type})`}
           </span>
         </div>
-        <div className="font-normal text-xs flex gap-2 items-center">
-          <span className="text-base-content/70">{data && `${showArchived ? data.features.length : data.features.filter((f) => f.properties.status !== "ARCHIVED").length} features`}</span>
+        <div className="font-normal text-xs flex flex-wrap gap-x-2 gap-y-1 items-center justify-end">
+          <span className="text-base-content/70">{data && (() => { const count = showArchived ? data.features.length : data.features.filter((f) => f.properties.status !== "ARCHIVED").length; return `${count} feature${count !== 1 ? "s" : ""}`; })()}</span>
           <ShowArchivedToggle
             setShowArchived={setShowArchived}
             showArchived={showArchived}
