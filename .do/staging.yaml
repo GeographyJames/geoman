@@ -1,0 +1,54 @@
+name: geoman-staging
+region: lon1
+services:
+  - name: geoman-staging
+    dockerfile_path: Dockerfile
+    source_dir: .
+    github:
+      branch: staging
+      repo: GeographyJames/geoman
+    health_check:
+      http_path: /health-check
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    routes:
+      - path: /
+    envs:
+      - key: GEOMAN_RUN_ENVIRONMENT
+        scope: RUN_TIME
+        value: "production"
+      - key: GEOMAN_CONFIG_ENVIRONMENT
+        scope: RUN_TIME
+        value: "staging"
+      - key: GEOMAN_DB_SETTINGS__USERNAME
+        scope: RUN_TIME
+        value: ${postgres-db.USERNAME}
+      - key: GEOMAN_DB_SETTINGS__PASSWORD
+        scope: RUN_TIME
+        value: ${postgres-db.PASSWORD}
+      - key: GEOMAN_DB_SETTINGS__HOST
+        scope: RUN_TIME
+        value: ${postgres-db.HOSTNAME}
+      - key: GEOMAN_DB_SETTINGS__PORT
+        scope: RUN_TIME
+        value: ${postgres-db.PORT}
+      - key: GEOMAN_DB_SETTINGS__DATABASE_NAME
+        scope: RUN_TIME
+        value: ${postgres-db.DATABASE}
+      - key: GEOMAN_AUTH_SETTINGS__CLERK_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: ""
+      - key: VITE_CLERK_PUBLISHABLE_KEY
+        scope: BUILD_TIME
+        value: ""
+
+databases:
+  - name: postgres-db
+    engine: PG
+    version: "17"
+    db_name: geoman_db_staging
+    db_user: app_staging
+    production: true
+    cluster_name: app-e2cc60f1-9a76-4487-9d33-f4523499e592
