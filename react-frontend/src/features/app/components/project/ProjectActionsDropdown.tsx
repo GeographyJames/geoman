@@ -6,14 +6,16 @@ import { useFlash } from "@/features/app/contexts/FlashMessageContext";
 import { useEditProject } from "../../contexts/EditProjectContext";
 import { useDeleteProject } from "../../contexts/DeleteProjectContext";
 import { useAddFeature } from "../../contexts/AddFeatureContext";
-import { useZoomToProjectBoundary } from "@/hooks/useZoomToProjectBoundary";
-
 export const ProjectActionsDropdown = ({
   item,
   id,
+  zoomToProject,
+  hasExtent,
 }: {
   item: Project;
   id: string;
+  zoomToProject?: () => void;
+  hasExtent?: boolean;
 }) => {
   const { mutate: patchProject } = usePatchProject();
   const { addFlash } = useFlash();
@@ -21,13 +23,12 @@ export const ProjectActionsDropdown = ({
   const { requestEdit } = useEditProject();
   const { requestDelete } = useDeleteProject();
   const { requestAddFeature } = useAddFeature();
-  const { zoomToProject, hasExtent } = useZoomToProjectBoundary(item.id);
   return (
     <ActionsDropdown id={id}>
       {hasExtent && (
         <li>
           <button onClick={(e) => {
-            zoomToProject();
+            zoomToProject?.();
             const popover = (e.currentTarget as HTMLElement).closest(
               "[popover]",
             ) as HTMLElement | null;
