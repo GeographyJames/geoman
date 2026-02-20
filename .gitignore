@@ -2,3 +2,6 @@
 .env
 /test-tools/testng*
 /.claude
+zellij.kdl
+react-frontend/node_modules/
+react-frontend/dist/

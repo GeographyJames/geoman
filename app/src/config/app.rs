@@ -48,14 +48,14 @@ pub fn get_config() -> Result<AppConfig, anyhow::Error> {
         .context("failed to add config environment to config builder")?
         .set_default("app_settings.environment.run", environment.run.to_string())
         .context("failed to add run environment to config builder")?
+        .add_source(config::File::from(
+            configuration_directory.join(environment_filename),
+        ))
         .add_source(
             config::Environment::with_prefix(ENVIRONMENT_VARIABLE_PREFIX)
                 .prefix_separator("_")
                 .separator("__"),
         )
-        .add_source(config::File::from(
-            configuration_directory.join(environment_filename),
-        ))
         .build()
         .context("failed to build config")?;
 

@@ -96,11 +96,11 @@ pub async fn run(
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/ogcapi/openapi.json", openapi.clone()),
             )
-            .service(
-                actix_files::Files::new("/book", "geoman-book/book")
-                    .index_file("index.html")
-                    .redirect_to_slash_directory(), // Relative paths in book (such as CSS files) are only resolved it we have a trailing slash when we navigate to /book/ so we need this redirect.
-            )
+            // .service(
+            //     actix_files::Files::new("/book", "geoman-book/book")
+            //         .index_file("index.html")
+            //         .redirect_to_slash_directory(),
+            // )
             .service(
                 actix_web_lab::web::spa()
                     .index_file("./react-frontend/dist/index.html")
