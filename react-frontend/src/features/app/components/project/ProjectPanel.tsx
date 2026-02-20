@@ -4,24 +4,12 @@ import { CloseButton } from "@/components/Buttons";
 import type Project from "@/domain/project/entity";
 import { useProjectCollections } from "@/hooks/api/useProjectCollections";
 import { useProjectCollectionItems } from "@/hooks/api/useProjectCollectionItems";
-import { useFeatureLayer } from "@/hooks/useFeatureLayer";
 import { useZoomToProjectBoundary } from "@/hooks/useZoomToProjectBoundary";
-import { Stroke, Fill, Style } from "ol/style";
 import { SiteDataDropdown } from "./siteDataDropdown";
 import { ProjectIcons } from "./ProjectIcons";
 import { ProjectActionsDropdown } from "./ProjectActionsDropdown";
 
 const SITE_BOUNDARIES_TITLE = "site boundaries";
-
-const boundaryStyle = new Style({
-  stroke: new Stroke({
-    color: "#DC2626",
-    width: 2.5,
-  }),
-  fill: new Fill({
-    color: "rgba(220, 38, 38, 0.12)",
-  }),
-});
 
 export const ProjectPanel = ({ project }: { project: Project }) => {
   const navigate = useNavigate();
@@ -44,7 +32,6 @@ export const ProjectPanel = ({ project }: { project: Project }) => {
     (f) => f.properties.is_primary,
   );
 
-  useFeatureLayer(primaryFeature, boundaryStyle);
   const { zoomToProject, hasExtent } = useZoomToProjectBoundary(primaryFeature);
 
   // Default to expanded on medium screens and up (sm breakpoint is 640px)

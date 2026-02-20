@@ -9,8 +9,10 @@ import { DeleteFeatureButton } from "./DeleteFeatureButton";
 
 export const FeatureActionsDropdown = ({
   item,
+  zoomToFeature,
 }: {
   item: ProjectCollectionItem;
+  zoomToFeature: () => void;
 }) => {
   const { mutate: patchProjectFeature } = usePatchProjectFeature();
   const { download, isLoading: isDownloading } = useDownloadFeatureShapefile();
@@ -23,6 +25,15 @@ export const FeatureActionsDropdown = ({
       id={`c${item.properties.collection_id}-item${item.id}`}
       style="bg-base-100"
     >
+      <li>
+        <button onClick={(e) => {
+          zoomToFeature();
+          const popover = (e.currentTarget as HTMLElement).closest(
+            "[popover]",
+          ) as HTMLElement | null;
+          popover?.hidePopover();
+        }}>zoom to feature</button>
+      </li>
       <li>
         <button
           disabled={isDownloading}

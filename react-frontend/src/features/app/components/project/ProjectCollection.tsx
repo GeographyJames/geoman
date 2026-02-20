@@ -3,12 +3,44 @@ import type {
   ProjectCollectionItems,
 } from "@/domain/projectCollectionItems/outputDTO";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import UserInitials from "../UserInitials";
 import SetPrimaryRadio from "./SetPrimaryRadio";
+import { useFeatureLayer, useZoomToFeature } from "@/hooks/useFeatureLayer";
+import { Stroke, Fill, Style, Circle } from "ol/style";
 
 import { FeatureActionsDropdown } from "./features/FeatureActionsDropdown";
 import { dateFormat } from "@/constants";
+
+const primaryStyle = new Style({
+  stroke: new Stroke({
+    color: "#DC2626",
+    width: 2.5,
+  }),
+  fill: new Fill({
+    color: "rgba(220, 38, 38, 0.12)",
+  }),
+  image: new Circle({
+    radius: 6,
+    fill: new Fill({ color: "#DC2626" }),
+    stroke: new Stroke({ color: "#fff", width: 1.5 }),
+  }),
+});
+
+const defaultStyle = new Style({
+  stroke: new Stroke({
+    color: "#2563EB",
+    width: 2.5,
+  }),
+  fill: new Fill({
+    color: "rgba(37, 99, 235, 0.12)",
+  }),
+  image: new Circle({
+    radius: 6,
+    fill: new Fill({ color: "#2563EB" }),
+    stroke: new Stroke({ color: "#fff", width: 1.5 }),
+  }),
+});
 
 export const ProjectCollection = ({
   data,
@@ -60,6 +92,10 @@ export function SiteDataTableRow({
   children: ReactNode;
   item: ProjectCollectionItem;
 }) {
+  const [visible, setVisible] = useState(item.properties.is_primary);
+  useFeatureLayer(visible ? item : undefined, item.properties.is_primary ? primaryStyle : defaultStyle);
+  const zoomToFeature = useZoomToFeature(item);
+
   return (
     <tr key={item.id}>
       <td className="p-0">
@@ -75,9 +111,10 @@ export function SiteDataTableRow({
         <div className="flex">
           <input
             id={`c${item.properties.collection_id}item${item.id}`}
-            name="show-ellipse-checkbox"
             type="checkbox"
             className="checkbox checkbox-sm bg-base-100"
+            checked={visible}
+            onChange={(e) => setVisible(e.target.checked)}
           ></input>
         </div>
       </td>
@@ -117,7 +154,7 @@ export function SiteDataTableRow({
         />
       </td>
       <td className="px-0 py-2 text-right">
-        <FeatureActionsDropdown item={item} />
+        <FeatureActionsDropdown item={item} zoomToFeature={zoomToFeature} />
       </td>
     </tr>
   );
