@@ -1,5 +1,5 @@
 import BaseMap from "@/features/app/components/map/BaseMap";
-import ProjectsMap from "@/features/projects/components/ProjectsMap";
+import ProjectsMap from "@/components/mapComponents/ProjectsMap";
 import { useProjects } from "@/hooks/api/projects/useProjects";
 import type Project from "@/domain/project/entity";
 import { ProjectsFilterProvider } from "@/features/app/contexts/ProjectsFilterContext";

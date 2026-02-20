@@ -51,7 +51,7 @@ export const OverlayPanels = () => {
             ))}
           </div>
         )}
-        <div className="pointer-events-auto">
+        <div className="pointer-events-none">
           <SearchBar
             highlightedSearchIndexState={highlightedSearchIndexState}
             searchText={searchText}
