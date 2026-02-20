@@ -4,8 +4,3 @@ app_settings:
 
 db_settings:
   require_ssl: true
-  host: ""
-  port: 5432
-  username: ""
-  password: ""
-  database_name: ""
