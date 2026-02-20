@@ -8,25 +8,49 @@ import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import GeoJSON from "ol/format/GeoJSON";
 import { Stroke, Fill, Style } from "ol/style";
+import { fromLonLat } from "ol/proj";
+import { boundingExtent } from "ol/extent";
 
 const SITE_BOUNDARIES_TITLE = "site boundaries";
 
 const boundaryStyle = new Style({
   stroke: new Stroke({
-    color: "#2A81CB",
+    color: "#DC2626",
     width: 2.5,
   }),
   fill: new Fill({
-    color: "rgba(42, 129, 203, 0.12)",
+    color: "rgba(220, 38, 38, 0.12)",
   }),
 });
 
 export default function ProjectBoundaryLayer() {
   const { projects: projectsParam } = useSearch({ from: "/_app/" });
   const { data: allProjects } = useProjects();
+  const { mapRef } = useMapContext();
+  const prevSlugsRef = useRef<string[]>([]);
 
-  const slugs = projectsParam ? projectsParam.split(",") : [];
+  const slugs = projectsParam ? projectsParam.split(",").filter(Boolean) : [];
   const selectedProjects = allProjects?.filter((p) => slugs.includes(p.slug)) ?? [];
+
+  useEffect(() => {
+    const prev = prevSlugsRef.current;
+    const removed = prev.length > 0 && slugs.length < prev.length;
+    prevSlugsRef.current = slugs;
+
+    if (!removed) return;
+
+    const map = mapRef.current;
+    if (!map || !allProjects) return;
+
+    const coordinates = allProjects
+      .filter((p) => p.centroid)
+      .map((p) => fromLonLat(p.centroid!.coordinates));
+
+    if (coordinates.length > 0) {
+      const extent = boundingExtent(coordinates);
+      map.getView().fit(extent, { padding: [50, 50, 50, 50], maxZoom: 16, duration: 500 });
+    }
+  }, [slugs.join(","), mapRef, allProjects]);
 
   return (
     <>
@@ -73,7 +97,7 @@ function ProjectBoundary({ projectId }: { projectId: number }) {
       style: boundaryStyle,
     });
 
-    map.addLayer(layer);
+    map.getLayers().insertAt(1, layer);
     layerRef.current = layer;
 
     const extent = source.getExtent();
