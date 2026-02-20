@@ -47,4 +47,9 @@ export default class Project {
         return this.outputDto.properties.status === Status.Archived
     }
 
+
+    get latitude(): number| undefined {return this.outputDto.geometry?.coordinates[1]}
+    get longitude(): number | undefined {return this.outputDto.geometry?.coordinates[0]}
+
+
 }

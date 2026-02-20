@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMapContext } from "@/features/app/contexts/MapRefContext";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
@@ -12,6 +12,8 @@ import { createMarkerStyles } from "@/components/mapComponents/markerStyles";
 import { useMarkerAnimation } from "@/components/mapComponents/MarkerAnimation";
 import type { MapBrowserEvent } from "ol";
 import MapPopup from "@/components/mapComponents/MapPopup";
+import type Project from "@/domain/project/entity";
+import { Link, useSearch } from "@tanstack/react-router";
 
 const HOVER_SCALE = 2;
 const ANIM_STEPS = 8;
@@ -31,8 +33,10 @@ export default function ProjectsMap() {
   const { mapRef } = useMapContext();
   const { projects, hoveredProjectId } = useProjectsFilter();
   const popupRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<Map<number, Feature>>(new Map());
+  const [popupContent, setPopupContent] = useState<{
+    project: Project;
+  } | null>(null);
 
   const { animateScale, hoveredFeatureRef, hoverScale } = useMarkerAnimation({
     activeStyles,
@@ -45,8 +49,7 @@ export default function ProjectsMap() {
   useEffect(() => {
     const map = mapRef.current;
     const popupEl = popupRef.current;
-    const contentEl = contentRef.current;
-    if (!map || !popupEl || !contentEl) return;
+    if (!map || !popupEl) return;
 
     const features = projects
       .filter((p) => p.centroid)
@@ -84,23 +87,25 @@ export default function ProjectsMap() {
     map.addLayer(vectorLayer);
     map.addOverlay(overlay);
 
-    const handleClick = (e: MapBrowserEvent<UIEvent>) => {
+    const handleClick = (e: MapBrowserEvent) => {
       const hit = map.forEachFeatureAtPixel(e.pixel, (feature) => feature, {
         layerFilter: (layer) => layer === vectorLayer,
       });
 
       if (hit && hit instanceof Feature) {
         const geom = hit.getGeometry() as Point;
-        const name = hit.get("projectName") as string;
-        const url = hit.get("projectUrl") as string;
-        contentEl.innerHTML = `<a href="${url}" class="link font-semibold">${name}</a>`;
-        overlay.setPosition(geom.getCoordinates());
+        const project = projects.find((p) => p.id === hit.get("projectId"));
+        if (project) {
+          setPopupContent({ project });
+          overlay.setPosition(geom.getCoordinates());
+        }
       } else {
         overlay.setPosition(undefined);
+        setPopupContent(null);
       }
     };
 
-    const handlePointerMove = (e: MapBrowserEvent<UIEvent>) => {
+    const handlePointerMove = (e: MapBrowserEvent) => {
       const hit = map.forEachFeatureAtPixel(e.pixel, (f) => f, {
         layerFilter: (layer) => layer === vectorLayer,
       });
@@ -139,9 +144,36 @@ export default function ProjectsMap() {
       ?.getOverlays()
       .getArray()
       .forEach((o) => o.setPosition(undefined));
+    setPopupContent(null);
   };
 
+  const { projects: projectsParam } = useSearch({ from: "/_app/" });
+  const projectsArray = projectsParam ? projectsParam.split(",") : [];
+
   return (
-    <MapPopup ref={popupRef} contentRef={contentRef} onClose={closePopup} />
+    <MapPopup ref={popupRef} onClose={closePopup}>
+      {popupContent && <PopupContent project={popupContent.project} projectsArray={projectsArray} onClose={closePopup} />}
+    </MapPopup>
+  );
+}
+
+function PopupContent({ project, projectsArray, onClose }: { project: Project; projectsArray: string[]; onClose: () => void }) {
+  const newProjects = projectsArray.includes(project.slug)
+    ? projectsArray.join(",")
+    : [...projectsArray, project.slug].join(",");
+
+  return (
+    <>
+      <Link
+        from={"/"}
+        search={{ projects: newProjects }}
+        onClick={onClose}
+        className="link font-semibold"
+      >
+        {project.name}
+      </Link>
+      <p>{`lat: ${project.latitude}`}</p>
+      <p>{`long: ${project.longitude}`}</p>
+    </>
   );
 }
