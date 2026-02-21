@@ -8,10 +8,12 @@ import { usePatchProject } from "@/hooks/api/projects/usePatchProject";
 import { useEditProject } from "../../contexts/EditProjectContext";
 import { ProjectForm, type ProjectFormData } from "./ProjectForm";
 import { ApiError } from "@/lib/api";
+import { useNavigate } from "@tanstack/react-router";
 
 const EditProjectInner = () => {
   const { project, clear } = useEditProject();
   const { mutate: patchProject, isPending } = usePatchProject();
+  const navigate = useNavigate();
 
   const { addError, closeDialog } = useModal();
 
@@ -60,6 +62,18 @@ const EditProjectInner = () => {
           reset();
           closeDialog();
           clear();
+          const oldSlug = project.slug;
+          navigate({
+            search: (prev) => {
+              if (!prev.projects) return prev;
+              const slugs = prev.projects.split(",");
+              const idx = slugs.indexOf(oldSlug);
+              if (idx === -1) return prev;
+              slugs[idx] = slug;
+              return { ...prev, projects: slugs.join(",") };
+            },
+            replace: true,
+          });
         },
         onError: (error) => {
           const message =
