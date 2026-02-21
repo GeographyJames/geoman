@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useMapContext } from "@/features/app/contexts/MapRefContext";
 import { useProjects } from "@/hooks/api/projects/useProjects";
 import VectorSource from "ol/source/Vector";
@@ -20,18 +20,31 @@ function readExtent(feature: GeoJSON.Feature): import("ol/extent").Extent {
 export function useZoomToProjectBoundary(feature: GeoJSON.Feature | undefined) {
   const { mapRef } = useMapContext();
   const { data: allProjects } = useProjects();
+  const hasZoomedRef = useRef(false);
+  const allProjectsRef = useRef(allProjects);
 
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !feature) return;
+    allProjectsRef.current = allProjects;
+  });
 
+  // Zoom to project only the first time a feature becomes available
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !feature || hasZoomedRef.current) return;
+
+    hasZoomedRef.current = true;
     const extent = readExtent(feature);
     map.getView().fit(extent, { padding: [80, 80, 80, 80], maxZoom: 16, duration: 500 });
+  }, [mapRef, feature]);
 
+  // Zoom to all projects only on unmount
+  useEffect(() => {
     return () => {
-      if (!map || !allProjects) return;
+      const map = mapRef.current;
+      const projects = allProjectsRef.current;
+      if (!map || !projects) return;
 
-      const coordinates = allProjects
+      const coordinates = projects
         .filter((p) => p.centroid)
         .map((p) => fromLonLat(p.centroid!.coordinates));
 
@@ -40,7 +53,8 @@ export function useZoomToProjectBoundary(feature: GeoJSON.Feature | undefined) {
         map.getView().fit(allExtent, { padding: [50, 50, 50, 50], maxZoom: 16, duration: 500 });
       }
     };
-  }, [mapRef, feature]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const zoomToProject = useCallback(() => {
     const map = mapRef.current;

@@ -32,7 +32,7 @@ impl Application {
         ))
         .context("failed to bind to port")?;
         let port = listener.local_addr().unwrap().port();
-        tracing::info!("\n\nhere!!\n");
+
         let server = run(listener, config, db_pool)
             .await
             .context("failed to run server")?;
@@ -63,15 +63,7 @@ pub async fn run(
         None,
     );
     let clerk = Clerk::new(clerk_config);
-    let string = format!(
-        "clerk key {:.8}",
-        config
-            .auth_settings
-            .clerk_secret_key
-            .expose_secret()
-            .to_string()
-    );
-    tracing::info!("\n\nand again!:{}\n", string);
+
     let app_state = AppState::new();
     let openapi = app_state.openapi.clone();
     let app_state = web::Data::new(app_state);

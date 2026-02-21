@@ -11,6 +11,7 @@ export function useProjectCollectionItems({projectId, collectionId, enabled = tr
     return useQuery({
         queryKey: CACHE_KEY_PROJECT_COLLECTION_ITEMS(projectId, collectionId),
         queryFn: ()=> apiRequest<ProjectCollectionItems>(url),
-        enabled
+        enabled,
+        retry: false,
     })
 }

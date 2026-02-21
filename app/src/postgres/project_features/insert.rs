@@ -24,7 +24,7 @@ impl Insert for (&FeatureInputDTO, ProjectId, ProjectCollectionId, UserId) {
                             is_primary,
                             geom
                             )
-                            VALUES ($1, $2, $3, $4, $4, COALESCE($5, false), ST_Transform(ST_GeomFromWKB($6, $7), $8::int))
+                            VALUES ($1, $2, $3, $4, $4, COALESCE($5, NOT EXISTS(SELECT 1 FROM app.project_features WHERE collection_id = $2 AND project_id = $1 AND status = 'ACTIVE')), ST_Transform(ST_GeomFromWKB($6, $7), $8::int))
                             RETURNING id AS "id: FeatureId"
 
         "#,

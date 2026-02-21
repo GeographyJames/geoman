@@ -100,7 +100,6 @@ async fn validate_clerk_auth<B: MessageBody>(
     let jwt = match clerk_authoriser.authorize(&req).await {
         Err(error) => match error {
             ClerkError::Unauthorized(msg) => {
-                log_jwt_claims(&req);
                 return Err(ErrorUnauthorized(format!("failed to authorise: {}", msg)));
             }
             ClerkError::InternalServerError(msg) => {
@@ -135,36 +134,6 @@ async fn validate_clerk_auth<B: MessageBody>(
     };
     req.extensions_mut().insert(user);
     next.call(req).await
-}
-
-fn log_jwt_claims(req: &ServiceRequest) {
-    let Some(auth_header) = req
-        .headers()
-        .get(AUTHORIZATION)
-        .and_then(|h| h.to_str().ok())
-    else {
-        return;
-    };
-    let Some(token) = auth_header.strip_prefix("Bearer ") else {
-        return;
-    };
-    let parts: Vec<&str> = token.split('.').collect();
-    if parts.len() != 3 {
-        return;
-    }
-    let payload = parts[1];
-    let padded = match payload.len() % 4 {
-        2 => format!("{}==", payload),
-        3 => format!("{}=", payload),
-        _ => payload.to_string(),
-    };
-    let padded = padded.replace('-', "+").replace('_', "/");
-    use base64::Engine;
-    if let Ok(decoded) = base64::engine::general_purpose::STANDARD.decode(&padded) {
-        if let Ok(claims) = std::str::from_utf8(&decoded) {
-            tracing::warn!(jwt_claims = %claims, "JWT validation failed - decoded claims");
-        }
-    }
 }
 
 async fn check_user_details<'a>(

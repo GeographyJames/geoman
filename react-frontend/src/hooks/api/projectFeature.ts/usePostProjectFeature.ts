@@ -1,6 +1,6 @@
 import { useApiRequest } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CACHE_KEY_PROJECT_COLLECTION_ITEMS, CACHE_KEY_PROJECT_COLLECTIONS } from "@/cache_keys";
+import { CACHE_KEY_PROJECT_COLLECTION_ITEMS, CACHE_KEY_PROJECT_COLLECTIONS, CACHE_KEY_PROJECTS } from "@/cache_keys";
 import type { Shapefile } from "@/lib/shapefile";
 
 
@@ -39,6 +39,7 @@ export const usePostProjectFeature = () => {
         
       })
       queryClient.invalidateQueries({queryKey: CACHE_KEY_PROJECT_COLLECTIONS(projectId)});
+      queryClient.invalidateQueries({queryKey: CACHE_KEY_PROJECTS});
     },
   });
 };
