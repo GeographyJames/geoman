@@ -12,7 +12,7 @@ serde_json = { workspace = true }
 ogc = { path = "../ogc" }
 anyhow = { workspace = true }
 ogcapi-types = { workspace = true, features = ["features"] }
-strum = { workspace = true }
+strum = { workspace = true, features = ["derive"] }
 chrono = { workspace = true }
 slug = "0.1.6"
 unicode-segmentation = "1.12.0"

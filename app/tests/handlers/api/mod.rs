@@ -1,5 +1,4 @@
 mod api_key;
-mod app_settings;
 mod collections;
 
 mod epsg_code;

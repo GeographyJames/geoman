@@ -33,6 +33,7 @@ async fn patch_project_feature_works() {
     assert_eq!(status, Status::Active);
     let mut payload = PatchProjectFeaturePayload::default();
     payload.status = Some(Status::Archived);
+    payload.primary = Some(false);
     let response = app
         .features_service
         .patch_json(

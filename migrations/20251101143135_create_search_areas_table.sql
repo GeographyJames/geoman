@@ -6,8 +6,6 @@ CREATE TABLE app.search_areas
     team_id integer NOT NULL REFERENCES app.teams(id),
     code text,
     slug text NOT NULL UNIQUE CHECK (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
-    country_code character(2) NOT NULL CHECK (country_code ~ '^[A-Z]{2}$'),
-    subdivision text,
     status app.status NOT NULL DEFAULT 'ACTIVE',
     added timestamptz DEFAULT now(),
     added_by integer NOT NULL REFERENCES app.users(id),

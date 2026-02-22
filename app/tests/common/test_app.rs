@@ -1,6 +1,5 @@
 use crate::common::{
     Auth, configure_database,
-    constants::REQUEST_FAILED,
     helpers::{
         add_layer, add_shapefile_to_form, create_gdal_multipolygon_bng, create_gdal_point_bng,
         create_shapefile_dataset, dataset_to_shapefile_data, handle_json_response,
@@ -16,10 +15,7 @@ use app::{
     get_config,
     handlers::{
         self,
-        api::{
-            app_settings::AppSettings, project_collections::CollectionReqPayload,
-            projects::PostProjectPayload,
-        },
+        api::{project_collections::CollectionReqPayload, projects::PostProjectPayload},
     },
     telemetry::{get_subscriber, init_subscriber},
 };
@@ -347,17 +343,6 @@ impl TestApp<ClerkAuthService> {
         handle_json_response(response)
             .await
             .expect("failed to retrieve project id")
-    }
-    pub async fn get_app_settings(&self) -> AppSettings {
-        handle_json_response(
-            self.api_client
-                .get(format!("{}{}", &URLS.api.base, &URLS.api.app_settings))
-                .send()
-                .await
-                .expect(REQUEST_FAILED),
-        )
-        .await
-        .expect("failed to retrieve app settings ")
     }
 
     pub async fn _generate_user(&self, admin: bool, team_id: TeamId) -> AuthenticatedUser {

@@ -7,5 +7,4 @@ mod features;
 mod gis_data_table;
 mod projcet_collections;
 mod sql_fragments;
-mod technologies;
 mod users;

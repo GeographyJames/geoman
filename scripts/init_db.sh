@@ -29,7 +29,7 @@ if ! [ -x "$(command -v sqlx)" ]; then
     exit
 fi
 
-DB_PORT="${POSTGRES_PORT:=5432}"
+DB_PORT="${POSTGRES_PORT:=5434}"
 SUPERUSER="${SUPERUSER:=postgres}"
 SUPERUSER_PWD="${SUPERUSER_PWD:=password}"
 
