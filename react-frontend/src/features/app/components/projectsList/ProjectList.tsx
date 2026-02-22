@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 
 import { CreateButton } from "../../../../components/Buttons";
 import ProjectListItem from "./ProjectListItem";
@@ -12,26 +12,29 @@ interface Props {
   projects?: Project[];
 }
 
-export default function ProjectsList({ projects: projectsProp }: Props = {}) {
+function ProjectsList({ projects: projectsProp }: Props = {}) {
   const { projects: contextProjects, showArchivedProjects, setShowArchivedProjects } =
     useProjectsFilter();
   const [sortBy, setSortBy] = useState(SORT_OPTIONS.NAME_ASCENDING);
-  const sortedProjects = (projectsProp ?? contextProjects)
-    .slice()
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "name_ascending":
-          return a.name.localeCompare(b.name);
-        case "created":
-          return b.added.getTime() - a.added.getTime();
-        case "id_ascending":
-          return a.id - b.id;
-        case "id_descending":
-          return b.id - a.id;
-        default:
-          return 0;
-      }
-    });
+
+  const sortedProjects = useMemo(
+    () =>
+      (projectsProp ?? contextProjects).slice().sort((a, b) => {
+        switch (sortBy) {
+          case "name_ascending":
+            return a.name.localeCompare(b.name);
+          case "created":
+            return b.added.getTime() - a.added.getTime();
+          case "id_ascending":
+            return a.id - b.id;
+          case "id_descending":
+            return b.id - a.id;
+          default:
+            return 0;
+        }
+      }),
+    [projectsProp, contextProjects, sortBy],
+  );
 
   return (
     <div className="flex flex-col min-h-0 h-full pb-2 pt-4 gap-2">
@@ -68,3 +71,5 @@ export default function ProjectsList({ projects: projectsProp }: Props = {}) {
     </div>
   );
 }
+
+export default memo(ProjectsList);

@@ -1,8 +1,8 @@
-import { useEffect } from "react";
+import { useMemo } from "react";
 
 import Project from "@/domain/project/entity";
-import SidebarList from "../projectsList/ProjectList";
 import { useProjectsFilter } from "@/features/app/contexts/ProjectsFilterContext";
+import ProjectsList from "../projectsList/ProjectList";
 
 interface Props {
   searchText: string;
@@ -10,8 +10,6 @@ interface Props {
   setSelectedTab: React.Dispatch<
     React.SetStateAction<"projects" | "search-sites">
   >;
-
-  filterSate: [Project[], React.Dispatch<React.SetStateAction<Project[]>>];
   highlightedSearchIndexState: [
     number,
     React.Dispatch<React.SetStateAction<number>>,
@@ -24,22 +22,17 @@ export default function SearchResultsBox({
   setSelectedTab,
   selectedTab,
   searchText,
-  filterSate: [filteredItems, setFilteredItems],
   inputRef,
 }: Props) {
   const { projects } = useProjectsFilter();
-  useEffect(() => {
-    if (!projects) return;
-    if (searchText.trim() !== "") {
-      const filtered = projects.filter((d) =>
-        d.name.toLowerCase().startsWith(searchText.toLowerCase())
-      );
 
-      setFilteredItems(filtered);
-    } else {
-      setFilteredItems(projects);
-    }
-  }, [searchText, projects, setFilteredItems]);
+  const filteredItems = useMemo(() => {
+    if (!projects) return [];
+    if (searchText.trim() === "") return projects;
+    return projects.filter((d) =>
+      d.name.toLowerCase().startsWith(searchText.toLowerCase()),
+    );
+  }, [searchText, projects]);
 
   return (
     <div
@@ -66,7 +59,7 @@ export default function SearchResultsBox({
       <div className=" flex flex-col min-h-0 ">
         {selectedTab === "projects" && (
           <div className=" min-h-0">
-            <SidebarList projects={filteredItems} />
+            <ProjectsList projects={filteredItems} />
           </div>
         )}
 

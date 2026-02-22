@@ -1,15 +1,16 @@
+import { memo } from "react";
 import Project from "@/domain/project/entity";
 
 import { Link, useSearch } from "@tanstack/react-router";
-import { useSearchbar } from "@/features/app/contexts/SearchbarContext";
-import { useProjectsFilter } from "@/features/app/contexts/ProjectsFilterContext";
+import { useSearchbarSetOpen } from "@/features/app/contexts/SearchbarContext";
+import { useSetHoveredProject } from "@/features/app/contexts/ProjectsFilterContext";
 
 import { ProjectIcons } from "../project/ProjectIcons";
 import { ProjectActionsDropdown } from "../project/ProjectActionsDropdown";
 
-export default function ProjectListItem({ item }: { item: Project }) {
-  const { setIsOpen: setSearchOpen } = useSearchbar();
-  const { setHoveredProjectId } = useProjectsFilter();
+function ProjectListItem({ item }: { item: Project }) {
+  const setSearchOpen = useSearchbarSetOpen();
+  const setHoveredProjectId = useSetHoveredProject();
 
   const { projects } = useSearch({ from: "/_app/" });
 
@@ -56,3 +57,5 @@ export default function ProjectListItem({ item }: { item: Project }) {
     </li>
   );
 }
+
+export default memo(ProjectListItem);

@@ -5,11 +5,15 @@ interface ProjectsFilterContextType {
   projects: Project[];
   showArchivedProjects: boolean;
   setShowArchivedProjects: (value: boolean) => void;
-  hoveredProjectId: number | null;
-  setHoveredProjectId: (id: number | null) => void;
 }
 
 const ProjectsFilterContext = createContext<ProjectsFilterContextType | undefined>(undefined);
+
+// State: only ProjectsMap/MarkerAnimation subscribes (OK to re-render on hover)
+const HoveredProjectStateContext = createContext<number | null>(null);
+
+// Actions: stable useState setter — consumers NEVER re-render on hover
+const HoveredProjectActionsContext = createContext<(id: number | null) => void>(() => {});
 
 export function ProjectsFilterProvider({
   allProjects,
@@ -27,11 +31,15 @@ export function ProjectsFilterProvider({
   );
 
   return (
-    <ProjectsFilterContext.Provider
-      value={{ projects, showArchivedProjects, setShowArchivedProjects, hoveredProjectId, setHoveredProjectId }}
-    >
-      {children}
-    </ProjectsFilterContext.Provider>
+    <HoveredProjectActionsContext.Provider value={setHoveredProjectId}>
+      <HoveredProjectStateContext.Provider value={hoveredProjectId}>
+        <ProjectsFilterContext.Provider
+          value={{ projects, showArchivedProjects, setShowArchivedProjects }}
+        >
+          {children}
+        </ProjectsFilterContext.Provider>
+      </HoveredProjectStateContext.Provider>
+    </HoveredProjectActionsContext.Provider>
   );
 }
 
@@ -43,4 +51,12 @@ export function useProjectsFilter() {
     );
   }
   return context;
+}
+
+export function useHoveredProjectId() {
+  return useContext(HoveredProjectStateContext);
+}
+
+export function useSetHoveredProject() {
+  return useContext(HoveredProjectActionsContext);
 }

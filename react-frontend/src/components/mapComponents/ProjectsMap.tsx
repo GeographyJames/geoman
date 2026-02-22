@@ -6,7 +6,7 @@ import Overlay from "ol/Overlay";
 import { Feature } from "ol";
 import { Point } from "ol/geom";
 import { fromLonLat } from "ol/proj";
-import { useProjectsFilter } from "@/features/app/contexts/ProjectsFilterContext";
+import { useProjectsFilter, useHoveredProjectId } from "@/features/app/contexts/ProjectsFilterContext";
 
 import { createMarkerStyles } from "@/components/mapComponents/markerStyles";
 import { useMarkerAnimation } from "@/components/mapComponents/MarkerAnimation";
@@ -31,7 +31,8 @@ const archivedStyles = createMarkerStyles({
 
 export default function ProjectsMap() {
   const { mapRef } = useMapContext();
-  const { projects, hoveredProjectId } = useProjectsFilter();
+  const { projects } = useProjectsFilter();
+  const hoveredProjectId = useHoveredProjectId();
   const popupRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<Map<number, Feature>>(new Map());
   const [popupContent, setPopupContent] = useState<{

@@ -41,14 +41,11 @@ export const Drawer = () => {
 
 const DrawerMain = ({ projects }: { projects: Project[] }) => {
   const { setIsOpen: setSearchOpen } = useSearchbar();
-
   const coordinates = projects
     .filter((p) => p.centroid)
     .map((p) => fromLonLat(p.centroid!.coordinates));
-
-  const initialExtent = coordinates.length > 0
-    ? boundingExtent(coordinates)
-    : undefined;
+  const initialExtent =
+    coordinates.length > 0 ? boundingExtent(coordinates) : undefined;
 
   return (
     <div className="drawer-content h-full">

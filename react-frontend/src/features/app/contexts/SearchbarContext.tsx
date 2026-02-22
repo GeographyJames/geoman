@@ -7,13 +7,18 @@ interface SearchBarContextValue {
 
 const SearchbarContext = createContext<SearchBarContextValue | null>(null);
 
+// Stable setter — consumers NEVER re-render when isOpen changes
+const SearchbarActionsContext = createContext<(open: boolean) => void>(() => {});
+
 export function SearchbarProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const toggleSearchbar = () => setIsOpen((prev) => !prev);
   return (
-    <SearchbarContext.Provider value={{ isOpen, setIsOpen, toggleSearchbar }}>
-      {children}
-    </SearchbarContext.Provider>
+    <SearchbarActionsContext.Provider value={setIsOpen}>
+      <SearchbarContext.Provider value={{ isOpen, setIsOpen, toggleSearchbar }}>
+        {children}
+      </SearchbarContext.Provider>
+    </SearchbarActionsContext.Provider>
   );
 }
 
@@ -23,4 +28,8 @@ export function useSearchbar() {
     throw new Error("useSidebar must be used within SidebarProvider");
   }
   return context;
+}
+
+export function useSearchbarSetOpen() {
+  return useContext(SearchbarActionsContext);
 }

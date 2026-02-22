@@ -3,30 +3,40 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { ProjectPanel } from "./project/ProjectPanel";
 import { useProjects } from "@/hooks/api/projects/useProjects";
 import { useSearchbar } from "../contexts/SearchbarContext";
+import { useProjectsFilter } from "../contexts/ProjectsFilterContext";
 import { useFlash } from "../contexts/FlashMessageContext";
 import SearchResultsBox from "./search/SearchResultsBox";
 import { FlashAlert } from "@/components/FlashAlert";
 import type Project from "@/domain/project/entity";
 import { SearchBar } from "./search/SearchBar";
-import { useRef, useState } from "react";
+import { useRef, useMemo, useState } from "react";
 
 export const OverlayPanels = () => {
-  const { projects } = useSearch({ from: "/_app/" });
+  const { projects: projectsParam } = useSearch({ from: "/_app/" });
   const { data } = useProjects();
+  const { projects } = useProjectsFilter();
   const { setIsOpen: setSearchOpen, isOpen: searchOpen } = useSearchbar();
   const { messages, removeFlash } = useFlash();
-  const loadedProjects = projects ? projects.split(",") : [];
+  const loadedProjects = projectsParam ? projectsParam.split(",") : [];
   const projectsToShow = data
     ? data.filter((p) => loadedProjects.includes(p.slug))
     : [];
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchText, setSearchText] = useState<string>("");
-  const [filteredItems, setFilteredItems] = useState<Project[]>([]);
   const highlightedSearchIndexState = useState<number>(0);
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState<"projects" | "search-sites">(
     "projects",
   );
+
+  const filteredItems = useMemo(() => {
+    if (!projects) return [];
+    if (searchText.trim() === "") return projects;
+    return projects.filter((d) =>
+      d.name.toLowerCase().startsWith(searchText.toLowerCase()),
+    );
+  }, [searchText, projects]);
+
   const handleSelect = (project: Project) => {
     setSearchText("");
     setSearchOpen(false);
@@ -77,7 +87,6 @@ export const OverlayPanels = () => {
               setSelectedTab={setSelectedTab}
               highlightedSearchIndexState={highlightedSearchIndexState}
               searchText={searchText}
-              filterSate={[filteredItems, setFilteredItems]}
               handleSelect={handleSelect}
               inputRef={inputRef}
             />
