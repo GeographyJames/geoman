@@ -8,7 +8,8 @@ import { boundingExtent } from "ol/extent";
 import { Sidebar } from "./Sidebar";
 import { OverlayPanels } from "./OverlayPanels";
 import { useSidebar } from "@/features/app/contexts/SidebarContext";
-import { useSearchbar } from "../contexts/SearchbarContext";
+import { useSearchbarSetOpen } from "../contexts/SearchbarContext";
+import { memo, useMemo } from "react";
 
 export const Drawer = () => {
   const sidebar = useSidebar();
@@ -39,13 +40,19 @@ export const Drawer = () => {
   );
 };
 
-const DrawerMain = ({ projects }: { projects: Project[] }) => {
-  const { setIsOpen: setSearchOpen } = useSearchbar();
-  const coordinates = projects
-    .filter((p) => p.centroid)
-    .map((p) => fromLonLat(p.centroid!.coordinates));
-  const initialExtent =
-    coordinates.length > 0 ? boundingExtent(coordinates) : undefined;
+const DrawerMain = memo(({ projects }: { projects: Project[] }) => {
+  const setSearchOpen = useSearchbarSetOpen();
+  const coordinates = useMemo(
+    () =>
+      projects
+        .filter((p) => p.centroid)
+        .map((p) => fromLonLat(p.centroid!.coordinates)),
+    [projects],
+  );
+  const initialExtent = useMemo(
+    () => (coordinates.length > 0 ? boundingExtent(coordinates) : undefined),
+    [coordinates],
+  );
 
   return (
     <div className="drawer-content h-full">
@@ -57,9 +64,9 @@ const DrawerMain = ({ projects }: { projects: Project[] }) => {
       <OverlayPanels />
     </div>
   );
-};
+});
 
-const DrawerSide = () => {
+const DrawerSide = memo(() => {
   return (
     <div className="drawer-side">
       <label
@@ -70,4 +77,4 @@ const DrawerSide = () => {
       <Sidebar />
     </div>
   );
-};
+});

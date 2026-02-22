@@ -64,6 +64,7 @@ const EditProjectInner = () => {
           clear();
           const oldSlug = project.slug;
           navigate({
+            from: "/",
             search: (prev) => {
               if (!prev.projects) return prev;
               const slugs = prev.projects.split(",");

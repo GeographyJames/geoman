@@ -1,10 +1,11 @@
+import { memo } from "react";
 import type Project from "@/domain/project/entity";
 import { VisibilityConfig } from "@/domain/types";
 import UserInitials from "../UserInitials";
 import { FaLocationDot } from "react-icons/fa6";
 import { dateFormat } from "@/constants";
 
-export function ProjectIcons({ project }: { project: Project }) {
+export const ProjectIcons = memo(function ProjectIcons({ project }: { project: Project }) {
   const vis = VisibilityConfig[project.visibility];
   const VisibilityIcon = vis.icon;
   return (
@@ -29,4 +30,4 @@ export function ProjectIcons({ project }: { project: Project }) {
       </div>
     </div>
   );
-}
+});

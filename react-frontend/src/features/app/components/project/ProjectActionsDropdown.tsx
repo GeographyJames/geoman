@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { ActionsDropdown } from "@/components/ActionsDropdown";
 import { ToggleArchivedStatus } from "@/components/ToggleArchivedStatus";
 import type Project from "@/domain/project/entity";
@@ -6,7 +7,7 @@ import { useFlash } from "@/features/app/contexts/FlashMessageContext";
 import { useEditProject } from "../../contexts/EditProjectContext";
 import { useDeleteProject } from "../../contexts/DeleteProjectContext";
 import { useAddFeature } from "../../contexts/AddFeatureContext";
-export const ProjectActionsDropdown = ({
+export const ProjectActionsDropdown = memo(({
   item,
   id,
   zoomToProject,
@@ -79,4 +80,4 @@ export const ProjectActionsDropdown = ({
       </li>
     </ActionsDropdown>
   );
-};
+});

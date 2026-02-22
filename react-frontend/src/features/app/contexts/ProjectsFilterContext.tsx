@@ -30,12 +30,15 @@ export function ProjectsFilterProvider({
     [allProjects, showArchivedProjects],
   );
 
+  const contextValue = useMemo(
+    () => ({ projects, showArchivedProjects, setShowArchivedProjects }),
+    [projects, showArchivedProjects, setShowArchivedProjects],
+  );
+
   return (
     <HoveredProjectActionsContext.Provider value={setHoveredProjectId}>
       <HoveredProjectStateContext.Provider value={hoveredProjectId}>
-        <ProjectsFilterContext.Provider
-          value={{ projects, showArchivedProjects, setShowArchivedProjects }}
-        >
+        <ProjectsFilterContext.Provider value={contextValue}>
           {children}
         </ProjectsFilterContext.Provider>
       </HoveredProjectStateContext.Provider>
