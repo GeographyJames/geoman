@@ -98,7 +98,7 @@ impl SelectAllWithParams for Project {
             status,
         } = params;
         let rows: Vec<ProjectRow> = sqlx::query_as(&format!(
-            "{}         WHERE p.status = ANY($2)
+            "{}         WHERE p.status = ANY($2) AND p.search_area_id IS NULL
             ORDER BY id
                  LIMIT $3",
             project_query()
