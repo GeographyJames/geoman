@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT u.id AS \"id: UserId\",\n                    u.first_name,\n                    u.last_name,\n                    u.clerk_id,\n                    u.operating_country_code,\n                    u.admin,\n                    (ROW(t.id, t.name)::app.team) as \"team!: Team\"\n                FROM app.users u JOIN app.teams t ON t.id = u.team_id\n                WHERE u.id = $1 ",
+  "query": "SELECT u.id AS \"id: UserId\",\n                    u.first_name,\n                    u.last_name,\n                    u.clerk_id,\n                    u.operating_country_code,\n                    u.admin,\n                    (ROW(t.id, t.name, t.business_unit_id)::app.team) as \"team!: Team\"\n                FROM app.users u JOIN app.teams t ON t.id = u.team_id\n                WHERE u.id = $1 ",
   "describe": {
     "columns": [
       {
@@ -48,6 +48,10 @@
                 [
                   "name",
                   "Text"
+                ],
+                [
+                  "business_unit_it",
+                  "Int4"
                 ]
               ]
             }
@@ -70,5 +74,5 @@
       null
     ]
   },
-  "hash": "6390eb2dbb54725b092a9ae674be08390580a4cfa696dc0af48251d2754251cb"
+  "hash": "65b603aaabe471f9d3507d157dab2aae83091b9fe2c0084f7e1cd0fa8909dd91"
 }

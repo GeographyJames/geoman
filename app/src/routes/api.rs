@@ -2,6 +2,7 @@ use crate::{
     URLS,
     enums::GeoManEnvironment,
     handlers::api::{
+        business_units::get_business_units,
         epsg::{post_epsg, post_epsg_from_shz},
         features::{
             get::get_project_feature_shapefile, patch::patch_project_feature,
@@ -11,7 +12,6 @@ use crate::{
         project_collections::{get_collections, patch_collection, post_project_collection},
         projects::{patch_project, post_project},
         teams::get_teams,
-        business_units::get_business_units,
         users::{get_user, get_users},
     },
     middleware::{auth_middleware, mock_auth_middlewear},

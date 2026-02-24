@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT t.id as \"id: TeamId\",\n               t.name,\n               t.business_unit_id as \"business_unit_id: BusinessUnitId\"\n\n\n        FROM app.teams t\n        WHERE t.id > 0\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: TeamId",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "business_unit_id: BusinessUnitId",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "83a3cd8353fd59a70f65573ae1018b8c575f9f67bd34fae5b6a0612e990b0f17"
+}
