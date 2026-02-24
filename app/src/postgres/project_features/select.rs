@@ -111,9 +111,9 @@ impl SelectOneWithParams<&ProjectFeatureId> for ProjectFeature {
                 f.properties,
                 f.status as "status: Status",
                 f.added,
-                ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t_ab.id, t_ab.name)::app.team))::app.user AS "added_by!: AddedBy",
+                ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t_ab.id, t_ab.name, t_ab.business_unit_id)::app.team))::app.user AS "added_by!: AddedBy",
                 f.last_updated,
-                ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name)::app.team))::app.user AS "last_updated_by!: LastUpdatedBy",
+                ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name, t_ub.business_unit_id)::app.team))::app.user AS "last_updated_by!: LastUpdatedBy",
                 1 as "number_matched!"
             FROM app.project_features f
             JOIN app.collections c ON f.collection_id = c.id
@@ -175,9 +175,9 @@ impl SelectAllWithParamsStreaming for ProjectFeature {
                 f.properties,
                 f.status as "status: Status",
                 f.added,
-                ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t_ab.id, t_ab.name)::app.team))::app.user AS "added_by!: AddedBy",
+                ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t_ab.id, t_ab.name, t_ab.business_unit_id)::app.team))::app.user AS "added_by!: AddedBy",
                 f.last_updated,
-                ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name)::app.team))::app.user AS "last_updated_by!: LastUpdatedBy",
+                ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name, t_ub.business_unit_id)::app.team))::app.user AS "last_updated_by!: LastUpdatedBy",
                 COUNT(*) OVER() as "number_matched!"
             FROM app.project_features f
             JOIN app.collections c ON c.id = f.collection_id

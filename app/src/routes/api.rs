@@ -10,6 +10,8 @@ use crate::{
         keys::{generate_api_key, get_api_keys, renew_api_key, revoke_api_key},
         project_collections::{get_collections, patch_collection, post_project_collection},
         projects::{patch_project, post_project},
+        teams::get_teams,
+        business_units::get_business_units,
         users::{get_user, get_users},
     },
     middleware::{auth_middleware, mock_auth_middlewear},
@@ -43,7 +45,9 @@ pub fn api_routes(cfg: &mut web::ServiceConfig, _clerk: Clerk, run_environment: 
         .configure(user_routes)
         .configure(project_collection_routes)
         .configure(project_features_routes)
-        .configure(epsg_routes);
+        .configure(epsg_routes)
+        .configure(teams_routes)
+        .configure(business_units_routes);
 
     match run_environment {
         GeoManEnvironment::Development => {
@@ -101,4 +105,12 @@ pub fn epsg_routes(cfg: &mut web::ServiceConfig) {
             .service(post_epsg)
             .service(post_epsg_from_shz),
     );
+}
+
+pub fn teams_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(scope(&URLS.api.teams).service(get_teams));
+}
+
+pub fn business_units_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(scope(&URLS.api.business_units).service(get_business_units));
 }

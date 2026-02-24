@@ -1,26 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@clerk/clerk-react";
-import type User from "@/domain/user/entity";
+import { useApiRequest } from "@/lib/api";
+import type { UserOutputDto } from "@/domain/user/outputDto";
+import User from "@/domain/user/entity";
 
 export function useUsers() {
-  const { getToken } = useAuth();
+  const apiRequest = useApiRequest();
+  const url = __URLS__.api.base + __URLS__.api.users;
 
   return useQuery({
     queryKey: ["users"],
     queryFn: async (): Promise<User[]> => {
-      const token = await getToken();
-
-      const response = await fetch(__URLS__.api.base + __URLS__.api.users, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch users: ${response.statusText}`);
-      }
-
-      return response.json();
+      const data = await apiRequest<UserOutputDto[]>(url);
+      return (data ?? []).map((dto) => new User(dto));
     },
   });
 }

@@ -207,7 +207,7 @@ impl SelectAll for CollectionListItem {
                       COUNT(f.id) FILTER (WHERE f.status = 'ACTIVE') AS "active_feature_count!",
                       COUNT(f.id) FILTER (WHERE f.status = 'ARCHIVED') AS "archived_feature_count!",
                       c.added,
-                      ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t.id, t.name)::app.team))::app.user AS "added_by!: AddedBy"
+                      ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t.id, t.name, t.business_unit_id)::app.team))::app.user AS "added_by!: AddedBy"
                FROM app.collections c
                LEFT JOIN app.project_features f ON f.collection_id = c.id
                JOIN app.users ab ON ab.id = c.added_by

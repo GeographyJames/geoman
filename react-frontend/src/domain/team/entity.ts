@@ -6,5 +6,8 @@ export default class Team {
     constructor(outputDto: TeamOutputDto) {
         this.outputDto = outputDto
     }
-get name(): string {return this.outputDto.name}
+
+    get id(): number { return this.outputDto.id }
+    get name(): string { return this.outputDto.name }
+    get businessUnitId(): number | null { return this.outputDto.business_unit_id }
 }

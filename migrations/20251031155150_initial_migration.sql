@@ -14,7 +14,8 @@ CREATE TYPE geometry_type AS ENUM (
 
 CREATE TYPE app.team AS (
     id INTEGER,
-    name TEXT
+    name TEXT,
+    business_unit_it INTEGER
 );
 
 CREATE TYPE app.user AS (

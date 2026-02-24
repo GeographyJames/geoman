@@ -6,7 +6,7 @@ pub fn user_row_fragment(user_alias: &str, row_alias: &str) -> String {
 
     format!(
         "ROW({alias}.id, {alias}.first_name, {alias}.last_name, {alias}.{USER_AUTH_ID_COLUMN}, \
- (ROW(t_{alias}.id, t_{alias}.name)::app.team))::app.user AS {row_alias}"
+ (ROW(t_{alias}.id, t_{alias}.name, t_{alias}.business_unit_id)::app.team))::app.user AS {row_alias}"
     )
 }
 

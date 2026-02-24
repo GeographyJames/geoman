@@ -157,6 +157,9 @@ then
         "collections.sql"
         "projects.sql"
         "features.sql"
+        "business_units.sql"
+        "teams.sql"
+        "users.sql"
 
     )
 

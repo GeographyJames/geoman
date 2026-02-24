@@ -25,5 +25,7 @@ mod user;
 pub use user::*;
 mod team;
 pub use team::Team;
+mod business_unit;
+pub use business_unit::BusinessUnit;
 
 pub mod name;

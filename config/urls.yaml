@@ -10,6 +10,8 @@ api:
   app_settings: "/app-settings"
   project_features: "/features"
   epsg: "/epsg"
+  teams: "/teams"
+  business_units: "/business-units"
 
 docs:
   base: "/docs"
