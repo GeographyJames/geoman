@@ -86,7 +86,6 @@ export default function CollectionsSection() {
                   <th>Geometry Type</th>
                   <th>Active</th>
                   <th>Archived</th>
-                  <th>Added</th>
                   <th>Added By</th>
                   <th>Description</th>
                   <th></th>
@@ -108,14 +107,11 @@ export default function CollectionsSection() {
                     </td>
                     <td className="text-sm">{collection.active_feature_count}</td>
                     <td className="text-sm">{collection.archived_feature_count}</td>
-                    <td className="text-sm">
-                      {dateFormat.format(new Date(collection.added))}
-                    </td>
                     <td>
                       <UserInitials
                         firstName={collection.added_by_first_name}
                         lastName={collection.added_by_last_name}
-                        message={`${collection.added_by_first_name} ${collection.added_by_last_name}`}
+                        message={`${collection.added_by_first_name} ${collection.added_by_last_name} · ${dateFormat.format(new Date(collection.added))}`}
                       />
                     </td>
                     <td className="text-sm text-base-content/70">
