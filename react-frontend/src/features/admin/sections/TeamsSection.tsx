@@ -1,9 +1,10 @@
-import { Users, UserMinus } from "lucide-react";
+import { Users, UserMinus, Plus } from "lucide-react";
 import { useUsers } from "@/hooks/api/useUsers";
 import { useTeams } from "@/hooks/api/useTeams";
 import { useBusinessUnits } from "@/hooks/api/useBusinessUnits";
 import { usePatchUser } from "@/hooks/api/usePatchUser";
 import { useCurrentUser } from "@/hooks/api/useCurrentUser";
+import { CreateTeamForm, openCreateTeamModal } from "./CreateTeamForm";
 import type Team from "@/domain/team/entity";
 import type User from "@/domain/user/entity";
 
@@ -58,7 +59,10 @@ function TeamCard({ team, members }: { team: Team; members: User[] }) {
   );
 }
 
-function UnassignedUsersCard({ users }: { users: User[] }) {
+function UnassignedUsersCard({ users, teams }: { users: User[]; teams: Team[] }) {
+  const { mutate: patchUser, isPending } = usePatchUser();
+  const { data: currentUser } = useCurrentUser();
+
   return (
     <div className="card border border-base-300 bg-base-100">
       <div className="card-body gap-3">
@@ -68,18 +72,36 @@ function UnassignedUsersCard({ users }: { users: User[] }) {
         </h3>
         <ul className="space-y-1">
           {users.map((user) => (
-            <li key={user.id} className="flex items-center gap-2">
-              <div className="avatar placeholder">
-                <div className="bg-neutral text-neutral-content rounded-full w-7">
-                  <span className="text-xs">
-                    {user.firstName[0]}
-                    {user.lastName[0]}
-                  </span>
+            <li key={user.id} className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="avatar placeholder">
+                  <div className="bg-neutral text-neutral-content rounded-full w-7">
+                    <span className="text-xs">
+                      {user.firstName[0]}
+                      {user.lastName[0]}
+                    </span>
+                  </div>
                 </div>
+                <span className="text-sm">
+                  {user.firstName} {user.lastName}
+                </span>
               </div>
-              <span className="text-sm">
-                {user.firstName} {user.lastName}
-              </span>
+              {currentUser?.isAdmin && (
+                <select
+                  className="select select-xs select-bordered"
+                  disabled={isPending}
+                  value=""
+                  onChange={(e) => {
+                    const teamId = Number(e.target.value);
+                    if (teamId) patchUser({ userId: user.id, patch: { team_id: teamId } });
+                  }}
+                >
+                  <option value="" disabled>Assign to team…</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.id}>{team.name}</option>
+                  ))}
+                </select>
+              )}
             </li>
           ))}
         </ul>
@@ -117,15 +139,26 @@ export default function TeamsSection() {
   const { data: teams = [] } = useTeams();
   const { data: users = [] } = useUsers();
   const { data: businessUnits = [] } = useBusinessUnits();
+  const { data: currentUser } = useCurrentUser();
 
   const unassignedTeams = teams.filter((t) => t.businessUnitId === null);
   const unassignedUsers = users.filter((u) => u.teamId === -1);
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold mb-1">Teams</h1>
-        <p className="text-base-content/70">Teams and their members</p>
+      <CreateTeamForm />
+
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold mb-1">Teams</h1>
+          <p className="text-base-content/70">Teams and their members</p>
+        </div>
+        {currentUser?.isAdmin && (
+          <button className="btn btn-primary gap-2" onClick={openCreateTeamModal}>
+            <Plus size={20} />
+            New Team
+          </button>
+        )}
       </div>
 
       {businessUnits.map((bu) => {
@@ -141,7 +174,7 @@ export default function TeamsSection() {
       {unassignedUsers.length > 0 && (
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-3 text-base-content/80">Unassigned Users</h2>
-          <UnassignedUsersCard users={unassignedUsers} />
+          <UnassignedUsersCard users={unassignedUsers} teams={teams} />
         </div>
       )}
     </>
