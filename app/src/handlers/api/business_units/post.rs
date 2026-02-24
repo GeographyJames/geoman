@@ -2,24 +2,23 @@ use actix_web::{
     post,
     web::{self, Json},
 };
-use domain::{BusinessUnitId, TeamId};
+use domain::BusinessUnitId;
 use serde::{Deserialize, Serialize};
 
 use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
 
 #[derive(Deserialize, Serialize)]
-pub struct TeamInputPayload {
+pub struct BusinessUnitInputPayload {
     pub name: String,
-    pub business_unit: BusinessUnitId,
 }
 
 #[post("")]
 #[tracing::instrument(skip(repo, user, payload))]
-pub async fn post_team(
+pub async fn post_business_unit(
     repo: web::Data<PostgresRepo>,
-    payload: web::Json<TeamInputPayload>,
+    payload: web::Json<BusinessUnitInputPayload>,
     user: web::ReqData<AuthenticatedUser>,
-) -> Result<Json<TeamId>, ApiError> {
+) -> Result<Json<BusinessUnitId>, ApiError> {
     if !user.admin {
         return Err(ApiError::AdminOnly);
     }

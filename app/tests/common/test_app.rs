@@ -15,13 +15,16 @@ use app::{
     get_config,
     handlers::{
         self,
-        api::{project_collections::CollectionReqPayload, projects::PostProjectPayload},
+        api::{
+            business_units::BusinessUnitInputPayload, project_collections::CollectionReqPayload,
+            projects::PostProjectPayload, teams::TeamInputPayload,
+        },
     },
     telemetry::{get_subscriber, init_subscriber},
 };
 use domain::{
-    FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName, TeamId, UserId,
-    enums::GeometryType,
+    BusinessUnitId, FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName, TeamId,
+    UserId, enums::GeometryType,
 };
 use dotenvy::dotenv;
 use gdal::vector::{Geometry, LayerAccess};
@@ -352,8 +355,40 @@ impl TestApp<ClerkAuthService> {
             .await
             .expect("failed to retrieve project id")
     }
+    pub async fn generate_bu_id(&self, auth: Option<&Auth>) -> BusinessUnitId {
+        handle_json_response(
+            self.business_units_service
+                .post_json(
+                    &self.api_client,
+                    auth,
+                    &BusinessUnitInputPayload {
+                        name: uuid::Uuid::new_v4().to_string(),
+                    },
+                )
+                .await,
+        )
+        .await
+        .expect("failed to generate bu id")
+    }
 
-    pub async fn _generate_user(&self, admin: bool, team_id: TeamId) -> AuthenticatedUser {
+    pub async fn generate_team_id(&self, auth: Option<&Auth>, bu_id: BusinessUnitId) -> TeamId {
+        handle_json_response(
+            self.teams_service
+                .post_json(
+                    &self.api_client,
+                    auth,
+                    &TeamInputPayload {
+                        name: uuid::Uuid::new_v4().to_string(),
+                        business_unit: bu_id,
+                    },
+                )
+                .await,
+        )
+        .await
+        .expect("failed to generate team id")
+    }
+
+    pub async fn generate_user(&self, admin: bool, team_id: TeamId) -> AuthenticatedUser {
         let first_name = uuid::Uuid::new_v4().to_string();
         let last_name = uuid::Uuid::new_v4().to_string();
 

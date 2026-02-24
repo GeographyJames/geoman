@@ -1,11 +1,16 @@
-import { Users } from "lucide-react";
+import { Users, UserMinus } from "lucide-react";
 import { useUsers } from "@/hooks/api/useUsers";
 import { useTeams } from "@/hooks/api/useTeams";
 import { useBusinessUnits } from "@/hooks/api/useBusinessUnits";
+import { usePatchUser } from "@/hooks/api/usePatchUser";
+import { useCurrentUser } from "@/hooks/api/useCurrentUser";
 import type Team from "@/domain/team/entity";
 import type User from "@/domain/user/entity";
 
 function TeamCard({ team, members }: { team: Team; members: User[] }) {
+  const { mutate: patchUser, isPending } = usePatchUser();
+  const { data: currentUser } = useCurrentUser();
+
   return (
     <div className="card border border-base-300 bg-base-100">
       <div className="card-body gap-3">
@@ -19,18 +24,31 @@ function TeamCard({ team, members }: { team: Team; members: User[] }) {
         ) : (
           <ul className="space-y-1">
             {members.map((member) => (
-              <li key={member.id} className="flex items-center gap-2">
-                <div className="avatar placeholder">
-                  <div className="bg-neutral text-neutral-content rounded-full w-7">
-                    <span className="text-xs">
-                      {member.firstName[0]}
-                      {member.lastName[0]}
-                    </span>
+              <li key={member.id} className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="avatar placeholder">
+                    <div className="bg-neutral text-neutral-content rounded-full w-7">
+                      <span className="text-xs">
+                        {member.firstName[0]}
+                        {member.lastName[0]}
+                      </span>
+                    </div>
                   </div>
+                  <span className="text-sm">
+                    {member.firstName} {member.lastName}
+                  </span>
                 </div>
-                <span className="text-sm">
-                  {member.firstName} {member.lastName}
-                </span>
+                {currentUser?.isAdmin && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-xs text-error"
+                    title="Remove from team"
+                    disabled={isPending}
+                    onClick={() => patchUser({ userId: member.id, patch: { team_id: -1 } })}
+                  >
+                    <UserMinus size={14} />
+                  </button>
+                )}
               </li>
             ))}
           </ul>

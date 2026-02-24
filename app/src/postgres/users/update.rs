@@ -1,7 +1,7 @@
 use domain::{TeamId, UserId, UserInputDto};
-use sqlx::{Acquire, Postgres};
+use sqlx::{Acquire, Executor, Postgres};
 
-use crate::{AuthenticatedUser, repo::traits::Update};
+use crate::{AuthenticatedUser, handlers::api::users::PatchUserPayload, repo::traits::Update};
 
 impl<'b> Update for UserInputDto<'b> {
     type Id = AuthenticatedUser;
@@ -27,5 +27,29 @@ impl<'b> Update for UserInputDto<'b> {
         .fetch_one(&mut *executor)
         .await
         .map_err(Into::into)
+    }
+}
+
+impl Update for (PatchUserPayload, UserId) {
+    type Id = UserId;
+
+    async fn update<'a, A>(&self, conn: A) -> Result<Self::Id, crate::repo::RepositoryError>
+    where
+        Self: Sized,
+        A: Acquire<'a, Database = Postgres>,
+    {
+        let mut executor = conn.acquire().await?;
+        let (dto, user_id) = self;
+        let res = sqlx::query!(
+            r#"
+        UPDATE app.users
+        SET team_id = COALESCE($1, team_id)
+        WHERE id = $2 RETURNING id"#,
+            dto.team_id.map(|id| id.0),
+            user_id.0
+        )
+        .fetch_one(&mut *executor)
+        .await?;
+        Ok(UserId(res.id))
     }
 }

@@ -68,6 +68,8 @@ pub enum ApiError {
     DatabaseForeignKeyViolation(ForeignKey),
     #[error("Invalid collection title: {0}")]
     InvalidCollectionTitle(String),
+    #[error("Admin permission required")]
+    AdminOnly,
 }
 
 impl From<RepositoryError> for ApiError {
@@ -126,6 +128,7 @@ impl ResponseError for ApiError {
             ApiError::DatabaseUniqueViolation(_) => StatusCode::CONFLICT,
             ApiError::DatabaseForeignKeyViolation(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::InvalidCollectionTitle(_) => StatusCode::UNPROCESSABLE_ENTITY,
+            ApiError::AdminOnly => StatusCode::UNAUTHORIZED,
         }
     }
 

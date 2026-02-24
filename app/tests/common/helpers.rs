@@ -115,7 +115,7 @@ pub fn auth_request(req: RequestBuilder, auth: Option<&Auth>) -> RequestBuilder 
                 "X-Test-User",
                 json!(MockUserCredentials::Token(token.clone())).to_string(),
             ),
-            Auth::_MockUserCredentials(user) => req.header(
+            Auth::MockUserCredentials(user) => req.header(
                 "X-Test-User",
                 json!(MockUserCredentials::User(user.clone())).to_string(),
             ),

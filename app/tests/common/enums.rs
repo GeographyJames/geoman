@@ -6,7 +6,7 @@ pub enum Auth {
     Key(String),
     Token(SessionToken),
     MockToken(String),
-    _MockUserCredentials(AuthenticatedUser),
+    MockUserCredentials(AuthenticatedUser),
 }
 
 impl Auth {

@@ -5,6 +5,7 @@ mod get;
 pub use get::get_teams;
 // mod put;
 // pub use post::post_team;
-// mod payload;
-// pub use payload::TeamInputPayload;
+
 // pub use put::put_team;
+mod post;
+pub use post::{TeamInputPayload, post_team};
