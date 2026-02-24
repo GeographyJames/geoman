@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 
 import { CloseButton } from "@/components/Buttons";
@@ -11,7 +12,7 @@ import { ProjectActionsDropdown } from "./ProjectActionsDropdown";
 
 const SITE_BOUNDARIES_TITLE = "site boundaries";
 
-export const ProjectPanel = ({ project }: { project: Project }) => {
+export const ProjectPanel = memo(({ project }: { project: Project }) => {
   const navigate = useNavigate();
   const search = useSearch({ from: "/_app/" });
   const { data: collectionsData, isLoading } = useProjectCollections({
@@ -98,4 +99,4 @@ export const ProjectPanel = ({ project }: { project: Project }) => {
       </div>
     </details>
   );
-};
+});

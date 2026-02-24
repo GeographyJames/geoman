@@ -7,12 +7,10 @@ import { fromLonLat } from "ol/proj";
 import { boundingExtent } from "ol/extent";
 import { Sidebar } from "./Sidebar";
 import { OverlayPanels } from "./OverlayPanels";
-import { useSidebar } from "@/features/app/contexts/SidebarContext";
 import { useSearchbarSetOpen } from "../contexts/SearchbarContext";
 import { memo, useMemo } from "react";
 
 export const Drawer = () => {
-  const sidebar = useSidebar();
   const { data: projects, isLoading } = useProjects();
 
   if (isLoading || !projects) {
@@ -30,8 +28,7 @@ export const Drawer = () => {
           id="my-drawer-1"
           type="checkbox"
           className="drawer-toggle"
-          checked={sidebar.isOpen}
-          onChange={sidebar.toggleSidebar}
+          readOnly
         />
         <DrawerMain projects={projects} />
         <DrawerSide />

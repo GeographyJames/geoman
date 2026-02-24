@@ -1,6 +1,5 @@
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 
-import Project from "@/domain/project/entity";
 import { useProjectsFilter } from "@/features/app/contexts/ProjectsFilterContext";
 import ProjectsList from "../projectsList/ProjectList";
 
@@ -10,15 +9,10 @@ interface Props {
   setSelectedTab: React.Dispatch<
     React.SetStateAction<"projects" | "search-sites">
   >;
-  highlightedSearchIndexState: [
-    number,
-    React.Dispatch<React.SetStateAction<number>>,
-  ];
-  handleSelect: (item: Project) => void;
   inputRef: React.RefObject<HTMLInputElement | null>;
 }
 
-export default function SearchResultsBox({
+function SearchResultsBox({
   setSelectedTab,
   selectedTab,
   searchText,
@@ -70,3 +64,5 @@ export default function SearchResultsBox({
     </div>
   );
 }
+
+export default memo(SearchResultsBox);

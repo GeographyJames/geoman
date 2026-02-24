@@ -12,15 +12,19 @@ import { SearchBar } from "./search/SearchBar";
 import { useRef, useMemo, useState } from "react";
 
 export const OverlayPanels = () => {
-  const { projects: projectsParam } = useSearch({ from: "/_app/" });
+  const projectsParam = useSearch({ from: "/_app/", select: (s) => s.projects });
   const { data } = useProjects();
   const { projects } = useProjectsFilter();
   const { setIsOpen: setSearchOpen, isOpen: searchOpen } = useSearchbar();
   const { messages, removeFlash } = useFlash();
-  const loadedProjects = projectsParam ? projectsParam.split(",") : [];
-  const projectsToShow = data
-    ? data.filter((p) => loadedProjects.includes(p.slug))
-    : [];
+  const loadedProjects = useMemo(
+    () => (projectsParam ? projectsParam.split(",") : []),
+    [projectsParam],
+  );
+  const projectsToShow = useMemo(
+    () => (data ? data.filter((p) => loadedProjects.includes(p.slug)) : []),
+    [data, loadedProjects],
+  );
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchText, setSearchText] = useState<string>("");
   const highlightedSearchIndexState = useState<number>(0);
@@ -85,9 +89,7 @@ export const OverlayPanels = () => {
             <SearchResultsBox
               selectedTab={selectedTab}
               setSelectedTab={setSelectedTab}
-              highlightedSearchIndexState={highlightedSearchIndexState}
               searchText={searchText}
-              handleSelect={handleSelect}
               inputRef={inputRef}
             />
           </div>

@@ -1,6 +1,5 @@
 import SearchInput from "./SearchInput";
 import { useProjects } from "@/hooks/api/projects/useProjects";
-import { useSidebar } from "@/features/app/contexts/SidebarContext";
 import { useSearchbar } from "../../contexts/SearchbarContext";
 import { ExpandButton, MenuButton } from "@/components/Buttons";
 import { UserBadge } from "@/components/UserBadge";
@@ -32,11 +31,12 @@ export const SearchBar = ({
   inputRef,
 }: Props) => {
   const { isError, isPending } = useProjects();
-  const { toggleSidebar } = useSidebar();
   const { toggleSearchbar, isOpen: searchOpen } = useSearchbar();
+  const toggleDrawer = () =>
+    (document.getElementById("my-drawer-1") as HTMLInputElement | null)?.click();
   return (
     <div className="sm:max-w-[28rem] flex pl-2 pr-3 gap-2 items-center bg-base-100 rounded-full shadow-lg pointer-events-auto">
-      <MenuButton onClick={toggleSidebar}></MenuButton>
+      <MenuButton onClick={toggleDrawer}></MenuButton>
       <ExpandButton
         expanded={searchOpen}
         onClick={toggleSearchbar}

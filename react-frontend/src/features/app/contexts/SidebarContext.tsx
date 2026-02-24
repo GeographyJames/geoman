@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 interface SidebarContextValue {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
@@ -7,13 +7,18 @@ interface SidebarContextValue {
 
 const SidebarContext = createContext<SidebarContextValue | null>(null);
 
+// Stable toggle — consumers NEVER re-render when isOpen changes
+const SidebarActionsContext = createContext<() => void>(() => {});
+
 export function SidebarProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const toggleSidebar = () => setIsOpen((prev) => !prev);
+  const toggleSidebar = useCallback(() => setIsOpen((prev) => !prev), []);
   return (
-    <SidebarContext.Provider value={{ isOpen, setIsOpen, toggleSidebar }}>
-      {children}
-    </SidebarContext.Provider>
+    <SidebarActionsContext.Provider value={toggleSidebar}>
+      <SidebarContext.Provider value={{ isOpen, setIsOpen, toggleSidebar }}>
+        {children}
+      </SidebarContext.Provider>
+    </SidebarActionsContext.Provider>
   );
 }
 
@@ -23,4 +28,8 @@ export function useSidebar() {
     throw new Error("useSidebar must be used within SidebarProvider");
   }
   return context;
+}
+
+export function useSidebarToggle() {
+  return useContext(SidebarActionsContext);
 }

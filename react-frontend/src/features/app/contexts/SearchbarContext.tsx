@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 interface SearchBarContextValue {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
@@ -12,10 +12,14 @@ const SearchbarActionsContext = createContext<(open: boolean) => void>(() => {})
 
 export function SearchbarProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const toggleSearchbar = () => setIsOpen((prev) => !prev);
+  const toggleSearchbar = useCallback(() => setIsOpen((prev) => !prev), []);
+  const value = useMemo(
+    () => ({ isOpen, setIsOpen, toggleSearchbar }),
+    [isOpen, toggleSearchbar],
+  );
   return (
     <SearchbarActionsContext.Provider value={setIsOpen}>
-      <SearchbarContext.Provider value={{ isOpen, setIsOpen, toggleSearchbar }}>
+      <SearchbarContext.Provider value={value}>
         {children}
       </SearchbarContext.Provider>
     </SearchbarActionsContext.Provider>

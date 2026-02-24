@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
 type FlashType = "success" | "error" | "warning" | "info";
 
@@ -19,19 +19,24 @@ const FlashContext = createContext<FlashContextValue | null>(null);
 export function FlashMessageProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<FlashMessage[]>([]);
 
-  const addFlash = (message: string, type: FlashType) => {
+  const addFlash = useCallback((message: string, type: FlashType) => {
     setMessages((prev) => [
       ...prev,
       { id: crypto.randomUUID(), message, type },
     ]);
-  };
+  }, []);
 
-  const removeFlash = (id: string) => {
+  const removeFlash = useCallback((id: string) => {
     setMessages((prev) => prev.filter((m) => m.id !== id));
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({ messages, addFlash, removeFlash }),
+    [messages, addFlash, removeFlash],
+  );
 
   return (
-    <FlashContext.Provider value={{ messages, addFlash, removeFlash }}>
+    <FlashContext.Provider value={value}>
       {children}
     </FlashContext.Provider>
   );
