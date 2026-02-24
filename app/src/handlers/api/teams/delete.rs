@@ -1,31 +1,18 @@
-use actix_web::{HttpResponse, web};
+use actix_web::{HttpResponse, delete, web};
+use domain::TeamId;
 
-use crate::{
-    app::{
-        handlers::api::{ApiError, error::ToApiErr},
-        session_state::{TypedSession, user_id},
-    },
-    domain::{dtos::Id, entities::Team},
-    postgres::PostgresRepo,
-};
+use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
 
-#[tracing::instrument(skip(repo, team_id, session))]
+#[delete("/{team_id}")]
+#[tracing::instrument(skip(repo, user, id))]
 pub async fn delete_team(
     repo: web::Data<PostgresRepo>,
-    team_id: web::Path<Id>,
-    session: TypedSession,
-) -> Result<HttpResponse, actix_web::Error> {
-    let user_id = user_id(&session)?;
-    let admin = repo
-        .is_admin(user_id)
-        .await
-        .map_err(|e| e.api_err("failed to query database"))?;
-    if !admin {
-        return Err(ApiError::AdminPermissionRequired.into());
+    user: web::ReqData<AuthenticatedUser>,
+    id: web::Path<TeamId>,
+) -> Result<HttpResponse, ApiError> {
+    if !user.admin {
+        return Err(ApiError::AdminOnly);
     }
-
-    repo.delete::<Team, _>(&team_id.into_inner())
-        .await
-        .map_err(|e| e.api_err("failed to delete team"))?;
-    Ok(HttpResponse::Ok().finish())
+    repo.delete_team(id.into_inner()).await?;
+    Ok(HttpResponse::NoContent().finish())
 }

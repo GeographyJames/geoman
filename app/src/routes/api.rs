@@ -11,7 +11,7 @@ use crate::{
         keys::{generate_api_key, get_api_keys, renew_api_key, revoke_api_key},
         project_collections::{get_collections, patch_collection, post_project_collection},
         projects::{patch_project, post_project},
-        teams::{get_teams, post_team},
+        teams::{delete_team, get_teams, patch_team, post_team},
         users::{get_user, get_users, patch_user},
     },
     middleware::{auth_middleware, mock_auth_middlewear},
@@ -113,7 +113,13 @@ pub fn epsg_routes(cfg: &mut web::ServiceConfig) {
 }
 
 pub fn teams_routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(scope(&URLS.api.teams).service(get_teams).service(post_team));
+    cfg.service(
+        scope(&URLS.api.teams)
+            .service(get_teams)
+            .service(post_team)
+            .service(patch_team)
+            .service(delete_team),
+    );
 }
 
 pub fn business_units_routes(cfg: &mut web::ServiceConfig) {

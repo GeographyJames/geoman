@@ -54,6 +54,21 @@ impl HttpService {
         .await
         .expect(REQUEST_FAILED)
     }
+    pub async fn delete(
+        &self,
+        client: &HttpClient,
+        id: impl Display,
+        auth: Option<&Auth>,
+    ) -> Response {
+        auth_request(
+            client.delete(&format!("{}/{}", &self.endpoint, id)),
+            auth,
+        )
+        .send()
+        .await
+        .expect(REQUEST_FAILED)
+    }
+
     pub async fn post_form(
         &self,
         client: &HttpClient,

@@ -1,5 +1,5 @@
 use domain::{TeamId, UserId, UserInputDto};
-use sqlx::{Acquire, Executor, Postgres};
+use sqlx::{Acquire, Postgres};
 
 use crate::{AuthenticatedUser, handlers::api::users::PatchUserPayload, repo::traits::Update};
 

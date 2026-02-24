@@ -24,4 +24,9 @@ impl HttpClient {
         self.client
             .patch(format!("{}{}", self.base_url, endpoint.as_ref()))
     }
+
+    pub fn delete(&self, endpoint: impl AsRef<str>) -> RequestBuilder {
+        self.client
+            .delete(format!("{}{}", self.base_url, endpoint.as_ref()))
+    }
 }
