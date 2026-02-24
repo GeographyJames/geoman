@@ -18,6 +18,7 @@ impl SelectAll for Team {
 
         FROM app.teams t
         WHERE t.id > 0
+        ORDER BY t.name ASC
         "#
         )
         .fetch_all(executor)

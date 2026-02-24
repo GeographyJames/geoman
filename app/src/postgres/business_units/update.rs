@@ -1,10 +1,10 @@
-use domain::{TeamId, UserId};
+use domain::{BusinessUnitId, UserId};
 use sqlx::{Acquire, Postgres};
 
-use crate::{handlers::api::teams::TeamUpdatePayload, repo::traits::Update};
+use crate::{handlers::api::business_units::BusinessUnitUpdatePayload, repo::traits::Update};
 
-impl Update for (TeamUpdatePayload, TeamId, UserId) {
-    type Id = TeamId;
+impl Update for (BusinessUnitUpdatePayload, BusinessUnitId, UserId) {
+    type Id = BusinessUnitId;
 
     async fn update<'a, A>(&self, conn: A) -> Result<Self::Id, crate::repo::RepositoryError>
     where
@@ -12,24 +12,22 @@ impl Update for (TeamUpdatePayload, TeamId, UserId) {
         A: Acquire<'a, Database = Postgres>,
     {
         let mut executor = conn.acquire().await?;
-        let (payload, team_id, user_id) = self;
+        let (payload, bu_id, user_id) = self;
         let res = sqlx::query!(
             r#"
-            UPDATE app.teams
+            UPDATE app.business_units
             SET name = COALESCE($1, name),
-                business_unit_id = COALESCE($2, business_unit_id),
                 last_updated = NOW(),
-                last_updated_by = $4
-            WHERE id = $3
+                last_updated_by = $3
+            WHERE id = $2
             RETURNING id
             "#,
             payload.name,
-            payload.business_unit.map(|id| id.0),
-            team_id.0,
+            bu_id.0,
             user_id.0
         )
         .fetch_one(&mut *executor)
         .await?;
-        Ok(TeamId(res.id))
+        Ok(BusinessUnitId(res.id))
     }
 }

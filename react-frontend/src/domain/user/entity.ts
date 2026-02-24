@@ -19,7 +19,7 @@ export default class User {
         return this.outputDto.team.id
     }
     get team(): Team {
-        return new Team({id: this.outputDto.team.id, name: this.outputDto.team.name})
+        return new Team(this.outputDto.team)
     }
     get id(): number {
         return this.outputDto.id

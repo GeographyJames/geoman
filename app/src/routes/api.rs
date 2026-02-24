@@ -2,7 +2,9 @@ use crate::{
     URLS,
     enums::GeoManEnvironment,
     handlers::api::{
-        business_units::{get_business_units, post_business_unit},
+        business_units::{
+            delete_business_unit, get_business_units, patch_business_unit, post_business_unit,
+        },
         epsg::{post_epsg, post_epsg_from_shz},
         features::{
             get::get_project_feature_shapefile, patch::patch_project_feature,
@@ -126,6 +128,8 @@ pub fn business_units_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         scope(&URLS.api.business_units)
             .service(get_business_units)
-            .service(post_business_unit),
+            .service(post_business_unit)
+            .service(patch_business_unit)
+            .service(delete_business_unit),
     );
 }

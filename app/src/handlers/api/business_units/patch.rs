@@ -1,22 +1,21 @@
 use actix_web::{HttpResponse, patch, web};
-use domain::{BusinessUnitId, TeamId};
+use domain::BusinessUnitId;
 use serde::{Deserialize, Serialize};
 
 use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
 
 #[derive(Serialize, Deserialize)]
-pub struct TeamUpdatePayload {
-    pub business_unit: Option<BusinessUnitId>,
+pub struct BusinessUnitUpdatePayload {
     pub name: Option<String>,
 }
 
-#[patch("/{team_id}")]
+#[patch("/{bu_id}")]
 #[tracing::instrument(skip(repo, body, user, id))]
-pub async fn patch_team(
+pub async fn patch_business_unit(
     repo: web::Data<PostgresRepo>,
-    body: web::Json<TeamUpdatePayload>,
+    body: web::Json<BusinessUnitUpdatePayload>,
     user: web::ReqData<AuthenticatedUser>,
-    id: web::Path<TeamId>,
+    id: web::Path<BusinessUnitId>,
 ) -> Result<HttpResponse, ApiError> {
     if !user.admin {
         return Err(ApiError::AdminOnly);

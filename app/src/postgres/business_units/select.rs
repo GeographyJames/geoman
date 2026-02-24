@@ -10,7 +10,7 @@ impl SelectAll for BusinessUnit {
     {
         let res = sqlx::query_as!(
             BusinessUnit,
-            r#"SELECT id as "id: BusinessUnitId", name FROM app.business_units"#
+            r#"SELECT id as "id: BusinessUnitId", name FROM app.business_units ORDER BY name ASC"#
         )
         .fetch_all(executor)
         .await?;

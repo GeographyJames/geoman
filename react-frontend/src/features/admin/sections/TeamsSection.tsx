@@ -1,24 +1,75 @@
-import { Users, UserMinus, Plus } from "lucide-react";
+import { useState } from "react";
+import { Users, UserMinus, Plus, Pencil, Trash2 } from "lucide-react";
 import { useUsers } from "@/hooks/api/useUsers";
 import { useTeams } from "@/hooks/api/useTeams";
 import { useBusinessUnits } from "@/hooks/api/useBusinessUnits";
 import { usePatchUser } from "@/hooks/api/usePatchUser";
 import { useCurrentUser } from "@/hooks/api/useCurrentUser";
 import { CreateTeamForm, openCreateTeamModal } from "./CreateTeamForm";
+import { EditTeamForm, openEditTeamModal } from "./EditTeamForm";
+import { DeleteTeamForm, openDeleteTeamModal } from "./DeleteTeamForm";
+import { CreateBusinessUnitForm, openCreateBusinessUnitModal } from "./CreateBusinessUnitForm";
+import { EditBusinessUnitForm, openEditBusinessUnitModal } from "./EditBusinessUnitForm";
+import { DeleteBusinessUnitForm, openDeleteBusinessUnitModal } from "./DeleteBusinessUnitForm";
 import type Team from "@/domain/team/entity";
 import type User from "@/domain/user/entity";
+import type { BusinessUnitOutputDto } from "@/domain/business_unit/outputDto";
 
-function TeamCard({ team, members }: { team: Team; members: User[] }) {
+function TeamCard({
+  team,
+  members,
+  onEdit,
+  onDelete,
+  isCurrentUserTeam,
+}: {
+  team: Team;
+  members: User[];
+  onEdit: (team: Team) => void;
+  onDelete: (team: Team) => void;
+  isCurrentUserTeam: boolean;
+}) {
   const { mutate: patchUser, isPending } = usePatchUser();
   const { data: currentUser } = useCurrentUser();
 
   return (
-    <div className="card border border-base-300 bg-base-100">
+    <div className={`card border bg-base-100 ${isCurrentUserTeam ? "border-primary" : "border-base-300"}`}>
       <div className="card-body gap-3">
-        <h3 className="card-title text-base flex items-center gap-2">
-          <Users size={16} />
-          {team.name}
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="card-title text-base flex items-center gap-2">
+            <Users size={16} />
+            {team.name}
+            {isCurrentUserTeam && (
+              <span className="text-primary text-sm font-normal">(your team)</span>
+            )}
+          </h3>
+          {currentUser?.isAdmin && (
+            <div className="flex gap-1">
+              <button
+                type="button"
+                className="btn btn-ghost btn-xs"
+                title="Edit team"
+                onClick={() => {
+                  onEdit(team);
+                  openEditTeamModal();
+                }}
+              >
+                <Pencil size={14} />
+              </button>
+              <button
+                type="button"
+                className={`btn btn-ghost btn-xs ${members.length > 0 ? "text-base-content/30" : "text-error"}`}
+                title="Delete team"
+                disabled={members.length > 0}
+                onClick={() => {
+                  onDelete(team);
+                  openDeleteTeamModal();
+                }}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          )}
+        </div>
 
         {members.length === 0 ? (
           <p className="text-sm text-base-content/50">No members</p>
@@ -114,23 +165,79 @@ function TeamGroup({
   label,
   teams,
   users,
+  onEdit,
+  onDelete,
+  businessUnit,
+  onEditBU,
+  onDeleteBU,
+  currentUserTeamId,
 }: {
   label: string;
   teams: Team[];
   users: User[];
+  onEdit: (team: Team) => void;
+  onDelete: (team: Team) => void;
+  businessUnit?: BusinessUnitOutputDto;
+  onEditBU?: (bu: BusinessUnitOutputDto) => void;
+  onDeleteBU?: (bu: BusinessUnitOutputDto) => void;
+  currentUserTeamId?: number;
 }) {
+  const { data: currentUser } = useCurrentUser();
+
+  const sortedTeams = [...teams].sort((a, b) => {
+    if (a.id === currentUserTeamId) return -1;
+    if (b.id === currentUserTeamId) return 1;
+    return 0;
+  });
+
   return (
     <div className="mb-8">
-      <h2 className="text-lg font-semibold mb-3 text-base-content/80">{label}</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {teams.map((team) => (
-          <TeamCard
-            key={team.id}
-            team={team}
-            members={users.filter((u) => u.teamId === team.id)}
-          />
-        ))}
+      <div className="flex items-center gap-2 mb-3">
+        <h2 className="text-lg font-semibold text-base-content/80">{label}</h2>
+        {businessUnit && currentUser?.isAdmin && onEditBU && onDeleteBU && (
+          <div className="flex gap-1">
+            <button
+              type="button"
+              className="btn btn-ghost btn-xs"
+              title="Edit business unit"
+              onClick={() => {
+                onEditBU(businessUnit);
+                openEditBusinessUnitModal();
+              }}
+            >
+              <Pencil size={14} />
+            </button>
+            <button
+              type="button"
+              className={`btn btn-ghost btn-xs ${teams.length > 0 ? "text-base-content/30" : "text-error"}`}
+              title="Delete business unit"
+              disabled={teams.length > 0}
+              onClick={() => {
+                onDeleteBU(businessUnit);
+                openDeleteBusinessUnitModal();
+              }}
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        )}
       </div>
+      {sortedTeams.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {sortedTeams.map((team) => (
+            <TeamCard
+              key={team.id}
+              team={team}
+              members={users.filter((u) => u.teamId === team.id)}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              isCurrentUserTeam={team.id === currentUserTeamId}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-base-content/50">No teams</p>
+      )}
     </div>
   );
 }
@@ -141,12 +248,22 @@ export default function TeamsSection() {
   const { data: businessUnits = [] } = useBusinessUnits();
   const { data: currentUser } = useCurrentUser();
 
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const [deletingTeam, setDeletingTeam] = useState<Team | null>(null);
+  const [editingBU, setEditingBU] = useState<BusinessUnitOutputDto | null>(null);
+  const [deletingBU, setDeletingBU] = useState<BusinessUnitOutputDto | null>(null);
+
   const unassignedTeams = teams.filter((t) => t.businessUnitId === null);
   const unassignedUsers = users.filter((u) => u.teamId === -1);
 
   return (
     <>
       <CreateTeamForm />
+      <CreateBusinessUnitForm />
+      <EditTeamForm team={editingTeam} onClose={() => setEditingTeam(null)} />
+      <DeleteTeamForm team={deletingTeam} onClose={() => setDeletingTeam(null)} />
+      <EditBusinessUnitForm businessUnit={editingBU} onClose={() => setEditingBU(null)} />
+      <DeleteBusinessUnitForm businessUnit={deletingBU} onClose={() => setDeletingBU(null)} />
 
       <div className="mb-6 flex items-start justify-between">
         <div>
@@ -154,21 +271,45 @@ export default function TeamsSection() {
           <p className="text-base-content/70">Teams and their members</p>
         </div>
         {currentUser?.isAdmin && (
-          <button className="btn btn-primary gap-2" onClick={openCreateTeamModal}>
-            <Plus size={20} />
-            New Team
-          </button>
+          <div className="flex gap-2">
+            <button className="btn btn-primary gap-2" onClick={openCreateBusinessUnitModal}>
+              <Plus size={20} />
+              New Business Unit
+            </button>
+            <button className="btn btn-primary gap-2" onClick={openCreateTeamModal}>
+              <Plus size={20} />
+              New Team
+            </button>
+          </div>
         )}
       </div>
 
       {businessUnits.map((bu) => {
         const buTeams = teams.filter((t) => t.businessUnitId === bu.id);
-        if (buTeams.length === 0) return null;
-        return <TeamGroup key={bu.id} label={bu.name} teams={buTeams} users={users} />;
+        if (buTeams.length === 0 && !currentUser?.isAdmin) return null;
+        return (
+          <TeamGroup
+            key={bu.id}
+            label={bu.name}
+            teams={buTeams}
+            users={users}
+            onEdit={setEditingTeam}
+            onDelete={setDeletingTeam}
+            businessUnit={bu}
+            onEditBU={setEditingBU}
+            onDeleteBU={setDeletingBU}
+          />
+        );
       })}
 
       {unassignedTeams.length > 0 && (
-        <TeamGroup label="Unassigned" teams={unassignedTeams} users={users} />
+        <TeamGroup
+          label="Unassigned"
+          teams={unassignedTeams}
+          users={users}
+          onEdit={setEditingTeam}
+          onDelete={setDeletingTeam}
+        />
       )}
 
       {unassignedUsers.length > 0 && (
