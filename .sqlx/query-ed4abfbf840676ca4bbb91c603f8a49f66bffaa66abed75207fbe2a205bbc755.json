@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id as \"id: BusinessUnitId\", name FROM app.business_units",
+  "query": "SELECT id as \"id: BusinessUnitId\", name FROM app.business_units ORDER BY name ASC",
   "describe": {
     "columns": [
       {
@@ -22,5 +22,5 @@
       false
     ]
   },
-  "hash": "b27e28673bff06d9ab996b58379588492c5b96fac3d7103305c86df0b1c1492d"
+  "hash": "ed4abfbf840676ca4bbb91c603f8a49f66bffaa66abed75207fbe2a205bbc755"
 }

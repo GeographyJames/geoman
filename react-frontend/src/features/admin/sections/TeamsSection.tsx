@@ -32,7 +32,7 @@ function TeamCard({
   const { data: currentUser } = useCurrentUser();
 
   return (
-    <div className={`card border bg-base-100 ${isCurrentUserTeam ? "border-primary" : "border-base-300"}`}>
+    <div className={`card border border-base-300 ${isCurrentUserTeam ? "bg-yellow-50" : "bg-base-100"}`}>
       <div className="card-body gap-3">
         <div className="flex items-center justify-between">
           <h3 className="card-title text-base flex items-center gap-2">
@@ -298,6 +298,7 @@ export default function TeamsSection() {
             businessUnit={bu}
             onEditBU={setEditingBU}
             onDeleteBU={setDeletingBU}
+            currentUserTeamId={currentUser?.teamId}
           />
         );
       })}
@@ -309,6 +310,7 @@ export default function TeamsSection() {
           users={users}
           onEdit={setEditingTeam}
           onDelete={setDeletingTeam}
+          currentUserTeamId={currentUser?.teamId}
         />
       )}
 
