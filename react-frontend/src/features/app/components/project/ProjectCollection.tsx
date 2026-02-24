@@ -4,7 +4,7 @@ import type {
 } from "@/domain/projectCollectionItems/outputDTO";
 
 import { useState, type ReactNode } from "react";
-import UserInitials from "../UserInitials";
+import UserInitials from "@/components/UserInitials";
 import SetPrimaryRadio from "./SetPrimaryRadio";
 import { useFeatureLayer, useZoomToFeature } from "@/hooks/useFeatureLayer";
 import { Stroke, Fill, Style, Circle } from "ol/style";

@@ -14,7 +14,7 @@ use crate::{
         project_collections::{get_collections, patch_collection, post_project_collection},
         projects::{patch_project, post_project},
         teams::{delete_team, get_teams, patch_team, post_team},
-        users::{get_user, get_users, patch_user},
+        users::{delete_user, get_user, get_users, patch_user},
     },
     middleware::{auth_middleware, mock_auth_middlewear},
 };
@@ -84,7 +84,8 @@ pub fn user_routes(cfg: &mut web::ServiceConfig) {
         scope(&URLS.api.users)
             .service(get_users)
             .service(get_user)
-            .service(patch_user),
+            .service(patch_user)
+            .service(delete_user),
     );
 }
 

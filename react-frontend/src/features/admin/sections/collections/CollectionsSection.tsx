@@ -2,7 +2,7 @@ import { Plus, AlertCircle, Layers, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useCollections, type Collection } from "@/hooks/api/useCollections";
 import { useCurrentUser } from "@/hooks/api/useCurrentUser";
-import UserInitials from "@/features/app/components/UserInitials";
+import UserInitials from "@/components/UserInitials";
 import { dateFormat } from "@/constants";
 
 import { NewCollectionForm } from "./NewCollectionForm";

@@ -1,3 +1,5 @@
+mod delete;
+pub use delete::delete_user;
 mod get;
 pub use get::{get_user, get_users};
 mod patch;
