@@ -2,7 +2,8 @@ import { useApiRequest } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface PatchUserRequest {
-  team_id: number;
+  team_id?: number;
+  admin?: boolean;
 }
 
 export function usePatchUser() {
@@ -20,6 +21,7 @@ export function usePatchUser() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
   });
 }

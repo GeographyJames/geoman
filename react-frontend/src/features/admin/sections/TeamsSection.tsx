@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, UserMinus, Plus, Pencil, Trash2 } from "lucide-react";
+import { Users, UserMinus, Plus, Pencil, Trash2, ShieldCheck } from "lucide-react";
 import { useUsers } from "@/hooks/api/useUsers";
 import { useTeams } from "@/hooks/api/useTeams";
 import { useBusinessUnits } from "@/hooks/api/useBusinessUnits";
@@ -32,14 +32,14 @@ function TeamCard({
   const { data: currentUser } = useCurrentUser();
 
   return (
-    <div className={`card border border-base-300 ${isCurrentUserTeam ? "bg-yellow-50" : "bg-base-100"}`}>
+    <div className={`card border border-base-300 ${isCurrentUserTeam ? "bg-primary/10" : "bg-base-100"}`}>
       <div className="card-body gap-3">
         <div className="flex items-center justify-between">
           <h3 className="card-title text-base flex items-center gap-2">
             <Users size={16} />
             {team.name}
             {isCurrentUserTeam && (
-              <span className="text-primary text-sm font-normal">(your team)</span>
+              <span className="text-base-content/50 text-sm font-normal">(your team)</span>
             )}
           </h3>
           {currentUser?.isAdmin && (
@@ -75,7 +75,7 @@ function TeamCard({
           <p className="text-sm text-base-content/50">No members</p>
         ) : (
           <ul className="space-y-1">
-            {members.map((member) => (
+            {[...members].sort((a, b) => a.lastName.localeCompare(b.lastName)).map((member) => (
               <li key={member.id} className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <div className="avatar placeholder">
@@ -88,18 +88,32 @@ function TeamCard({
                   </div>
                   <span className="text-sm">
                     {member.firstName} {member.lastName}
+                    {member.isAdmin && <span className="text-xs text-base-content/50 ml-1">(admin)</span>}
                   </span>
                 </div>
                 {currentUser?.isAdmin && (
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-xs text-error"
-                    title="Remove from team"
-                    disabled={isPending}
-                    onClick={() => patchUser({ userId: member.id, patch: { team_id: -1 } })}
-                  >
-                    <UserMinus size={14} />
-                  </button>
+                  <div className="flex gap-1">
+                    {currentUser.id !== member.id && (
+                      <button
+                        type="button"
+                        className={`btn btn-ghost btn-xs ${member.isAdmin ? "text-primary" : "text-base-content/40"}`}
+                        title={member.isAdmin ? "Revoke admin" : "Grant admin"}
+                        disabled={isPending}
+                        onClick={() => patchUser({ userId: member.id, patch: { admin: !member.isAdmin } })}
+                      >
+                        <ShieldCheck size={16} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-xs text-error"
+                      title="Remove from team"
+                      disabled={isPending}
+                      onClick={() => patchUser({ userId: member.id, patch: { team_id: -1 } })}
+                    >
+                      <UserMinus size={14} />
+                    </button>
+                  </div>
                 )}
               </li>
             ))}
@@ -122,7 +136,7 @@ function UnassignedUsersCard({ users, teams }: { users: User[]; teams: Team[] })
           Unassigned Users
         </h3>
         <ul className="space-y-1">
-          {users.map((user) => (
+          {[...users].sort((a, b) => a.lastName.localeCompare(b.lastName)).map((user) => (
             <li key={user.id} className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <div className="avatar placeholder">
@@ -135,23 +149,37 @@ function UnassignedUsersCard({ users, teams }: { users: User[]; teams: Team[] })
                 </div>
                 <span className="text-sm">
                   {user.firstName} {user.lastName}
+                  {user.isAdmin && <span className="text-xs text-base-content/50 ml-1">(admin)</span>}
                 </span>
               </div>
               {currentUser?.isAdmin && (
-                <select
-                  className="select select-xs select-bordered"
-                  disabled={isPending}
-                  value=""
-                  onChange={(e) => {
-                    const teamId = Number(e.target.value);
-                    if (teamId) patchUser({ userId: user.id, patch: { team_id: teamId } });
-                  }}
-                >
-                  <option value="" disabled>Assign to team…</option>
-                  {teams.map((team) => (
-                    <option key={team.id} value={team.id}>{team.name}</option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-1">
+                  {currentUser.id !== user.id && (
+                    <button
+                      type="button"
+                      className={`btn btn-ghost btn-xs ${user.isAdmin ? "text-primary" : "text-base-content/40"}`}
+                      title={user.isAdmin ? "Revoke admin" : "Grant admin"}
+                      disabled={isPending}
+                      onClick={() => patchUser({ userId: user.id, patch: { admin: !user.isAdmin } })}
+                    >
+                      <ShieldCheck size={16} />
+                    </button>
+                  )}
+                  <select
+                    className="select select-xs select-bordered"
+                    disabled={isPending}
+                    value=""
+                    onChange={(e) => {
+                      const teamId = Number(e.target.value);
+                      if (teamId) patchUser({ userId: user.id, patch: { team_id: teamId } });
+                    }}
+                  >
+                    <option value="" disabled>Assign to team…</option>
+                    {teams.map((team) => (
+                      <option key={team.id} value={team.id}>{team.name}</option>
+                    ))}
+                  </select>
+                </div>
               )}
             </li>
           ))}

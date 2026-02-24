@@ -43,9 +43,11 @@ impl Update for (PatchUserPayload, UserId) {
         let res = sqlx::query!(
             r#"
         UPDATE app.users
-        SET team_id = COALESCE($1, team_id)
-        WHERE id = $2 RETURNING id"#,
+        SET team_id = COALESCE($1, team_id),
+            admin = COALESCE($2, admin)
+        WHERE id = $3 RETURNING id"#,
             dto.team_id.map(|id| id.0),
+            dto.admin,
             user_id.0
         )
         .fetch_one(&mut *executor)

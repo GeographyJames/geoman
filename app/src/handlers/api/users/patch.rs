@@ -10,6 +10,7 @@ use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
 #[derive(Serialize, Deserialize)]
 pub struct PatchUserPayload {
     pub team_id: Option<TeamId>,
+    pub admin: Option<bool>,
 }
 
 #[patch("/{user_id}")]
