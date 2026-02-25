@@ -22,6 +22,7 @@ export const usePatchCollection = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: CACHE_KEY_COLLECTIONS })
+            queryClient.invalidateQueries({ queryKey: ["project-collections"] })
         },
     })
 }

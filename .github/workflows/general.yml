@@ -79,7 +79,7 @@ jobs:
           PGPASSWORD="password" psql -U "postgres" -h "localhost" -c "${GRANT_QUERY}"
 
       - name: Run tests
-        run: cargo test
+        run: cargo test -- --test-threads=4
 
   # `fmt` container job
   fmt:
@@ -153,7 +153,7 @@ jobs:
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
       - name: Generate code coverage
-        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info -- --test-threads=4
       - name: Generate report
         run: cargo llvm-cov report --html --output-dir coverage
       - uses: actions/upload-artifact@v4
