@@ -106,7 +106,10 @@ function TeamCard({
                   className="flex items-center justify-between gap-2 hover:bg-base-200 rounded px-1 -mx-1"
                 >
                   <div className="flex items-center gap-2">
-                    <UserInitials firstName={member.firstName} lastName={member.lastName} />
+                    <UserInitials
+                      firstName={member.firstName}
+                      lastName={member.lastName}
+                    />
                     <span className="text-sm">
                       {member.firstName} {member.lastName}
                       {member.isAdmin && (
@@ -203,7 +206,10 @@ function UnassignedUsersCard({
                 className="flex items-center justify-between gap-2 hover:bg-base-200 rounded px-1 -mx-1"
               >
                 <div className="flex items-center gap-2">
-                  <UserInitials firstName={user.firstName} lastName={user.lastName} />
+                  <UserInitials
+                    firstName={user.firstName}
+                    lastName={user.lastName}
+                  />
                   <span className="text-sm">
                     {user.firstName} {user.lastName}
                     {user.isAdmin && (
@@ -399,13 +405,13 @@ export default function TeamsSection() {
         onClose={() => setDeletingUser(null)}
       />
 
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold mb-1">Teams</h1>
           <p className="text-base-content/70">Teams and their members.</p>
         </div>
         {currentUser?.isAdmin && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               className="btn btn-primary gap-2"
               onClick={openCreateBusinessUnitModal}
@@ -459,7 +465,11 @@ export default function TeamsSection() {
           <h2 className="text-lg font-semibold mb-3 text-base-content/80">
             Unassigned Users
           </h2>
-          <UnassignedUsersCard users={unassignedUsers} teams={teams} onDeleteUser={setDeletingUser} />
+          <UnassignedUsersCard
+            users={unassignedUsers}
+            teams={teams}
+            onDeleteUser={setDeletingUser}
+          />
         </div>
       )}
     </>
