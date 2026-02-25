@@ -107,7 +107,6 @@ async fn get_project_collection_works() {
 #[actix_web::test]
 async fn get_project_collection_returns_404_for_project_not_found() {
     let app = TestApp::spawn_with_db().await;
-    let auth = Auth::mock_session_token();
     let collection_id = app.generate_project_collection_id().await;
     let response = app
         .ogc_service

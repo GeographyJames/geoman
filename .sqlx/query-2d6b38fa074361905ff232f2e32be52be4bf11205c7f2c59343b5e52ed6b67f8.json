@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT c.id AS \"id: ProjectCollectionId\",\n                      c.title,\n                      c.description,\n                      c.geometry_type AS \"geometry_type: GeometryType\",\n                      COUNT(f.id) FILTER (WHERE f.status = 'ACTIVE') AS \"active_feature_count!\",\n                      COUNT(f.id) FILTER (WHERE f.status = 'ARCHIVED') AS \"archived_feature_count!\",\n                      c.added,\n                      ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t.id, t.name, t.business_unit_id)::app.team))::app.user AS \"added_by!: AddedBy\"\n               FROM app.collections c\n               LEFT JOIN app.project_features f ON f.collection_id = c.id\n               JOIN app.users ab ON ab.id = c.added_by\n               JOIN app.teams t ON t.id = ab.team_id\n               WHERE c.status = 'ACTIVE'\n               GROUP BY c.id, ab.id, t.id\n               ORDER BY c.id",
+  "query": "SELECT c.id AS \"id: ProjectCollectionId\",\n                      c.title,\n                      c.description,\n                      c.geometry_type AS \"geometry_type: GeometryType\",\n                      COUNT(f.id) FILTER (WHERE f.status = 'ACTIVE') AS \"active_feature_count!\",\n                      COUNT(f.id) FILTER (WHERE f.status = 'ARCHIVED') AS \"archived_feature_count!\",\n                      c.added,\n                      ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t.id, t.name, t.business_unit_id)::app.team))::app.user AS \"added_by!: AddedBy\"\n               FROM app.collections c\n               LEFT JOIN app.project_features f ON f.collection_id = c.id\n               JOIN app.users ab ON ab.id = c.added_by\n               JOIN app.teams t ON t.id = ab.team_id\n               WHERE c.status = 'ACTIVE'\n               AND c.project_id IS NULL\n               GROUP BY c.id, ab.id, t.id\n               ORDER BY c.id",
   "describe": {
     "columns": [
       {
@@ -121,5 +121,5 @@
       null
     ]
   },
-  "hash": "9b82bfffda31a1080e8e0aba28233169c7ac7a8e4151989b36f98ddb6851f519"
+  "hash": "2d6b38fa074361905ff232f2e32be52be4bf11205c7f2c59343b5e52ed6b67f8"
 }
