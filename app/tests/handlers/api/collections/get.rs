@@ -9,7 +9,7 @@ use crate::common::{
 pub async fn get_collections_works() {
     let app = AppBuilder::new().build().await;
     let auth = Auth::mock_session_token();
-    let _collection_id = app.generate_project_collection_id(Some(&auth)).await;
+    let _collection_id = app.generate_project_collection_id().await;
     let response = app
         .collections_service
         .get(&app.api_client, Some(&auth))

@@ -11,7 +11,7 @@ pub async fn crs_transform_works() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
     let project_id = app.generate_project_id(Some(&auth)).await;
-    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
+    let collection_id = app.generate_project_collection_id().await;
     let srid = 27700;
     let (easting, northing, wkt) = generate_random_bng_point_wkt();
     let geom = Geometry::from_wkt(&wkt).expect("failed to generate geometry");

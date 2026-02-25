@@ -35,13 +35,15 @@ export default function CollectionsSection() {
               Manage your geospatial data collections
             </p>
           </div>
-          <button
-            onClick={() => openCreateModal()}
-            className="btn btn-primary gap-2"
-          >
-            <Plus size={20} />
-            New Collection
-          </button>
+          {currentUser?.isAdmin && (
+            <button
+              onClick={() => openCreateModal()}
+              className="btn btn-primary gap-2"
+            >
+              <Plus size={20} />
+              New Collection
+            </button>
+          )}
         </div>
       </div>
 
@@ -66,16 +68,9 @@ export default function CollectionsSection() {
           <div className="card-body items-center text-center py-12">
             <Layers size={48} className="opacity-30 mb-4" />
             <h3 className="text-lg font-semibold mb-2">No collections</h3>
-            <p className="text-base-content/70 mb-4">
-              Get started by creating your first collection
+            <p className="text-base-content/70">
+              No collections have been created yet.
             </p>
-            <button
-              onClick={() => openCreateModal()}
-              className="btn btn-sm btn-primary gap-2"
-            >
-              <Plus size={16} />
-              Create your first collection
-            </button>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -120,52 +115,41 @@ export default function CollectionsSection() {
                       )}
                     </td>
                     <td>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => {
-                            setEditingCollection(collection);
-                            const el = document.getElementById("edit_collection");
-                            if (el instanceof HTMLDialogElement) el.showModal();
-                          }}
-                          className={`btn btn-ghost btn-sm gap-1 ${
-                            currentUser?.id !== collection.added_by_id &&
-                            !currentUser?.isAdmin
-                              ? "text-base-content/30"
-                              : ""
-                          }`}
-                          disabled={
-                            currentUser?.id !== collection.added_by_id &&
-                            !currentUser?.isAdmin
-                          }
-                        >
-                          <Pencil size={14} />
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => {
-                            setDeletingCollection(collection);
-                            const el = document.getElementById("delete_collection");
-                            if (el instanceof HTMLDialogElement) el.showModal();
-                          }}
-                          className={`btn btn-ghost btn-sm gap-1 ${
-                            collection.active_feature_count > 0 ||
-                            collection.archived_feature_count > 0 ||
-                            (currentUser?.id !== collection.added_by_id &&
-                              !currentUser?.isAdmin)
-                              ? "text-base-content/30"
-                              : "text-error"
-                          }`}
-                          disabled={
-                            collection.active_feature_count > 0 ||
-                            collection.archived_feature_count > 0 ||
-                            (currentUser?.id !== collection.added_by_id &&
-                              !currentUser?.isAdmin)
-                          }
-                        >
-                          <Trash2 size={14} />
-                          Delete
-                        </button>
-                      </div>
+                      {currentUser?.isAdmin && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => {
+                              setEditingCollection(collection);
+                              const el = document.getElementById("edit_collection");
+                              if (el instanceof HTMLDialogElement) el.showModal();
+                            }}
+                            className="btn btn-ghost btn-sm gap-1"
+                          >
+                            <Pencil size={14} />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => {
+                              setDeletingCollection(collection);
+                              const el = document.getElementById("delete_collection");
+                              if (el instanceof HTMLDialogElement) el.showModal();
+                            }}
+                            className={`btn btn-ghost btn-sm gap-1 ${
+                              collection.active_feature_count > 0 ||
+                              collection.archived_feature_count > 0
+                                ? "text-base-content/30"
+                                : "text-error"
+                            }`}
+                            disabled={
+                              collection.active_feature_count > 0 ||
+                              collection.archived_feature_count > 0
+                            }
+                          >
+                            <Trash2 size={14} />
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}

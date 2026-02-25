@@ -17,6 +17,9 @@ pub async fn post_project_collection(
     payload: Json<CollectionReqPayload>,
     user: web::ReqData<AuthenticatedUser>,
 ) -> Result<Json<ProjectCollectionId>, ApiError> {
+    if payload.project_id.is_none() && !user.admin {
+        return Err(ApiError::AdminOnly);
+    }
     let collection_input_dto: ProjectCollectionInputDto = payload
         .into_inner()
         .try_into()

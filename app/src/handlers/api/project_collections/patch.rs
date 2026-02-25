@@ -28,27 +28,11 @@ pub async fn patch_collection(
     repo: web::Data<PostgresRepo>,
     user: web::ReqData<AuthenticatedUser>,
 ) -> Result<HttpResponse, ApiError> {
+    if !user.admin {
+        return Err(ApiError::AdminOnly);
+    }
     let mut payload = body.into_inner();
     let collection_id = id.into_inner();
-
-    // Check if user owns this collection or is an admin
-    if !user.admin {
-        let added_by: i32 = sqlx::query_scalar!(
-            r#"
-            SELECT added_by
-            FROM app.collections
-            WHERE id = $1
-            "#,
-            collection_id.0
-        )
-        .fetch_one(&repo.db_pool)
-        .await
-        .map_err(|e| ApiError::Unexpected(e.into()))?;
-
-        if added_by != user.id.0 {
-            return Err(ApiError::NotCollectionOwner);
-        }
-    }
 
     if let Some(ref status) = payload.status
         && status == &Status::Deleted

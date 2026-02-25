@@ -1,9 +1,10 @@
-use domain::{ProjectCollectionInputDto, enums::GeometryType, name::NameInputDTO};
+use domain::{ProjectCollectionInputDto, ProjectId, enums::GeometryType, name::NameInputDTO};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct CollectionReqPayload {
     pub title: String,
+    pub project_id: Option<ProjectId>,
     pub geometry_type: GeometryType,
     pub description: Option<String>,
 }
@@ -14,6 +15,7 @@ impl Default for CollectionReqPayload {
             title: uuid::Uuid::new_v4().to_string(),
             geometry_type: GeometryType::Point,
             description: Default::default(),
+            project_id: None,
         }
     }
 }
@@ -24,6 +26,7 @@ impl TryFrom<CollectionReqPayload> for ProjectCollectionInputDto {
             title,
             geometry_type,
             description,
+            project_id: _,
         } = value;
         let slug = slug::slugify(&title);
         Ok(ProjectCollectionInputDto {

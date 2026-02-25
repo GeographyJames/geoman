@@ -10,7 +10,7 @@ use crate::common::{
 async fn patch_project_feature_works() {
     let app = AppBuilder::new().build().await;
     let auth = Auth::mock_session_token();
-    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
+    let collection_id = app.generate_project_collection_id().await;
     let project_id = app.generate_project_id(Some(&auth)).await;
     let feature_id = app
         .generate_project_feature_id(collection_id, project_id, Some(&auth))

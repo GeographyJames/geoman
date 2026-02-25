@@ -11,7 +11,7 @@ async fn get_project_collection_has_correct_storage_crs() {
     let auth = Auth::mock_session_token();
     let project_one_id = app.generate_project_id(Some(&auth)).await;
     let project_two_id = app.generate_project_id(Some(&auth)).await;
-    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
+    let collection_id = app.generate_project_collection_id().await;
     let bng = create_gdal_point_bng();
     let wgs84 = create_gdal_point_wgs84();
 
@@ -93,7 +93,7 @@ async fn get_project_collection_works() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
     let project_id = app.generate_project_id(Some(&auth)).await;
-    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
+    let collection_id = app.generate_project_collection_id().await;
     let _feature_id = app
         .generate_project_feature_id(collection_id, project_id, Some(&auth))
         .await;
@@ -108,7 +108,7 @@ async fn get_project_collection_works() {
 async fn get_project_collection_returns_404_for_project_not_found() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
-    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
+    let collection_id = app.generate_project_collection_id().await;
     let response = app
         .ogc_service
         .get_project_collection(&app.api_client, ProjectId::default(), collection_id)
@@ -122,7 +122,7 @@ async fn get_project_collection_returns_404_for_collection_with_no_features() {
     let auth = Auth::mock_session_token();
     let project_id = app.generate_project_id(Some(&auth)).await;
     let another_project = app.generate_project_id(Some(&auth)).await;
-    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
+    let collection_id = app.generate_project_collection_id().await;
     let _feature = app
         .generate_project_feature_id(collection_id, another_project, Some(&auth))
         .await;
@@ -138,7 +138,7 @@ async fn get_project_collection_has_correct_crs_list() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
     let project_id = app.generate_project_id(Some(&auth)).await;
-    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
+    let collection_id = app.generate_project_collection_id().await;
     let _feature_id = app
         .generate_project_feature_id(collection_id, project_id, Some(&auth))
         .await;

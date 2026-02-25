@@ -10,7 +10,7 @@ use crate::common::{
 };
 use app::{
     AppConfig, Application, AuthenticatedUser, DatabaseSettings, Password, URLS,
-    constants::GIS_DATA_SCHEMA,
+    constants::{GIS_DATA_SCHEMA, SITE_BOUNDARIES_COLLECTION_ID},
     enums::GeoManEnvironment,
     get_config,
     handlers::{
@@ -182,11 +182,13 @@ impl TestApp<ClerkAuthService> {
         app
     }
 
-    pub async fn generate_project_collection_id(&self, auth: Option<&Auth>) -> ProjectCollectionId {
+    pub async fn generate_project_collection_id(&self) -> ProjectCollectionId {
+        let admin = self.generate_user(true, TeamId(0)).await;
+        let admin_auth = Auth::MockUserCredentials(admin);
         let collection = CollectionReqPayload::default();
         let response = self
             .collections_service
-            .post_json(&self.api_client, auth, &collection)
+            .post_json(&self.api_client, Some(&admin_auth), &collection)
             .await;
         handle_json_response(response)
             .await
@@ -321,7 +323,7 @@ impl TestApp<ClerkAuthService> {
     ) -> ProjectFeatureId {
         let polygon = create_gdal_multipolygon_bng();
         self.insert_project_feature(
-            ProjectCollectionId(1),
+            ProjectCollectionId(SITE_BOUNDARIES_COLLECTION_ID),
             project_id,
             polygon,
             27700,

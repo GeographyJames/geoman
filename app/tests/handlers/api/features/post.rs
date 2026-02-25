@@ -1,5 +1,5 @@
 use app::handlers::api::project_collections::CollectionReqPayload;
-use domain::{FeatureId, ProjectCollectionId, enums::GeometryType};
+use domain::{FeatureId, ProjectCollectionId, TeamId, enums::GeometryType};
 use gdal::{
     vector::{LayerAccess, OGRwkbGeometryType},
     vsi::get_vsi_mem_file_bytes_owned,
@@ -16,11 +16,13 @@ use crate::common::{
 #[actix_web::test]
 async fn post_shapefile_works() {
     let app = AppBuilder::new().build().await;
-    let auth = Auth::mock_session_token();
+    let admin = app.generate_user(true, TeamId(0)).await;
+    let auth = Auth::MockUserCredentials(admin);
     let collection = CollectionReqPayload {
         title: uuid::Uuid::new_v4().to_string(),
         geometry_type: GeometryType::MultiPolygon,
         description: None,
+        project_id: None,
     };
     let collection_id: ProjectCollectionId = handle_json_response(
         app.collections_service
@@ -62,11 +64,13 @@ async fn post_shapefile_works() {
 #[actix_web::test]
 async fn post_shapefile_works_with_shz() {
     let app = AppBuilder::new().build().await;
-    let auth = Auth::mock_session_token();
+    let admin = app.generate_user(true, TeamId(0)).await;
+    let auth = Auth::MockUserCredentials(admin);
     let collection = CollectionReqPayload {
         title: uuid::Uuid::new_v4().to_string(),
         geometry_type: GeometryType::MultiPolygon,
         description: None,
+        project_id: None,
     };
     let collection_id: ProjectCollectionId = handle_json_response(
         app.collections_service

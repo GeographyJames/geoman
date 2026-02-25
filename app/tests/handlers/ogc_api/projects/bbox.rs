@@ -8,7 +8,7 @@ pub async fn bbox_works() {
     let app = TestApp::spawn_with_db().await;
     let auth = Auth::mock_session_token();
     let project_id = app.generate_project_id(Some(&auth)).await;
-    let collection_id = app.generate_project_collection_id(Some(&auth)).await;
+    let collection_id = app.generate_project_collection_id().await;
     let srid = 27700;
     let feature_1 = format!("POINT({} {})", 1, 1);
     let feature_2 = format!("POINT({} {})", 3, 1);
