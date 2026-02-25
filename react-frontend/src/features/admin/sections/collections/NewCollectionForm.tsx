@@ -19,7 +19,13 @@ interface NewCollectionFormData {
   description: string;
 }
 
-const NewCollectionInner = () => {
+export const NewCollectionInner = ({
+  projectId,
+  onClose,
+}: {
+  projectId?: number;
+  onClose?: () => void;
+} = {}) => {
   const { mutate: createCollection, isPending } = useCreateCollection();
   const { addError, closeDialog } = useModal();
 
@@ -42,11 +48,13 @@ const NewCollectionInner = () => {
         title: data.title,
         geometry_type: data.geometry_type,
         description: data.description || undefined,
+        project_id: projectId,
       },
       {
         onSuccess: () => {
           reset();
           closeDialog();
+          onClose?.();
         },
         onError: (error) => {
           const message =
@@ -62,6 +70,7 @@ const NewCollectionInner = () => {
   const handleCancel = () => {
     reset();
     closeDialog();
+    onClose?.();
   };
 
   return (

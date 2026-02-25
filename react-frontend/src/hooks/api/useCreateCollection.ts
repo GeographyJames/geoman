@@ -6,6 +6,7 @@ interface CreateCollectionRequest {
     title: string
     geometry_type: string
     description?: string
+    project_id?: number
 }
 
 export const useCreateCollection = () => {

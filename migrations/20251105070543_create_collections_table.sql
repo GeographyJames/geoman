@@ -1,5 +1,6 @@
 CREATE TABLE app.collections (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    project_id integer REFERENCES app.projects(id),
     title text NOT NULL,
     slug text NOT NULL CHECK (slug ~ '[a-z]' AND slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
     description TEXT,

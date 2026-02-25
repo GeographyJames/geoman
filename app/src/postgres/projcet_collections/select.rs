@@ -97,13 +97,15 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
                           AND f.status = ANY($4)
                     ) extent_sub) as extent
               FROM app.collections c
-             WHERE EXISTS (
-                 SELECT 1
-                 FROM app.project_features f
-                 WHERE f.collection_id = c.id
-                   AND f.project_id = $1
-                   AND f.status = ANY($4)
-
+             WHERE (
+                 EXISTS (
+                     SELECT 1
+                     FROM app.project_features f
+                     WHERE f.collection_id = c.id
+                       AND f.project_id = $1
+                       AND f.status = ANY($4)
+                 )
+                 OR c.project_id = $1
              )
                AND c.id = $2"#,
             params.project_id.0,
@@ -169,12 +171,15 @@ impl SelectAllWithParams for ProjectCollection {
                     ) extent_sub) as extent
   FROM app.collections c
   WHERE c.status = 'ACTIVE'
-  AND EXISTS (
-      SELECT 1
-      FROM app.project_features f
-      WHERE f.collection_id = c.id
-      AND f.status = ANY($3)
-      AND f.project_id =  $1
+  AND (
+      EXISTS (
+          SELECT 1
+          FROM app.project_features f
+          WHERE f.collection_id = c.id
+          AND f.status = ANY($3)
+          AND f.project_id = $1
+      )
+      OR c.project_id = $1
   )
   ORDER BY id"#,
             params.project_id.0,

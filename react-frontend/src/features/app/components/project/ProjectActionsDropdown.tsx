@@ -7,6 +7,7 @@ import { useFlash } from "@/features/app/contexts/FlashMessageContext";
 import { useEditProject } from "../../contexts/EditProjectContext";
 import { useDeleteProject } from "../../contexts/DeleteProjectContext";
 import { useAddFeature } from "../../contexts/AddFeatureContext";
+import { useCreateProjectCollection } from "../../contexts/CreateProjectCollectionContext";
 export const ProjectActionsDropdown = memo(({
   item,
   id,
@@ -24,6 +25,7 @@ export const ProjectActionsDropdown = memo(({
   const { requestEdit } = useEditProject();
   const { requestDelete } = useDeleteProject();
   const { requestAddFeature } = useAddFeature();
+  const { requestCreateCollection } = useCreateProjectCollection();
   return (
     <ActionsDropdown id={id}>
       {hasExtent && (
@@ -68,6 +70,9 @@ export const ProjectActionsDropdown = memo(({
       </li>
       <li>
         <button onClick={() => requestAddFeature(item)}>add feature</button>
+      </li>
+      <li>
+        <button onClick={() => requestCreateCollection(item)}>create collection</button>
       </li>
       <li>
         <button>create figure</button>

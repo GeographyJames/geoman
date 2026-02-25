@@ -14,6 +14,8 @@ import { DeleteProjectProvider } from "../contexts/DeleteProjectContext";
 import { DeleteProjectForm } from "./forms/DeleteProject";
 import { AddFeatureProvider } from "../contexts/AddFeatureContext";
 import { AddSiteFeatureForm } from "./forms/AddSiteFeature";
+import { CreateProjectCollectionProvider } from "../contexts/CreateProjectCollectionContext";
+import { CreateProjectCollectionForm } from "./forms/CreateProjectCollection";
 
 const CreateProjectForm = lazy(() =>
   import("@/features/app/components/forms/CreateProject").then((module) => ({
@@ -32,15 +34,18 @@ export const App = () => {
                 <EditProjectProvider>
                   <DeleteProjectProvider>
                     <AddFeatureProvider>
-                      <Drawer />
-                      <Suspense fallback={null}>
-                        <CreateProjectForm />
-                        <DeleteFeatureForm />
-                        <EditFeatureForm />
-                        <EditProjectForm />
-                        <AddSiteFeatureForm />
-                        <DeleteProjectForm />
-                      </Suspense>
+                      <CreateProjectCollectionProvider>
+                        <Drawer />
+                        <Suspense fallback={null}>
+                          <CreateProjectForm />
+                          <DeleteFeatureForm />
+                          <EditFeatureForm />
+                          <EditProjectForm />
+                          <AddSiteFeatureForm />
+                          <DeleteProjectForm />
+                          <CreateProjectCollectionForm />
+                        </Suspense>
+                      </CreateProjectCollectionProvider>
                     </AddFeatureProvider>
                   </DeleteProjectProvider>
                 </EditProjectProvider>

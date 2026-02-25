@@ -1,5 +1,8 @@
+use app::handlers::api::project_collections::CollectionReqPayload;
+use domain::TeamId;
+
 use crate::common::{
-    Auth, TestApp,
+    AppBuilder, Auth, TestApp,
     helpers::{assert_ok, handle_json_response},
 };
 
@@ -42,4 +45,26 @@ async fn get_project_collections_only_returns_collections_that_contain_items_for
         .await
         .expect("failed to extract ogc collections");
     assert!(ogc_collections.collections.is_empty())
+}
+
+#[actix_web::test]
+async fn get_collections_includes_project_specific_collections() {
+    let app = AppBuilder::new().build().await;
+    let user = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
+    let project_id = app.generate_project_id(Some(&user)).await;
+    let mut collection = CollectionReqPayload::default();
+    collection.project_id = Some(project_id);
+    let _ = app
+        .collections_service
+        .post_json(&app.api_client, Some(&user), &collection)
+        .await;
+
+    let response = app
+        .ogc_service
+        .get_project_collections(&app.api_client, project_id)
+        .await;
+    let ogc_collections: ogcapi_types::common::Collections = handle_json_response(response)
+        .await
+        .expect("failed to extract ogc collections");
+    assert_eq!(ogc_collections.collections.len(), 1)
 }

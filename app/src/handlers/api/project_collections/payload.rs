@@ -26,7 +26,7 @@ impl TryFrom<CollectionReqPayload> for ProjectCollectionInputDto {
             title,
             geometry_type,
             description,
-            project_id: _,
+            project_id,
         } = value;
         let slug = slug::slugify(&title);
         Ok(ProjectCollectionInputDto {
@@ -34,6 +34,7 @@ impl TryFrom<CollectionReqPayload> for ProjectCollectionInputDto {
             slug,
             description,
             geometry_type,
+            project_id,
         })
     }
 
