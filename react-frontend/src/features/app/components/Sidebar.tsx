@@ -10,6 +10,23 @@ export const Sidebar = () => {
           <MdAdminPanelSettings size={18} />
           Admin
         </Link>
+        <ul>
+          <li>
+            <Link to="/admin" search={{ tab: "teams" }}>
+              Teams
+            </Link>
+          </li>
+          <li>
+            <Link to="/admin" search={{ tab: "collections" }}>
+              Collections
+            </Link>
+          </li>
+          <li>
+            <Link to="/admin" search={{ tab: "api-keys" }}>
+              API Keys
+            </Link>
+          </li>
+        </ul>
       </li>
       <li>
         <Link to="/about" className="flex gap-2 items-center">
