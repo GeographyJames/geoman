@@ -9,8 +9,7 @@ import { useZoomToProjectBoundary } from "@/hooks/useZoomToProjectBoundary";
 import { SiteDataDropdown } from "./siteDataDropdown";
 import { ProjectIcons } from "./ProjectIcons";
 import { ProjectActionsDropdown } from "./ProjectActionsDropdown";
-
-const SITE_BOUNDARIES_TITLE = "site boundaries";
+import { SITE_BOUNDARIES_COLLECTION_ID } from "@/constants";
 
 export const ProjectPanel = memo(({ project }: { project: Project }) => {
   const navigate = useNavigate();
@@ -20,7 +19,7 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
   });
 
   const siteBoundariesCollection = collectionsData?.collections.find(
-    (c) => c.title.toLowerCase() === SITE_BOUNDARIES_TITLE,
+    (c) => c.id === SITE_BOUNDARIES_COLLECTION_ID.toString(),
   );
 
   const { data: itemsData } = useProjectCollectionItems({

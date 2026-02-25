@@ -1,5 +1,5 @@
 use crate::{
-    constants::SITE_BOUNDARIES_COLLECTION_NAME,
+    constants::SITE_BOUNDARIES_COLLECTION_ID,
     postgres::sql_fragments::{user_join_fragment, user_row_fragment},
     repo::{
         RepositoryError,
@@ -48,7 +48,7 @@ fn project_query() -> String {
               JOIN app.collections c
                 ON c.id = pf.collection_id
              WHERE pf.is_primary = true
-               AND c.title = '{SITE_BOUNDARIES_COLLECTION_NAME}'
+               AND c.id = {SITE_BOUNDARIES_COLLECTION_ID}
         )
         SELECT
             p.id,

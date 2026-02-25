@@ -16,13 +16,15 @@ CREATE TABLE app.collections (
 
 
 INSERT INTO app.collections (
+    id,
     title,
     slug,
     geometry_type,
     added_by,
     last_updated_by,
     description
-) VALUES (
+) OVERRIDING SYSTEM VALUE VALUES (
+    0,
     'site boundaries',
     'site-boundaries',
     'MULTIPOLYGON',

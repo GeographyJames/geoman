@@ -1,7 +1,4 @@
-use app::{
-    constants::SITE_BOUNDARIES_COLLECTION_NAME,
-    handlers::api::project_collections::CollectionReqPayload,
-};
+use app::handlers::api::project_collections::CollectionReqPayload;
 
 use crate::common::{AppBuilder, Auth, helpers::check_error_response};
 
@@ -16,8 +13,13 @@ async fn post_collection_works() {
 #[actix_web::test]
 async fn post_collection_returns_409_for_duplicate_name() {
     let app = AppBuilder::new().build().await;
-    let mut collection = CollectionReqPayload::default();
-    collection.title = SITE_BOUNDARIES_COLLECTION_NAME.to_string();
+    let auth = Auth::mock_session_token();
+    let collection = CollectionReqPayload::default();
+    let _collection_id = app
+        .collections_service
+        .post_json(&app.api_client, Some(&auth), &collection)
+        .await;
+
     let response = app
         .collections_service
         .post_json(

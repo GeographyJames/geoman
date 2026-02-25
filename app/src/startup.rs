@@ -49,7 +49,6 @@ pub async fn run(
     config: AppConfig,
     db_pool: PgPool,
 ) -> anyhow::Result<Server> {
-    tracing::info!("\n\nhere!! again\n");
     let clerk_config = ClerkConfiguration::new(
         None,
         None,
