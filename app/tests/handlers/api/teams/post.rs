@@ -7,18 +7,14 @@ use crate::common::{AppBuilder, Auth, helpers::assert_status};
 async fn post_team_works() {
     let app = AppBuilder::new().build().await;
     let auth = Auth::MockUserCredentials(app.generate_user(true, TeamId(0)).await);
-    let bu_id = app.generate_bu_id(Some(&auth)).await;
-    let _team_id = app.generate_team_id(Some(&auth), bu_id).await;
+
+    let _team_id = app.generate_team_id(Some(&auth)).await;
 }
 
 #[tokio::test]
 async fn post_team_requires_admin_permission() {
     let app = AppBuilder::new().build().await;
-    let admin_user = app.generate_user(true, TeamId(0)).await;
     let non_admin_user = app.generate_user(false, TeamId(0)).await;
-    let bu_id = app
-        .generate_bu_id(Some(&Auth::MockUserCredentials(admin_user)))
-        .await;
 
     let response = app
         .teams_service
@@ -27,7 +23,7 @@ async fn post_team_requires_admin_permission() {
             Some(&Auth::MockUserCredentials(non_admin_user)),
             &TeamInputPayload {
                 name: uuid::Uuid::new_v4().to_string(),
-                business_unit: bu_id,
+                business_unit: None,
             },
         )
         .await;

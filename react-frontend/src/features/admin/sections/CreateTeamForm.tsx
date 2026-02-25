@@ -7,7 +7,7 @@ import { ApiError } from "@/lib/api";
 
 interface CreateTeamFormData {
   name: string;
-  businessUnitId: number;
+  businessUnitId: number | "";
 }
 
 const MODAL_ID = "create_team";
@@ -28,7 +28,7 @@ const CreateTeamInner = () => {
 
   const onSubmit = (data: CreateTeamFormData) => {
     postTeam(
-      { name: data.name, business_unit: Number(data.businessUnitId) },
+      { name: data.name, business_unit: data.businessUnitId ? Number(data.businessUnitId) : null },
       {
         onSuccess: () => {
           reset();
@@ -74,19 +74,16 @@ const CreateTeamInner = () => {
         </label>
         <select
           id="team-bu"
-          className={`select select-bordered w-full ${errors.businessUnitId ? "select-error" : ""}`}
-          {...register("businessUnitId", { required: "Business unit is required" })}
+          className="select select-bordered w-full"
+          {...register("businessUnitId")}
         >
-          <option value="">Select a business unit…</option>
+          <option value="">None</option>
           {businessUnits.map((bu) => (
             <option key={bu.id} value={bu.id}>
               {bu.name}
             </option>
           ))}
         </select>
-        {errors.businessUnitId && (
-          <span className="label-text-alt text-error mt-1">{errors.businessUnitId.message}</span>
-        )}
       </div>
 
       <div className="modal-action">

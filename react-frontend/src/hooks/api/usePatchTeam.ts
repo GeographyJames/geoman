@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface PatchTeamRequest {
   name?: string;
-  business_unit?: number;
+  business_unit?: number | null;
 }
 
 export function usePatchTeam() {

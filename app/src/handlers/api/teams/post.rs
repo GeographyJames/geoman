@@ -10,7 +10,7 @@ use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
 #[derive(Deserialize, Serialize)]
 pub struct TeamInputPayload {
     pub name: String,
-    pub business_unit: BusinessUnitId,
+    pub business_unit: Option<BusinessUnitId>,
 }
 
 #[post("")]

@@ -17,7 +17,7 @@ impl Insert for (TeamInputPayload, UserId) {
         INSERT INTO app.teams(name, business_unit_id, added_by, last_updated_by) VALUES ($1, $2, $3, $4) RETURNING id
         ",
             dto.name,
-            dto.business_unit.0,
+            dto.business_unit.map(|id| id.0),
             user.0,
             user.0
         )

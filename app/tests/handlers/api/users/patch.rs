@@ -47,8 +47,7 @@ async fn patch_user_revoke_admin_works() {
 async fn patch_user_works() {
     let app = AppBuilder::new().build().await;
     let admin_user = Auth::MockUserCredentials(app.generate_user(true, TeamId(-1)).await);
-    let bu_id = app.generate_bu_id(Some(&admin_user)).await;
-    let team_id = app.generate_team_id(Some(&admin_user), bu_id).await;
+    let team_id = app.generate_team_id(Some(&admin_user)).await;
     let user_to_update = app.generate_user(false, team_id).await;
     let response = app
         .users_service
@@ -70,8 +69,8 @@ async fn patch_user_requires_admin_permission() {
     let app = AppBuilder::new().build().await;
     let admin_user = Auth::MockUserCredentials(app.generate_user(true, TeamId(-1)).await);
     let non_admin_user = Auth::MockUserCredentials(app.generate_user(false, TeamId(-1)).await);
-    let bu_id = app.generate_bu_id(Some(&admin_user)).await;
-    let team_id = app.generate_team_id(Some(&admin_user), bu_id).await;
+
+    let team_id = app.generate_team_id(Some(&admin_user)).await;
     let user_to_update = app.generate_user(false, team_id).await;
     let response = app
         .users_service

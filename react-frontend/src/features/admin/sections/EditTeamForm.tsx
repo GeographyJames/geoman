@@ -8,7 +8,7 @@ import type Team from "@/domain/team/entity";
 
 interface EditTeamFormData {
   name: string;
-  businessUnitId: number;
+  businessUnitId: number | "";
 }
 
 const MODAL_ID = "edit_team";
@@ -24,7 +24,7 @@ const EditTeamInner = ({ team, onClose }: { team: Team | null; onClose: () => vo
     formState: { errors, isDirty, dirtyFields },
   } = useForm<EditTeamFormData>({
     values: team
-      ? { name: team.name, businessUnitId: team.businessUnitId ?? 0 }
+      ? { name: team.name, businessUnitId: team.businessUnitId ?? "" }
       : undefined,
   });
 
@@ -35,7 +35,7 @@ const EditTeamInner = ({ team, onClose }: { team: Team | null; onClose: () => vo
         teamId: team.id,
         patch: {
           name: dirtyFields.name ? data.name : undefined,
-          business_unit: dirtyFields.businessUnitId ? Number(data.businessUnitId) : undefined,
+          business_unit: dirtyFields.businessUnitId ? (data.businessUnitId ? Number(data.businessUnitId) : null) : undefined,
         },
       },
       {
@@ -82,19 +82,16 @@ const EditTeamInner = ({ team, onClose }: { team: Team | null; onClose: () => vo
         </label>
         <select
           id="edit-team-bu"
-          className={`select select-bordered w-full ${errors.businessUnitId ? "select-error" : ""}`}
-          {...register("businessUnitId", { required: "Business unit is required" })}
+          className="select select-bordered w-full"
+          {...register("businessUnitId")}
         >
-          <option value="">Select a business unit…</option>
+          <option value="">None</option>
           {businessUnits.map((bu) => (
             <option key={bu.id} value={bu.id}>
               {bu.name}
             </option>
           ))}
         </select>
-        {errors.businessUnitId && (
-          <span className="label-text-alt text-error mt-1">{errors.businessUnitId.message}</span>
-        )}
       </div>
 
       <div className="modal-action">

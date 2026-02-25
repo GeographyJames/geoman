@@ -373,7 +373,7 @@ impl TestApp<ClerkAuthService> {
         .expect("failed to generate bu id")
     }
 
-    pub async fn generate_team_id(&self, auth: Option<&Auth>, bu_id: BusinessUnitId) -> TeamId {
+    pub async fn generate_team_id(&self, auth: Option<&Auth>) -> TeamId {
         handle_json_response(
             self.teams_service
                 .post_json(
@@ -381,7 +381,7 @@ impl TestApp<ClerkAuthService> {
                     auth,
                     &TeamInputPayload {
                         name: uuid::Uuid::new_v4().to_string(),
-                        business_unit: bu_id,
+                        business_unit: None,
                     },
                 )
                 .await,

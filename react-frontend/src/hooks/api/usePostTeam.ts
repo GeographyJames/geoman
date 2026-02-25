@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface PostTeamRequest {
   name: string;
-  business_unit: number;
+  business_unit?: number | null;
 }
 
 export function usePostTeam() {
