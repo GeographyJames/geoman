@@ -232,6 +232,7 @@ fn project_collection(collections_url: &str) -> ogcapi_types::common::Collection
         description: None,
         supported_crs: SupportedCrs::new(None),
         geometry_type: domain::enums::GeometryType::MultiPolygon,
+        project_id: None,
     }
     .into_ogc_collection(collections_url);
     let queryables_link = Link::new(

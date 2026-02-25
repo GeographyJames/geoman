@@ -10,8 +10,8 @@ CREATE TABLE app.collections (
     added timestamptz NOT NULL DEFAULT now(),
     last_updated_by integer NOT NULL REFERENCES app.users(id),
     last_updated timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT project_collections_title_key UNIQUE (title),
-    CONSTRAINT project_collections_slug_key UNIQUE (slug)
+    CONSTRAINT collections_title_global_unique UNIQUE NULLS NOT DISTINCT (title, project_id),
+    CONSTRAINT collections_slug_global_unique UNIQUE NULLS NOT DISTINCT (slug, project_id)
 );
 
 

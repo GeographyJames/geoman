@@ -3,7 +3,7 @@ use serde::Deserialize;
 use serde_json::Map;
 
 use crate::{
-    CreateLinks, IntoOGCCollection, SupportedCrs,
+    CreateLinks, IntoOGCCollection, ProjectId, SupportedCrs,
     enums::{CollectionId, GeometryType},
 };
 
@@ -17,6 +17,7 @@ pub struct ProjectCollection {
     pub extent: Option<SpatialExtent>,
     pub supported_crs: SupportedCrs,
     pub geometry_type: GeometryType,
+    pub project_id: Option<ProjectId>,
 }
 
 impl IntoOGCCollection for ProjectCollection {
@@ -30,6 +31,7 @@ impl IntoOGCCollection for ProjectCollection {
             extent,
             geometry_type,
             slug,
+            project_id,
         } = self;
         let links = ogcapi_types::common::Collection::create_links(collections_url, &id);
         let additional_properties = Map::from_iter([
@@ -38,6 +40,10 @@ impl IntoOGCCollection for ProjectCollection {
                 serde_json::json!(geometry_type),
             ),
             ("slug".to_string(), serde_json::json!(slug)),
+            (
+                "project_id".to_string(),
+                serde_json::json!(project_id.map(|p| p.0)),
+            ),
         ]);
 
         ogcapi_types::common::Collection {

@@ -28,11 +28,52 @@ pub async fn patch_collection(
     repo: web::Data<PostgresRepo>,
     user: web::ReqData<AuthenticatedUser>,
 ) -> Result<HttpResponse, ApiError> {
-    if !user.admin {
-        return Err(ApiError::AdminOnly);
-    }
     let mut payload = body.into_inner();
     let collection_id = id.into_inner();
+
+    let project_id: Option<i32> = sqlx::query_scalar!(
+        "SELECT project_id FROM app.collections WHERE id = $1",
+        collection_id.0
+    )
+    .fetch_optional(&repo.db_pool)
+    .await
+    .map_err(|e| ApiError::Unexpected(e.into()))?
+    .flatten();
+
+    if !user.admin && project_id.is_none() {
+        return Err(ApiError::AdminOnly);
+    }
+
+    if let Some(ref new_title) = payload.title
+        && project_id.is_some()
+    {
+        let title_clashes: bool = sqlx::query_scalar!(
+            "SELECT EXISTS(SELECT 1 FROM app.collections WHERE title = $1 AND project_id IS NULL)",
+            new_title
+        )
+        .fetch_one(&repo.db_pool)
+        .await
+        .map_err(|e| ApiError::Unexpected(e.into()))?
+        .unwrap_or(false);
+
+        if title_clashes {
+            return Err(ApiError::DuplicateCollectionName);
+        }
+
+        let new_slug = slug::slugify(new_title);
+        let slug_clashes: bool = sqlx::query_scalar!(
+            "SELECT EXISTS(SELECT 1 FROM app.collections WHERE slug = $1 AND project_id IS NULL)",
+            new_slug
+        )
+        .fetch_one(&repo.db_pool)
+        .await
+        .map_err(|e| ApiError::Unexpected(e.into()))?
+        .unwrap_or(false);
+
+        if slug_clashes {
+            return Err(ApiError::DuplicateCollectionSlug);
+        }
+    }
 
     if let Some(ref status) = payload.status
         && status == &Status::Deleted

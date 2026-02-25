@@ -52,6 +52,11 @@ export const ProjectCollection = ({
   const features = showArchived
     ? data.features
     : data.features.filter((f) => f.properties.status !== "ARCHIVED");
+
+  if (features.length === 0) {
+    return <p className="text-base-content/50 py-2 text-center">No features</p>;
+  }
+
   return (
     <table className="table table-fixed">
       <SiteDataTableHeadings>

@@ -1,14 +1,18 @@
-import type { Collection } from "@/hooks/api/useCollections";
 import { usePatchCollection } from "@/hooks/api/usePatchCollection";
 import { Modal, useModal } from "@/components/forms/Modal";
 import { CancelButton, SubmitButton } from "@/components/Buttons";
 import { ApiError } from "@/lib/api";
 
-const DeleteCollectionInner = ({
+export interface CollectionForDelete {
+  id: number;
+  title: string;
+}
+
+export const DeleteCollectionInner = ({
   collection,
   onClose,
 }: {
-  collection: Collection | null;
+  collection: CollectionForDelete | null;
   onClose: () => void;
 }) => {
   const { mutate: patchCollection, isPending } = usePatchCollection();
@@ -71,7 +75,7 @@ export const DeleteCollectionForm = ({
   collection,
   onClose,
 }: {
-  collection: Collection | null;
+  collection: CollectionForDelete | null;
   onClose: () => void;
 }) => {
   return (

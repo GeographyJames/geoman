@@ -11,7 +11,7 @@ export interface Collection {
      title: string
      id: string
      geometry_type: string
-
+     project_id?: number | null
 }
 
 export function useProjectCollections({projectId}: {projectId: number}) {

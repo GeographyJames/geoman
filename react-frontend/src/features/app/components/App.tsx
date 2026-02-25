@@ -16,6 +16,10 @@ import { AddFeatureProvider } from "../contexts/AddFeatureContext";
 import { AddSiteFeatureForm } from "./forms/AddSiteFeature";
 import { CreateProjectCollectionProvider } from "../contexts/CreateProjectCollectionContext";
 import { CreateProjectCollectionForm } from "./forms/CreateProjectCollection";
+import { EditProjectCollectionProvider } from "../contexts/EditProjectCollectionContext";
+import { EditProjectCollectionForm } from "./forms/EditProjectCollection";
+import { DeleteProjectCollectionProvider } from "../contexts/DeleteProjectCollectionContext";
+import { DeleteProjectCollectionForm } from "./forms/DeleteProjectCollection";
 
 const CreateProjectForm = lazy(() =>
   import("@/features/app/components/forms/CreateProject").then((module) => ({
@@ -35,16 +39,22 @@ export const App = () => {
                   <DeleteProjectProvider>
                     <AddFeatureProvider>
                       <CreateProjectCollectionProvider>
-                        <Drawer />
-                        <Suspense fallback={null}>
-                          <CreateProjectForm />
-                          <DeleteFeatureForm />
-                          <EditFeatureForm />
-                          <EditProjectForm />
-                          <AddSiteFeatureForm />
-                          <DeleteProjectForm />
-                          <CreateProjectCollectionForm />
-                        </Suspense>
+                        <EditProjectCollectionProvider>
+                          <DeleteProjectCollectionProvider>
+                            <Drawer />
+                            <Suspense fallback={null}>
+                              <CreateProjectForm />
+                              <DeleteFeatureForm />
+                              <EditFeatureForm />
+                              <EditProjectForm />
+                              <AddSiteFeatureForm />
+                              <DeleteProjectForm />
+                              <CreateProjectCollectionForm />
+                              <EditProjectCollectionForm />
+                              <DeleteProjectCollectionForm />
+                            </Suspense>
+                          </DeleteProjectCollectionProvider>
+                        </EditProjectCollectionProvider>
                       </CreateProjectCollectionProvider>
                     </AddFeatureProvider>
                   </DeleteProjectProvider>

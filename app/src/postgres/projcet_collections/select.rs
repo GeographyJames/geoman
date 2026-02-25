@@ -18,6 +18,7 @@ struct CollectionRow {
     pub storage_crs_srid: Option<i32>,
     pub extent: Option<Vec<f64>>,
     pub geometry_type: GeometryType,
+    pub project_id: Option<i32>,
 }
 
 impl CollectionRow {
@@ -30,6 +31,7 @@ impl CollectionRow {
             storage_crs_srid,
             extent,
             geometry_type,
+            project_id,
         } = self;
         let bbox: Option<Bbox> = extent.and_then(|bbox| Bbox::try_from(bbox.as_slice()).ok());
         let storage_crs = storage_crs_srid.map(Crs::from_srid);
@@ -43,6 +45,7 @@ impl CollectionRow {
             supported_crs,
             storage_crs,
             geometry_type,
+            project_id: project_id.map(domain::ProjectId),
             extent: bbox.map(|bbox| SpatialExtent {
                 bbox: vec![bbox],
                 crs: extent_crs,
@@ -70,6 +73,7 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
                    slug,
                    description,
                    geometry_type as "geometry_type: GeometryType",
+                   project_id,
                    (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(f.geom)) = 1
                            THEN MIN(ST_SRID(f.geom))::int
                            ELSE NULL
@@ -143,6 +147,7 @@ impl SelectAllWithParams for ProjectCollection {
                    slug,
                    description,
                    geometry_type AS "geometry_type: GeometryType",
+                   project_id,
                    (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(f.geom)) = 1
                            THEN MIN(ST_SRID(f.geom))::int
                            ELSE NULL
@@ -218,6 +223,7 @@ impl SelectAll for CollectionListItem {
                JOIN app.users ab ON ab.id = c.added_by
                JOIN app.teams t ON t.id = ab.team_id
                WHERE c.status = 'ACTIVE'
+               AND c.project_id IS NULL
                GROUP BY c.id, ab.id, t.id
                ORDER BY c.id"#
         )

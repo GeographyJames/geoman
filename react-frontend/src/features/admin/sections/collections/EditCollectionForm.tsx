@@ -1,20 +1,25 @@
 import { useForm } from "react-hook-form";
-import type { Collection } from "@/hooks/api/useCollections";
 import { usePatchCollection } from "@/hooks/api/usePatchCollection";
 import { Modal, useModal } from "@/components/forms/Modal";
 import { CancelButton, SubmitButton } from "@/components/Buttons";
 import { ApiError } from "@/lib/api";
+
+export interface CollectionForEdit {
+  id: number;
+  title: string;
+  description?: string | null;
+}
 
 interface EditFormData {
   title: string;
   description: string;
 }
 
-const EditCollectionInner = ({
+export const EditCollectionInner = ({
   collection,
   onClose,
 }: {
-  collection: Collection | null;
+  collection: CollectionForEdit | null;
   onClose: () => void;
 }) => {
   const { mutate: patchCollection, isPending } = usePatchCollection();
@@ -106,7 +111,7 @@ export const EditCollectionForm = ({
   collection,
   onClose,
 }: {
-  collection: Collection | null;
+  collection: CollectionForEdit | null;
   onClose: () => void;
 }) => {
   return (
