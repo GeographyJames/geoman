@@ -3,7 +3,8 @@ import type Project from "@/domain/project/entity";
 
 interface AddFeatureContextValue {
   project: Project | null;
-  requestAddFeature: (project: Project) => void;
+  preSelectedCollectionId: number | null;
+  requestAddFeature: (project: Project, collectionId?: number) => void;
   clear: () => void;
 }
 
@@ -11,19 +12,24 @@ const AddFeatureContext = createContext<AddFeatureContextValue | null>(null);
 
 export function AddFeatureProvider({ children }: { children: ReactNode }) {
   const [project, setProject] = useState<Project | null>(null);
+  const [preSelectedCollectionId, setPreSelectedCollectionId] = useState<number | null>(null);
 
-  const requestAddFeature = (project: Project) => {
+  const requestAddFeature = (project: Project, collectionId?: number) => {
     setProject(project);
+    setPreSelectedCollectionId(collectionId ?? null);
     const el = document.getElementById("add_site_feature");
     if (el instanceof HTMLDialogElement) {
       el.showModal();
     }
   };
 
-  const clear = () => setProject(null);
+  const clear = () => {
+    setProject(null);
+    setPreSelectedCollectionId(null);
+  };
 
   return (
-    <AddFeatureContext.Provider value={{ project, requestAddFeature, clear }}>
+    <AddFeatureContext.Provider value={{ project, preSelectedCollectionId, requestAddFeature, clear }}>
       {children}
     </AddFeatureContext.Provider>
   );

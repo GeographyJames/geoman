@@ -18,7 +18,7 @@ export const Sidebar = () => {
           </li>
           <li>
             <Link to="/admin" search={{ tab: "collections" }}>
-              Collections
+              Global Collections
             </Link>
           </li>
           <li>

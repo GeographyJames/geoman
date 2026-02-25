@@ -3,6 +3,7 @@ import { ShapefilePreview } from "@/components/forms/components/ShapefilePreview
 import { Modal, useModal } from "@/components/forms/Modal";
 import { CancelButton, SubmitButton } from "@/components/Buttons";
 import { useCollections } from "@/hooks/api/useCollections";
+import { useProjectCollections } from "@/hooks/api/useProjectCollections";
 import { useForm } from "react-hook-form";
 import { useEffect, useMemo, useState } from "react";
 import { Shapefile } from "@/lib/shapefile";
@@ -26,8 +27,28 @@ const COMPATIBLE_GEOMETRY: Record<string, string[]> = {
 const SINGLE_GEOMETRY_TYPES = ["Point", "LineString", "Polygon"];
 
 const AddSiteFeatureInner = () => {
-  const { project, clear } = useAddFeature();
-  const { data: collections } = useCollections();
+  const { project, preSelectedCollectionId, clear } = useAddFeature();
+  const { data: globalCollections } = useCollections();
+  const { data: projectCollectionsData } = useProjectCollections({
+    projectId: project?.id ?? 0,
+    enabled: !!project,
+  });
+
+  const collections = useMemo(() => {
+    const global = (globalCollections ?? []).map((c) => ({
+      id: c.id,
+      title: c.title,
+      geometry_type: c.geometry_type,
+    }));
+    const projectSpecific = (projectCollectionsData?.collections ?? [])
+      .filter((c) => c.project_id != null)
+      .map((c) => ({
+        id: Number(c.id),
+        title: c.title,
+        geometry_type: c.geometry_type,
+      }));
+    return [...global, ...projectSpecific];
+  }, [globalCollections, projectCollectionsData]);
   const { addError, clearErrors, closeDialog } = useModal();
   const { mutate: postFeature, isPending } = usePostProjectFeature();
   const { mutate: postEpsg } = usePostEpsg();
@@ -45,10 +66,12 @@ const AddSiteFeatureInner = () => {
   >(null);
 
   useEffect(() => {
-    if (collections?.length && !selectedCollectionId) {
+    if (preSelectedCollectionId != null) {
+      setSelectedCollectionId(String(preSelectedCollectionId));
+    } else if (collections.length && !selectedCollectionId) {
       setSelectedCollectionId(String(collections[0].id));
     }
-  }, [collections, selectedCollectionId]);
+  }, [collections, preSelectedCollectionId]);
 
   const selectedCollection = collections?.find(
     (c) => String(c.id) === selectedCollectionId,

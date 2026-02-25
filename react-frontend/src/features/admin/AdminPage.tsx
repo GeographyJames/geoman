@@ -37,7 +37,7 @@ export default function AdminPage() {
                 className={`tab ${activeTab === "collections" ? "tab-active" : ""}`}
                 onClick={() => setActiveTab("collections")}
               >
-                Collections
+                Global Collections
               </a>
               <a
                 className={`tab ${activeTab === "api-keys" ? "tab-active" : ""}`}

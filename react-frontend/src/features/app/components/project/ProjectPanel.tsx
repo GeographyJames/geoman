@@ -88,7 +88,7 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
               <SiteDataDropdown
                 key={collection.id}
                 collection={collection}
-                projectId={project.id}
+                project={project}
               />
             ))
           ) : (

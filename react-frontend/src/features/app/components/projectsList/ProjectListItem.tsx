@@ -45,7 +45,12 @@ function ProjectListItem({ item }: { item: Project }) {
             <span className="w-6 flex items-center font-bold flex-shrink-0">
               {item.id}
             </span>
-            <span className="break-all min-w-0">{item.name}</span>
+            <span className="break-all min-w-0">
+              {item.name}{" "}
+              {item.status === "ARCHIVED" && (
+                <span className="text-xs">(archived)</span>
+              )}
+            </span>
           </div>
 
           <div className="flex ml-auto">

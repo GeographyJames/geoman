@@ -3,7 +3,7 @@ import type {
   ProjectCollectionItems,
 } from "@/domain/projectCollectionItems/outputDTO";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import UserInitials from "@/components/UserInitials";
 import SetPrimaryRadio from "./SetPrimaryRadio";
 import { useFeatureLayer, useZoomToFeature } from "@/hooks/useFeatureLayer";
@@ -53,18 +53,41 @@ export const ProjectCollection = ({
     ? data.features
     : data.features.filter((f) => f.properties.status !== "ARCHIVED");
 
+  const [visibilityMap, setVisibilityMap] = useState<Record<number, boolean>>(
+    () => Object.fromEntries(features.map((f) => [f.id, f.properties.is_primary])),
+  );
+
   if (features.length === 0) {
     return <p className="text-base-content/50 py-2 text-center">No features</p>;
   }
 
+  const allVisible = features.every((f) => visibilityMap[f.id]);
+  const someVisible = features.some((f) => visibilityMap[f.id]);
+
+  const toggleAll = () => {
+    const newVal = !allVisible;
+    setVisibilityMap(Object.fromEntries(features.map((f) => [f.id, newVal])));
+  };
+
   return (
     <table className="table table-fixed">
-      <SiteDataTableHeadings>
+      <SiteDataTableHeadings
+        allVisible={allVisible}
+        someVisible={someVisible}
+        onToggleAll={toggleAll}
+      >
         <></>
       </SiteDataTableHeadings>
       <tbody>
         {features.map((f) => (
-          <SiteDataTableRow key={f.id} item={f}>
+          <SiteDataTableRow
+            key={f.id}
+            item={f}
+            visible={visibilityMap[f.id] ?? false}
+            onVisibleChange={(val) =>
+              setVisibilityMap((prev) => ({ ...prev, [f.id]: val }))
+            }
+          >
             <></>
           </SiteDataTableRow>
         ))}
@@ -73,12 +96,42 @@ export const ProjectCollection = ({
   );
 };
 
-export function SiteDataTableHeadings({ children }: { children: ReactNode }) {
+export function SiteDataTableHeadings({
+  children,
+  allVisible,
+  someVisible,
+  onToggleAll,
+}: {
+  children: ReactNode;
+  allVisible?: boolean;
+  someVisible?: boolean;
+  onToggleAll?: () => void;
+}) {
+  const checkboxRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (checkboxRef.current) {
+      checkboxRef.current.indeterminate = !!someVisible && !allVisible;
+    }
+  }, [allVisible, someVisible]);
+
   return (
     <thead>
       <tr>
-        <th className="w-12 p-0">Id</th>
-        <th className="w-6 p-0 text-center"></th>
+        <th className="w-16 p-0">Id</th>
+        <th className="w-6 p-0">
+          {onToggleAll && (
+            <div className="flex">
+              <input
+                ref={checkboxRef}
+                type="checkbox"
+                className="checkbox checkbox-sm bg-base-100"
+                checked={allVisible ?? false}
+                onChange={onToggleAll}
+              />
+            </div>
+          )}
+        </th>
         <th className="p-0">Name</th>
         <th className="w-16 p-0 hidden sm:table-cell">CRS ID</th>
         {children}
@@ -93,11 +146,14 @@ export function SiteDataTableHeadings({ children }: { children: ReactNode }) {
 export function SiteDataTableRow({
   children,
   item,
+  visible,
+  onVisibleChange,
 }: {
   children: ReactNode;
   item: ProjectCollectionItem;
+  visible: boolean;
+  onVisibleChange: (val: boolean) => void;
 }) {
-  const [visible, setVisible] = useState(item.properties.is_primary);
   useFeatureLayer(visible ? item : undefined, item.properties.is_primary ? primaryStyle : defaultStyle);
   const zoomToFeature = useZoomToFeature(item);
 
@@ -119,7 +175,7 @@ export function SiteDataTableRow({
             type="checkbox"
             className="checkbox checkbox-sm bg-base-100"
             checked={visible}
-            onChange={(e) => setVisible(e.target.checked)}
+            onChange={(e) => onVisibleChange(e.target.checked)}
           ></input>
         </div>
       </td>
@@ -143,7 +199,7 @@ export function SiteDataTableRow({
           </span>
         </label>
       </td>
-      <td className="p-0 text-sm hidden sm:table-cell">{item.properties.storage_crs_srid}</td>
+      <td className={`p-0 text-sm hidden sm:table-cell ${item.properties.status === "ARCHIVED" ? "text-base-content/50" : ""}`}>{item.properties.storage_crs_srid}</td>
       {children}
 
       <td className="p-0">

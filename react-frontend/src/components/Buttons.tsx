@@ -85,6 +85,26 @@ export const CreateButton = ({
   );
 };
 
+export const CreateIconButton = ({
+  onClick,
+  className,
+  title,
+}: {
+  onClick: () => void;
+  className?: string;
+  title: string;
+}) => {
+  return (
+    <button
+      title={title}
+      className={`btn btn-primary btn-xs btn-square ${className ?? ""}`}
+      onClick={onClick}
+    >
+      <FaPlus size={10} />
+    </button>
+  );
+};
+
 export const ExpandButton = ({
   expanded,
   onClick,

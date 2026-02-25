@@ -5,18 +5,23 @@ import { ProjectCollection } from "./ProjectCollection";
 import { useProjectCollectionItems } from "@/hooks/api/useProjectCollectionItems";
 import { useEditProjectCollection } from "../../contexts/EditProjectCollectionContext";
 import { useDeleteProjectCollection } from "../../contexts/DeleteProjectCollectionContext";
-import { Pencil, Trash2 } from "lucide-react";
+import { useAddFeature } from "../../contexts/AddFeatureContext";
+import { CreateIconButton } from "@/components/Buttons";
+import { Download, Pencil, Trash2 } from "lucide-react";
+import type Project from "@/domain/project/entity";
 
 export const SiteDataDropdown = ({
   collection,
-  projectId,
+  project,
 }: {
   collection: Collection;
-  projectId: number;
+  project: Project;
 }) => {
+  const projectId = project.id;
   const [showArchived, setShowArchived] = useState<boolean>(false);
   const { requestEdit } = useEditProjectCollection();
   const { requestDelete } = useDeleteProjectCollection();
+  const { requestAddFeature } = useAddFeature();
 
   const { data } = useProjectCollectionItems({
     projectId,
@@ -35,23 +40,27 @@ export const SiteDataDropdown = ({
             {`(${collection.geometry_type})`}
           </span>
         </div>
-        <div className="font-normal text-xs flex flex-wrap gap-x-2 gap-y-1 items-center justify-end">
+        <div className="font-normal text-xs flex items-center justify-end gap-x-2">
           {collection.project_id != null && (
-            <>
+            <div className="flex gap-x-1">
               <button
                 type="button"
-                className="btn btn-ghost btn-xs px-1"
+                className="btn btn-ghost btn-xs px-1 hidden sm:flex hover:bg-base-300"
                 title="Edit collection"
                 onClick={(e) => {
                   e.preventDefault();
-                  requestEdit({ id: collectionId, title: collection.title });
+                  requestEdit({
+                    id: collectionId,
+                    title: collection.title,
+                    description: collection.description,
+                  });
                 }}
               >
                 <Pencil size={12} />
               </button>
               <button
                 type="button"
-                className={`btn btn-ghost btn-xs px-1 ${hasFeatures ? "text-base-content/30" : "text-error"}`}
+                className={`btn btn-ghost btn-xs px-1 hidden sm:flex hover:bg-base-300 ${hasFeatures ? "text-base-content/30" : "text-error"}`}
                 title="Delete collection"
                 disabled={hasFeatures}
                 onClick={(e) => {
@@ -61,16 +70,46 @@ export const SiteDataDropdown = ({
               >
                 <Trash2 size={12} />
               </button>
-            </>
+            </div>
           )}
-          <span className="text-base-content/70">{data && (() => { const count = showArchived ? data.features.length : data.features.filter((f) => f.properties.status !== "ARCHIVED").length; return `${count} feature${count !== 1 ? "s" : ""}`; })()}</span>
-          <ShowArchivedToggle
-            setShowArchived={setShowArchived}
-            showArchived={showArchived}
+          <div className="flex items-center gap-x-1 flex-wrap justify-end">
+            <span className="text-base-content/70 w-14 text-right">
+              {data &&
+                (() => {
+                  const count = showArchived
+                    ? data.features.length
+                    : data.features.filter(
+                        (f) => f.properties.status !== "ARCHIVED",
+                      ).length;
+                  return `${count} feature${count !== 1 ? "s" : ""}`;
+                })()}
+            </span>
+            <ShowArchivedToggle
+              setShowArchived={setShowArchived}
+              showArchived={showArchived}
+            />
+          </div>
+          <button
+            type="button"
+            className="btn btn-outline btn-xs px-1 hidden sm:flex"
+            title="Download collection"
+            onClick={(e) => e.preventDefault()}
+          >
+            <Download size={12} />
+          </button>
+          <CreateIconButton
+            title="Add feature"
+            onClick={() => requestAddFeature(project, collectionId)}
+            className="hidden sm:flex"
           />
         </div>
       </summary>
       <div className="collapse-content text-sm pb-0">
+        {collection.description && (
+          <p className="text-xs text-base-content/60 mb-2">
+            {collection.description}
+          </p>
+        )}
         {data && <ProjectCollection data={data} showArchived={showArchived} />}
       </div>
     </details>

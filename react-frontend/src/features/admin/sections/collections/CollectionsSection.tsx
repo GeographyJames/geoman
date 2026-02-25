@@ -30,9 +30,9 @@ export default function CollectionsSection() {
       <div className="mb-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-semibold mb-1">Collections</h1>
+            <h1 className="text-2xl font-semibold mb-1">Global Collections</h1>
             <p className="text-base-content/70">
-              Manage your geospatial data collections
+              Collections available across all projects
             </p>
           </div>
           {currentUser?.isAdmin && (
