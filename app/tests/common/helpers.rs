@@ -175,7 +175,10 @@ pub fn dataset_to_shapefile_data(mut dataset: Dataset, filename: &str) -> Shapef
 }
 
 pub fn create_gdal_point_bng() -> Geometry {
-    let geom = Geometry::from_wkt("POINT(123456 654321)").expect("failed to create poient");
+    let mut rng = rand::rng();
+    let x = rng.random_range(0..699_999);
+    let y = rng.random_range(0..699_999);
+    let geom = Geometry::from_wkt(&format!("POINT({} {})", x, y)).expect("failed to create poient");
     assert!(geom.is_valid(), "invalid geometry");
     assert!(!geom.is_empty(), "geometry empty");
     geom

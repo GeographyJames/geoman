@@ -30,7 +30,7 @@ impl Insert for (&FeatureInputDTO, ProjectId, ProjectCollectionId, UserId) {
         "#,
             project_id.0,
             collection_id.0,
-            dto.name,
+            dto.name.as_ref(),
             user_id.0,
             dto.primary,
             dto.geom_wkb,

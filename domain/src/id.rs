@@ -10,6 +10,10 @@ pub struct ProjectFeatureId {
 #[sqlx(transparent)]
 pub struct ProjectId(pub i32);
 
+#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
+#[sqlx(transparent)]
+pub struct LayoutId(pub i32);
+
 #[derive(Clone, Copy, Default, Debug, sqlx::Type, Serialize, Deserialize, PartialEq)]
 #[sqlx(transparent)]
 pub struct BusinessUnitId(pub i32);
@@ -21,7 +25,7 @@ pub struct UserId(pub i32);
 #[sqlx(transparent)]
 pub struct TeamId(pub i32);
 
-#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type)]
+#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
 #[sqlx(transparent)]
 pub struct FeatureId(pub i32);
 

@@ -16,7 +16,7 @@ pub async fn crs_transform_works() {
     let (easting, northing, wkt) = generate_random_bng_point_wkt();
     let geom = Geometry::from_wkt(&wkt).expect("failed to generate geometry");
     let feature_id = app
-        .insert_project_feature(collection_id, project_id, geom, srid, Some(&auth), None)
+        .post_project_feature(collection_id, project_id, geom, srid, Some(&auth), None)
         .await;
 
     let crs = Crs::from_epsg(srid as i32).to_string();

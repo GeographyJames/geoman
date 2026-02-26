@@ -70,6 +70,8 @@ pub enum ApiError {
     InvalidCollectionTitle(String),
     #[error("Admin permission required")]
     AdminOnly,
+    #[error("Invalid name: {0}")]
+    InvalidName(String),
 }
 
 impl From<RepositoryError> for ApiError {
@@ -129,6 +131,7 @@ impl ResponseError for ApiError {
             ApiError::DatabaseForeignKeyViolation(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::InvalidCollectionTitle(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::AdminOnly => StatusCode::UNAUTHORIZED,
+            ApiError::InvalidName(_) => StatusCode::UNPROCESSABLE_ENTITY,
         }
     }
 

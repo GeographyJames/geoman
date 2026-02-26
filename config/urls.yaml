@@ -12,6 +12,7 @@ api:
   epsg: "/epsg"
   teams: "/teams"
   business_units: "/business-units"
+  turbine_layouts: "/turbine_layouts"
 
 docs:
   base: "/docs"

@@ -22,14 +22,12 @@ INSERT INTO app.collections (
     slug,
     geometry_type,
     added_by,
-    last_updated_by,
-    description
+    last_updated_by
 ) OVERRIDING SYSTEM VALUE VALUES (
     0,
     'site boundaries',
     'site-boundaries',
     'MULTIPOLYGON',
    0,
-   0,
-   'the site boundaries'
-);
+   0
+), (-1, 'turbine layouts', 'turbine-layouts', 'POINT', 0, 0);

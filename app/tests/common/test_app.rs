@@ -10,7 +10,7 @@ use crate::common::{
 };
 use app::{
     AppConfig, Application, AuthenticatedUser, DatabaseSettings, Password, URLS,
-    constants::{GIS_DATA_SCHEMA, SITE_BOUNDARIES_COLLECTION_ID},
+    constants::{GIS_DATA_SCHEMA, SITE_BOUNDARIES_COLLECTION_ID, TURBINE_LAYOUTS_COLLECTION_ID},
     enums::GeoManEnvironment,
     get_config,
     handlers::{
@@ -23,11 +23,11 @@ use app::{
     telemetry::{get_subscriber, init_subscriber},
 };
 use domain::{
-    BusinessUnitId, FeatureId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName, TeamId,
-    UserId, enums::GeometryType,
+    BusinessUnitId, FeatureId, LayoutId, ProjectCollectionId, ProjectFeatureId, ProjectId,
+    TableName, TeamId, UserId, enums::GeometryType,
 };
 use dotenvy::dotenv;
-use gdal::vector::{Geometry, LayerAccess};
+use gdal::vector::{Defn, Feature, Geometry, LayerAccess, OGRFieldType, OGRwkbGeometryType};
 use secrecy::ExposeSecret;
 
 use sqlx::{Connection, PgConnection, PgPool};
@@ -195,7 +195,7 @@ impl TestApp<ClerkAuthService> {
             .expect("failed to retrieve collection id")
     }
 
-    pub async fn insert_project_feature(
+    pub async fn post_project_feature(
         &self,
         collection_id: ProjectCollectionId,
         project_id: ProjectId,
@@ -241,7 +241,7 @@ impl TestApp<ClerkAuthService> {
         auth: Option<&Auth>,
     ) -> ProjectFeatureId {
         let geom = create_gdal_point_bng();
-        self.insert_project_feature(collection_id, project_id, geom, 27700, auth, None)
+        self.post_project_feature(collection_id, project_id, geom, 27700, auth, None)
             .await
     }
 
@@ -322,7 +322,7 @@ impl TestApp<ClerkAuthService> {
         auth: Option<&Auth>,
     ) -> ProjectFeatureId {
         let polygon = create_gdal_multipolygon_bng();
-        self.insert_project_feature(
+        self.post_project_feature(
             ProjectCollectionId(SITE_BOUNDARIES_COLLECTION_ID),
             project_id,
             polygon,
@@ -408,5 +408,77 @@ first_name, last_name,
             team_id,
             admin,
         }
+    }
+
+    pub async fn generate_primary_layout(
+        &self,
+        project_id: &ProjectId,
+        auth: Option<&Auth>,
+    ) -> reqwest::Response {
+        let (mut ds, filename) = create_shapefile_dataset();
+        {
+            let layer = add_layer(&mut ds, OGRwkbGeometryType::wkbPoint, 27700);
+            let fields = [
+                ("num", OGRFieldType::OFTInteger),
+                ("hub_m", OGRFieldType::OFTInteger),
+                ("rd_m", OGRFieldType::OFTReal),
+            ];
+            layer
+                .create_defn_fields(&fields)
+                .expect("failed to add fields to shapefile");
+
+            let defn = Defn::from_layer(&layer);
+            let num_idx = defn.field_index("num").expect("field not found");
+            let hub_idx = defn.field_index("hub_m").expect("field not found");
+            let rotor_diameter_idx = defn.field_index("rd_m").expect("field not found");
+
+            for i in 0..3 {
+                let geom = create_gdal_point_bng();
+                let mut feature = Feature::new(&defn).expect("failed to create feature");
+                feature.set_geometry(geom).expect("failed to set geometry");
+                feature
+                    .set_field_integer(num_idx, i + 1)
+                    .expect("failed to set num");
+                feature
+                    .set_field_double(hub_idx, 120.)
+                    .expect("failed to set hub_m");
+                feature
+                    .set_field_double(rotor_diameter_idx, 160.0)
+                    .expect("failed to set rd_m");
+                feature
+                    .create(&layer)
+                    .expect("failed to write feature to layer");
+            }
+            // layer and defn drop here, releasing the borrow on ds
+        }
+        let shapefile_data = dataset_to_shapefile_data(ds, &filename);
+        let mut form = reqwest::multipart::Form::new();
+        form = add_shapefile_to_form(&filename, shapefile_data, form)
+            .text("name", uuid::Uuid::new_v4().to_string())
+            .text("primary", true.to_string())
+            .text("turbine_number_field", "num")
+            .text("rotor_diameter_field", "rd_m")
+            .text("hub_height_field", "hub_m");
+
+        self.features_service
+            .post_form(
+                &self.api_client,
+                form,
+                format!("{}/{}", project_id, TURBINE_LAYOUTS_COLLECTION_ID),
+                auth,
+            )
+            .await
+    }
+
+    pub async fn _generate_primary_layout_id(
+        &self,
+        project_id: &ProjectId,
+        auth: Option<&Auth>,
+    ) -> LayoutId {
+        let response = self.generate_primary_layout(project_id, auth).await;
+        response
+            .json::<LayoutId>()
+            .await
+            .expect("failed to parse json")
     }
 }

@@ -4,7 +4,10 @@ use actix_web::{
     web::{self, Json},
 };
 use anyhow::Context;
-use domain::{FeatureId, FeatureInputDTO, ProjectCollectionId, ProjectId};
+use domain::{
+    FeatureInputDTO, ProjectCollectionId, ProjectId, builder::InputDTOBuilder, name::NameInputDTO,
+    turbine_layout::TurbineLayoutInputDTO,
+};
 use gdal::{
     Dataset,
     vector::{LayerAccess, OGRwkbGeometryType},
@@ -17,18 +20,10 @@ use geo::{
 use std::io::Read;
 use uuid::Uuid;
 
-use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
-
-#[derive(MultipartForm)]
-pub struct FeatureInputPayload {
-    pub shp: Option<TempFile>,
-    pub dbf: Option<TempFile>,
-    pub shx: Option<TempFile>,
-    pub prj: Option<TempFile>,
-    pub shz: Option<TempFile>,
-    pub name: actix_multipart::form::text::Text<String>,
-    pub primary: Option<actix_multipart::form::text::Text<bool>>,
-}
+use crate::{
+    AuthenticatedUser, constants::TURBINE_LAYOUTS_COLLECTION_ID, errors::ApiError,
+    handlers::api::features::payload::FeatureInputPayload, postgres::PostgresRepo,
+};
 
 fn dataset_from_shz(mut shz: TempFile) -> Result<Dataset, ShapefileError> {
     let mut bytes = Vec::new();
@@ -72,14 +67,14 @@ fn dataset_from_parts(
     Ok(ds)
 }
 
-#[tracing::instrument(skip(repo, payload))]
+#[tracing::instrument(skip(repo, payload, user, path))]
 #[post("{projectId}/{collectionId}")]
 pub async fn post_project_feature_shapefile(
     repo: web::Data<PostgresRepo>,
     payload: MultipartForm<FeatureInputPayload>,
     user: web::ReqData<AuthenticatedUser>,
     path: web::Path<(ProjectId, ProjectCollectionId)>,
-) -> Result<Json<FeatureId>, ApiError> {
+) -> Result<Json<i32>, ApiError> {
     let (project_id, collection_id) = path.into_inner();
     let projcet_srid = repo.get_project_srid(project_id).await?;
     let FeatureInputPayload {
@@ -90,6 +85,11 @@ pub async fn post_project_feature_shapefile(
         shz,
         name,
         primary,
+        hub_height_default_metre,
+        rotor_diameter_default_metre,
+        turbine_number_field,
+        rotor_diameter_field,
+        hub_height_field,
     } = payload.into_inner();
     let ds = match (shz, shp, dbf, shx, prj) {
         (Some(shz), None, None, None, None) => dataset_from_shz(shz)?,
@@ -111,23 +111,50 @@ pub async fn post_project_feature_shapefile(
         .context("failed to retrive spatial ref auth code")
         .map_err(ShapefileError::InvalidData)?;
     let target_srid = projcet_srid.unwrap_or(srid);
-    let geom_type = repo.get_collection_geom_type(collection_id).await?;
-    let expected_type: OGRwkbGeometryType::Type = geom_type.into();
-    let geom = merge_geometries(&ds, expected_type)?;
-
-    let input_dto = FeatureInputDTO {
-        name: name.0,
-        primary: primary.map(|p| p.0),
-        geom_wkb: geom
-            .wkb()
-            .context("failed to create WKB")
-            .map_err(ShapefileError::UnexpectedError)?,
-        srid,
-        target_srid,
-    };
-    let feature_id = repo
-        .insert(&(&input_dto, project_id, collection_id, user.id))
-        .await?;
-
-    Ok(Json(feature_id))
+    let primary = primary.map(|p| p.0);
+    let name = NameInputDTO::parse(name.into_inner()).map_err(|e| ApiError::InvalidName(e))?;
+    if collection_id.0 == TURBINE_LAYOUTS_COLLECTION_ID {
+        let hub_height_default_mm =
+            hub_height_default_metre.map(|v| (v.into_inner() * 1000.) as u32);
+        let blade_length_default_mm =
+            rotor_diameter_default_metre.map(|v| (v.into_inner() * 1000.) as u32);
+        let turbine_number_field = turbine_number_field.map(|v| v.into_inner());
+        let blade_length_field = rotor_diameter_field.map(|v| v.into_inner());
+        let hub_height_field = hub_height_field.map(|v| v.into_inner());
+        let builder = InputDTOBuilder::new(&ds)?;
+        let turbines = builder.build_turbines_geom_input_dto(
+            hub_height_default_mm,
+            blade_length_default_mm,
+            turbine_number_field,
+            blade_length_field,
+            hub_height_field,
+        )?;
+        let input_dto = TurbineLayoutInputDTO {
+            name,
+            primary,
+            turbines,
+            target_srid,
+            srid,
+        };
+        let layout_id = repo.insert(&(&input_dto, project_id, user.id)).await?;
+        Ok(Json(layout_id.0))
+    } else {
+        let geom_type = repo.get_collection_geom_type(collection_id).await?;
+        let expected_type: OGRwkbGeometryType::Type = geom_type.into();
+        let geom = merge_geometries(&ds, expected_type)?;
+        let input_dto = FeatureInputDTO {
+            name,
+            primary,
+            geom_wkb: geom
+                .wkb()
+                .context("failed to create WKB")
+                .map_err(ShapefileError::UnexpectedError)?,
+            srid,
+            target_srid,
+        };
+        let feature_id = repo
+            .insert(&(&input_dto, project_id, collection_id, user.id))
+            .await?;
+        Ok(Json(feature_id.0))
+    }
 }

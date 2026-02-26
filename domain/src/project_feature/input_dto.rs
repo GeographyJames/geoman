@@ -1,5 +1,7 @@
+use crate::name::NameInputDTO;
+
 pub struct FeatureInputDTO {
-    pub name: String,
+    pub name: NameInputDTO,
     pub primary: Option<bool>,
     pub geom_wkb: Vec<u8>,
     pub srid: i32,

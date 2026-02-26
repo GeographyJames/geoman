@@ -111,7 +111,7 @@ run_sqlx_command "database create"
 run_psql_query "${SUPERUSER_URL}" "CREATE EXTENSION postgis;"
 run_psql_query "${SUPERUSER_URL}" "GRANT REFERENCES ON spatial_ref_sys TO ${APP_USER};"
 # BTREE index required for checking turbines are not on top of each other
-# psql postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME} -q -c "CREATE EXTENSION btree_gist;" 
+psql postgres://${SUPERUSER}:${SUPERUSER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME} -q -c "CREATE EXTENSION btree_gist;" 
 
 run_sqlx_command "migrate run"
 echo -e "${SUCCESS}Migration completed${NC}"

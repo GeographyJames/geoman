@@ -13,7 +13,7 @@ pub async fn bbox_works() {
     let feature_1 = format!("POINT({} {})", 1, 1);
     let feature_2 = format!("POINT({} {})", 3, 1);
     let _feature_1_id = app
-        .insert_project_feature(
+        .post_project_feature(
             collection_id,
             project_id,
             Geometry::from_wkt(&feature_1).expect("failed to generate geom"),
@@ -23,7 +23,7 @@ pub async fn bbox_works() {
         )
         .await;
     let _feature_2_id = app
-        .insert_project_feature(
+        .post_project_feature(
             collection_id,
             project_id,
             Geometry::from_wkt(&feature_2).expect("failed to generate geom"),

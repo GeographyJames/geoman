@@ -40,6 +40,12 @@ pub async fn configure_database(db_settings: &DatabaseSettings) {
         .await
         .expect("Failed to create PostGIS extension");
 
+    // Create BTREE index extension on new database
+    superuser_connection
+        .execute("CREATE EXTENSION btree_gist")
+        .await
+        .expect("Failed to create btree gist extension");
+
     superuser_connection
         .execute(
             format!(

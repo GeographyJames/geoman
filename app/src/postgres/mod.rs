@@ -9,4 +9,5 @@ mod gis_data_table;
 mod projcet_collections;
 mod sql_fragments;
 mod teams;
+mod turbine_layouts;
 mod users;

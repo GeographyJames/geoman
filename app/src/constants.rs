@@ -5,6 +5,7 @@ pub const OPEN_API_JSON: &str = "application/vnd.oai.openapi+json;version=3.0";
 pub const USER_AUTH_ID_COLUMN: &str = "clerk_id";
 pub const GIS_DATA_SCHEMA: &str = "gis_data";
 pub const SITE_BOUNDARIES_COLLECTION_ID: i32 = 0;
+pub const TURBINE_LAYOUTS_COLLECTION_ID: i32 = -1;
 
 pub mod db_constraints {
     pub const PROJECT_NAME_UNIQUE: &str = "projects_name_key";

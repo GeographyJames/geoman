@@ -1,4 +1,6 @@
 use unicode_segmentation::UnicodeSegmentation;
+
+#[derive(Debug)]
 pub struct NameInputDTO(String);
 
 impl std::fmt::Display for NameInputDTO {

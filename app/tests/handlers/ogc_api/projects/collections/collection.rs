@@ -17,7 +17,7 @@ async fn get_project_collection_has_correct_storage_crs() {
 
     // Insert a feature for project one
     let _ = app
-        .insert_project_feature(collection_id, project_one_id, bng, 27700, Some(&auth), None)
+        .post_project_feature(collection_id, project_one_id, bng, 27700, Some(&auth), None)
         .await;
 
     // Retrieve the collection
@@ -34,7 +34,7 @@ async fn get_project_collection_has_correct_storage_crs() {
 
     // Insert a second feature in a different crs to another project
     let _ = app
-        .insert_project_feature(
+        .post_project_feature(
             collection_id,
             project_two_id,
             wgs84.clone(),
@@ -70,7 +70,7 @@ async fn get_project_collection_has_correct_storage_crs() {
 
     // Finally lets add a feature in anothe crs to for project one
     let _ = app
-        .insert_project_feature(
+        .post_project_feature(
             collection_id,
             project_one_id,
             wgs84,
@@ -148,7 +148,7 @@ async fn get_project_collection_has_correct_crs_list() {
         .await;
 
     assert_eq!(collection.crs.len(), 2);
-    app.insert_project_feature(
+    app.post_project_feature(
         collection_id,
         project_id,
         create_gdal_point_wgs84(),
