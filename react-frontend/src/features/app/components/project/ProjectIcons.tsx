@@ -5,15 +5,21 @@ import UserInitials from "@/components/UserInitials";
 import { FaLocationDot } from "react-icons/fa6";
 import { dateFormat } from "@/constants";
 
-export const ProjectIcons = memo(function ProjectIcons({ project }: { project: Project }) {
+export const ProjectIcons = memo(function ProjectIcons({
+  project,
+}: {
+  project: Project;
+}) {
   const vis = VisibilityConfig[project.visibility];
   const VisibilityIcon = vis.icon;
   return (
     <div className="flex">
-      <div className="flex w-6  items-center justify-center">
+      <div
+        className={`flex w-6  items-center justify-center ${project.archived && "text-base-content/50"}`}
+      >
         {project.centroid && <FaLocationDot size={18} />}
       </div>
-      <div className="flex w-6 items-center justify-center">
+      <div className={`flex w-6 items-center justify-center ${project.archived && "text-base-content/50"}`}>
         <div
           className="tooltip tooltip-left"
           data-tip={`${vis.label}: ${vis.description}`}

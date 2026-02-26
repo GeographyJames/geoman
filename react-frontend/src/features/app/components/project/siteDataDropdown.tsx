@@ -45,7 +45,7 @@ export const SiteDataDropdown = ({
             <div className="flex gap-x-1">
               <button
                 type="button"
-                className="btn btn-ghost btn-xs px-1 hidden sm:flex hover:bg-base-300"
+                className="btn btn-ghost btn-xs px-1 hover:bg-base-300"
                 title="Edit collection"
                 onClick={(e) => {
                   e.preventDefault();
@@ -60,7 +60,7 @@ export const SiteDataDropdown = ({
               </button>
               <button
                 type="button"
-                className={`btn btn-ghost btn-xs px-1 hidden sm:flex hover:bg-base-300 ${hasFeatures ? "text-base-content/30" : "text-error"}`}
+                className={`btn btn-ghost btn-xs px-1 hover:bg-base-300 ${hasFeatures ? "text-base-content/30" : "text-error"}`}
                 title="Delete collection"
                 disabled={hasFeatures}
                 onClick={(e) => {
@@ -72,8 +72,32 @@ export const SiteDataDropdown = ({
               </button>
             </div>
           )}
+          <button
+            type="button"
+            className="btn btn-outline btn-xs btn-square px-1"
+            title="Download collection"
+            onClick={(e) => e.preventDefault()}
+          >
+            <Download size={12} />
+          </button>
+          <CreateIconButton
+            title="Add feature"
+            onClick={() => requestAddFeature(project, collectionId)}
+            className=""
+          />
+        </div>
+      </summary>
+      <div className="collapse-content text-sm pb-0">
+        <div className="flex justify-between items-end mb-2">
+          {collection.description ? (
+            <p className="text-xs text-base-content/60">
+              {collection.description}
+            </p>
+          ) : (
+            <span />
+          )}
           <div className="flex items-center gap-x-1 flex-wrap justify-end">
-            <span className="text-base-content/70 w-14 text-right">
+            <span className="text-base-content/70 text-xs w-14 text-right">
               {data &&
                 (() => {
                   const count = showArchived
@@ -89,27 +113,7 @@ export const SiteDataDropdown = ({
               showArchived={showArchived}
             />
           </div>
-          <button
-            type="button"
-            className="btn btn-outline btn-xs px-1 hidden sm:flex"
-            title="Download collection"
-            onClick={(e) => e.preventDefault()}
-          >
-            <Download size={12} />
-          </button>
-          <CreateIconButton
-            title="Add feature"
-            onClick={() => requestAddFeature(project, collectionId)}
-            className="hidden sm:flex"
-          />
         </div>
-      </summary>
-      <div className="collapse-content text-sm pb-0">
-        {collection.description && (
-          <p className="text-xs text-base-content/60 mb-2">
-            {collection.description}
-          </p>
-        )}
         {data && <ProjectCollection data={data} showArchived={showArchived} />}
       </div>
     </details>

@@ -42,7 +42,7 @@ function ProjectListItem({ item }: { item: Project }) {
               item.status === "ARCHIVED" && "text-base-content/50"
             }`}
           >
-            <span className="w-6 flex items-center font-bold flex-shrink-0">
+            <span className="w-14 flex items-center flex-shrink-0">
               {item.id}
             </span>
             <span className="break-all min-w-0">
