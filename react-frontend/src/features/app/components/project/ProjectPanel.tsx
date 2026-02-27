@@ -111,7 +111,9 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
           <div className="tab-content bg-base-100  bg-base-300 p-0">
             <div className="flex flex-col gap-1">
               {isLoading ? (
-                <span className="loading loading-spinner loading-sm"></span>
+                <div className=" bg-base-100 border-base-300 p-6 rounded-sm shadow-lg">
+                  <span className="loading loading-spinner loading-sm"></span>
+                </div>
               ) : collectionsData?.collections &&
                 collectionsData.collections.length > 0 ? (
                 collectionsData.collections.map((collection) => (
