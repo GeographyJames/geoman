@@ -77,7 +77,7 @@ export const SiteDataDropdown = ({
 
   return (
     <details className="collapse collapse-arrow  bg-base-100 rounded-sm shadow-xl">
-      <summary className="flex justify-between collapse-title font-semibold after:start-5 after:end-auto p-1 pe-2 ps-10 ">
+      <summary className="flex justify-between collapse-title font-semibold after:start-5 after:end-auto p-1 pe-2 ps-10 gap-2">
         <div className="flex items-center gap-2">
           <input
             ref={checkboxRef}
@@ -149,35 +149,33 @@ export const SiteDataDropdown = ({
         </div>
       </summary>
       <div className="collapse-content text-sm pb-1 mt-1">
-        <div className="flex justify-between items-end mb-2">
-          {collection.description ? (
-            <p className="text-xs text-base-content/60">
+        {collection.description && (
+          <div className="flex mb-1">
+            <p className="text-xs text-base-content/90">
               {collection.description}
             </p>
-          ) : (
-            <span />
-          )}
-          <div className="flex flex-col items-end gap-y-1">
-            <span className="text-base-content/70 text-xs">
-              {data &&
-                (() => {
-                  const count = showArchived
-                    ? data.features.length
-                    : data.features.filter(
-                        (f) => f.properties.status !== "ARCHIVED",
-                      ).length;
-                  return `${count} feature${count !== 1 ? "s" : ""}`;
-                })()}
-            </span>
-            <ShowArchivedToggle
-              setShowArchived={setShowArchived}
-              showArchived={showArchived}
-              archivedCount={
-                data?.features.filter((f) => f.properties.status === "ARCHIVED")
-                  .length
-              }
-            />
           </div>
+        )}
+        <div className="flex justify-between mb-2">
+          <span className="text-base-content/60 text-xs whitespace-nowrap">
+            {data &&
+              (() => {
+                const count = showArchived
+                  ? data.features.length
+                  : data.features.filter(
+                      (f) => f.properties.status !== "ARCHIVED",
+                    ).length;
+                return `${count} feature${count !== 1 ? "s" : ""}`;
+              })()}
+          </span>
+          <ShowArchivedToggle
+            setShowArchived={setShowArchived}
+            showArchived={showArchived}
+            archivedCount={
+              data?.features.filter((f) => f.properties.status === "ARCHIVED")
+                .length
+            }
+          />
         </div>
         {data && (
           <ProjectCollection

@@ -13,8 +13,12 @@ interface Props {
 }
 
 function ProjectsList({ projects: projectsProp }: Props = {}) {
-  const { allProjects, projects: contextProjects, showArchivedProjects, setShowArchivedProjects } =
-    useProjectsFilter();
+  const {
+    allProjects,
+    projects: contextProjects,
+    showArchivedProjects,
+    setShowArchivedProjects,
+  } = useProjectsFilter();
   const [sortBy, setSortBy] = useState(SORT_OPTIONS.NAME_ASCENDING);
 
   const sortedProjects = useMemo(
@@ -38,31 +42,35 @@ function ProjectsList({ projects: projectsProp }: Props = {}) {
 
   return (
     <div className="flex flex-col min-h-0 h-full pb-2 pt-4 gap-2">
-      <div className="px-4 flex flex-col gap-4">
-        <div className="flex justify-between items-center gap-2">
-          <CreateButton
-            text="Create project"
-            onClick={() => {
-              const el = document.getElementById("create_project");
-              if (el instanceof HTMLDialogElement) {
-                el.showModal();
-              }
-            }}
-          />
-          <SortBy sortBy={sortBy} setSortBy={setSortBy} />
-        </div>
-
-        <div className="flex justify-end">
-          <div className="flex flex-col items-end gap-y-1">
-            <span className="text-xs text-base-content/70">{`showing ${sortedProjects.length}`}</span>
-            <ShowArchivedToggle
-              showArchived={showArchivedProjects}
-              setShowArchived={setShowArchivedProjects}
-              archivedCount={allProjects.filter((p) => p.archived).length}
+      <div className="px-4 flex flex-col gap-2">
+        <div className="flex justify-between gap-2">
+          <div>
+            <SortBy sortBy={sortBy} setSortBy={setSortBy} />
+          </div>
+          <div className=" flex flex-col gap-2">
+            <CreateButton
+              text="Create project"
+              onClick={() => {
+                const el = document.getElementById("create_project");
+                if (el instanceof HTMLDialogElement) {
+                  el.showModal();
+                }
+              }}
             />
+            <div className="flex justify-end">
+              <div className="flex flex-col items-end gap-y-1">
+                <span className="text-xs text-base-content/70">{`showing ${sortedProjects.length}`}</span>
+                <ShowArchivedToggle
+                  showArchived={showArchivedProjects}
+                  setShowArchived={setShowArchivedProjects}
+                  archivedCount={allProjects.filter((p) => p.archived).length}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
       <div className="flex flex-col  overflow-y-auto scroll-gutter-stable scroll-panel py-1">
         <ul className="menu w-full  pb-0">
           {sortedProjects.map((item) => (

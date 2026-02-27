@@ -84,15 +84,11 @@ export const ProjectCollection = ({
   );
 };
 
-export function SiteDataTableHeadings({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export function SiteDataTableHeadings({ children }: { children: ReactNode }) {
   return (
     <thead>
       <tr>
-        <th className="w-16 p-0">Id</th>
+        <th className="w-12 p-0">Id</th>
         <th className="w-6 p-0"></th>
         <th className="p-0">Name</th>
         <th className="w-16 p-0 hidden sm:table-cell">CRS ID</th>
@@ -165,9 +161,9 @@ export function SiteDataTableRow({
         </label>
       </td>
       <td
-        className={`p-0 text-sm hidden sm:table-cell ${item.properties.status === "ARCHIVED" ? "text-base-content/50" : ""}`}
+        className={`p-0  hidden sm:table-cell ${item.properties.status === "ARCHIVED" ? "text-base-content/50" : ""}`}
       >
-        {item.properties.storage_crs_srid}
+        {`EPSG:${item.properties.storage_crs_srid}`}
       </td>
       {children}
 

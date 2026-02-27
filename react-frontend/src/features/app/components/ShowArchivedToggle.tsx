@@ -8,14 +8,17 @@ export default function ShowArchivedToggle({
   archivedCount?: number;
 }) {
   return (
-    <div className="flex content-center">
-      <label className="label cursor-pointer p-0 gap-x-1">
-        <span className="label-text text-xs">
+    <div className="flex content-center ">
+      <label className="label cursor-pointer p-0">
+        <span className="label-text text-xs ">
           show archived
-          {archivedCount != null && archivedCount > 0 && (
+          {archivedCount != null && archivedCount > 0 ? (
             <span className="text-base-content/50"> ({archivedCount})</span>
+          ) : (
+            <span className="text-base-content/50"> {"(none)"}</span>
           )}
         </span>
+
         <input
           onChange={() => setShowArchived(!showArchived)}
           type="checkbox"

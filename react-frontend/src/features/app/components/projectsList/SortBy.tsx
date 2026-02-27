@@ -5,7 +5,7 @@ interface Props {
 
 export default function SortBy({ sortBy, setSortBy }: Props) {
   return (
-    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 justify-end">
+    <div className="flex flex-wrap items-center gap-x-2">
       <label htmlFor="sort-by" className="label-text text-sm whitespace-nowrap">
         Sort by
       </label>
