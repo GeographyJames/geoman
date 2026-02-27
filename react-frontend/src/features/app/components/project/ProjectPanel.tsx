@@ -111,9 +111,11 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
                   />
                 ))
               ) : (
-                <p className="text-sm text-base-content/70">
-                  No collections found
-                </p>
+                <div className=" bg-base-100 border-base-300 p-6 rounded-sm shadow-lg">
+                  <p className="text-sm text-base-content/70">
+                    No collections found
+                  </p>
+                </div>
               )}
             </div>
           </div>
