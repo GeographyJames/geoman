@@ -55,7 +55,7 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
       className="collapse collapse-arrow bg-base-100 min-w-0 w-full rounded-box relative flex-shrink-0 shadow-lg"
       open={defaultExpanded}
     >
-      <summary className="collapse-title after:start-5 after:end-auto ps-12 text-l font-bold pr-4 flex justify-between items-center py-2">
+      <summary className="collapse-title after:start-5 after:end-auto ps-12 text-l font-bold pr-4 flex justify-between items-center py-2 shadow-md">
         <p>
           {project.name}{" "}
           <span className="text-sm font-normal text-base-content/70">
@@ -78,22 +78,64 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
         </div>
       </summary>
 
-      <div className="collapse-content ">
-        <div className="flex flex-col gap-2">
-          {isLoading ? (
-            <span className="loading loading-spinner loading-sm"></span>
-          ) : collectionsData?.collections &&
-            collectionsData.collections.length > 0 ? (
-            collectionsData.collections.map((collection) => (
-              <SiteDataDropdown
-                key={collection.id}
-                collection={collection}
-                project={project}
-              />
-            ))
-          ) : (
-            <p className="text-sm text-base-content/70">No collections found</p>
-          )}
+      <div className="collapse-content p-0 ">
+        <div className="tabs tabs-box bg-base-300 p-2 rounded-none">
+          <input
+            type="radio"
+            name="my_tabs_6"
+            className="tab"
+            aria-label="Collections"
+            defaultChecked
+          />
+          <div className="tab-content bg-base-100  bg-base-300 p-0">
+            <div className="flex flex-col gap-1">
+              {isLoading ? (
+                <span className="loading loading-spinner loading-sm"></span>
+              ) : collectionsData?.collections &&
+                collectionsData.collections.length > 0 ? (
+                collectionsData.collections.map((collection) => (
+                  <SiteDataDropdown
+                    key={collection.id}
+                    collection={collection}
+                    project={project}
+                  />
+                ))
+              ) : (
+                <p className="text-sm text-base-content/70">
+                  No collections found
+                </p>
+              )}
+            </div>
+          </div>
+
+          <input
+            type="radio"
+            name="my_tabs_6"
+            className="tab"
+            aria-label="Figures"
+          />
+          <div className="tab-content bg-base-100 border-base-300 p-6 rounded-sm shadow-lg">
+            Figures go here
+          </div>
+
+          <input
+            type="radio"
+            name="my_tabs_6"
+            className="tab"
+            aria-label="Information"
+          />
+          <div className="tab-content bg-base-100 border-base-300 p-6 rounded-sm shadow-lg">
+            Information goes here
+          </div>
+          <input
+            type="radio"
+            name="my_tabs_6"
+            className="tab"
+            aria-label="Project members"
+          />
+          <div className="tab-content bg-base-100 border-base-300 p-6 rounded-sm shadow-lg">
+            Project members goes here
+          </div>
         </div>
       </div>
     </details>

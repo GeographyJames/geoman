@@ -7,13 +7,15 @@ import { useProjectCollections } from "@/hooks/api/useProjectCollections";
 import { useForm } from "react-hook-form";
 import { useEffect, useMemo, useState } from "react";
 import { Shapefile } from "@/lib/shapefile";
-import { usePostProjectFeature } from "@/hooks/api/projectFeature.ts/usePostProjectFeature";
+import { usePostProjectFeature, type TurbineLayoutParams } from "@/hooks/api/projectFeature.ts/usePostProjectFeature";
 import { usePostEpsg, type CrsInfo } from "@/hooks/api/usePostEpsg";
 import { usePostEpsgFromShz } from "@/hooks/api/usePostEpsgFromShz";
 import { useAddFeature } from "../../contexts/AddFeatureContext";
 import { ApiError } from "@/lib/api";
 import type { FeatureCollection } from "geojson";
 import { parseShp, parseDbf, combine, parseZip } from "shpjs";
+
+const TURBINE_LAYOUTS_COLLECTION_ID = -1;
 
 const COMPATIBLE_GEOMETRY: Record<string, string[]> = {
   Point: ["Point"],
@@ -101,6 +103,13 @@ const AddSiteFeatureInner = () => {
     return null;
   }, [selectedCollection, shapefileGeometryType]);
 
+  const isTurbineLayout = selectedCollectionId === String(TURBINE_LAYOUTS_COLLECTION_ID);
+
+  const featurePropertyNames = useMemo(() => {
+    const props = geojson?.features[0]?.properties;
+    return props ? Object.keys(props) : [];
+  }, [geojson]);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!project) return;
@@ -112,8 +121,24 @@ const AddSiteFeatureInner = () => {
       setFileError(shapefile);
       return;
     }
+    let turbineLayout: TurbineLayoutParams | undefined;
+    if (collectionId === TURBINE_LAYOUTS_COLLECTION_ID) {
+      const hubHeightStr = formData.get("hub_height_default_metre") as string;
+      const rotorDiameterStr = formData.get("rotor_diameter_default_metre") as string;
+      const turbineNumberField = (formData.get("turbine_number_field") as string) || undefined;
+      const rotorDiameterField = (formData.get("rotor_diameter_field") as string) || undefined;
+      const hubHeightField = (formData.get("hub_height_field") as string) || undefined;
+      turbineLayout = {
+        primary: formData.get("primary") === "on",
+        hubHeightDefaultMetre: hubHeightStr ? Number(hubHeightStr) : undefined,
+        rotorDiameterDefaultMetre: rotorDiameterStr ? Number(rotorDiameterStr) : undefined,
+        turbineNumberField,
+        rotorDiameterField,
+        hubHeightField,
+      };
+    }
     postFeature(
-      { projectId: project.id, collectionId, name, shapefile },
+      { projectId: project.id, collectionId, name, shapefile, turbineLayout },
       {
         onSuccess: () => {
           reset();
@@ -248,7 +273,7 @@ const AddSiteFeatureInner = () => {
           {geometryMismatch}
         </div>
       )}
-      {tooManyFeatures && (
+      {!isTurbineLayout && tooManyFeatures && (
         <div role="alert" className="alert alert-warning text-sm">
           Shapefile has {geojson?.features.length} features but{" "}
           {selectedCollection?.geometry_type} collections only accept a single
@@ -265,6 +290,70 @@ const AddSiteFeatureInner = () => {
         <div role="alert" className="alert alert-warning text-sm">
           Unable to identify shapefile CRS
         </div>
+      )}
+      {isTurbineLayout && (
+        <fieldset className="fieldset w-full">
+          <legend className="fieldset-legend">Turbine Layout Options</legend>
+          <div className="space-y-3">
+            <label className="label cursor-pointer justify-start gap-3">
+              <input type="checkbox" className="checkbox" name="primary" />
+              <span className="label-text">Mark as primary layout</span>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <fieldset className="fieldset">
+                <legend className="fieldset-legend">Hub height default (m)</legend>
+                <input
+                  type="number"
+                  className="input input-bordered w-full"
+                  name="hub_height_default_metre"
+                  min="0"
+                  step="0.1"
+                />
+              </fieldset>
+              <fieldset className="fieldset">
+                <legend className="fieldset-legend">Rotor diameter default (m)</legend>
+                <input
+                  type="number"
+                  className="input input-bordered w-full"
+                  name="rotor_diameter_default_metre"
+                  min="0"
+                  step="0.1"
+                />
+              </fieldset>
+            </div>
+            {featurePropertyNames.length > 0 && (
+              <div className="grid grid-cols-3 gap-3">
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend">Turbine # field</legend>
+                  <select className="select select-bordered w-full" name="turbine_number_field">
+                    <option value="">None</option>
+                    {featurePropertyNames.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </fieldset>
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend">Hub height field</legend>
+                  <select className="select select-bordered w-full" name="hub_height_field">
+                    <option value="">None</option>
+                    {featurePropertyNames.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </fieldset>
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend">Rotor diameter field</legend>
+                  <select className="select select-bordered w-full" name="rotor_diameter_field">
+                    <option value="">None</option>
+                    {featurePropertyNames.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </fieldset>
+              </div>
+            )}
+          </div>
+        </fieldset>
       )}
       <fieldset className="fieldset w-full">
         <legend className="fieldset-legend">Name</legend>
@@ -302,7 +391,7 @@ const AddSiteFeatureInner = () => {
             !!fileError ||
             crsError ||
             emptyShapefile ||
-            tooManyFeatures
+            (!isTurbineLayout && tooManyFeatures)
           }
         />
       </div>
