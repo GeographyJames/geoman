@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE app.turbine_layouts SET is_primary=false WHERE is_primary=true AND project_id=$1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b146eb4b628e49d5f72723bc6cac4fb00de274b7f4fd81f3c7000ffbe3f032a3"
+}

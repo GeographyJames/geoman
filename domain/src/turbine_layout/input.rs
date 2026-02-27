@@ -3,7 +3,6 @@ use std::collections::HashSet;
 use anyhow::{Context, anyhow};
 use gdal::{
     cpl::CslStringList,
-    spatial_ref::CoordTransform,
     vector::{Feature, Geometry, OGRwkbGeometryType, geometry_type_to_name},
 };
 use geojson::Value;

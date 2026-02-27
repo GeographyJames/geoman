@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO app.turbine_layouts(project_id, name, is_primary, added_by, last_updated_by)\n         VALUES ($1, $2, COALESCE($3, NOT EXISTS(SELECT 1 FROM app.turbine_layouts WHERE project_id = $1 AND status = 'ACTIVE')), $4, $4)\n         RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d4b67d39f440ef092041b0fedc37ea63c729a378fa34d060ecbc7b844399a82e"
+}

@@ -112,7 +112,7 @@ pub async fn post_project_feature_shapefile(
         .map_err(ShapefileError::InvalidData)?;
     let target_srid = projcet_srid.unwrap_or(srid);
     let primary = primary.map(|p| p.0);
-    let name = NameInputDTO::parse(name.into_inner()).map_err(|e| ApiError::InvalidName(e))?;
+    let name = NameInputDTO::parse(name.into_inner()).map_err(ApiError::InvalidName)?;
     if collection_id.0 == TURBINE_LAYOUTS_COLLECTION_ID {
         let hub_height_default_mm =
             hub_height_default_metre.map(|v| (v.into_inner() * 1000.) as u32);

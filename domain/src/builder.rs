@@ -1,15 +1,11 @@
 use anyhow::{Context, anyhow};
-use gdal::{
-    spatial_ref::{CoordTransform, SpatialRef},
-    vector::{Feature, Layer, LayerAccess},
-};
+use gdal::vector::{Feature, Layer, LayerAccess};
 
 use crate::turbine_layout::{LayoutBuilder, TurbinesGeomInputDTO};
 
 pub struct InputDTOBuilder<'a> {
     _ds: &'a gdal::Dataset,
     layer: Layer<'a>,
-    input_srs: SpatialRef,
 
     valid_feature_ids: Vec<u64>,
     empty_geometries: i32,
@@ -19,9 +15,7 @@ pub struct InputDTOBuilder<'a> {
 impl<'a> InputDTOBuilder<'a> {
     pub fn new(ds: &'a gdal::Dataset) -> Result<Self, anyhow::Error> {
         let mut layer = ds.layers().next().context("dataset has no layers")?;
-        let input_srs = layer
-            .spatial_ref()
-            .context("The layer has no spatial reference system")?;
+
         if layer.feature_count() == 0 {
             return Err(anyhow!("layer has no features"));
         }
@@ -42,10 +36,9 @@ impl<'a> InputDTOBuilder<'a> {
                 }
             }
         }
-        let mut builder = Self {
+        let builder = Self {
             _ds: ds,
             layer,
-            input_srs,
 
             valid_feature_ids,
             features_with_no_geometry,
