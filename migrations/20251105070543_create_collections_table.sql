@@ -30,4 +30,4 @@ INSERT INTO app.collections (
     'MULTIPOLYGON',
    0,
    0
-), (-1, 'turbine layouts', 'turbine-layouts', 'POINT', 0, 0);
+), (-1, 'turbine layouts', 'turbine-layouts', 'MULTIPOINT', 0, 0);

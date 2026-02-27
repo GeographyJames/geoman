@@ -4,10 +4,13 @@ use domain::{
 };
 use ogcapi_types::common::{Bbox, Crs, SpatialExtent};
 
-use crate::repo::{
-    RepositoryError,
-    project_collections::{SelectAllParams, SelectOneParams},
-    traits::{SelectAll, SelectAllWithParams, SelectOneWithParams},
+use crate::{
+    constants::TURBINE_LAYOUTS_COLLECTION_ID,
+    repo::{
+        RepositoryError,
+        project_collections::{SelectAllParams, SelectOneParams},
+        traits::{SelectAll, SelectAllWithParams, SelectOneWithParams},
+    },
 };
 
 struct CollectionRow {
@@ -65,6 +68,62 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
         &'a E: sqlx::PgExecutor<'a>,
     {
         let extent_crs = Crs::default();
+        let status = params.status.clone().unwrap_or(vec![Status::Active]);
+
+        if id.0 == TURBINE_LAYOUTS_COLLECTION_ID {
+            let row_opt = sqlx::query_as!(
+                CollectionRow,
+                r#"
+                SELECT c.id,
+                       c.title,
+                       c.slug,
+                       c.description,
+                       c.geometry_type AS "geometry_type: GeometryType",
+                       c.project_id,
+                       (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(t.geom)) = 1
+                                   THEN MIN(ST_SRID(t.geom))::int
+                                   ELSE NULL
+                              END
+                         FROM app.turbines t
+                         JOIN app.turbine_layouts tl ON tl.id = t.layout_id
+                        WHERE tl.project_id = $1
+                          AND tl.status = ANY($3)
+                       ) AS storage_crs_srid,
+                       (SELECT CASE
+                                   WHEN bbox IS NOT NULL THEN
+                                       ARRAY[
+                                           ST_XMin(bbox),
+                                           ST_YMin(bbox),
+                                           ST_XMax(bbox),
+                                           ST_YMax(bbox)
+                                       ]
+                                   ELSE NULL
+                               END
+                        FROM (
+                            SELECT ST_Extent(ST_Transform(t.geom, $2))::geometry AS bbox
+                              FROM app.turbines t
+                              JOIN app.turbine_layouts tl ON tl.id = t.layout_id
+                             WHERE tl.project_id = $1
+                               AND tl.status = ANY($3)
+                        ) extent_sub
+                       ) AS extent
+                  FROM app.collections c
+                 WHERE c.id = -1
+                   AND EXISTS (
+                       SELECT 1 FROM app.turbine_layouts
+                        WHERE project_id = $1
+                          AND status = ANY($3)
+                   )"#,
+                params.project_id.0,
+                extent_crs.as_srid() as i32,
+                status as Vec<Status>,
+            )
+            .fetch_optional(executor)
+            .await?;
+
+            return Ok(row_opt.map(|r| r.into_collection(extent_crs)));
+        }
+
         let row_opt = sqlx::query_as!(
             CollectionRow,
             r#"
@@ -115,15 +174,12 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
             params.project_id.0,
             id.0,
             extent_crs.as_srid() as i32,
-            params.status.clone().unwrap_or(vec![Status::Active]) as Vec<Status>
+            status as Vec<Status>,
         )
         .fetch_optional(executor)
         .await?;
 
-        match row_opt {
-            Some(row) => Ok(Some(row.into_collection(extent_crs))),
-            None => Ok(None),
-        }
+        Ok(row_opt.map(|r| r.into_collection(extent_crs)))
     }
 }
 
@@ -194,10 +250,65 @@ impl SelectAllWithParams for ProjectCollection {
         .fetch_all(executor)
         .await?;
 
-        let mut items = Vec::new();
-        for row in rows {
-            items.push(row.into_collection(extent_crs.clone()));
+        let turbine_layout_row = sqlx::query_as!(
+            CollectionRow,
+            r#"
+            SELECT c.id,
+                   c.title,
+                   c.slug,
+                   c.description,
+                   c.geometry_type AS "geometry_type: GeometryType",
+                   c.project_id,
+                   (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(t.geom)) = 1
+                               THEN MIN(ST_SRID(t.geom))::int
+                               ELSE NULL
+                          END
+                     FROM app.turbines t
+                     JOIN app.turbine_layouts tl ON tl.id = t.layout_id
+                    WHERE tl.project_id = $1
+                      AND tl.status = ANY($3)
+                   ) AS storage_crs_srid,
+                   (SELECT CASE
+                               WHEN bbox IS NOT NULL THEN
+                                   ARRAY[
+                                       ST_XMin(bbox),
+                                       ST_YMin(bbox),
+                                       ST_XMax(bbox),
+                                       ST_YMax(bbox)
+                                   ]
+                               ELSE NULL
+                           END
+                    FROM (
+                        SELECT ST_Extent(ST_Transform(t.geom, $2))::geometry AS bbox
+                          FROM app.turbines t
+                          JOIN app.turbine_layouts tl ON tl.id = t.layout_id
+                         WHERE tl.project_id = $1
+                           AND tl.status = ANY($3)
+                    ) extent_sub
+                   ) AS extent
+              FROM app.collections c
+             WHERE c.id = -1
+               AND EXISTS (
+                   SELECT 1 FROM app.turbine_layouts
+                    WHERE project_id = $1
+                      AND status = ANY($3)
+               )"#,
+            params.project_id.0,
+            extent_crs.as_srid() as i32,
+            params.status.clone().unwrap_or(vec![Status::Active]) as Vec<Status>,
+        )
+        .fetch_optional(executor)
+        .await?;
+
+        let mut items: Vec<ProjectCollection> = rows
+            .into_iter()
+            .map(|r| r.into_collection(extent_crs.clone()))
+            .collect();
+
+        if let Some(row) = turbine_layout_row {
+            items.push(row.into_collection(extent_crs));
         }
+
         Ok((items, ()))
     }
 }

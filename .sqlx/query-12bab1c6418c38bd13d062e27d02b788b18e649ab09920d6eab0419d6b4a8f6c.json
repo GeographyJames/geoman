@@ -1,0 +1,99 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT c.id,\n                   c.title,\n                   c.slug,\n                   c.description,\n                   c.geometry_type AS \"geometry_type: GeometryType\",\n                   c.project_id,\n                   (SELECT CASE WHEN COUNT(DISTINCT ST_SRID(t.geom)) = 1\n                               THEN MIN(ST_SRID(t.geom))::int\n                               ELSE NULL\n                          END\n                     FROM app.turbines t\n                     JOIN app.turbine_layouts tl ON tl.id = t.layout_id\n                    WHERE tl.project_id = $1\n                      AND tl.status = ANY($3)\n                   ) AS storage_crs_srid,\n                   (SELECT CASE\n                               WHEN bbox IS NOT NULL THEN\n                                   ARRAY[\n                                       ST_XMin(bbox),\n                                       ST_YMin(bbox),\n                                       ST_XMax(bbox),\n                                       ST_YMax(bbox)\n                                   ]\n                               ELSE NULL\n                           END\n                    FROM (\n                        SELECT ST_Extent(ST_Transform(t.geom, $2))::geometry AS bbox\n                          FROM app.turbines t\n                          JOIN app.turbine_layouts tl ON tl.id = t.layout_id\n                         WHERE tl.project_id = $1\n                           AND tl.status = ANY($3)\n                    ) extent_sub\n                   ) AS extent\n              FROM app.collections c\n             WHERE c.id = -1\n               AND EXISTS (\n                   SELECT 1 FROM app.turbine_layouts\n                    WHERE project_id = $1\n                      AND status = ANY($3)\n               )",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "geometry_type: GeometryType",
+        "type_info": {
+          "Custom": {
+            "name": "geometry_type",
+            "kind": {
+              "Enum": [
+                "POINT",
+                "LINESTRING",
+                "POLYGON",
+                "MULTIPOINT",
+                "MULTILINESTRING",
+                "MULTIPOLYGON",
+                "GEOMETRYCOLLECTION"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "project_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "storage_crs_srid",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "extent",
+        "type_info": "Float8Array"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        {
+          "Custom": {
+            "name": "app.status[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "app.status",
+                  "kind": {
+                    "Enum": [
+                      "ACTIVE",
+                      "ARCHIVED",
+                      "DELETED"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "12bab1c6418c38bd13d062e27d02b788b18e649ab09920d6eab0419d6b4a8f6c"
+}

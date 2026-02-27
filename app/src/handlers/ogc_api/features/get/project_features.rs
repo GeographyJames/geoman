@@ -2,13 +2,14 @@ use std::str::FromStr;
 
 use crate::{
     URLS,
+    constants::TURBINE_LAYOUTS_COLLECTION_ID,
     handlers::{
         ApiError,
         ogc_api::features::{Query, common::append_crs_header},
     },
     helpers::get_base_url,
     postgres::PostgresRepo,
-    repo::{project_collections, project_features::SelectAllParams},
+    repo::{project_collections, project_features::SelectAllParams, turbine_layout_features},
     streaming::ogc_feature_collection_byte_stream,
 };
 use actix_web::{
@@ -17,8 +18,8 @@ use actix_web::{
 };
 
 use domain::{
-    ProjectCollection, ProjectCollectionId, ProjectFeature, ProjectId, enums::Status,
-    project::ProjectName,
+    ProjectCollection, ProjectCollectionId, ProjectFeature, ProjectId, TurbineLayout,
+    enums::Status, project::ProjectName,
 };
 
 use ogcapi_types::common::media_type::GEO_JSON;
@@ -59,6 +60,27 @@ pub async fn get_project_features(
         "{}{}{}/{}/collections/{}",
         base_url, URLS.ogc_api.base, URLS.ogc_api.project, project_id, collection_id
     );
+
+    if collection_id.0 == TURBINE_LAYOUTS_COLLECTION_ID {
+        let params = turbine_layout_features::SelectAllParams {
+            project_id,
+            crs: query.crs.clone(),
+            limit: query.limit,
+            offset: query.offset,
+            status,
+        };
+        let features = repo.select_all_with_params_streaming::<TurbineLayout>(params);
+        let bytes = ogc_feature_collection_byte_stream(
+            features,
+            collection_url,
+            collection_id.into(),
+            query.into_inner(),
+        )
+        .await?;
+        let mut response = HttpResponse::Ok().content_type(GEO_JSON).streaming(bytes);
+        append_crs_header(&mut response, &request_crs);
+        return Ok(response);
+    }
 
     let params = SelectAllParams {
         limit: query.limit,

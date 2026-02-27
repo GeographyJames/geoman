@@ -113,6 +113,7 @@ pub async fn get_project_collections(
     let (project_collections, _) = repo
         .select_all_with_params::<ProjectCollection>(&params)
         .await?;
+
     let collections = Collections {
         project_collections,
         gis_data_tables: Vec::new(),

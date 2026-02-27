@@ -1,7 +1,8 @@
-use domain::ProjectId;
+use app::constants::TURBINE_LAYOUTS_COLLECTION_ID;
+use domain::{ProjectCollectionId, ProjectId, TeamId};
 
 use crate::common::{
-    Auth, TestApp,
+    AppBuilder, Auth, TestApp,
     helpers::{assert_ok, assert_status, create_gdal_point_bng, create_gdal_point_wgs84},
 };
 
@@ -162,4 +163,38 @@ async fn get_project_collection_has_correct_crs_list() {
         .get_project_collection_ogc(&app.api_client, project_id, collection_id)
         .await;
     assert_eq!(collection.crs.len(), 1)
+}
+
+#[actix_web::test]
+async fn get_project_collection_returns_404_for_turbine_layouts_when_project_has_none() {
+    let app = TestApp::spawn_with_db().await;
+    let auth = Auth::mock_session_token();
+    let project_id = app.generate_project_id(Some(&auth)).await;
+    let response = app
+        .ogc_service
+        .get_project_collection(
+            &app.api_client,
+            project_id,
+            ProjectCollectionId(TURBINE_LAYOUTS_COLLECTION_ID),
+        )
+        .await;
+    assert_status(&response, 404);
+}
+
+#[actix_web::test]
+async fn get_project_collection_works_for_turbine_layouts() {
+    let app = AppBuilder::new().build().await;
+    let user = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
+    let project_id = app.generate_project_id(Some(&user)).await;
+
+    let _feature_id = app.generate_primary_layout(&project_id, Some(&user)).await;
+    let response = app
+        .ogc_service
+        .get_project_collection(
+            &app.api_client,
+            project_id,
+            ProjectCollectionId(TURBINE_LAYOUTS_COLLECTION_ID),
+        )
+        .await;
+    assert_ok(&response);
 }

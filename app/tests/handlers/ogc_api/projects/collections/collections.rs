@@ -68,3 +68,48 @@ async fn get_collections_includes_project_specific_collections() {
         .expect("failed to extract ogc collections");
     assert_eq!(ogc_collections.collections.len(), 1)
 }
+
+#[actix_web::test]
+async fn get_collections_includes_turbine_layouts() {
+    let app = AppBuilder::new().build().await;
+    let user = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
+    let project_id = app.generate_project_id(Some(&user)).await;
+    let _ = app
+        ._generate_primary_layout_id(&project_id, Some(&user))
+        .await;
+    let response = app
+        .ogc_service
+        .get_project_collections(&app.api_client, project_id)
+        .await;
+    let ogc_collections: ogcapi_types::common::Collections = handle_json_response(response)
+        .await
+        .expect("failed to extract ogc collections");
+    let _turbine_layouts = ogc_collections
+        .collections
+        .iter()
+        .find(|&c| c.title.as_deref() == Some("turbine layouts"))
+        .expect("turbine collection not found");
+}
+
+#[actix_web::test]
+async fn get_collections_does_not_include_turbine_layouts_for_other_projects() {
+    let app = AppBuilder::new().build().await;
+    let user = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
+    let project_a = app.generate_project_id(Some(&user)).await;
+    let project_b = app.generate_project_id(Some(&user)).await;
+    let _ = app
+        ._generate_primary_layout_id(&project_a, Some(&user))
+        .await;
+    let response = app
+        .ogc_service
+        .get_project_collections(&app.api_client, project_b)
+        .await;
+    let ogc_collections: ogcapi_types::common::Collections = handle_json_response(response)
+        .await
+        .expect("failed to extract ogc collections");
+    let has_turbine_layouts = ogc_collections
+        .collections
+        .iter()
+        .any(|c| c.title.as_deref() == Some("turbine layouts"));
+    assert!(!has_turbine_layouts);
+}

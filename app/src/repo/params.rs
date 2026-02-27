@@ -74,6 +74,20 @@ pub mod features {
         pub crs: Crs,
     }
 }
+pub mod turbine_layout_features {
+    use domain::{ProjectId, enums::Status};
+    use ogcapi_types::common::Crs;
+
+    #[derive(Clone)]
+    pub struct SelectAllParams {
+        pub project_id: ProjectId,
+        pub crs: Crs,
+        pub limit: Option<usize>,
+        pub offset: Option<usize>,
+        pub status: Option<Vec<Status>>,
+    }
+}
+
 pub mod api_keys {
     use domain::UserId;
 
