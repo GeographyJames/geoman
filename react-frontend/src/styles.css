@@ -3,6 +3,12 @@
   themes: light --default, dark --prefersdark;
 }
 
+@theme {
+  --shadow-btn: oklch(1 0 0 / 0.06) 0px 0.5px 0px 0.5px inset,
+                oklch(0.14 0 0 / 0.3) 0px 3px 2px -2px,
+                oklch(0.14 0 0 / 0.3) 0px 4px 3px -2px;
+}
+
 
 html,
 body,

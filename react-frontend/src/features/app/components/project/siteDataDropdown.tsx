@@ -1,6 +1,6 @@
 import type { Collection } from "@/hooks/api/useProjectCollections";
 import ShowArchivedToggle from "../ShowArchivedToggle";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ProjectCollection } from "./ProjectCollection";
 import { useProjectCollectionItems } from "@/hooks/api/useProjectCollectionItems";
 import { useEditProjectCollection } from "../../contexts/EditProjectCollectionContext";
@@ -28,13 +28,65 @@ export const SiteDataDropdown = ({
     collectionId: collection.id,
   });
 
+  const [visibilityMap, setVisibilityMap] = useState<Record<number, boolean>>(
+    {},
+  );
+
+  useEffect(() => {
+    if (data) {
+      setVisibilityMap((prev) => {
+        const next: Record<number, boolean> = { ...prev };
+        let changed = false;
+        for (const f of data.features) {
+          if (!(f.id in next)) {
+            next[f.id] = f.properties.is_primary;
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+    }
+  }, [data]);
+
+  const filteredFeatures = showArchived
+    ? (data?.features ?? [])
+    : (data?.features ?? []).filter((f) => f.properties.status !== "ARCHIVED");
+
+  const allVisible =
+    filteredFeatures.length > 0 &&
+    filteredFeatures.every((f) => visibilityMap[f.id]);
+  const someVisible = filteredFeatures.some((f) => visibilityMap[f.id]);
+
+  const toggleAll = () => {
+    const newVal = !allVisible;
+    setVisibilityMap((prev) => ({
+      ...prev,
+      ...Object.fromEntries(filteredFeatures.map((f) => [f.id, newVal])),
+    }));
+  };
+
+  const checkboxRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (checkboxRef.current) {
+      checkboxRef.current.indeterminate = someVisible && !allVisible;
+    }
+  }, [allVisible, someVisible]);
+
   const collectionId = Number(collection.id);
   const hasFeatures = (data?.features.length ?? 0) > 0;
 
   return (
     <details className="collapse collapse-arrow  bg-base-100 rounded-sm shadow-xl">
       <summary className="flex justify-between collapse-title font-semibold after:start-5 after:end-auto p-1 pe-2 ps-12 ">
-        <div>
+        <div className="flex items-center gap-2">
+          <input
+            ref={checkboxRef}
+            type="checkbox"
+            className="checkbox checkbox-sm bg-base-100"
+            checked={allVisible}
+            onChange={toggleAll}
+            onClick={(e) => e.stopPropagation()}
+          />
           {collection.title}{" "}
           <span className="text-sm font-normal text-base-content/70">
             {`(${collection.geometry_type})`}
@@ -74,7 +126,7 @@ export const SiteDataDropdown = ({
           )}
           <button
             type="button"
-            className="btn btn-outline btn-xs btn-square px-1"
+            className="btn btn-outline btn-xs btn-square px-1 !shadow-btn"
             title="Download collection"
             onClick={(e) => e.preventDefault()}
           >
@@ -114,7 +166,14 @@ export const SiteDataDropdown = ({
             />
           </div>
         </div>
-        {data && <ProjectCollection data={data} showArchived={showArchived} />}
+        {data && (
+          <ProjectCollection
+            data={data}
+            showArchived={showArchived}
+            visibilityMap={visibilityMap}
+            setVisibilityMap={setVisibilityMap}
+          />
+        )}
       </div>
     </details>
   );
