@@ -148,8 +148,8 @@ export const SiteDataDropdown = ({
           ) : (
             <span />
           )}
-          <div className="flex items-center gap-x-1 flex-wrap justify-end">
-            <span className="text-base-content/70 text-xs w-14 text-right">
+          <div className="flex flex-col items-end gap-y-1">
+            <span className="text-base-content/70 text-xs">
               {data &&
                 (() => {
                   const count = showArchived
@@ -163,6 +163,7 @@ export const SiteDataDropdown = ({
             <ShowArchivedToggle
               setShowArchived={setShowArchived}
               showArchived={showArchived}
+              archivedCount={data?.features.filter((f) => f.properties.status === "ARCHIVED").length}
             />
           </div>
         </div>

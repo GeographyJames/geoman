@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from "re
 import type Project from "@/domain/project/entity";
 
 interface ProjectsFilterContextType {
+  allProjects: Project[];
   projects: Project[];
   showArchivedProjects: boolean;
   setShowArchivedProjects: (value: boolean) => void;
@@ -31,8 +32,8 @@ export function ProjectsFilterProvider({
   );
 
   const contextValue = useMemo(
-    () => ({ projects, showArchivedProjects, setShowArchivedProjects }),
-    [projects, showArchivedProjects, setShowArchivedProjects],
+    () => ({ allProjects, projects, showArchivedProjects, setShowArchivedProjects }),
+    [allProjects, projects, showArchivedProjects, setShowArchivedProjects],
   );
 
   return (

@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 actix-web = { workspace = true }
 utils = { path = "../utils" }
+domain = { path = "../domain" }
 gdal = { workspace = true }
 actix-multipart = { workspace = true }
 anyhow = { workspace = true }

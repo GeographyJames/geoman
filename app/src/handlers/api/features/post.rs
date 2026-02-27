@@ -5,7 +5,7 @@ use actix_web::{
 };
 use anyhow::Context;
 use domain::{
-    FeatureInputDTO, ProjectCollectionId, ProjectId, builder::InputDTOBuilder, name::NameInputDTO,
+    FeatureInputDTO, ProjectCollectionId, ProjectId, name::NameInputDTO,
     turbine_layout::TurbineLayoutInputDTO,
 };
 use gdal::{
@@ -14,6 +14,7 @@ use gdal::{
     vsi,
 };
 use geo::{
+    dto_builder::InputDTOBuilder,
     shapefile_processor::merge_geometries,
     virtual_shapefile::{ShapefileData, ShapefileError, ShapefileForm},
 };
