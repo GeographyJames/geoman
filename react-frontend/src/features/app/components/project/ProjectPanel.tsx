@@ -53,7 +53,7 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
 
   return (
     <details
-      className="collapse collapse-arrow bg-base-100  rounded-box   shadow-lg"
+      className="collapse collapse-arrow bg-base-100 min-w-0 w-full rounded-box relative flex-shrink-0 shadow-lg"
       open={defaultExpanded}
     >
       <summary className="flex justify-between collapse-title after:start-5 after:end-auto ps-12 gap-2 text-l font-bold pr-4  items-center py-2 shadow-md">
