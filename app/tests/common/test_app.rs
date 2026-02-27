@@ -470,7 +470,7 @@ first_name, last_name,
             .await
     }
 
-    pub async fn _generate_primary_layout_id(
+    pub async fn generate_primary_layout_id(
         &self,
         project_id: &ProjectId,
         auth: Option<&Auth>,

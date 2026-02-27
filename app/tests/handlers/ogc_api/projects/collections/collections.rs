@@ -75,7 +75,7 @@ async fn get_collections_includes_turbine_layouts() {
     let user = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
     let project_id = app.generate_project_id(Some(&user)).await;
     let _ = app
-        ._generate_primary_layout_id(&project_id, Some(&user))
+        .generate_primary_layout_id(&project_id, Some(&user))
         .await;
     let response = app
         .ogc_service
@@ -98,7 +98,7 @@ async fn get_collections_does_not_include_turbine_layouts_for_other_projects() {
     let project_a = app.generate_project_id(Some(&user)).await;
     let project_b = app.generate_project_id(Some(&user)).await;
     let _ = app
-        ._generate_primary_layout_id(&project_a, Some(&user))
+        .generate_primary_layout_id(&project_a, Some(&user))
         .await;
     let response = app
         .ogc_service

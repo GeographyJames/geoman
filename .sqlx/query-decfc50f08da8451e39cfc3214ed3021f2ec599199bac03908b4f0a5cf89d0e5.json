@@ -1,0 +1,209 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                tl.id,\n                tl.project_id,\n                c.id AS collection_id,\n                c.title AS \"collection_title!\",\n                tl.name,\n                tl.is_primary,\n                tl.status AS \"status: Status\",\n                CASE WHEN COUNT(DISTINCT ST_SRID(t.geom)) = 1\n                     THEN MIN(ST_SRID(t.geom))::int\n                     ELSE NULL\n                END AS storage_crs_srid,\n                tl.added,\n                ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t_ab.id, t_ab.name, t_ab.business_unit_id)::app.team))::app.user AS \"added_by!: AddedBy\",\n                tl.last_updated,\n                ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name, t_ub.business_unit_id)::app.team))::app.user AS \"last_updated_by!: LastUpdatedBy\",\n                ST_AsGeoJSON(ST_Transform(ST_Collect(t.geom), $1))::jsonb AS \"geometry!: Json<Geometry>\",\n                1::bigint AS \"number_matched!\"\n            FROM app.turbine_layouts tl\n            JOIN app.collections c ON c.id = -1\n            JOIN app.turbines t ON t.layout_id = tl.id\n            JOIN app.users ab ON ab.id = tl.added_by\n            JOIN app.teams t_ab ON t_ab.id = ab.team_id\n            JOIN app.users ub ON ub.id = tl.last_updated_by\n            JOIN app.teams t_ub ON t_ub.id = ub.team_id\n            WHERE tl.id = $2\n              AND tl.project_id = $3\n            GROUP BY tl.id, c.id, ab.id, t_ab.id, ub.id, t_ub.id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "project_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "collection_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "collection_title!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_primary",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "status: Status",
+        "type_info": {
+          "Custom": {
+            "name": "app.status",
+            "kind": {
+              "Enum": [
+                "ACTIVE",
+                "ARCHIVED",
+                "DELETED"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "storage_crs_srid",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "added",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "added_by!: AddedBy",
+        "type_info": {
+          "Custom": {
+            "name": "app.\"user\"",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Int4"
+                ],
+                [
+                  "first_name",
+                  "Text"
+                ],
+                [
+                  "last_name",
+                  "Text"
+                ],
+                [
+                  "clerk_id",
+                  "Text"
+                ],
+                [
+                  "team",
+                  {
+                    "Custom": {
+                      "name": "app.team",
+                      "kind": {
+                        "Composite": [
+                          [
+                            "id",
+                            "Int4"
+                          ],
+                          [
+                            "name",
+                            "Text"
+                          ],
+                          [
+                            "business_unit_it",
+                            "Int4"
+                          ]
+                        ]
+                      }
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "last_updated",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "last_updated_by!: LastUpdatedBy",
+        "type_info": {
+          "Custom": {
+            "name": "app.\"user\"",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Int4"
+                ],
+                [
+                  "first_name",
+                  "Text"
+                ],
+                [
+                  "last_name",
+                  "Text"
+                ],
+                [
+                  "clerk_id",
+                  "Text"
+                ],
+                [
+                  "team",
+                  {
+                    "Custom": {
+                      "name": "app.team",
+                      "kind": {
+                        "Composite": [
+                          [
+                            "id",
+                            "Int4"
+                          ],
+                          [
+                            "name",
+                            "Text"
+                          ],
+                          [
+                            "business_unit_it",
+                            "Int4"
+                          ]
+                        ]
+                      }
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "geometry!: Json<Geometry>",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 13,
+        "name": "number_matched!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      false,
+      null,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "decfc50f08da8451e39cfc3214ed3021f2ec599199bac03908b4f0a5cf89d0e5"
+}

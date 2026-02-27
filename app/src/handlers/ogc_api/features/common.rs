@@ -1,4 +1,5 @@
 use crate::{
+    constants::TURBINE_LAYOUTS_COLLECTION_ID,
     handlers::ApiError,
     postgres::PostgresRepo,
     repo::{self, project},
@@ -9,8 +10,8 @@ use actix_web::{
 };
 
 use domain::{
-    FeatureId, IntoOGCFeature, ProjectFeature, ProjectFeatureId, ProjectId, enums::CollectionId,
-    project::Project,
+    FeatureId, IntoOGCFeature, ProjectFeature, ProjectFeatureId, ProjectId, TurbineLayout,
+    enums::CollectionId, project::Project,
 };
 use ogcapi_types::common::Crs;
 
@@ -30,6 +31,15 @@ pub async fn retrieve_feature_from_database<'a>(
                 .ok_or_else(|| ApiError::ProjectNotFound(project_id))?
                 .into_ogc_feature(collection_url)
         }
+        CollectionId::ProjectCollection(collection_id)
+            if collection_id.0 == TURBINE_LAYOUTS_COLLECTION_ID =>
+        {
+            repo.select_one_with_params::<TurbineLayout, _>(feature_id, params)
+                .await?
+                .ok_or(ApiError::NotFound)?
+                .into_ogc_feature(collection_url)
+        }
+
         CollectionId::ProjectCollection(collection_id) => {
             let id = ProjectFeatureId {
                 collection_id,
