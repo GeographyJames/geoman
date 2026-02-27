@@ -11,13 +11,9 @@ import { useCreateProjectCollection } from "../../contexts/CreateProjectCollecti
 export const ProjectActionsDropdown = memo(({
   item,
   id,
-  zoomToProject,
-  hasExtent,
 }: {
   item: Project;
   id: string;
-  zoomToProject?: () => void;
-  hasExtent?: boolean;
 }) => {
   const { mutate: patchProject } = usePatchProject();
   const { addFlash } = useFlash();
@@ -28,17 +24,6 @@ export const ProjectActionsDropdown = memo(({
   const { requestCreateCollection } = useCreateProjectCollection();
   return (
     <ActionsDropdown id={id}>
-      {hasExtent && (
-        <li>
-          <button onClick={(e) => {
-            zoomToProject?.();
-            const popover = (e.currentTarget as HTMLElement).closest(
-              "[popover]",
-            ) as HTMLElement | null;
-            popover?.hidePopover();
-          }}>zoom to project</button>
-        </li>
-      )}
       <li>
         <ToggleArchivedStatus
           archived={item.archived}

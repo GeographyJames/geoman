@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { Search } from "lucide-react";
 
 import { CloseButton } from "@/components/Buttons";
 import type Project from "@/domain/project/entity";
@@ -56,24 +57,33 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
       open={defaultExpanded}
     >
       <summary className="collapse-title after:start-5 after:end-auto ps-12 text-l font-bold pr-4 flex justify-between items-center py-2 shadow-md">
-        <p>
-          {project.name}{" "}
-          <span className="text-sm font-normal text-base-content/70">
-            <span className="hidden sm:inline">
-              {project.outputDto.properties.crs_srid &&
-                `EPSG:${project.outputDto.properties.crs_srid}`}
-            </span>
-            {project.archived && " (archived)"}
+        <p className="flex items-start gap-2">
+          <span className="text-sm font-normal text-base-content/70 min-w-6 self-center">
+            {project.id}
           </span>
+          <span>{project.name}</span>
+          {project.archived && (
+            <span className="text-sm font-normal text-base-content/70">
+              (archived)
+            </span>
+          )}
         </p>
-        <div className="flex items-center gap-2 font-normal">
+        <div className="flex items-center gap-1 font-normal">
+          {project.outputDto.properties.crs_srid && (
+            <span className="hidden sm:inline text-sm text-base-content/70">
+              EPSG:{project.outputDto.properties.crs_srid}
+            </span>
+          )}
           <ProjectIcons project={project} />
-          <ProjectActionsDropdown
-            item={project}
-            id={`panel-p-${project.id}`}
-            zoomToProject={zoomToProject}
-            hasExtent={hasExtent}
-          />
+          <ProjectActionsDropdown item={project} id={`panel-p-${project.id}`} />
+          <button
+            className="btn btn-ghost btn-circle btn-sm disabled:opacity-40"
+            title="Zoom to project"
+            onClick={zoomToProject}
+            disabled={!hasExtent}
+          >
+            <Search size={16} />
+          </button>
           <CloseButton onClick={handleClose} />
         </div>
       </summary>
@@ -82,7 +92,7 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
         <div className="tabs tabs-box bg-base-300 p-2 rounded-none">
           <input
             type="radio"
-            name="my_tabs_6"
+            name={`tabs_${project.id}`}
             className="tab"
             aria-label="Collections"
             defaultChecked
@@ -110,7 +120,7 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
 
           <input
             type="radio"
-            name="my_tabs_6"
+            name={`tabs_${project.id}`}
             className="tab"
             aria-label="Figures"
           />
@@ -120,7 +130,7 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
 
           <input
             type="radio"
-            name="my_tabs_6"
+            name={`tabs_${project.id}`}
             className="tab"
             aria-label="Information"
           />
@@ -129,7 +139,7 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
           </div>
           <input
             type="radio"
-            name="my_tabs_6"
+            name={`tabs_${project.id}`}
             className="tab"
             aria-label="Project members"
           />
