@@ -53,38 +53,49 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
 
   return (
     <details
-      className="collapse collapse-arrow bg-base-100 min-w-0 w-full rounded-box relative flex-shrink-0 shadow-lg"
+      className="collapse collapse-arrow bg-base-100  rounded-box   shadow-lg"
       open={defaultExpanded}
     >
-      <summary className="collapse-title after:start-5 after:end-auto ps-12 text-l font-bold pr-4 flex justify-between items-center py-2 shadow-md">
-        <p className="flex items-start gap-2">
-          <span className="text-sm font-normal text-base-content/70 min-w-6 self-center">
+      <summary className="flex justify-between collapse-title after:start-5 after:end-auto ps-12 text-l font-bold pr-4  items-center py-2 shadow-md">
+        <div className="flex items-center">
+          <span className="text-sm font-normal text-base-content/70 w-8 flex-shrink-0">
             {project.id}
           </span>
-          <span>{project.name}</span>
-          {project.archived && (
-            <span className="text-sm font-normal text-base-content/70">
-              (archived)
-            </span>
-          )}
-        </p>
-        <div className="flex items-center gap-1 font-normal">
-          {project.outputDto.properties.crs_srid && (
-            <span className="hidden sm:inline text-sm text-base-content/70">
-              EPSG:{project.outputDto.properties.crs_srid}
-            </span>
-          )}
-          <ProjectIcons project={project} />
-          <ProjectActionsDropdown item={project} id={`panel-p-${project.id}`} />
-          <button
-            className="btn btn-ghost btn-circle btn-sm disabled:opacity-40"
-            title="Zoom to project"
-            onClick={zoomToProject}
-            disabled={!hasExtent}
-          >
-            <Search size={16} />
-          </button>
-          <CloseButton onClick={handleClose} />
+          <div>
+            {project.name}
+            {project.archived && (
+              <>
+                {" "}
+                <span className="text-sm font-normal text-base-content/70">
+                  (archived)
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center gap-1 font-normal justify-end">
+            {project.outputDto.properties.crs_srid && (
+              <span className="hidden sm:inline text-sm text-base-content/70">
+                EPSG:{project.outputDto.properties.crs_srid}
+              </span>
+            )}
+            <ProjectIcons project={project} />
+            <ProjectActionsDropdown
+              item={project}
+              id={`panel-p-${project.id}`}
+            />
+            <button
+              className="btn btn-ghost btn-circle btn-sm disabled:opacity-40"
+              title="Zoom to project"
+              onClick={zoomToProject}
+              disabled={!hasExtent}
+            >
+              <Search size={16} />
+            </button>
+            <CloseButton onClick={handleClose} />
+          </div>
         </div>
       </summary>
 

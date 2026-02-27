@@ -77,7 +77,7 @@ export const SiteDataDropdown = ({
 
   return (
     <details className="collapse collapse-arrow  bg-base-100 rounded-sm shadow-xl">
-      <summary className="flex justify-between collapse-title font-semibold after:start-5 after:end-auto p-1 pe-2 ps-10 gap-2">
+      <summary className="flex justify-between collapse-title font-semibold after:start-3 after:end-auto p-1 pe-2 ps-8 gap-2">
         <div className="flex items-center gap-2">
           <input
             ref={checkboxRef}
