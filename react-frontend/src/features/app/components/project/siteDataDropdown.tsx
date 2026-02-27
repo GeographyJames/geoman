@@ -88,7 +88,7 @@ export const SiteDataDropdown = ({
             onClick={(e) => e.stopPropagation()}
           />
           <div>
-            {collection.title}{" "}
+            <span className="break-all">{collection.title} </span>
             <span className="text-sm font-normal text-base-content/70">
               {`(${collection.geometry_type})`}
             </span>

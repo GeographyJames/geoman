@@ -56,13 +56,13 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
       className="collapse collapse-arrow bg-base-100  rounded-box   shadow-lg"
       open={defaultExpanded}
     >
-      <summary className="flex justify-between collapse-title after:start-5 after:end-auto ps-12 text-l font-bold pr-4  items-center py-2 shadow-md">
+      <summary className="flex justify-between collapse-title after:start-5 after:end-auto ps-12 gap-2 text-l font-bold pr-4  items-center py-2 shadow-md">
         <div className="flex items-center">
           <span className="text-sm font-normal text-base-content/70 w-8 flex-shrink-0">
             {project.id}
           </span>
           <div>
-            {project.name}
+            <span className="break-all">{project.name}</span>
             {project.archived && (
               <>
                 {" "}
