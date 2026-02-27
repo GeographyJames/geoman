@@ -54,7 +54,8 @@ export const ProjectCollection = ({
     : data.features.filter((f) => f.properties.status !== "ARCHIVED");
 
   const [visibilityMap, setVisibilityMap] = useState<Record<number, boolean>>(
-    () => Object.fromEntries(features.map((f) => [f.id, f.properties.is_primary])),
+    () =>
+      Object.fromEntries(features.map((f) => [f.id, f.properties.is_primary])),
   );
 
   if (features.length === 0) {
@@ -70,7 +71,7 @@ export const ProjectCollection = ({
   };
 
   return (
-    <table className="table table-fixed">
+    <table className="table table-fixed table-xs">
       <SiteDataTableHeadings
         allVisible={allVisible}
         someVisible={someVisible}
@@ -154,7 +155,10 @@ export function SiteDataTableRow({
   visible: boolean;
   onVisibleChange: (val: boolean) => void;
 }) {
-  useFeatureLayer(visible ? item : undefined, item.properties.is_primary ? primaryStyle : defaultStyle);
+  useFeatureLayer(
+    visible ? item : undefined,
+    item.properties.is_primary ? primaryStyle : defaultStyle,
+  );
   const zoomToFeature = useZoomToFeature(item);
 
   return (
@@ -173,7 +177,7 @@ export function SiteDataTableRow({
           <input
             id={`c${item.properties.collection_id}item${item.id}`}
             type="checkbox"
-            className="checkbox checkbox-sm bg-base-100"
+            className="checkbox checkbox-xs bg-base-100"
             checked={visible}
             onChange={(e) => onVisibleChange(e.target.checked)}
           ></input>
@@ -199,7 +203,11 @@ export function SiteDataTableRow({
           </span>
         </label>
       </td>
-      <td className={`p-0 text-sm hidden sm:table-cell ${item.properties.status === "ARCHIVED" ? "text-base-content/50" : ""}`}>{item.properties.storage_crs_srid}</td>
+      <td
+        className={`p-0 text-sm hidden sm:table-cell ${item.properties.status === "ARCHIVED" ? "text-base-content/50" : ""}`}
+      >
+        {item.properties.storage_crs_srid}
+      </td>
       {children}
 
       <td className="p-0">
@@ -214,7 +222,7 @@ export function SiteDataTableRow({
           message={`added by: ${item.properties.added_by_first_name} ${item.properties.added_by_last_name} ${dateFormat.format(new Date(item.properties.added))}`}
         />
       </td>
-      <td className="px-0 py-2 text-right">
+      <td className="px-0 py-1 text-right">
         <FeatureActionsDropdown item={item} zoomToFeature={zoomToFeature} />
       </td>
     </tr>

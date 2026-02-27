@@ -33,7 +33,7 @@ export const SiteDataDropdown = ({
 
   return (
     <details className="collapse collapse-arrow bg-base-200 border-base-300 border">
-      <summary className="flex justify-between collapse-title font-semibold after:start-5 after:end-auto p-2 pe-4 ps-12">
+      <summary className="flex justify-between collapse-title font-semibold after:start-5 after:end-auto p-1 pe-2 ps-12">
         <div>
           {collection.title}{" "}
           <span className="text-sm font-normal text-base-content/70">
@@ -87,7 +87,7 @@ export const SiteDataDropdown = ({
           />
         </div>
       </summary>
-      <div className="collapse-content text-sm pb-0">
+      <div className="collapse-content text-sm pb-0 mt-1">
         <div className="flex justify-between items-end mb-2">
           {collection.description ? (
             <p className="text-xs text-base-content/60">

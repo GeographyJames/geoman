@@ -35,7 +35,7 @@ function SetPrimaryRadio({ item }: { item: ProjectCollectionItem }) {
     >
       <input
         onChange={handleClick}
-        className="radio-sm radio bg-base-100"
+        className="radio-xs radio bg-base-100"
         type="radio"
         checked={item.properties.is_primary}
         disabled={item.properties.status === "ARCHIVED"}
