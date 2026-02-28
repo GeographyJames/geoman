@@ -69,7 +69,7 @@ pub async fn run(
     let repo = web::Data::new(PostgresRepo::new(db_pool));
     let clerk_authoriser = web::Data::new(ClerkAuthorizer::new(
         MemoryCacheJwksProvider::new(clerk.clone()),
-        false,
+        true,
     ));
 
     let server = HttpServer::new(move || {

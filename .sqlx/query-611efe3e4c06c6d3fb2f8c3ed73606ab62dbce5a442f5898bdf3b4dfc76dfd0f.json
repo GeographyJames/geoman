@@ -1,0 +1,72 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            t.id,\n            t.turbine_number,\n            t.hub_height_mm::float8 / 1000.0 AS hub_height_m,\n            t.rotor_diameter_mm::float8 / 2000.0 AS blade_length_m,\n            ST_Y(ST_Transform(t.geom, 4326)) AS \"latitude!\",\n            ST_X(ST_Transform(t.geom, 4326)) AS \"longitude!\",\n            ST_Srid(t.geom) AS \"srid!\",\n            ST_X(t.geom) AS \"x!\",\n            ST_Y(t.geom) AS \"y!\"\n        FROM app.turbines t\n        JOIN app.turbine_layouts tl ON tl.id = t.layout_id\n        JOIN app.projects p ON p.id = tl.project_id\n        JOIN app.collections c ON c.id = -1\n        WHERE tl.id = $1\n          AND p.slug = $2\n          AND c.slug = $3\n        ORDER BY t.turbine_number\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "turbine_number",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "hub_height_m",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "blade_length_m",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "latitude!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 5,
+        "name": "longitude!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 6,
+        "name": "srid!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "x!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 8,
+        "name": "y!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "611efe3e4c06c6d3fb2f8c3ed73606ab62dbce5a442f5898bdf3b4dfc76dfd0f"
+}

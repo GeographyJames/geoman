@@ -135,6 +135,22 @@ impl PostgresRepo {
     }
 
     #[tracing::instrument(skip(self))]
+    pub async fn get_turbine_layout_csv(
+        &self,
+        layout_id: FeatureId,
+        project_slug: &str,
+        collection_slug: &str,
+    ) -> Result<Vec<super::turbine_layouts::get_csv::TurbineCsvRow>, RepositoryError> {
+        super::turbine_layouts::get_csv::get_turbine_layout_csv(
+            &self.db_pool,
+            layout_id,
+            project_slug,
+            collection_slug,
+        )
+        .await
+    }
+
+    #[tracing::instrument(skip(self))]
     pub async fn get_project_feature_for_download(
         &self,
         feature_id: FeatureId,

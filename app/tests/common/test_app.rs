@@ -18,15 +18,17 @@ use app::{
     handlers::{
         self,
         api::{
-            business_units::BusinessUnitInputPayload, project_collections::CollectionReqPayload,
-            projects::PostProjectPayload, teams::TeamInputPayload,
+            business_units::BusinessUnitInputPayload, features::get::FeatureFormat,
+            project_collections::CollectionReqPayload, projects::PostProjectPayload,
+            teams::TeamInputPayload,
         },
     },
     telemetry::{get_subscriber, init_subscriber},
 };
 use domain::{
     BusinessUnitId, FeatureId, LayoutId, ProjectCollectionId, ProjectFeatureId, ProjectId,
-    TableName, TeamId, UserId, enums::GeometryType,
+    TableName, TeamId, UserId,
+    enums::{CollectionId, GeometryType},
 };
 use dotenvy::dotenv;
 use gdal::vector::{Defn, Feature, Geometry, LayerAccess, OGRFieldType, OGRwkbGeometryType};
@@ -518,9 +520,27 @@ first_name, last_name,
         collection_slug: &str,
         feature_id: i32,
     ) -> Response {
+        self.get_feature_download(
+            FeatureFormat::Shapefile,
+            auth,
+            project_slug,
+            collection_slug,
+            feature_id,
+        )
+        .await
+    }
+
+    async fn get_feature_download(
+        &self,
+        format: FeatureFormat,
+        auth: Option<&Auth>,
+        project_slug: &str,
+        collection_slug: &str,
+        feature_id: i32,
+    ) -> Response {
         auth_request(
             self.api_client.get(&format!(
-                "{}{}/{}/{}/{}?format=shapefile",
+                "{}{}/{}/{}/{}?format={format}",
                 URLS.api.base, URLS.api.project_features, project_slug, collection_slug, feature_id,
             )),
             auth,
@@ -528,5 +548,59 @@ first_name, last_name,
         .send()
         .await
         .expect("failed to execute request")
+    }
+
+    pub async fn get_feature_csv(
+        &self,
+        auth: Option<&Auth>,
+        project_slug: &str,
+        collection_slug: &str,
+        feature_id: i32,
+    ) -> Response {
+        self.get_feature_download(
+            FeatureFormat::Csv,
+            auth,
+            project_slug,
+            collection_slug,
+            feature_id,
+        )
+        .await
+    }
+
+    pub async fn get_collection_slug(
+        &self,
+        project_id: ProjectId,
+        collection_id: ProjectCollectionId,
+    ) -> String {
+        let mut collection = self
+            .ogc_service
+            .get_project_collection_ogc(&self.api_client, project_id, collection_id)
+            .await;
+        match collection
+            .additional_properties
+            .remove("slug")
+            .expect("no collection slug")
+        {
+            serde_json::Value::String(slug) => slug,
+            _ => panic!("collection slug not a string"),
+        }
+    }
+
+    pub async fn get_project_slug(&self, project_id: ProjectId) -> String {
+        let mut project: ogc::features::Feature = handle_json_response(
+            self.ogc_service
+                .get_feature(
+                    &self.api_client,
+                    &CollectionId::Projects.to_string(),
+                    project_id.0,
+                )
+                .await,
+        )
+        .await
+        .expect("failed to retrieve project");
+        match project.properties.remove("slug").expect("no project slug") {
+            serde_json::Value::String(slug) => slug,
+            _ => panic!("project slug not a string"),
+        }
     }
 }

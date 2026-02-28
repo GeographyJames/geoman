@@ -7,15 +7,17 @@ use gdal::{
     vsi::{self, get_vsi_mem_file_bytes_owned},
 };
 use serde::Deserialize;
+use strum::Display;
 use uuid::Uuid;
 
 use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
 
-#[derive(Deserialize, Default)]
+#[derive(Deserialize, Display)]
 #[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
 pub enum FeatureFormat {
-    #[default]
     Shapefile,
+    Csv,
 }
 
 #[derive(Deserialize)]
@@ -27,7 +29,6 @@ pub struct FeatureDownloadPath {
 
 #[derive(Deserialize)]
 pub struct FeatureDownloadQuery {
-    #[serde(default)]
     format: FeatureFormat,
 }
 
@@ -48,7 +49,55 @@ pub async fn get_project_feature_download(
         FeatureFormat::Shapefile => {
             get_shapefile(&repo, feature_id, &project_slug, &collection_slug).await
         }
+        FeatureFormat::Csv => get_csv(&repo, feature_id, &project_slug, &collection_slug).await,
     }
+}
+
+async fn get_csv(
+    repo: &PostgresRepo,
+    feature_id: FeatureId,
+    project_slug: &str,
+    collection_slug: &str,
+) -> Result<HttpResponse, ApiError> {
+    let rows = repo
+        .get_turbine_layout_csv(feature_id, project_slug, collection_slug)
+        .await
+        .context("failed to query turbine layout csv")?;
+
+    if rows.is_empty() {
+        return Err(ApiError::FeatureNotFound(feature_id));
+    }
+
+    let srid = rows[0].srid;
+    let mut csv = format!(
+        "id,turbine_number,hub_height_m,blade_length_m,latitude,longitude,x_{srid},y_{srid}\n"
+    );
+    for row in rows {
+        csv.push_str(&format!(
+            "{},{},{},{},{},{},{},{}\n",
+            row.id,
+            row.turbine_number,
+            row.hub_height_m.map_or(String::new(), |v| v.to_string()),
+            row.blade_length_m.map_or(String::new(), |v| v.to_string()),
+            row.latitude,
+            row.longitude,
+            row.x,
+            row.y,
+        ));
+    }
+
+    let download_filename = format!(
+        "{}-{}{:05}.csv",
+        project_slug, collection_slug, feature_id.0
+    );
+
+    Ok(HttpResponse::Ok()
+        .content_type("text/csv")
+        .append_header((
+            "Content-Disposition",
+            format!("attachment; filename=\"{}\"", download_filename),
+        ))
+        .body(csv))
 }
 
 async fn get_shapefile(

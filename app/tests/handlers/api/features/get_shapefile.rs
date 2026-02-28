@@ -1,10 +1,7 @@
 use app::constants::SITE_BOUNDARIES_COLLECTION_ID;
 
-use crate::common::{
-    AppBuilder, Auth,
-    helpers::{assert_ok, handle_json_response},
-};
-use domain::enums::CollectionId;
+use crate::common::{AppBuilder, Auth, helpers::assert_ok};
+use domain::ProjectCollectionId;
 use gdal::{Dataset, vector::LayerAccess};
 use geo::virtual_shapefile::VirtualFile;
 
@@ -16,43 +13,20 @@ async fn get_shapefile_works() {
     let boundary_id = app
         .generate_primary_boundary_id(project_id, Some(&auth))
         .await;
-    let collection = app
-        .ogc_service
-        .get_project_collection_ogc(
-            &app.api_client,
+    let collection_slug = app
+        .get_collection_slug(
             project_id,
-            domain::ProjectCollectionId(SITE_BOUNDARIES_COLLECTION_ID),
+            ProjectCollectionId(SITE_BOUNDARIES_COLLECTION_ID),
         )
         .await;
-    let project: ogc::features::Feature = handle_json_response(
-        app.ogc_service
-            .get_feature(
-                &app.api_client,
-                &CollectionId::Projects.to_string(),
-                project_id.0,
-            )
-            .await,
-    )
-    .await
-    .expect("failed to retrieve project");
-    let project_slug = match project.properties.get("slug").expect("no project slug") {
-        serde_json::Value::String(slug) => slug,
-        _ => panic!("project slug not a string"),
-    };
 
-    let collection_slug = match collection
-        .additional_properties
-        .get("slug")
-        .expect("no collection slug")
-    {
-        serde_json::Value::String(slug) => slug,
-        _ => panic!("collection slug not a string"),
-    };
+    let project_slug = app.get_project_slug(project_id).await;
+
     let response = app
         .get_feature_shapefile(
             Some(&auth),
-            project_slug,
-            collection_slug,
+            project_slug.as_str(),
+            collection_slug.as_str(),
             boundary_id.feature_id.0,
         )
         .await;
