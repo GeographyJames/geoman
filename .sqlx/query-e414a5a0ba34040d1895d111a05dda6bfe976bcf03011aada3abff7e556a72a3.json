@@ -1,0 +1,66 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            tl.name AS layout_name,\n            t.id,\n            t.turbine_number,\n            t.hub_height_mm::float8 / 1000.0 AS hub_height_m,\n            t.rotor_diameter_mm::float8 / 1000.0 AS rotor_diameter_m,\n            ST_Srid(t.geom) AS \"srid!\",\n            ST_X(t.geom) AS \"x!\",\n            ST_Y(t.geom) AS \"y!\"\n        FROM app.turbines t\n        JOIN app.turbine_layouts tl ON tl.id = t.layout_id\n        JOIN app.projects p ON p.id = tl.project_id\n        JOIN app.collections c ON c.id = -1\n        WHERE tl.id = $1\n          AND p.slug = $2\n          AND c.slug = $3\n        ORDER BY t.turbine_number\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "layout_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "turbine_number",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "hub_height_m",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "rotor_diameter_m",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 5,
+        "name": "srid!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "x!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 7,
+        "name": "y!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "e414a5a0ba34040d1895d111a05dda6bfe976bcf03011aada3abff7e556a72a3"
+}

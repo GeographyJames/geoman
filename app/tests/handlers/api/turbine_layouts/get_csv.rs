@@ -35,7 +35,7 @@ async fn get_turbine_layout_csv_works() {
             let first_line = s.split("\n").next().expect("no first line");
             assert_eq!(
                 first_line,
-                "id,turbine_number,hub_height_m,blade_length_m,latitude,longitude,x_27700,y_27700"
+                "id,turbine_number,hub_height_m,rotor_diameter_m,x_epsg:27700,y_epsg:27700"
             )
         }
         Err(e) => panic!("failed to read bytes to string: {}", e),

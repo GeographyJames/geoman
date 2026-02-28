@@ -51,13 +51,32 @@ export const FeatureActionsDropdown = ({
             const popover = (e.currentTarget as HTMLElement).closest(
               "[popover]",
             ) as HTMLElement | null;
-            await download(item.id, projectSlug, collectionSlug);
+            await download(item.id, projectSlug, collectionSlug, "shapefile");
             popover?.hidePopover();
           }}
         >
           {isDownloading ? "downloading..." : "download shapefile"}
         </a>
       </li>
+      {item.properties.collection_id === TURBINE_LAYOUT_CCOLLECTION_ID && (
+        <li>
+          <a
+            href={`${__URLS__.api.base}${__URLS__.api.project_features}/${projectSlug}/${collectionSlug}/${item.id}?format=csv`}
+            aria-disabled={isDownloading}
+            onClick={async (e) => {
+              e.preventDefault();
+              if (isDownloading) return;
+              const popover = (e.currentTarget as HTMLElement).closest(
+                "[popover]",
+              ) as HTMLElement | null;
+              await download(item.id, projectSlug, collectionSlug, "csv");
+              popover?.hidePopover();
+            }}
+          >
+            {isDownloading ? "downloading..." : "download csv"}
+          </a>
+        </li>
+      )}
       <li>
         <button onClick={() => requestEdit(item)}>edit</button>
       </li>

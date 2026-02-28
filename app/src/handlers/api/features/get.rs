@@ -20,6 +20,15 @@ pub enum FeatureFormat {
     Csv,
 }
 
+impl FeatureFormat {
+    fn file_extension(&self) -> String {
+        match self {
+            FeatureFormat::Shapefile => "shz".to_string(),
+            FeatureFormat::Csv => "csv".to_string(),
+        }
+    }
+}
+
 #[derive(Deserialize)]
 pub struct FeatureDownloadPath {
     project_slug: String,
@@ -69,27 +78,29 @@ async fn get_csv(
     }
 
     let srid = rows[0].srid;
+    let layout_name = &rows[0].layout_name;
     let mut csv = format!(
-        "id,turbine_number,hub_height_m,blade_length_m,latitude,longitude,x_{srid},y_{srid}\n"
+        "id,turbine_number,hub_height_m,rotor_diameter_m,x_epsg:{srid},y_epsg:{srid}\n"
+    );
+    let download_filename = download_filename(
+        project_slug,
+        collection_slug,
+        feature_id,
+        layout_name,
+        FeatureFormat::Csv,
     );
     for row in rows {
         csv.push_str(&format!(
-            "{},{},{},{},{},{},{},{}\n",
+            "{},{},{},{},{},{}\n",
             row.id,
             row.turbine_number,
             row.hub_height_m.map_or(String::new(), |v| v.to_string()),
-            row.blade_length_m.map_or(String::new(), |v| v.to_string()),
-            row.latitude,
-            row.longitude,
+            row.rotor_diameter_m
+                .map_or(String::new(), |v| v.to_string()),
             row.x,
             row.y,
         ));
     }
-
-    let download_filename = format!(
-        "{}-{}{:05}.csv",
-        project_slug, collection_slug, feature_id.0
-    );
 
     Ok(HttpResponse::Ok()
         .content_type("text/csv")
@@ -100,6 +111,22 @@ async fn get_csv(
         .body(csv))
 }
 
+fn download_filename(
+    project_slug: &str,
+    collection_slug: &str,
+    feature_id: FeatureId,
+    feature_name: &str,
+    format: FeatureFormat,
+) -> String {
+    format!(
+        "{}-{}{:05}-{}.{}",
+        project_slug,
+        collection_slug,
+        feature_id.0,
+        slug::slugify(feature_name),
+        format.file_extension()
+    )
+}
 async fn get_shapefile(
     repo: &PostgresRepo,
     feature_id: FeatureId,
@@ -112,13 +139,14 @@ async fn get_shapefile(
         .context("failed to query project feature")?
         .ok_or(ApiError::FeatureNotFound(feature_id))?;
 
-    let download_filename = format!(
-        "{}-{}{:05}-{}.shz",
+    let download_filename = download_filename(
         project_slug,
         collection_slug,
-        feature_id.0,
-        slug::slugify(&ft.name)
+        feature_id,
+        &ft.name,
+        FeatureFormat::Shapefile,
     );
+
     let vsimem_path = format!("/vsimem/{}.shz", Uuid::new_v4());
 
     let driver = gdal::DriverManager::get_driver_by_name("ESRI Shapefile")

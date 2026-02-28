@@ -7,7 +7,7 @@ export const useDownloadFeatureShapefile = () => {
   const { addFlash } = useFlash();
   const [isLoading, setIsLoading] = useState(false);
 
-  const download = async (featureId: number, projectSlug: string, collectionSlug: string) => {
+  const download = async (featureId: number, projectSlug: string, collectionSlug: string, format: "shapefile" | "csv") => {
     setIsLoading(true);
     try {
       let token: string | null = null;
@@ -15,7 +15,7 @@ export const useDownloadFeatureShapefile = () => {
         token = await getToken();
       }
 
-      const response = await fetch(`${__URLS__.api.base}${__URLS__.api.project_features}/${projectSlug}/${collectionSlug}/${featureId}?format=shapefile`, {
+      const response = await fetch(`${__URLS__.api.base}${__URLS__.api.project_features}/${projectSlug}/${collectionSlug}/${featureId}?format=${format}`, {
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
@@ -41,7 +41,8 @@ export const useDownloadFeatureShapefile = () => {
       const blob = await response.blob();
       const disposition = response.headers.get("Content-Disposition");
       const filenameMatch = disposition?.match(/filename="(.+)"/);
-      const filename = filenameMatch?.[1] ?? `feature-${featureId}.shz`;
+      const ext = format === "csv" ? "csv" : "shz";
+      const filename = filenameMatch?.[1] ?? `feature-${featureId}.${ext}`;
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

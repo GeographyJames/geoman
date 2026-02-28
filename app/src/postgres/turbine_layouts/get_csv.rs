@@ -4,12 +4,11 @@ use sqlx::PgPool;
 use crate::repo::RepositoryError;
 
 pub struct TurbineCsvRow {
+    pub layout_name: String,
     pub id: i32,
     pub turbine_number: i32,
     pub hub_height_m: Option<f64>,
-    pub blade_length_m: Option<f64>,
-    pub latitude: f64,
-    pub longitude: f64,
+    pub rotor_diameter_m: Option<f64>,
     pub srid: i32,
     pub x: f64,
     pub y: f64,
@@ -25,12 +24,11 @@ pub async fn get_turbine_layout_csv(
         TurbineCsvRow,
         r#"
         SELECT
+            tl.name AS layout_name,
             t.id,
             t.turbine_number,
             t.hub_height_mm::float8 / 1000.0 AS hub_height_m,
-            t.rotor_diameter_mm::float8 / 2000.0 AS blade_length_m,
-            ST_Y(ST_Transform(t.geom, 4326)) AS "latitude!",
-            ST_X(ST_Transform(t.geom, 4326)) AS "longitude!",
+            t.rotor_diameter_mm::float8 / 1000.0 AS rotor_diameter_m,
             ST_Srid(t.geom) AS "srid!",
             ST_X(t.geom) AS "x!",
             ST_Y(t.geom) AS "y!"
