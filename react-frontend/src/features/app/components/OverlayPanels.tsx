@@ -96,7 +96,7 @@ export const OverlayPanels = () => {
         </div>
 
         {projectsToShow.length > 0 && (
-          <div className="flex flex-col shadow-lg rounded-box gap-2 max-w-[600px] pointer-events-auto min-h-12 overflow-y-auto ">
+          <div className="flex flex-col shadow-lg rounded-box gap-2 max-w-[720px] pointer-events-auto min-h-12 overflow-y-auto ">
             {<ProjectPanels projects={projectsToShow} />}
           </div>
         )}

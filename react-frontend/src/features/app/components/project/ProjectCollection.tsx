@@ -82,15 +82,15 @@ export const ProjectCollection = ({
         {isTurbineLayout && (
           <>
             <th className="hidden sm:table-cell landscape:table-cell w-14 p-0 pr-2 text-right">
-              no. of
+              No. of
               <br />
               turbines
             </th>
             <th className="w-14 p-0 hidden sm:table-cell text-wrap">
-              rotor diameter
+              Rotor diameter
             </th>
             <th className="w-12 p-0 hidden sm:table-cell text-wrap">
-              hub height
+              Hub height
             </th>
           </>
         )}
@@ -172,7 +172,7 @@ export function SiteDataTableRow({
   const zoomToFeature = useZoomToFeature(item);
 
   return (
-    <tr key={item.id}>
+    <tr key={item.id} className="hover:bg-base-200">
       <td className="p-0">
         <span
           className={
