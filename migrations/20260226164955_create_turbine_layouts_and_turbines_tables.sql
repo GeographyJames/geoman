@@ -23,8 +23,8 @@ CREATE TABLE app.turbines (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     layout_id integer NOT NULL REFERENCES app.turbine_layouts(id),
     turbine_number integer NOT NULL,
-    hub_height_mm integer NOT NULL,
-    rotor_diameter_mm integer NOT NULL,
+    hub_height_mm integer,
+    rotor_diameter_mm integer,
     geom geometry(POINT) NOT NULL CHECK (ST_IsValid(geom)),
     UNIQUE (layout_id, turbine_number),
     CONSTRAINT duplicate_turbine_exclusion EXCLUDE USING gist (

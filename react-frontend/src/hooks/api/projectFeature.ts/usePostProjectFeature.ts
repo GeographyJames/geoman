@@ -5,7 +5,6 @@ import type { Shapefile } from "@/lib/shapefile";
 
 
 export interface TurbineLayoutParams {
-  primary?: boolean;
   hubHeightDefaultMetre?: number;
   rotorDiameterDefaultMetre?: number;
   turbineNumberField?: string;
@@ -31,7 +30,6 @@ export const usePostProjectFeature = () => {
       shapefile.addToForm(form);
       form.append("name", name);
       if (turbineLayout) {
-        if (turbineLayout.primary != null) form.append("primary", String(turbineLayout.primary));
         if (turbineLayout.hubHeightDefaultMetre != null) form.append("hub_height_default_metre", String(turbineLayout.hubHeightDefaultMetre));
         if (turbineLayout.rotorDiameterDefaultMetre != null) form.append("rotor_diameter_default_metre", String(turbineLayout.rotorDiameterDefaultMetre));
         if (turbineLayout.turbineNumberField) form.append("turbine_number_field", turbineLayout.turbineNumberField);

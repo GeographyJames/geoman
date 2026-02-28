@@ -7,7 +7,7 @@ use utils::error_chain_fmt;
 use crate::{
     constants::db_constraints::{
         PROJECT_COLLECTION_SLUG_UNIQUE, PROJECT_COLLECTIONS_TITLE_UNIQUE, PROJECT_CRS_ID_FKEY,
-        PROJECT_NAME_UNIQUE, PROJECT_SLUG_UNIQUE,
+        PROJECT_NAME_UNIQUE, PROJECT_SLUG_UNIQUE, TURBINE_PROXIMITY_CHECK,
     },
     repo::{
         RepositoryError,
@@ -72,6 +72,8 @@ pub enum ApiError {
     AdminOnly,
     #[error("Invalid name: {0}")]
     InvalidName(String),
+    #[error("One or more turbines are within 1 metre of each other in this layout.")]
+    TurbineProximityViolation,
 }
 
 impl From<RepositoryError> for ApiError {
@@ -94,9 +96,10 @@ impl From<RepositoryError> for ApiError {
             RepositoryError::UnknownForeignKeyViolation(error) => {
                 ApiError::UnexpectedDatabase(error.into())
             }
-            RepositoryError::CheckConstraintViolation(check_key) => {
-                ApiError::DatabaseCheckConstraintViolation(check_key)
-            }
+            RepositoryError::CheckConstraintViolation(check_key) => match check_key.as_str() {
+                TURBINE_PROXIMITY_CHECK => ApiError::TurbineProximityViolation,
+                _ => ApiError::DatabaseCheckConstraintViolation(check_key),
+            },
             RepositoryError::UnknowConstraintViolation(_) => ApiError::UnexpectedDatabase(value),
         }
     }
@@ -132,6 +135,7 @@ impl ResponseError for ApiError {
             ApiError::InvalidCollectionTitle(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::AdminOnly => StatusCode::UNAUTHORIZED,
             ApiError::InvalidName(_) => StatusCode::UNPROCESSABLE_ENTITY,
+            ApiError::TurbineProximityViolation => StatusCode::UNPROCESSABLE_ENTITY,
         }
     }
 

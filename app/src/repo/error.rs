@@ -46,6 +46,13 @@ impl From<sqlx::Error> for RepositoryError {
                     None => RepositoryError::UnknowConstraintViolation(error),
                 }
             }
+            sqlx::Error::Database(ref db_err) if db_err.code().as_deref() == Some("23P01") => {
+                let key = db_err.constraint().map(|s| CheckKey(s.to_string()));
+                match key {
+                    Some(key) => RepositoryError::CheckConstraintViolation(key),
+                    None => RepositoryError::UnknowConstraintViolation(error),
+                }
+            }
             sqlx::Error::RowNotFound => RepositoryError::RowNotFound,
             _ => RepositoryError::UnexpectedSqlx(error),
         }

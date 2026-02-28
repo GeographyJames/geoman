@@ -13,4 +13,5 @@ pub mod db_constraints {
     pub const PROJECT_COLLECTIONS_TITLE_UNIQUE: &str = "collections_title_global_unique";
     pub const PROJECT_CRS_ID_FKEY: &str = "projects_crs_srid_fkey";
     pub const PROJECT_COLLECTION_SLUG_UNIQUE: &str = "collections_slug_global_unique";
+    pub const TURBINE_PROXIMITY_CHECK: &str = "duplicate_turbine_exclusion";
 }

@@ -82,7 +82,9 @@ export function ShapefilePreview({
 
   const geometryType = geojson.features[0]?.geometry.type ?? "Unknown";
   const crsLabel = crs
-    ? `EPSG:${crs.srid}${crs.name ? ` — ${crs.name}` : ""}`
+    ? crs.name
+      ? `${crs.name} (EPSG:${crs.srid})`
+      : `EPSG:${crs.srid}`
     : "Unknown";
 
   return (
@@ -92,7 +94,7 @@ export function ShapefilePreview({
         className="w-full rounded-lg border border-base-300 overflow-hidden"
         style={{ height: 300 }}
       />
-      <div className="flex flex-wrap gap-4 text-sm bg-base-200 rounded-lg px-3 py-2">
+      <div className="flex flex-wrap gap-2 text-sm bg-base-200 rounded-lg px-3 py-2">
         <span>
           <span className="font-semibold">CRS:</span> {crsLabel}
         </span>
@@ -100,7 +102,7 @@ export function ShapefilePreview({
           <span className="font-semibold">Geometry:</span> {geometryType}
         </span>
         <span>
-          <span className="font-semibold">Features:</span>{" "}
+          <span className="font-semibold">Features with geometry:</span>{" "}
           {geojson.features.length}
         </span>
         {nullGeometryCount > 0 && (
