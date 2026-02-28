@@ -1,13 +1,15 @@
 use crate::common::{
     Auth, configure_database,
     helpers::{
-        add_layer, add_shapefile_to_form, create_gdal_multipolygon_bng, create_gdal_point_bng,
-        create_shapefile_dataset, dataset_to_shapefile_data, handle_json_response,
+        add_layer, add_shapefile_to_form, auth_request, create_gdal_multipolygon_bng,
+        create_gdal_point_bng, create_shapefile_dataset, dataset_to_shapefile_data,
+        handle_json_response,
     },
     services::{
         ApiKeysService, AuthService, ClerkAuthService, HttpClient, HttpService, OgcService,
     },
 };
+
 use app::{
     AppConfig, Application, AuthenticatedUser, DatabaseSettings, Password, URLS,
     constants::{GIS_DATA_SCHEMA, SITE_BOUNDARIES_COLLECTION_ID, TURBINE_LAYOUTS_COLLECTION_ID},
@@ -28,8 +30,10 @@ use domain::{
 };
 use dotenvy::dotenv;
 use gdal::vector::{Defn, Feature, Geometry, LayerAccess, OGRFieldType, OGRwkbGeometryType};
+use reqwest::Response;
 use secrecy::ExposeSecret;
 
+use serde::Serialize;
 use sqlx::{Connection, PgConnection, PgPool};
 use std::{str::FromStr, sync::LazyLock};
 use uuid::Uuid;
@@ -480,5 +484,49 @@ first_name, last_name,
             .json::<LayoutId>()
             .await
             .expect("failed to parse json")
+    }
+    pub async fn duplicate_feature<B: Serialize>(
+        &self,
+        auth: Option<&Auth>,
+        body: &B,
+        project_id: ProjectId,
+        collection_id: ProjectCollectionId,
+        feature_id: i32,
+    ) -> Response {
+        auth_request(
+            self.api_client
+                .post(&format!(
+                    "{}{}/{}/{}/{}/duplicate",
+                    URLS.api.base,
+                    URLS.api.project_features,
+                    project_id.0,
+                    collection_id.0,
+                    feature_id
+                ))
+                .json(body),
+            auth,
+        )
+        .send()
+        .await
+        .expect("failed to execute request")
+    }
+
+    pub async fn get_feature_shapefile(
+        &self,
+        auth: Option<&Auth>,
+        project_slug: &str,
+        collection_slug: &str,
+        feature_id: i32,
+    ) -> Response {
+        auth_request(
+            self.api_client.get(&format!(
+                "{}{}/{}/{}/{}?format=shapefile",
+                URLS.api.base, URLS.api.project_features, project_slug, collection_slug, feature_id,
+            )),
+            auth,
+        )
+        .send()
+        .await
+        .expect("failed to execute request")
     }
 }

@@ -1,58 +1,72 @@
 use actix_web::{HttpResponse, get, web};
 use anyhow::Context;
-use domain::{FeatureId, enums::GeometryType};
+use domain::FeatureId;
 use gdal::{
     spatial_ref::SpatialRef,
     vector::LayerAccess,
     vsi::{self, get_vsi_mem_file_bytes_owned},
 };
+use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
 
-pub struct ProjectFeature {
-    name: String,
-    geom: Vec<u8>,
-    srid: i32,
-    geom_type: GeometryType,
-    project_slug: String,
-    collection_slug: String,
+#[derive(Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum FeatureFormat {
+    #[default]
+    Shapefile,
 }
 
-#[tracing::instrument(skip(repo))]
-#[get("/{featureId}")]
-pub async fn get_project_feature_shapefile(
+#[derive(Deserialize)]
+pub struct FeatureDownloadPath {
+    project_slug: String,
+    collection_slug: String,
+    feature_id: FeatureId,
+}
+
+#[derive(Deserialize)]
+pub struct FeatureDownloadQuery {
+    #[serde(default)]
+    format: FeatureFormat,
+}
+
+#[tracing::instrument(skip(repo, path, query))]
+#[get("/{project_slug}/{collection_slug}/{feature_id}")]
+pub async fn get_project_feature_download(
     repo: web::Data<PostgresRepo>,
-    path: web::Path<FeatureId>,
+    path: web::Path<FeatureDownloadPath>,
+    query: web::Query<FeatureDownloadQuery>,
     _user: web::ReqData<AuthenticatedUser>,
 ) -> Result<HttpResponse, ApiError> {
-    let feature_id = path.into_inner();
-    let ft = sqlx::query_as!(
-        ProjectFeature,
-        r#"
-    SELECT
-            pf.name,
-            ST_AsBinary(geom) AS "geom!",
-            ST_Srid(geom) AS "srid!",
-            GeometryType(geom) AS "geom_type!: GeometryType",
-            p.slug AS project_slug,
-            c.slug AS collection_slug
-    FROM app.project_features pf
-    JOIN app.projects p ON p.id = pf.project_id
-    JOIN app.collections c ON c.id = pf.collection_id
-    WHERE pf.id = $1
-    "#,
-        feature_id.0
-    )
-    .fetch_optional(&repo.db_pool)
-    .await
-    .context("failed to query project feature")?
-    .ok_or(ApiError::FeatureNotFound(feature_id))?;
+    let FeatureDownloadPath {
+        project_slug,
+        collection_slug,
+        feature_id,
+    } = path.into_inner();
+    match query.into_inner().format {
+        FeatureFormat::Shapefile => {
+            get_shapefile(&repo, feature_id, &project_slug, &collection_slug).await
+        }
+    }
+}
+
+async fn get_shapefile(
+    repo: &PostgresRepo,
+    feature_id: FeatureId,
+    project_slug: &str,
+    collection_slug: &str,
+) -> Result<HttpResponse, ApiError> {
+    let ft = repo
+        .get_project_feature_for_download(feature_id, project_slug, collection_slug)
+        .await
+        .context("failed to query project feature")?
+        .ok_or(ApiError::FeatureNotFound(feature_id))?;
 
     let download_filename = format!(
         "{}-{}{:05}-{}.shz",
-        ft.project_slug,
-        ft.collection_slug,
+        project_slug,
+        collection_slug,
         feature_id.0,
         slug::slugify(&ft.name)
     );
@@ -66,7 +80,7 @@ pub async fn get_project_feature_shapefile(
     let srs = SpatialRef::from_epsg(ft.srid as u32).context("failed to get spatial ref")?;
     let layer_name = format!(
         "{}{:05}-{}",
-        ft.collection_slug,
+        collection_slug,
         feature_id.0,
         slug::slugify(ft.name)
     );

@@ -38,7 +38,7 @@ export const usePostProjectFeature = () => {
       }
 
       const data = await apiRequest<{ id: number }>(
-        `/api/features/${projectId}/${collectionId}`,
+        `${__URLS__.api.base}${__URLS__.api.project_features}/${projectId}/${collectionId}`,
         {
           method: "POST",
           body: form,

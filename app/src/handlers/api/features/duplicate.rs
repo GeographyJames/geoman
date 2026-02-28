@@ -1,5 +1,8 @@
 use actix_web::{HttpResponse, post, web};
-use domain::{FeatureId, LayoutId, ProjectCollectionId, ProjectId, name::NameInputDTO};
+use domain::{
+    FeatureId, FeatureNameInputDTO, LayoutId, ProjectCollectionId, ProjectId,
+    turbine_layout::DuplicateTurbineInputDTO,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -29,21 +32,19 @@ pub async fn duplicate_project_feature(
     if collection_id.0 == TURBINE_LAYOUTS_COLLECTION_ID {
         let name = payload
             .name
-            .map(|n| NameInputDTO::parse(n).map_err(ApiError::InvalidName))
+            .map(|n| FeatureNameInputDTO::parse(n).map_err(ApiError::InvalidName))
             .transpose()?;
         let hub_height_mm = payload.hub_height_metre.map(|v| (v * 1000.) as i32);
         let rotor_diameter_mm = payload.rotor_diameter_metre.map(|v| (v * 1000.) as i32);
 
+        let dto = DuplicateTurbineInputDTO {
+            name,
+            hub_height_mm,
+            rotor_diameter_mm,
+            primary: payload.primary,
+        };
         let new_id = repo
-            .duplicate_turbine_layout(
-                project_id,
-                LayoutId(feature_id.0),
-                user.id,
-                name,
-                hub_height_mm,
-                rotor_diameter_mm,
-                payload.primary,
-            )
+            .insert(&(&dto, project_id, LayoutId(feature_id.0), user.id))
             .await?;
 
         return Ok(HttpResponse::Created().json(new_id.0));

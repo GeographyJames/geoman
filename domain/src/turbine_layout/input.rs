@@ -1,8 +1,8 @@
-use crate::name::NameInputDTO;
+use crate::FeatureNameInputDTO;
 
 #[derive(Debug)]
 pub struct TurbineLayoutInputDTO {
-    pub name: NameInputDTO,
+    pub name: FeatureNameInputDTO,
     pub primary: Option<bool>,
     pub turbines: TurbinesGeomInputDTO,
     pub target_srid: i32,
@@ -30,4 +30,11 @@ impl TurbinesGeomInputDTO {
     pub fn new() -> Self {
         Self(Vec::new())
     }
+}
+
+pub struct DuplicateTurbineInputDTO {
+    pub name: Option<FeatureNameInputDTO>,
+    pub hub_height_mm: Option<i32>,
+    pub rotor_diameter_mm: Option<i32>,
+    pub primary: Option<bool>,
 }

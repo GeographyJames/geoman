@@ -76,6 +76,7 @@ const DuplicateTurbineLayoutInner = () => {
                     <TextInput
                         name="name"
                         label="Name"
+                        required
                         value={name}
                         onChange={setName}
                     />

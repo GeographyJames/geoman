@@ -16,7 +16,7 @@ export function useDuplicateTurbineLayout() {
     return useMutation<number, Error, { projectId: number; collectionId: number; id: number; dto: DuplicateTurbineLayoutDTO }>({
         mutationFn: async ({ projectId, collectionId, id, dto }) => {
             const data = await apiRequest<number>(
-                `/api/features/${projectId}/${collectionId}/${id}/duplicate`,
+                `${__URLS__.api.base}${__URLS__.api.project_features}/${projectId}/${collectionId}/${id}/duplicate`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

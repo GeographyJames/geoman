@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            pf.name,\n            ST_AsBinary(geom) AS \"geom!\",\n            ST_Srid(geom) AS \"srid!\",\n            GeometryType(geom) AS \"geom_type!: GeometryType\"\n        FROM app.project_features pf\n        JOIN app.projects p ON p.id = pf.project_id\n        JOIN app.collections c ON c.id = pf.collection_id\n        WHERE pf.id = $1\n        AND p.slug = $2\n        AND c.slug = $3\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "geom!",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 2,
+        "name": "srid!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "geom_type!: GeometryType",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "66d3713963b029ed2bbafb5b02f6d5effb1526aab2b1d57a5c39191028f75df5"
+}

@@ -13,9 +13,9 @@ impl std::fmt::Display for ProjectNameInputDTO {
 impl ProjectNameInputDTO {
     pub fn parse(s: String) -> Result<ProjectNameInputDTO, String> {
         validate_name(&s)?;
-        if s.trim().parse::<i64>().is_ok() {
-            return Err("name cannot be an integer".into());
-        };
+        if !s.chars().any(|c| c.is_alphabetic()) {
+            return Err("name must contain at least one letter".to_string());
+        }
         Ok(Self(s))
     }
 }
@@ -36,7 +36,7 @@ pub fn validate_name(s: &str) -> Result<(), String> {
             "name is greater than max of {max_chars} characters"
         ));
     }
-    let forbidden_characters = ['/', '(', ')', '"', '<', '>', '\\', '{', '}'];
+    let forbidden_characters = ['/', '"', '<', '>', '\\', '{', '}'];
     if let Some(char) = s.chars().find(|char| forbidden_characters.contains(char)) {
         return Err(format!("name contains forbidden character: '{char}'"));
     }
@@ -87,8 +87,9 @@ mod tests {
     }
 
     #[test]
-    fn names_cannot_be_integers() {
-        let name = "1".to_string();
-        assert_err!(ProjectNameInputDTO::parse(name));
+    fn names_must_contain_at_least_one_letter() {
+        for name in &["1", "123", "!!", "42-7"] {
+            assert_err!(ProjectNameInputDTO::parse(name.to_string()));
+        }
     }
 }

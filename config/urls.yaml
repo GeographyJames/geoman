@@ -8,11 +8,11 @@ api:
   users: "/users"
   collections: "/collections"
   app_settings: "/app-settings"
-  project_features: "/features"
+  project_features: "/site-features"
   epsg: "/epsg"
   teams: "/teams"
   business_units: "/business-units"
-  turbine_layouts: "/turbine_layouts"
+  turbine_layouts: "/turbine-layouts"
 
 docs:
   base: "/docs"

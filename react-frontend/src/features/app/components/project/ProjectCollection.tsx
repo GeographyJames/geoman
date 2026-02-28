@@ -51,11 +51,15 @@ export const ProjectCollection = ({
   showArchived,
   visibilityMap,
   setVisibilityMap,
+  projectSlug,
+  collectionSlug,
 }: {
   data: ProjectCollectionItems;
   showArchived: boolean;
   visibilityMap: Record<number, boolean>;
   setVisibilityMap: Dispatch<SetStateAction<Record<number, boolean>>>;
+  projectSlug: string;
+  collectionSlug: string;
 }) => {
   const features = showArchived
     ? data.features
@@ -104,6 +108,8 @@ export const ProjectCollection = ({
             onVisibleChange={(val) =>
               setVisibilityMap((prev) => ({ ...prev, [f.id]: val }))
             }
+            projectSlug={projectSlug}
+            collectionSlug={collectionSlug}
           >
             {hasArea && (
               <td className="p-0 hidden sm:table-cell">
@@ -159,11 +165,15 @@ export function SiteDataTableRow({
   item,
   visible,
   onVisibleChange,
+  projectSlug,
+  collectionSlug,
 }: {
   children: ReactNode;
   item: ProjectCollectionItem;
   visible: boolean;
   onVisibleChange: (val: boolean) => void;
+  projectSlug: string;
+  collectionSlug: string;
 }) {
   useFeatureLayer(
     visible ? item : undefined,
@@ -234,7 +244,7 @@ export function SiteDataTableRow({
         />
       </td>
       <td className="px-0 py-1 text-right">
-        <FeatureActionsDropdown item={item} zoomToFeature={zoomToFeature} />
+        <FeatureActionsDropdown item={item} zoomToFeature={zoomToFeature} projectSlug={projectSlug} collectionSlug={collectionSlug} />
       </td>
     </tr>
   );

@@ -4,7 +4,7 @@ CREATE TABLE app.projects (
     search_area_id integer REFERENCES app.search_areas(id),
     search_site_name text,
     name text NOT NULL,
-    slug text NOT NULL,
+    slug text NOT NULL CHECK (slug ~ '[a-z]' AND slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
     status app.status NOT NULL DEFAULT 'ACTIVE',
     visibility app.visibility NOT NULL DEFAULT 'PUBLIC',
     owner integer NOT NULL REFERENCES app.users(id),

@@ -7,7 +7,7 @@ export const useDownloadFeatureShapefile = () => {
   const { addFlash } = useFlash();
   const [isLoading, setIsLoading] = useState(false);
 
-  const download = async (featureId: number) => {
+  const download = async (featureId: number, projectSlug: string, collectionSlug: string) => {
     setIsLoading(true);
     try {
       let token: string | null = null;
@@ -15,7 +15,7 @@ export const useDownloadFeatureShapefile = () => {
         token = await getToken();
       }
 
-      const response = await fetch(`/api/features/${featureId}`, {
+      const response = await fetch(`${__URLS__.api.base}${__URLS__.api.project_features}/${projectSlug}/${collectionSlug}/${featureId}?format=shapefile`, {
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),
         },

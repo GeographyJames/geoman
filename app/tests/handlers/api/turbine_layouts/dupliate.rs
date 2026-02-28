@@ -6,7 +6,7 @@ use domain::{FeatureId, LayoutId, TeamId};
 
 use crate::common::{
     AppBuilder, Auth,
-    helpers::{assert_ok, assert_status, handle_json_response},
+    helpers::{assert_status, handle_json_response},
 };
 
 #[tokio::test]
@@ -36,9 +36,7 @@ async fn duplicate_turbine_layout_works() {
         primary: None,
     };
     let response = app
-        .features_service
         .duplicate_feature(
-            &app.api_client,
             Some(&auth),
             &updated_layout,
             project_id,

@@ -1,5 +1,5 @@
 /// Appplication repository
-use domain::{KeyId, LayoutId, ProjectCollectionId, ProjectId, UserId, enums::GeometryType, name::NameInputDTO};
+use domain::{FeatureId, KeyId, ProjectCollectionId, ProjectId, UserId, enums::GeometryType};
 use futures::Stream;
 use sqlx::PgPool;
 
@@ -134,6 +134,22 @@ impl PostgresRepo {
         Ok(())
     }
 
+    #[tracing::instrument(skip(self))]
+    pub async fn get_project_feature_for_download(
+        &self,
+        feature_id: FeatureId,
+        project_slug: &str,
+        collection_slug: &str,
+    ) -> Result<Option<super::project_features::get::ProjectFeatureDownload>, RepositoryError> {
+        super::project_features::get::get_project_feature_for_download(
+            &self.db_pool,
+            feature_id,
+            project_slug,
+            collection_slug,
+        )
+        .await
+    }
+
     #[tracing::instrument(skip(self, id))]
     pub async fn get_collection_geom_type(
         &self,
@@ -153,29 +169,5 @@ impl PostgresRepo {
             .fetch_one(&self.db_pool)
             .await?;
         Ok(srid)
-    }
-
-    #[tracing::instrument(skip(self, name))]
-    pub async fn duplicate_turbine_layout(
-        &self,
-        project_id: ProjectId,
-        source_layout_id: LayoutId,
-        user_id: UserId,
-        name: Option<NameInputDTO>,
-        hub_height_mm: Option<i32>,
-        rotor_diameter_mm: Option<i32>,
-        primary: Option<bool>,
-    ) -> Result<LayoutId, RepositoryError> {
-        super::turbine_layouts::duplicate::duplicate_turbine_layout(
-            &self.db_pool,
-            project_id,
-            source_layout_id,
-            user_id,
-            name,
-            hub_height_mm,
-            rotor_diameter_mm,
-            primary,
-        )
-        .await
     }
 }

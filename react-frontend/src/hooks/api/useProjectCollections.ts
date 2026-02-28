@@ -10,6 +10,7 @@ export interface CollectionsResponse {
 export interface Collection {
      title: string
      id: string
+     slug: string
      geometry_type: string
      description?: string | null
      project_id?: number | null

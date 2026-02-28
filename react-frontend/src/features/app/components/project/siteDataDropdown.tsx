@@ -183,6 +183,8 @@ export const SiteDataDropdown = ({
             showArchived={showArchived}
             visibilityMap={visibilityMap}
             setVisibilityMap={setVisibilityMap}
+            projectSlug={project.slug}
+            collectionSlug={collection.slug}
           />
         )}
       </div>

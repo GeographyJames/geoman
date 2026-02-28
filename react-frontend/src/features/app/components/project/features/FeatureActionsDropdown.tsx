@@ -12,9 +12,13 @@ import { TURBINE_LAYOUT_CCOLLECTION_ID } from "@/constants";
 export const FeatureActionsDropdown = ({
   item,
   zoomToFeature,
+  projectSlug,
+  collectionSlug,
 }: {
   item: ProjectCollectionItem;
   zoomToFeature: () => void;
+  projectSlug: string;
+  collectionSlug: string;
 }) => {
   const { mutate: patchProjectFeature } = usePatchProjectFeature();
   const { download, isLoading: isDownloading } = useDownloadFeatureShapefile();
@@ -38,18 +42,21 @@ export const FeatureActionsDropdown = ({
         }}>zoom to feature</button>
       </li>
       <li>
-        <button
-          disabled={isDownloading}
+        <a
+          href={`${__URLS__.api.base}${__URLS__.api.project_features}/${projectSlug}/${collectionSlug}/${item.id}?format=shapefile`}
+          aria-disabled={isDownloading}
           onClick={async (e) => {
+            e.preventDefault();
+            if (isDownloading) return;
             const popover = (e.currentTarget as HTMLElement).closest(
               "[popover]",
             ) as HTMLElement | null;
-            await download(item.id);
+            await download(item.id, projectSlug, collectionSlug);
             popover?.hidePopover();
           }}
         >
           {isDownloading ? "downloading..." : "download shapefile"}
-        </button>
+        </a>
       </li>
       <li>
         <button onClick={() => requestEdit(item)}>edit</button>

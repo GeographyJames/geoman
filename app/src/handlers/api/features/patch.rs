@@ -1,5 +1,7 @@
 use actix_web::{HttpResponse, patch, web};
-use domain::{FeatureId, LayoutId, ProjectCollectionId, ProjectFeatureId, ProjectId, enums::Status};
+use domain::{
+    FeatureId, LayoutId, ProjectCollectionId, ProjectFeatureId, ProjectId, enums::Status,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{

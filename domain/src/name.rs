@@ -11,11 +11,11 @@ impl std::fmt::Display for NameInputDTO {
 
 impl NameInputDTO {
     pub fn parse(s: String) -> Result<NameInputDTO, String> {
-        if s.trim().parse::<i64>().is_ok() {
-            return Err("cannot be an integer".into());
-        };
         if s.trim().is_empty() {
             return Err("cannot be empty".to_string());
+        }
+        if !s.chars().any(|c| c.is_alphabetic()) {
+            return Err("must contain at least one letter".to_string());
         }
         let max_chars = 256;
         if s.graphemes(true).count() > max_chars {
