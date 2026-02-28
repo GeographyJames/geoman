@@ -1,6 +1,7 @@
 import { SignedIn, UserButton } from "@clerk/clerk-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Route } from "@/routes/admin";
+import { Map } from "lucide-react";
 
 import ApiKeysSection from "./sections/apiKey/ApiKeysSection";
 import TeamsSection from "./sections/TeamsSection";
@@ -22,7 +23,8 @@ export default function AdminPage() {
       {/* Header */}
       <div className="navbar bg-base-100 border-b border-base-300">
         <div className="flex-1">
-          <a href="/" className="btn btn-ghost text-xl font-bold">
+          <a href="/" className="btn btn-ghost text-xl font-bold gap-2">
+            <Map size={24} />
             GeoMan
           </a>
           <div className="ml-4">

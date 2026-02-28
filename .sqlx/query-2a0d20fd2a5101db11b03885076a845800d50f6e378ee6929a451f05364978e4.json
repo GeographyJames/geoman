@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE app.turbine_layouts\n            SET status = COALESCE($1, status),\n                is_primary = COALESCE($2, is_primary),\n                name = COALESCE($3, name),\n                last_updated = NOW(),\n                last_updated_by = $4\n            WHERE id = $5\n              AND project_id = $6\n            RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "app.status",
+            "kind": {
+              "Enum": [
+                "ACTIVE",
+                "ARCHIVED",
+                "DELETED"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Text",
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2a0d20fd2a5101db11b03885076a845800d50f6e378ee6929a451f05364978e4"
+}

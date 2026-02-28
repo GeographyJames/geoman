@@ -5,7 +5,9 @@ import { usePatchProjectFeature } from "@/hooks/api/projectFeature.ts/usePatchPr
 import { useDownloadFeatureShapefile } from "@/hooks/api/projectFeature.ts/useDownloadFeatureShapefile";
 import { useFlash } from "@/features/app/contexts/FlashMessageContext";
 import { useEditFeature } from "@/features/app/contexts/EditFeatureContext";
+import { useDuplicateTurbineLayoutContext } from "@/features/app/contexts/DuplicateTurbineLayoutContext";
 import { DeleteFeatureButton } from "./DeleteFeatureButton";
+import { TURBINE_LAYOUT_CCOLLECTION_ID } from "@/constants";
 
 export const FeatureActionsDropdown = ({
   item,
@@ -18,6 +20,7 @@ export const FeatureActionsDropdown = ({
   const { download, isLoading: isDownloading } = useDownloadFeatureShapefile();
   const { addFlash } = useFlash();
   const { requestEdit } = useEditFeature();
+  const { requestDuplicate } = useDuplicateTurbineLayoutContext();
   const action =
     item.properties.status === "ARCHIVED" ? "unarchive" : "archive";
   return (
@@ -51,6 +54,21 @@ export const FeatureActionsDropdown = ({
       <li>
         <button onClick={() => requestEdit(item)}>edit</button>
       </li>
+      {item.properties.collection_id === TURBINE_LAYOUT_CCOLLECTION_ID && (
+        <li>
+          <button
+            onClick={(e) => {
+              requestDuplicate(item);
+              const popover = (e.currentTarget as HTMLElement).closest(
+                "[popover]",
+              ) as HTMLElement | null;
+              popover?.hidePopover();
+            }}
+          >
+            duplicate
+          </button>
+        </li>
+      )}
       <li>
         {item.properties.is_primary ? (
           <div

@@ -1,6 +1,8 @@
 use std::fmt::Display;
 
 use crate::common::{Auth, constants::REQUEST_FAILED, helpers::auth_request, services::HttpClient};
+use app::URLS;
+use domain::{FeatureId, ProjectCollectionId, ProjectId};
 use reqwest::Response;
 use serde::Serialize;
 
@@ -77,6 +79,32 @@ impl HttpService {
             client
                 .post(&format!("{}/{}", self.endpoint, id))
                 .multipart(form),
+            auth,
+        )
+        .send()
+        .await
+        .expect(REQUEST_FAILED)
+    }
+    pub async fn duplicate_feature<B: Serialize>(
+        &self,
+        client: &HttpClient,
+        auth: Option<&Auth>,
+        body: &B,
+        project_id: ProjectId,
+        collection_id: ProjectCollectionId,
+        feature_id: i32,
+    ) -> Response {
+        auth_request(
+            client
+                .post(&format!(
+                    "{}{}/{}/{}/{}/duplicate",
+                    URLS.api.base,
+                    URLS.api.project_features,
+                    project_id.0,
+                    collection_id.0,
+                    feature_id
+                ))
+                .json(body),
             auth,
         )
         .send()

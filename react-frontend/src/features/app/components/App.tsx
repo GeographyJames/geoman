@@ -20,6 +20,8 @@ import { EditProjectCollectionProvider } from "../contexts/EditProjectCollection
 import { EditProjectCollectionForm } from "./forms/EditProjectCollection";
 import { DeleteProjectCollectionProvider } from "../contexts/DeleteProjectCollectionContext";
 import { DeleteProjectCollectionForm } from "./forms/DeleteProjectCollection";
+import { DuplicateTurbineLayoutProvider } from "../contexts/DuplicateTurbineLayoutContext";
+import { DuplicateTurbineLayoutForm } from "./forms/DuplicateTurbineLayout";
 
 const CreateProjectForm = lazy(() =>
   import("@/features/app/components/forms/CreateProject").then((module) => ({
@@ -41,18 +43,21 @@ export const App = () => {
                       <CreateProjectCollectionProvider>
                         <EditProjectCollectionProvider>
                           <DeleteProjectCollectionProvider>
-                            <Drawer />
-                            <Suspense fallback={null}>
-                              <CreateProjectForm />
-                              <DeleteFeatureForm />
-                              <EditFeatureForm />
-                              <EditProjectForm />
-                              <AddSiteFeatureForm />
-                              <DeleteProjectForm />
-                              <CreateProjectCollectionForm />
-                              <EditProjectCollectionForm />
-                              <DeleteProjectCollectionForm />
-                            </Suspense>
+                            <DuplicateTurbineLayoutProvider>
+                              <Drawer />
+                              <Suspense fallback={null}>
+                                <CreateProjectForm />
+                                <DeleteFeatureForm />
+                                <EditFeatureForm />
+                                <EditProjectForm />
+                                <AddSiteFeatureForm />
+                                <DeleteProjectForm />
+                                <CreateProjectCollectionForm />
+                                <EditProjectCollectionForm />
+                                <DeleteProjectCollectionForm />
+                                <DuplicateTurbineLayoutForm />
+                              </Suspense>
+                            </DuplicateTurbineLayoutProvider>
                           </DeleteProjectCollectionProvider>
                         </EditProjectCollectionProvider>
                       </CreateProjectCollectionProvider>

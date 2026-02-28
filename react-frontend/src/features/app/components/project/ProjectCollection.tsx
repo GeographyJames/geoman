@@ -81,7 +81,7 @@ export const ProjectCollection = ({
         )}
         {isTurbineLayout && (
           <>
-            <th className="hidden sm:table-cell landscape:table-cell w-14 p-0 pr-2 text-right">
+            <th className="hidden sm:table-cell landscape:table-cell w-14 p-0">
               No. of
               <br />
               turbines
@@ -89,7 +89,7 @@ export const ProjectCollection = ({
             <th className="w-14 p-0 hidden sm:table-cell text-wrap">
               Rotor diameter
             </th>
-            <th className="w-12 p-0 hidden sm:table-cell text-wrap">
+            <th className="w-14 p-0 hidden sm:table-cell text-wrap">
               Hub height
             </th>
           </>
@@ -114,7 +114,7 @@ export const ProjectCollection = ({
             )}
             {isTurbineLayout && (
               <>
-                <td className=" hidden sm:table-cell landscape:table-cell p-0 pr-2 text-right">
+                <td className=" hidden sm:table-cell landscape:table-cell p-0 pr-2">
                   {f.properties.turbine_count ?? ""}
                 </td>
                 <td className="p-0 hidden sm:table-cell">
@@ -146,7 +146,7 @@ export function SiteDataTableHeadings({ children }: { children: ReactNode }) {
         {children}
         <th className="w-16 p-0 hidden sm:table-cell">CRS ID</th>
 
-        <th className="w-8 p-0 text-center">Primary</th>
+        <th className="w-12 p-0 text-center">Primary</th>
         <th className="w-8 hidden sm:table-cell"></th>
         <th className="w-8"></th>
       </tr>
@@ -193,7 +193,7 @@ export function SiteDataTableRow({
           ></input>
         </div>
       </td>
-      <td className="p-0 text-wrap break-words ">
+      <td className="p-0 text-wrap break-words pr-2">
         <label
           htmlFor={`c${item.properties.collection_id}item${item.id}`}
           className="cursor-pointer"

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE app.turbine_layouts\n                SET is_primary = false,\n                    last_updated = NOW(),\n                    last_updated_by = $1\n                WHERE project_id = $2\n                  AND is_primary = true",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "808da2691f5f91e4b882b37c9e04762c097b28b392db5d2d900b00c7733a1d21"
+}
