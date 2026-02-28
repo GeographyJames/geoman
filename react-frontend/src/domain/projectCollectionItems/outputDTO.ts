@@ -26,6 +26,9 @@ export interface ProjectCollectionItem extends GeoJSON.Feature {
         collection_id: number,
         collection_title: string,
         area_ellipsoidal_m2?: number
+        rotor_diameter_mm?: number | null
+        hub_height_mm?: number | null
+        turbine_count?: number
 
 
     }

@@ -29,6 +29,9 @@ struct TurbineLayoutRow {
     pub last_updated_by: LastUpdatedBy,
     pub geometry: Json<Geometry>,
     pub number_matched: i64,
+    pub rotor_diameter_mm: Option<i32>,
+    pub hub_height_mm: Option<i32>,
+    pub turbine_count: i64,
 }
 
 impl TryInto<TurbineLayout> for TurbineLayoutRow {
@@ -48,6 +51,9 @@ impl TryInto<TurbineLayout> for TurbineLayoutRow {
             last_updated,
             last_updated_by,
             geometry,
+            rotor_diameter_mm,
+            hub_height_mm,
+            turbine_count,
             ..
         } = self;
         Ok(TurbineLayout {
@@ -66,6 +72,9 @@ impl TryInto<TurbineLayout> for TurbineLayoutRow {
                 added_by,
                 last_updated,
                 last_updated_by,
+                rotor_diameter_mm,
+                hub_height_mm,
+                turbine_count,
             },
             geometry: geometry.0,
         })
@@ -107,7 +116,16 @@ impl SelectAllWithParamsStreaming for TurbineLayout {
                 tl.last_updated,
                 ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name, t_ub.business_unit_id)::app.team))::app.user AS "last_updated_by!: LastUpdatedBy",
                 ST_AsGeoJSON(ST_Transform(ST_Collect(t.geom), $1))::jsonb AS "geometry!: Json<Geometry>",
-                COUNT(*) OVER () AS "number_matched!"
+                COUNT(*) OVER () AS "number_matched!",
+                CASE WHEN COUNT(DISTINCT t.rotor_diameter_mm) = 1
+                     THEN MIN(t.rotor_diameter_mm)::int
+                     ELSE NULL
+                END AS rotor_diameter_mm,
+                CASE WHEN COUNT(DISTINCT t.hub_height_mm) = 1
+                     THEN MIN(t.hub_height_mm)::int
+                     ELSE NULL
+                END AS hub_height_mm,
+                COUNT(t.id) AS "turbine_count!"
             FROM app.turbine_layouts tl
             JOIN app.collections c ON c.id = -1
             JOIN app.turbines t ON t.layout_id = tl.id
@@ -172,7 +190,16 @@ impl SelectOneWithParams<FeatureId> for TurbineLayout {
                 tl.last_updated,
                 ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name, t_ub.business_unit_id)::app.team))::app.user AS "last_updated_by!: LastUpdatedBy",
                 ST_AsGeoJSON(ST_Transform(ST_Collect(t.geom), $1))::jsonb AS "geometry!: Json<Geometry>",
-                1::bigint AS "number_matched!"
+                1::bigint AS "number_matched!",
+                CASE WHEN COUNT(DISTINCT t.rotor_diameter_mm) = 1
+                     THEN MIN(t.rotor_diameter_mm)::int
+                     ELSE NULL
+                END AS rotor_diameter_mm,
+                CASE WHEN COUNT(DISTINCT t.hub_height_mm) = 1
+                     THEN MIN(t.hub_height_mm)::int
+                     ELSE NULL
+                END AS hub_height_mm,
+                COUNT(t.id) AS "turbine_count!"
             FROM app.turbine_layouts tl
             JOIN app.collections c ON c.id = -1
             JOIN app.turbines t ON t.layout_id = tl.id

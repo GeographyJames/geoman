@@ -10,7 +10,7 @@ import { useFeatureLayer, useZoomToFeature } from "@/hooks/useFeatureLayer";
 import { Stroke, Fill, Style, Circle } from "ol/style";
 
 import { FeatureActionsDropdown } from "./features/FeatureActionsDropdown";
-import { dateFormat } from "@/constants";
+import { dateFormat, TURBINE_LAYOUT_CCOLLECTION_ID } from "@/constants";
 
 const primaryStyle = new Style({
   stroke: new Stroke({
@@ -69,11 +69,30 @@ export const ProjectCollection = ({
     (f) => f.properties.area_ellipsoidal_m2 != null,
   );
 
+  const isTurbineLayout =
+    data.features[0]?.properties.collection_id ===
+    TURBINE_LAYOUT_CCOLLECTION_ID;
+
   return (
     <table className="table table-fixed table-xs">
       <SiteDataTableHeadings>
         {hasArea && (
           <th className="w-18 p-0 hidden sm:table-cell">Area (ha)</th>
+        )}
+        {isTurbineLayout && (
+          <>
+            <th className="hidden sm:table-cell landscape:table-cell w-14 p-0 pr-2 text-right">
+              no. of
+              <br />
+              turbines
+            </th>
+            <th className="w-14 p-0 hidden sm:table-cell text-wrap">
+              rotor diameter
+            </th>
+            <th className="w-12 p-0 hidden sm:table-cell text-wrap">
+              hub height
+            </th>
+          </>
         )}
       </SiteDataTableHeadings>
       <tbody>
@@ -93,6 +112,23 @@ export const ProjectCollection = ({
                   : ""}
               </td>
             )}
+            {isTurbineLayout && (
+              <>
+                <td className=" hidden sm:table-cell landscape:table-cell p-0 pr-2 text-right">
+                  {f.properties.turbine_count ?? ""}
+                </td>
+                <td className="p-0 hidden sm:table-cell">
+                  {f.properties.rotor_diameter_mm != null
+                    ? `${(f.properties.rotor_diameter_mm / 1000).toLocaleString()}m`
+                    : ""}
+                </td>
+                <td className="p-0 hidden sm:table-cell">
+                  {f.properties.hub_height_mm != null
+                    ? `${(f.properties.hub_height_mm / 1000).toLocaleString()}m`
+                    : ""}
+                </td>
+              </>
+            )}
           </SiteDataTableRow>
         ))}
       </tbody>
@@ -102,15 +138,15 @@ export const ProjectCollection = ({
 
 export function SiteDataTableHeadings({ children }: { children: ReactNode }) {
   return (
-    <thead>
+    <thead className="text-xs">
       <tr>
         <th className="w-12 p-0">Id</th>
         <th className="w-6 p-0"></th>
         <th className="p-0">Name</th>
         {children}
-        <th className="w-18 p-0 hidden sm:table-cell">CRS ID</th>
+        <th className="w-16 p-0 hidden sm:table-cell">CRS ID</th>
 
-        <th className="w-11 p-0 text-center">Primary</th>
+        <th className="w-8 p-0 text-center">Primary</th>
         <th className="w-8 hidden sm:table-cell"></th>
         <th className="w-8"></th>
       </tr>

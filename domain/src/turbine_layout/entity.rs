@@ -27,6 +27,9 @@ pub struct Properties {
     #[serde(flatten)]
     pub last_updated_by: LastUpdatedBy,
     pub collection_title: String,
+    pub rotor_diameter_mm: Option<i32>,
+    pub hub_height_mm: Option<i32>,
+    pub turbine_count: i64,
 }
 
 impl IntoOGCFeature for TurbineLayout {
