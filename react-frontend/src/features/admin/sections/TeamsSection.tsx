@@ -195,7 +195,7 @@ function UnassignedUsersCard({
       <div className="card-body gap-3">
         <h3 className="card-title text-base flex items-center gap-2">
           <Users size={16} />
-          Unassigned Users
+          Guests
         </h3>
         <ul className="space-y-1">
           {[...users]
@@ -294,7 +294,7 @@ function TeamGroup({
   onEditBU,
   onDeleteBU,
 }: {
-  label: string;
+  label?: string;
   teams: Team[];
   users: User[];
   onEdit: (team: Team) => void;
@@ -314,38 +314,40 @@ function TeamGroup({
 
   return (
     <div className="mb-8">
-      <div className="flex items-center gap-2 mb-3">
-        <h2 className="text-lg font-semibold text-base-content/80">{label}</h2>
-        {businessUnit && currentUser?.isAdmin && onEditBU && onDeleteBU && (
-          <div className="flex gap-1">
-            <button
-              type="button"
-              className="btn btn-ghost btn-xs"
-              title="Edit business unit"
-              onClick={() => {
-                onEditBU(businessUnit);
-                openEditBusinessUnitModal();
-              }}
-            >
-              <Pencil size={14} />
-            </button>
-            <button
-              type="button"
-              className={`btn btn-ghost btn-xs ${teams.length > 0 ? "text-base-content/30" : "text-error"}`}
-              title="Delete business unit"
-              disabled={teams.length > 0}
-              onClick={() => {
-                onDeleteBU(businessUnit);
-                openDeleteBusinessUnitModal();
-              }}
-            >
-              <Trash2 size={14} />
-            </button>
-          </div>
-        )}
-      </div>
+      {label != null && (
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-lg font-semibold text-base-content/80">{label}</h2>
+          {businessUnit && currentUser?.isAdmin && onEditBU && onDeleteBU && (
+            <div className="flex gap-1">
+              <button
+                type="button"
+                className="btn btn-ghost btn-xs"
+                title="Edit business unit"
+                onClick={() => {
+                  onEditBU(businessUnit);
+                  openEditBusinessUnitModal();
+                }}
+              >
+                <Pencil size={14} />
+              </button>
+              <button
+                type="button"
+                className={`btn btn-ghost btn-xs ${teams.length > 0 ? "text-base-content/30" : "text-error"}`}
+                title="Delete business unit"
+                disabled={teams.length > 0}
+                onClick={() => {
+                  onDeleteBU(businessUnit);
+                  openDeleteBusinessUnitModal();
+                }}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
       {sortedTeams.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className={`grid grid-cols-1 gap-4 ${sortedTeams.length > 1 ? "sm:grid-cols-2" : ""}`}>
           {sortedTeams.map((team) => (
             <TeamCard
               key={team.id}
@@ -430,41 +432,48 @@ export default function TeamsSection() {
         )}
       </div>
 
-      {businessUnits.map((bu) => {
-        const buTeams = teams.filter((t) => t.businessUnitId === bu.id);
-        if (buTeams.length === 0 && !currentUser?.isAdmin) return null;
-        return (
+      {businessUnits
+        .filter((bu) => {
+          const buTeams = teams.filter((t) => t.businessUnitId === bu.id);
+          return buTeams.length > 0 || currentUser?.isAdmin;
+        })
+        .map((bu, i) => {
+          const buTeams = teams.filter((t) => t.businessUnitId === bu.id);
+          return (
+            <>
+              {i > 0 && <div className="divider" />}
+              <TeamGroup
+                key={bu.id}
+                label={bu.name}
+                teams={buTeams}
+                users={users}
+                onEdit={setEditingTeam}
+                onDelete={setDeletingTeam}
+                onDeleteUser={setDeletingUser}
+                businessUnit={bu}
+                onEditBU={setEditingBU}
+                onDeleteBU={setDeletingBU}
+              />
+            </>
+          );
+        })}
+
+      {unassignedTeams.length > 0 && (
+        <>
+          {businessUnits.length > 0 && <div className="divider" />}
           <TeamGroup
-            key={bu.id}
-            label={bu.name}
-            teams={buTeams}
+            teams={unassignedTeams}
             users={users}
             onEdit={setEditingTeam}
             onDelete={setDeletingTeam}
             onDeleteUser={setDeletingUser}
-            businessUnit={bu}
-            onEditBU={setEditingBU}
-            onDeleteBU={setDeletingBU}
           />
-        );
-      })}
-
-      {unassignedTeams.length > 0 && (
-        <TeamGroup
-          label="Unassigned"
-          teams={unassignedTeams}
-          users={users}
-          onEdit={setEditingTeam}
-          onDelete={setDeletingTeam}
-          onDeleteUser={setDeletingUser}
-        />
+        </>
       )}
 
       {unassignedUsers.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-3 text-base-content/80">
-            Unassigned Users
-          </h2>
+          {businessUnits.length > 0 && unassignedTeams.length === 0 && <div className="divider" />}
           <UnassignedUsersCard
             users={unassignedUsers}
             teams={teams}

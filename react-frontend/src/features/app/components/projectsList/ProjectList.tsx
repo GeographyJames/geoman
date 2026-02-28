@@ -47,7 +47,7 @@ function ProjectsList({ projects: projectsProp }: Props = {}) {
           <div>
             <SortBy sortBy={sortBy} setSortBy={setSortBy} />
           </div>
-          <div className=" flex flex-col gap-2">
+          <div className=" flex flex-col gap-2 items-end">
             <CreateButton
               text="Create project"
               onClick={() => {

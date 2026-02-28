@@ -18,9 +18,8 @@ export default function CollectionsSection() {
   const [editingCollection, setEditingCollection] = useState<Collection | null>(
     null,
   );
-  const [deletingCollection, setDeletingCollection] = useState<Collection | null>(
-    null,
-  );
+  const [deletingCollection, setDeletingCollection] =
+    useState<Collection | null>(null);
 
   const { data: collections = [], isLoading, error } = useCollections();
   const { data: currentUser } = useCurrentUser();
@@ -28,7 +27,7 @@ export default function CollectionsSection() {
     <>
       {/* Page Header */}
       <div className="mb-6">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between gap-2">
           <div>
             <h1 className="text-2xl font-semibold mb-1">Global Collections</h1>
             <p className="text-base-content/70">
@@ -100,8 +99,12 @@ export default function CollectionsSection() {
                         {collection.geometry_type}
                       </div>
                     </td>
-                    <td className="text-sm">{collection.active_feature_count}</td>
-                    <td className="text-sm">{collection.archived_feature_count}</td>
+                    <td className="text-sm">
+                      {collection.active_feature_count}
+                    </td>
+                    <td className="text-sm">
+                      {collection.archived_feature_count}
+                    </td>
                     <td>
                       <UserInitials
                         firstName={collection.added_by_first_name}
@@ -120,8 +123,10 @@ export default function CollectionsSection() {
                           <button
                             onClick={() => {
                               setEditingCollection(collection);
-                              const el = document.getElementById("edit_collection");
-                              if (el instanceof HTMLDialogElement) el.showModal();
+                              const el =
+                                document.getElementById("edit_collection");
+                              if (el instanceof HTMLDialogElement)
+                                el.showModal();
                             }}
                             className="btn btn-ghost btn-sm gap-1"
                           >
@@ -131,8 +136,10 @@ export default function CollectionsSection() {
                           <button
                             onClick={() => {
                               setDeletingCollection(collection);
-                              const el = document.getElementById("delete_collection");
-                              if (el instanceof HTMLDialogElement) el.showModal();
+                              const el =
+                                document.getElementById("delete_collection");
+                              if (el instanceof HTMLDialogElement)
+                                el.showModal();
                             }}
                             className={`btn btn-ghost btn-sm gap-1 ${
                               collection.active_feature_count > 0 ||

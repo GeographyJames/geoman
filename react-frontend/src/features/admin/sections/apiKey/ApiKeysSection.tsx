@@ -44,7 +44,7 @@ export default function ApiKeysSection() {
     <>
       {/* Page Header */}
       <div className="mb-6">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between gap-2">
           <div>
             <h1 className="text-2xl font-semibold mb-1">API Keys</h1>
             <p className="text-base-content/70">
@@ -151,7 +151,8 @@ export default function ApiKeysSection() {
                           disabled={renewApiKeyMutation.isPending}
                           className="btn btn-ghost btn-sm text-primary gap-1"
                         >
-                          {renewApiKeyMutation.isPending && renewApiKeyMutation.variables === key.id ? (
+                          {renewApiKeyMutation.isPending &&
+                          renewApiKeyMutation.variables === key.id ? (
                             <span className="loading loading-spinner loading-xs"></span>
                           ) : (
                             <Plus size={14} />
