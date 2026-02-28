@@ -15,6 +15,9 @@ impl Insert for (&FeatureInputDTO, ProjectId, ProjectCollectionId, UserId) {
         let feature_id: FeatureId = sqlx::query_scalar!(
             r#"
 
+                WITH g AS (
+                    SELECT ST_Transform(ST_GeomFromWKB($6, $7), $8::int) AS geom
+                )
                 INSERT INTO app.project_features (
                             project_id,
                             collection_id,
@@ -22,10 +25,20 @@ impl Insert for (&FeatureInputDTO, ProjectId, ProjectCollectionId, UserId) {
                             added_by,
                             last_updated_by,
                             is_primary,
-                            geom
+                            geom,
+                            properties
                             )
-                            VALUES ($1, $2, $3, $4, $4, COALESCE($5, NOT EXISTS(SELECT 1 FROM app.project_features WHERE collection_id = $2 AND project_id = $1 AND status = 'ACTIVE')), ST_Transform(ST_GeomFromWKB($6, $7), $8::int))
-                            RETURNING id AS "id: FeatureId"
+                SELECT
+                    $1, $2, $3, $4, $4,
+                    COALESCE($5, NOT EXISTS(SELECT 1 FROM app.project_features WHERE collection_id = $2 AND project_id = $1 AND status = 'ACTIVE')),
+                    geom,
+                    CASE
+                        WHEN ST_GeometryType(geom) IN ('ST_Polygon', 'ST_MultiPolygon')
+                        THEN jsonb_build_object('area_ellipsoidal_m2', ST_Area(ST_Transform(geom, 4326)::geography))
+                        ELSE '{}'::jsonb
+                    END
+                FROM g
+                RETURNING id AS "id: FeatureId"
 
         "#,
             project_id.0,
@@ -39,6 +52,7 @@ impl Insert for (&FeatureInputDTO, ProjectId, ProjectCollectionId, UserId) {
         )
         .fetch_one(&mut *conn)
         .await?;
+
         Ok(feature_id)
     }
 }

@@ -24,7 +24,8 @@ export interface ProjectCollectionItem extends GeoJSON.Feature {
         is_primary: boolean,
         project_id: number,
         collection_id: number,
-        collection_title: string
+        collection_title: string,
+        area_ellipsoidal_m2?: number
 
 
     }

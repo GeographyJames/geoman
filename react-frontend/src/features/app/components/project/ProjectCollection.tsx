@@ -42,6 +42,10 @@ const defaultStyle = new Style({
   }),
 });
 
+function formatArea(m2: number): string {
+  return `${(m2 / 10_000).toLocaleString(undefined, { maximumFractionDigits: 1 })} ha`;
+}
+
 export const ProjectCollection = ({
   data,
   showArchived,
@@ -61,10 +65,14 @@ export const ProjectCollection = ({
     return <p className="text-base-content/50 py-2 text-center">No features</p>;
   }
 
+  const hasArea = features.some(
+    (f) => f.properties.area_ellipsoidal_m2 != null,
+  );
+
   return (
     <table className="table table-fixed table-xs">
       <SiteDataTableHeadings>
-        <></>
+        {hasArea && <th className="w-18 p-0 hidden sm:table-cell">Area</th>}
       </SiteDataTableHeadings>
       <tbody>
         {features.map((f) => (
@@ -76,7 +84,13 @@ export const ProjectCollection = ({
               setVisibilityMap((prev) => ({ ...prev, [f.id]: val }))
             }
           >
-            <></>
+            {hasArea && (
+              <td className="p-0 hidden sm:table-cell">
+                {f.properties.area_ellipsoidal_m2 != null
+                  ? formatArea(f.properties.area_ellipsoidal_m2)
+                  : ""}
+              </td>
+            )}
           </SiteDataTableRow>
         ))}
       </tbody>
@@ -91,8 +105,9 @@ export function SiteDataTableHeadings({ children }: { children: ReactNode }) {
         <th className="w-12 p-0">Id</th>
         <th className="w-6 p-0"></th>
         <th className="p-0">Name</th>
-        <th className="w-16 p-0 hidden sm:table-cell">CRS ID</th>
         {children}
+        <th className="w-18 p-0 hidden sm:table-cell">CRS ID</th>
+
         <th className="w-11 p-0 text-center">Primary</th>
         <th className="w-8 hidden sm:table-cell"></th>
         <th className="w-8"></th>
@@ -160,12 +175,13 @@ export function SiteDataTableRow({
           </span>
         </label>
       </td>
+
+      {children}
       <td
         className={`p-0  hidden sm:table-cell ${item.properties.status === "ARCHIVED" ? "text-base-content/50" : ""}`}
       >
         {`EPSG:${item.properties.storage_crs_srid}`}
       </td>
-      {children}
 
       <td className="p-0">
         <div className="flex justify-center">
