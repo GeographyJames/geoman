@@ -256,7 +256,29 @@ const AddSiteFeatureInner = () => {
         ))}
       </Select>
       <fieldset className="fieldset w-full">
-        <legend className="fieldset-legend">Shapefiles</legend>
+        <legend className="fieldset-legend flex items-center gap-1">
+          Shapefiles
+          <div className="dropdown">
+            <div
+              tabIndex={0}
+              role="button"
+              className="btn btn-circle btn-ghost btn-xs text-info"
+            >
+              <FaCircleInfo size={14} />
+            </div>
+            <div
+              tabIndex={0}
+              className="card card-sm dropdown-content bg-base-100 rounded-box z-1 w-80 shadow-sm whitespace-normal"
+            >
+              <div className="card-body font-normal">
+                <p>
+                  Select all essential shapefile components (.shp, .dbf, .prj, &
+                  .shx) together, or upload a single zipped shapefile (.shz).
+                </p>
+              </div>
+            </div>
+          </div>
+        </legend>
         <input
           {...register("files")}
           multiple={true}
