@@ -32,16 +32,20 @@ pub async fn dual_auth_middleware(
         .headers()
         .get(AUTHORIZATION)
         .and_then(|h| h.to_str().ok())
-        .ok_or_else(|| ErrorUnauthorized("Missing authorisation header"))?;
+        .map(|s| s.to_string());
 
-    let token = auth_header
-        .strip_prefix("Bearer ")
-        .ok_or_else(|| ErrorUnauthorized("Invalid authorisation format"))?
-        .to_string();
-
-    match token.starts_with("gman_") {
-        true => validate_api_key(req, next, &SecretBox::new(Box::new(token))).await,
-        false => validate_clerk_auth(req, next).await,
+    match auth_header {
+        Some(header) => {
+            let token = header
+                .strip_prefix("Bearer ")
+                .ok_or_else(|| ErrorUnauthorized("Invalid authorisation format"))?
+                .to_string();
+            match token.starts_with("gman_") {
+                true => validate_api_key(req, next, &SecretBox::new(Box::new(token))).await,
+                false => validate_clerk_auth(req, next).await,
+            }
+        }
+        None => validate_clerk_auth(req, next).await,
     }
 }
 
