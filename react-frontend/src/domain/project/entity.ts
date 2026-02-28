@@ -50,6 +50,10 @@ export default class Project {
 
     get latitude(): number| undefined {return this.outputDto.geometry?.coordinates[1]}
     get longitude(): number | undefined {return this.outputDto.geometry?.coordinates[0]}
+    get crsSrid(): number | null { return this.outputDto.properties.crs_srid }
+    get crsName(): string | null { return this.outputDto.properties.crs_name }
+    get centroidX(): number | null { return this.outputDto.properties.centroid_x }
+    get centroidY(): number | null { return this.outputDto.properties.centroid_y }
 
 
 }

@@ -43,7 +43,7 @@ const defaultStyle = new Style({
 });
 
 function formatArea(m2: number): string {
-  return `${(m2 / 10_000).toLocaleString(undefined, { maximumFractionDigits: 1 })} ha`;
+  return `${(m2 / 10_000).toLocaleString(undefined, { maximumFractionDigits: 1 })}`;
 }
 
 export const ProjectCollection = ({
@@ -72,7 +72,9 @@ export const ProjectCollection = ({
   return (
     <table className="table table-fixed table-xs">
       <SiteDataTableHeadings>
-        {hasArea && <th className="w-18 p-0 hidden sm:table-cell">Area</th>}
+        {hasArea && (
+          <th className="w-18 p-0 hidden sm:table-cell">Area (ha)</th>
+        )}
       </SiteDataTableHeadings>
       <tbody>
         {features.map((f) => (

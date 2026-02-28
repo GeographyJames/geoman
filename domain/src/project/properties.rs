@@ -23,4 +23,7 @@ pub struct Properties {
     pub slug: String,
     pub search_area_id: Option<i32>,
     pub search_site_name: Option<String>,
+    pub crs_name: Option<String>,
+    pub centroid_x: Option<f64>,
+    pub centroid_y: Option<f64>,
 }

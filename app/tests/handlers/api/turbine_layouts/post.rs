@@ -30,5 +30,5 @@ async fn post_turbine_layout_works() {
         .await
         .expect("failed to retrieve feature");
 
-    let feature: domain::ProjectFeature = ogc_feature.try_into().unwrap();
+    let _feature: domain::ProjectFeature = ogc_feature.try_into().unwrap();
 }

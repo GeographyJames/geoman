@@ -23,6 +23,7 @@ export interface ProjectProperties {
     status: Status;
     visibility: Visibility;
     crs_srid: number | null;
+    crs_name: string | null;
     // LastUpdatedBy fields (flattened)
     last_updated_by_id: number;
     last_updated_by_first_name: string;
@@ -32,4 +33,6 @@ export interface ProjectProperties {
     slug: string;
     search_area_id: number | null;
     search_site_name: string | null;
+    centroid_x: number | null;
+    centroid_y: number | null;
 }

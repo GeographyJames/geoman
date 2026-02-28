@@ -150,7 +150,50 @@ export const ProjectPanel = memo(({ project }: { project: Project }) => {
             aria-label="Information"
           />
           <div className="tab-content bg-base-100 border-base-300 p-6 rounded-sm shadow-lg">
-            Information goes here
+            <table className="table table-xs">
+              <tbody>
+                {project.latitude != null && (
+                  <tr>
+                    <td className="text-base-content/70 pl-0">Lat</td>
+                    <td>{project.latitude.toFixed(6)}</td>
+                  </tr>
+                )}
+                {project.longitude != null && (
+                  <tr>
+                    <td className="text-base-content/70 pl-0">Long</td>
+                    <td>{project.longitude.toFixed(6)}</td>
+                  </tr>
+                )}
+                {project.centroidX != null &&
+                  project.centroidY != null &&
+                  project.crsSrid != null && (
+                    <>
+                      {project.crsName && (
+                        <tr>
+                          <td className="text-base-content/70 pl-0">
+                            Project CRS
+                          </td>
+                          <td>
+                            {project.crsName} (EPSG:{project.crsSrid})
+                          </td>
+                        </tr>
+                      )}
+                      <tr>
+                        <td className="text-base-content/70 pl-0">
+                          X (EPSG:{project.crsSrid})
+                        </td>
+                        <td>{project.centroidX.toFixed(0)}</td>
+                      </tr>
+                      <tr>
+                        <td className="text-base-content/70 pl-0">
+                          Y (EPSG:{project.crsSrid})
+                        </td>
+                        <td>{project.centroidY.toFixed(0)}</td>
+                      </tr>
+                    </>
+                  )}
+              </tbody>
+            </table>
           </div>
           <input
             type="radio"

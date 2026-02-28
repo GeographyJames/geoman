@@ -64,7 +64,10 @@ fn project_query() -> String {
             {user_row_owner},
             {user_row_added_by},
             {user_row_last_updated_by},
-            ST_AsGeoJson(ST_Transform(pb.centroid, $1))::json AS geom
+            ST_AsGeoJson(ST_Transform(pb.centroid, $1))::json AS geom,
+            (SELECT substring(srtext from '"([^"]+)"') FROM spatial_ref_sys WHERE srid = p.crs_srid) AS crs_name,
+            ST_X(ST_Transform(pb.centroid, p.crs_srid)) AS centroid_x,
+            ST_Y(ST_Transform(pb.centroid, p.crs_srid)) AS centroid_y
         FROM app.projects p
         {user_join_owner}
         {user_join_added_by}

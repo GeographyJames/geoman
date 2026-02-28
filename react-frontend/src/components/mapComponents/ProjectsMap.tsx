@@ -175,6 +175,14 @@ function PopupContent({ project, projectsArray, onClose }: { project: Project; p
       </Link>
       <p>{`lat: ${project.latitude}`}</p>
       <p>{`long: ${project.longitude}`}</p>
+      {project.centroidX != null && project.centroidY != null && project.crsSrid != null && (
+        <>
+          {project.crsName && <p className="text-base-content/70 text-xs">{project.crsName}</p>}
+          {project.crsSrid && <p className="text-base-content/70 text-xs">EPSG:{project.crsSrid}</p>}
+          <p>{`X: ${project.centroidX.toFixed(0)}`}</p>
+          <p>{`Y: ${project.centroidY.toFixed(0)}`}</p>
+        </>
+      )}
     </>
   );
 }

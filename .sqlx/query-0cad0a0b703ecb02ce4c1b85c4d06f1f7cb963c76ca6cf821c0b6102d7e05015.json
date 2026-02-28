@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n\n                WITH g AS (\n                    SELECT ST_Transform(ST_GeomFromWKB($6, $7), $8::int) AS geom\n                )\n                INSERT INTO app.project_features (\n                            project_id,\n                            collection_id,\n                            name,\n                            added_by,\n                            last_updated_by,\n                            is_primary,\n                            geom,\n                            properties\n                            )\n                SELECT\n                    $1, $2, $3, $4, $4,\n                    COALESCE($5, NOT EXISTS(SELECT 1 FROM app.project_features WHERE collection_id = $2 AND project_id = $1 AND status = 'ACTIVE')),\n                    geom,\n                    CASE\n                        WHEN ST_GeometryType(geom) IN ('ST_Polygon', 'ST_MultiPolygon')\n                        THEN jsonb_build_object('area_ellipsoidal_m2', ST_Area(ST_Transform(geom, 4326)::geography))\n                        ELSE '{}'::jsonb\n                    END\n                FROM g\n                RETURNING id AS \"id: FeatureId\"\n\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: FeatureId",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Text",
+        "Int4",
+        "Bool",
+        "Bytea",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0cad0a0b703ecb02ce4c1b85c4d06f1f7cb963c76ca6cf821c0b6102d7e05015"
+}
