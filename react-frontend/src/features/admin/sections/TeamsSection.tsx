@@ -110,10 +110,13 @@ function TeamCard({
                       firstName={member.firstName}
                       lastName={member.lastName}
                     />
-                    <span className="text-sm">
+                    <span className={`text-sm ${currentUser?.id === member.id ? "font-bold" : ""}`}>
                       {member.firstName} {member.lastName}
+                      {currentUser?.id === member.id && (
+                        <span className="text-xs text-base-content/50 ml-1 font-normal">(you)</span>
+                      )}
                       {member.isAdmin && (
-                        <span className="text-xs text-base-content/50 ml-1">
+                        <span className="text-xs text-base-content/50 ml-1 font-normal">
                           (admin)
                         </span>
                       )}
@@ -139,33 +142,35 @@ function TeamCard({
                           >
                             <ShieldCheck size={16} />
                           </button>
-                          <button
-                            type="button"
-                            className="btn btn-ghost btn-xs text-error"
-                            title="Remove from team"
-                            disabled={isPending}
-                            onClick={() =>
-                              patchUser({
-                                userId: member.id,
-                                patch: { team_id: -1 },
-                              })
-                            }
-                          >
-                            <UserMinus size={16} />
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-ghost btn-xs text-error"
-                            title="Delete user"
-                            disabled={isPending}
-                            onClick={() => {
-                              onDeleteUser(member);
-                              openDeleteUserModal();
-                            }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
                         </>
+                      )}
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-xs text-error"
+                        title="Remove from team"
+                        disabled={isPending}
+                        onClick={() =>
+                          patchUser({
+                            userId: member.id,
+                            patch: { team_id: -1 },
+                          })
+                        }
+                      >
+                        <UserMinus size={16} />
+                      </button>
+                      {currentUser.id !== member.id && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-xs text-error"
+                          title="Delete user"
+                          disabled={isPending}
+                          onClick={() => {
+                            onDeleteUser(member);
+                            openDeleteUserModal();
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       )}
                     </div>
                   )}
@@ -191,7 +196,7 @@ function UnassignedUsersCard({
   const { data: currentUser } = useCurrentUser();
 
   return (
-    <div className="card border border-base-300 bg-base-100">
+    <div className={`card border border-base-300 ${users.some(u => u.id === currentUser?.id) ? "bg-primary/10" : "bg-base-100"}`}>
       <div className="card-body gap-3">
         <h3 className="card-title text-base flex items-center gap-2">
           <Users size={16} />
@@ -210,10 +215,13 @@ function UnassignedUsersCard({
                     firstName={user.firstName}
                     lastName={user.lastName}
                   />
-                  <span className="text-sm">
+                  <span className={`text-sm ${currentUser?.id === user.id ? "font-bold" : ""}`}>
                     {user.firstName} {user.lastName}
+                    {currentUser?.id === user.id && (
+                      <span className="text-xs text-base-content/50 ml-1 font-normal">(you)</span>
+                    )}
                     {user.isAdmin && (
-                      <span className="text-xs text-base-content/50 ml-1">
+                      <span className="text-xs text-base-content/50 ml-1 font-normal">
                         (admin)
                       </span>
                     )}
