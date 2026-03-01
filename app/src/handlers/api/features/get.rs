@@ -1,16 +1,14 @@
 use actix_web::{HttpResponse, get, web};
 use anyhow::Context;
 use domain::FeatureId;
-use gdal::{
-    spatial_ref::SpatialRef,
-    vector::LayerAccess,
-    vsi::{self, get_vsi_mem_file_bytes_owned},
-};
+use geo::shapefile_builder::{self, TurbineEntry};
 use serde::Deserialize;
 use strum::Display;
-use uuid::Uuid;
 
-use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
+use crate::{
+    AuthenticatedUser, constants::TURBINE_LAYOUTS_COLLECTION_ID, errors::ApiError,
+    postgres::PostgresRepo,
+};
 
 #[derive(Deserialize, Display)]
 #[serde(rename_all = "lowercase")]
@@ -79,9 +77,8 @@ async fn get_csv(
 
     let srid = rows[0].srid;
     let layout_name = &rows[0].layout_name;
-    let mut csv = format!(
-        "id,turbine_number,hub_height_m,rotor_diameter_m,x_epsg:{srid},y_epsg:{srid}\n"
-    );
+    let mut csv =
+        format!("id,turbine_number,hub_height_m,rotor_diameter_m,x_epsg:{srid},y_epsg:{srid}\n");
     let download_filename = download_filename(
         project_slug,
         collection_slug,
@@ -111,6 +108,109 @@ async fn get_csv(
         .body(csv))
 }
 
+async fn get_shapefile(
+    repo: &PostgresRepo,
+    feature_id: FeatureId,
+    project_slug: &str,
+    collection_slug: &str,
+) -> Result<HttpResponse, ApiError> {
+    let collection_id = repo
+        .get_collection_id_by_slug(collection_slug)
+        .await
+        .context("failed to query collection id")?
+        .ok_or(ApiError::CollectionNotFound)?;
+
+    if collection_id == TURBINE_LAYOUTS_COLLECTION_ID {
+        get_turbine_layout_shapefile(repo, feature_id, project_slug, collection_slug).await
+    } else {
+        get_project_feature_shapefile(repo, feature_id, project_slug, collection_slug).await
+    }
+}
+
+async fn get_project_feature_shapefile(
+    repo: &PostgresRepo,
+    feature_id: FeatureId,
+    project_slug: &str,
+    collection_slug: &str,
+) -> Result<HttpResponse, ApiError> {
+    let ft = repo
+        .get_project_feature_for_download(feature_id, project_slug, collection_slug)
+        .await
+        .context("failed to query project feature")?
+        .ok_or(ApiError::FeatureNotFound(feature_id))?;
+
+    let layer_name = layer_name(collection_slug, feature_id, &ft.name);
+    let bytes = shapefile_builder::build_project_feature_shapefile(
+        ft.srid as u32,
+        ft.geom_type,
+        &layer_name,
+        &ft.geom,
+    )?;
+
+    Ok(shapefile_response(
+        bytes,
+        &download_filename(
+            project_slug,
+            collection_slug,
+            feature_id,
+            &ft.name,
+            FeatureFormat::Shapefile,
+        ),
+    ))
+}
+
+async fn get_turbine_layout_shapefile(
+    repo: &PostgresRepo,
+    feature_id: FeatureId,
+    project_slug: &str,
+    collection_slug: &str,
+) -> Result<HttpResponse, ApiError> {
+    let rows = repo
+        .get_turbine_layout_shapefile(feature_id, project_slug, collection_slug)
+        .await
+        .context("failed to query turbine layout shapefile")?;
+
+    if rows.is_empty() {
+        return Err(ApiError::FeatureNotFound(feature_id));
+    }
+
+    let layout_name = rows[0].layout_name.clone();
+    let srid = rows[0].srid;
+    let layer_name = layer_name(collection_slug, feature_id, &layout_name);
+    let turbines: Vec<TurbineEntry> = rows
+        .into_iter()
+        .map(|r| TurbineEntry {
+            id: r.id,
+            turbine_number: r.turbine_number,
+            hub_height_m: r.hub_height_m,
+            rotor_diameter_m: r.rotor_diameter_m,
+            geom_wkb: r.geom,
+        })
+        .collect();
+    let bytes =
+        shapefile_builder::build_turbine_layout_shapefile(srid as u32, &layer_name, &turbines)?;
+
+    Ok(shapefile_response(
+        bytes,
+        &download_filename(
+            project_slug,
+            collection_slug,
+            feature_id,
+            &layout_name,
+            FeatureFormat::Shapefile,
+        ),
+    ))
+}
+
+fn layer_name(collection_slug: &str, feature_id: FeatureId, name: &str) -> String {
+    format!(
+        "{}{:05}-{}",
+        collection_slug,
+        feature_id.0,
+        slug::slugify(name)
+    )
+}
+
 fn download_filename(
     project_slug: &str,
     collection_slug: &str,
@@ -127,66 +227,13 @@ fn download_filename(
         format.file_extension()
     )
 }
-async fn get_shapefile(
-    repo: &PostgresRepo,
-    feature_id: FeatureId,
-    project_slug: &str,
-    collection_slug: &str,
-) -> Result<HttpResponse, ApiError> {
-    let ft = repo
-        .get_project_feature_for_download(feature_id, project_slug, collection_slug)
-        .await
-        .context("failed to query project feature")?
-        .ok_or(ApiError::FeatureNotFound(feature_id))?;
 
-    let download_filename = download_filename(
-        project_slug,
-        collection_slug,
-        feature_id,
-        &ft.name,
-        FeatureFormat::Shapefile,
-    );
-
-    let vsimem_path = format!("/vsimem/{}.shz", Uuid::new_v4());
-
-    let driver = gdal::DriverManager::get_driver_by_name("ESRI Shapefile")
-        .context("failed to get gdal shapefile driver")?;
-    let mut dataset = driver
-        .create_vector_only(&vsimem_path)
-        .context("failed to create vector layer")?;
-    let srs = SpatialRef::from_epsg(ft.srid as u32).context("failed to get spatial ref")?;
-    let layer_name = format!(
-        "{}{:05}-{}",
-        collection_slug,
-        feature_id.0,
-        slug::slugify(ft.name)
-    );
-    let layer_options = gdal::vector::LayerOptions {
-        name: &layer_name,
-        srs: Some(&srs),
-        ty: ft.geom_type.into(),
-        options: None,
-    };
-    let mut layer = dataset
-        .create_layer(layer_options)
-        .context("failed to create layer")?;
-    let geom = gdal::vector::Geometry::from_wkb(&ft.geom)
-        .context("failed to generate gdal geom from wkb")?;
-    layer
-        .create_feature(geom)
-        .context("failed to add feature to layer")?;
-    dataset.flush_cache().context("failed to flush cache")?;
-    dataset.close().context("failed to close dataset")?;
-
-    let content =
-        get_vsi_mem_file_bytes_owned(&vsimem_path).context("failed to get bytes owned")?;
-    let _ = vsi::unlink_mem_file(&vsimem_path);
-
-    Ok(HttpResponse::Ok()
+fn shapefile_response(content: Vec<u8>, filename: &str) -> HttpResponse {
+    HttpResponse::Ok()
         .content_type("application/octet-stream")
         .append_header((
             "Content-Disposition",
-            format!("attachment; filename=\"{}\"", download_filename),
+            format!("attachment; filename=\"{}\"", filename),
         ))
-        .body(content))
+        .body(content)
 }

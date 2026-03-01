@@ -151,6 +151,36 @@ impl PostgresRepo {
     }
 
     #[tracing::instrument(skip(self))]
+    pub async fn get_collection_id_by_slug(
+        &self,
+        collection_slug: &str,
+    ) -> Result<Option<i32>, RepositoryError> {
+        sqlx::query_scalar!(
+            "SELECT id FROM app.collections WHERE slug = $1",
+            collection_slug
+        )
+        .fetch_optional(&self.db_pool)
+        .await
+        .map_err(RepositoryError::from)
+    }
+
+    #[tracing::instrument(skip(self))]
+    pub async fn get_turbine_layout_shapefile(
+        &self,
+        layout_id: FeatureId,
+        project_slug: &str,
+        collection_slug: &str,
+    ) -> Result<Vec<super::turbine_layouts::get_shapefile::TurbineShapefileRow>, RepositoryError> {
+        super::turbine_layouts::get_shapefile::get_turbine_layout_shapefile(
+            &self.db_pool,
+            layout_id,
+            project_slug,
+            collection_slug,
+        )
+        .await
+    }
+
+    #[tracing::instrument(skip(self))]
     pub async fn get_project_feature_for_download(
         &self,
         feature_id: FeatureId,
