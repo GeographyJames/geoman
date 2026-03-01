@@ -1,7 +1,7 @@
 use app::{ErrorResponse, MockUserCredentials};
 use gdal::{
     Dataset,
-    vector::{Geometry, Layer, LayerOptions},
+    vector::{Defn, Feature, Geometry, Layer, LayerAccess, LayerOptions, OGRFieldType, OGRwkbGeometryType},
 };
 use geo::virtual_shapefile::ShapefileData;
 use rand::RngExt;
@@ -199,6 +199,54 @@ pub fn add_shz_to_form(shz_bytes: Vec<u8>, form: Form) -> Form {
             .mime_str("application/octet-stream")
             .expect("failed to add shz part"),
     )
+}
+
+/// Per-turbine values for building a test turbine layout shapefile.
+/// `None` leaves the field unset (null) for that turbine.
+pub struct TurbineInput {
+    pub hub_m: Option<f64>,
+    pub rd_m: Option<f64>,
+}
+
+/// Builds an in-memory turbine layout shapefile dataset from a list of per-turbine inputs.
+/// Always creates `num`, `hub_m`, and `rd_m` fields; values are only written when `Some`.
+pub fn create_turbine_layout_dataset(turbines: &[TurbineInput]) -> (Dataset, String) {
+    let (mut ds, filename) = create_shapefile_dataset();
+    {
+        let layer = add_layer(&mut ds, OGRwkbGeometryType::wkbPoint, 27700);
+        let fields = [
+            ("num", OGRFieldType::OFTInteger),
+            ("hub_m", OGRFieldType::OFTReal),
+            ("rd_m", OGRFieldType::OFTReal),
+        ];
+        layer
+            .create_defn_fields(&fields)
+            .expect("failed to add fields to shapefile");
+        let defn = Defn::from_layer(&layer);
+        let num_idx = defn.field_index("num").expect("field not found");
+        let hub_idx = defn.field_index("hub_m").expect("field not found");
+        let rd_idx = defn.field_index("rd_m").expect("field not found");
+        for (i, turbine) in turbines.iter().enumerate() {
+            let geom = create_gdal_point_bng();
+            let mut feature = Feature::new(&defn).expect("failed to create feature");
+            feature.set_geometry(geom).expect("failed to set geometry");
+            feature
+                .set_field_integer(num_idx, i as i32 + 1)
+                .expect("failed to set num");
+            if let Some(hub) = turbine.hub_m {
+                feature
+                    .set_field_double(hub_idx, hub)
+                    .expect("failed to set hub_m");
+            }
+            if let Some(rd) = turbine.rd_m {
+                feature
+                    .set_field_double(rd_idx, rd)
+                    .expect("failed to set rd_m");
+            }
+            feature.create(&layer).expect("failed to write feature to layer");
+        }
+    }
+    (ds, filename)
 }
 
 pub fn add_shapefile_to_form(filename: &str, data: ShapefileData, form: Form) -> Form {

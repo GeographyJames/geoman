@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use domain::{
     AddedBy, FeatureId, LastUpdatedBy, TurbineLayout, enums::Status,
-    turbine_layout::TurbineLayoutProperties,
+    turbine_layout::{TurbineLayoutProperties, TurbineMeasurement},
 };
 use futures::{Stream, StreamExt};
 use geojson::Geometry;
@@ -30,7 +30,9 @@ struct TurbineLayoutRow {
     pub geometry: Json<Geometry>,
     pub number_matched: i64,
     pub rotor_diameter_mm: Option<i32>,
+    pub rotor_diameter_various: bool,
     pub hub_height_mm: Option<i32>,
+    pub hub_height_various: bool,
     pub turbine_count: i64,
 }
 
@@ -52,10 +54,22 @@ impl TryInto<TurbineLayout> for TurbineLayoutRow {
             last_updated_by,
             geometry,
             rotor_diameter_mm,
+            rotor_diameter_various,
             hub_height_mm,
+            hub_height_various,
             turbine_count,
             ..
         } = self;
+        let hub_height_mm = match (hub_height_mm, hub_height_various) {
+            (Some(v), _) => TurbineMeasurement::SingleValue(v),
+            (None, true) => TurbineMeasurement::Various,
+            (None, false) => TurbineMeasurement::None,
+        };
+        let rotor_diameter_mm = match (rotor_diameter_mm, rotor_diameter_various) {
+            (Some(v), _) => TurbineMeasurement::SingleValue(v),
+            (None, true) => TurbineMeasurement::Various,
+            (None, false) => TurbineMeasurement::None,
+        };
         Ok(TurbineLayout {
             id,
             properties_map: serde_json::Map::default(),
@@ -117,14 +131,16 @@ impl SelectAllWithParamsStreaming for TurbineLayout {
                 ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name, t_ub.business_unit_id)::app.team))::app.user AS "last_updated_by!: LastUpdatedBy",
                 ST_AsGeoJSON(ST_Transform(ST_Collect(t.geom), $1))::jsonb AS "geometry!: Json<Geometry>",
                 COUNT(*) OVER () AS "number_matched!",
-                CASE WHEN COUNT(DISTINCT t.rotor_diameter_mm) = 1
+                CASE WHEN COUNT(DISTINCT t.rotor_diameter_mm) = 1 AND COUNT(t.id) = COUNT(t.rotor_diameter_mm)
                      THEN MIN(t.rotor_diameter_mm)::int
                      ELSE NULL
                 END AS rotor_diameter_mm,
-                CASE WHEN COUNT(DISTINCT t.hub_height_mm) = 1
+                COUNT(t.rotor_diameter_mm) > 0 AND (COUNT(DISTINCT t.rotor_diameter_mm) > 1 OR COUNT(t.id) > COUNT(t.rotor_diameter_mm)) AS "rotor_diameter_various!",
+                CASE WHEN COUNT(DISTINCT t.hub_height_mm) = 1 AND COUNT(t.id) = COUNT(t.hub_height_mm)
                      THEN MIN(t.hub_height_mm)::int
                      ELSE NULL
                 END AS hub_height_mm,
+                COUNT(t.hub_height_mm) > 0 AND (COUNT(DISTINCT t.hub_height_mm) > 1 OR COUNT(t.id) > COUNT(t.hub_height_mm)) AS "hub_height_various!",
                 COUNT(t.id) AS "turbine_count!"
             FROM app.turbine_layouts tl
             JOIN app.collections c ON c.id = -1
@@ -191,14 +207,16 @@ impl SelectOneWithParams<FeatureId> for TurbineLayout {
                 ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name, t_ub.business_unit_id)::app.team))::app.user AS "last_updated_by!: LastUpdatedBy",
                 ST_AsGeoJSON(ST_Transform(ST_Collect(t.geom), $1))::jsonb AS "geometry!: Json<Geometry>",
                 1::bigint AS "number_matched!",
-                CASE WHEN COUNT(DISTINCT t.rotor_diameter_mm) = 1
+                CASE WHEN COUNT(DISTINCT t.rotor_diameter_mm) = 1 AND COUNT(t.id) = COUNT(t.rotor_diameter_mm)
                      THEN MIN(t.rotor_diameter_mm)::int
                      ELSE NULL
                 END AS rotor_diameter_mm,
-                CASE WHEN COUNT(DISTINCT t.hub_height_mm) = 1
+                COUNT(t.rotor_diameter_mm) > 0 AND (COUNT(DISTINCT t.rotor_diameter_mm) > 1 OR COUNT(t.id) > COUNT(t.rotor_diameter_mm)) AS "rotor_diameter_various!",
+                CASE WHEN COUNT(DISTINCT t.hub_height_mm) = 1 AND COUNT(t.id) = COUNT(t.hub_height_mm)
                      THEN MIN(t.hub_height_mm)::int
                      ELSE NULL
                 END AS hub_height_mm,
+                COUNT(t.hub_height_mm) > 0 AND (COUNT(DISTINCT t.hub_height_mm) > 1 OR COUNT(t.id) > COUNT(t.hub_height_mm)) AS "hub_height_various!",
                 COUNT(t.id) AS "turbine_count!"
             FROM app.turbine_layouts tl
             JOIN app.collections c ON c.id = -1

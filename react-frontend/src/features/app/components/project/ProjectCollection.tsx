@@ -3,11 +3,22 @@ import type {
   ProjectCollectionItems,
 } from "@/domain/projectCollectionItems/outputDTO";
 
-import { type Dispatch, type ReactNode, type SetStateAction } from "react";
+import {
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+  useMemo,
+  useState,
+} from "react";
 import UserInitials from "@/components/UserInitials";
 import SetPrimaryRadio from "./SetPrimaryRadio";
-import { useFeatureLayer, useZoomToFeature } from "@/hooks/useFeatureLayer";
+import {
+  useFeatureCollectionLayer,
+  useFeatureLayer,
+  useZoomToFeature,
+} from "@/hooks/useFeatureLayer";
 import { Stroke, Fill, Style, Circle } from "ol/style";
+import { type WakePreset, generateTurbineAreas } from "@/lib/turbineAreas";
 
 import { FeatureActionsDropdown } from "./features/FeatureActionsDropdown";
 import { dateFormat, TURBINE_LAYOUT_CCOLLECTION_ID } from "@/constants";
@@ -42,8 +53,30 @@ const defaultStyle = new Style({
   }),
 });
 
+const sweptAreaStyle = new Style({
+  stroke: new Stroke({ color: "rgba(37, 99, 235, 0.5)", width: 1 }),
+  fill: new Fill({ color: "rgba(37, 99, 235, 0.06)" }),
+});
+
+const wakeEllipseStyle = new Style({
+  stroke: new Stroke({
+    color: "rgba(217, 119, 6, 0.6)",
+    width: 1,
+    lineDash: [4, 4],
+  }),
+  fill: new Fill({ color: "rgba(217, 119, 6, 0.04)" }),
+});
+
 function formatArea(m2: number): string {
   return `${(m2 / 10_000).toLocaleString(undefined, { maximumFractionDigits: 1 })}`;
+}
+
+function formatTurbineMeasurement(
+  value: number | "various" | null | undefined,
+): string {
+  if (value == null) return "none specified";
+  if (value === "various") return "Various";
+  return `${(value / 1000).toLocaleString()}m`;
 }
 
 export const ProjectCollection = ({
@@ -77,68 +110,161 @@ export const ProjectCollection = ({
     data.features[0]?.properties.collection_id ===
     TURBINE_LAYOUT_CCOLLECTION_ID;
 
+  const [showAreasMap, setShowAreasMap] = useState<Record<number, boolean>>({});
+  const [wakePreset, setWakePreset] = useState<WakePreset>("6x4");
+  const [windFromDeg, setWindFromDeg] = useState(225);
+
   return (
-    <table className="table table-fixed table-xs">
-      <SiteDataTableHeadings>
-        {hasArea && (
-          <th className="w-18 p-0 hidden sm:table-cell">Area (ha)</th>
-        )}
-        {isTurbineLayout && (
-          <>
-            <th className="hidden sm:table-cell landscape:table-cell w-14 p-0">
-              No. of
-              <br />
-              turbines
-            </th>
-            <th className="w-14 p-0 hidden sm:table-cell text-wrap">
-              Rotor diameter
-            </th>
-            <th className="w-14 p-0 hidden sm:table-cell text-wrap">
-              Hub height
-            </th>
-          </>
-        )}
-      </SiteDataTableHeadings>
-      <tbody>
-        {features.map((f) => (
-          <SiteDataTableRow
-            key={f.id}
-            item={f}
-            visible={visibilityMap[f.id] ?? false}
-            onVisibleChange={(val) =>
-              setVisibilityMap((prev) => ({ ...prev, [f.id]: val }))
-            }
-            projectSlug={projectSlug}
-            collectionSlug={collectionSlug}
-          >
-            {hasArea && (
-              <td className="p-0 hidden sm:table-cell">
-                {f.properties.area_ellipsoidal_m2 != null
-                  ? formatArea(f.properties.area_ellipsoidal_m2)
-                  : ""}
-              </td>
-            )}
-            {isTurbineLayout && (
-              <>
-                <td className=" hidden sm:table-cell landscape:table-cell p-0 pr-2">
-                  {f.properties.turbine_count ?? ""}
-                </td>
+    <>
+      {isTurbineLayout && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pb-1 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-base-content/70">
+              Ellipse size (rotor diameters):
+            </span>
+            <div className="join">
+              <input
+                className="join-item btn btn-xs"
+                type="radio"
+                name={`wake-preset-${projectSlug}-${collectionSlug}`}
+                aria-label="6×4"
+                checked={wakePreset === "6x4"}
+                onChange={() => setWakePreset("6x4")}
+              />
+              <input
+                className="join-item btn btn-xs"
+                type="radio"
+                name={`wake-preset-${projectSlug}-${collectionSlug}`}
+                aria-label="5×3"
+                checked={wakePreset === "5x3"}
+                onChange={() => setWakePreset("5x3")}
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-base-content/70">Wind direction:</span>
+            <input
+              type="range"
+              className="range range-xs w-24"
+              min={0}
+              max={359}
+              value={windFromDeg}
+              onChange={(e) => setWindFromDeg(Number(e.target.value))}
+            />
+            <span className="text-base-content/70 w-8">{windFromDeg}°</span>
+          </div>
+        </div>
+      )}
+      <table className="table table-fixed table-xs">
+        <SiteDataTableHeadings>
+          {hasArea && (
+            <th className="w-18 p-0 hidden sm:table-cell">Area (ha)</th>
+          )}
+          {isTurbineLayout && (
+            <>
+              <th className="hidden sm:table-cell landscape:table-cell w-14 p-0">
+                No. of
+                <br />
+                turbines
+              </th>
+              <th className="w-14 p-0 hidden sm:table-cell text-wrap">
+                Rotor diameter
+              </th>
+              <th className="w-12 p-0 hidden sm:table-cell text-wrap">
+                Hub height
+              </th>
+              <th className="w-14 p-0 text-wrap text-center">Ellipses</th>
+            </>
+          )}
+        </SiteDataTableHeadings>
+        <tbody>
+          {features.map((f) => (
+            <SiteDataTableRow
+              key={f.id}
+              item={f}
+              visible={visibilityMap[f.id] ?? false}
+              onVisibleChange={(val) =>
+                setVisibilityMap((prev) => ({ ...prev, [f.id]: val }))
+              }
+              areasVisible={showAreasMap[f.id] ?? true}
+              wakePreset={wakePreset}
+              windFromDeg={windFromDeg}
+              projectSlug={projectSlug}
+              collectionSlug={collectionSlug}
+            >
+              {hasArea && (
                 <td className="p-0 hidden sm:table-cell">
-                  {f.properties.rotor_diameter_mm != null
-                    ? `${(f.properties.rotor_diameter_mm / 1000).toLocaleString()}m`
-                    : ""}
+                  <span
+                    className={
+                      f.properties.status === "ARCHIVED"
+                        ? "text-base-content/50"
+                        : ""
+                    }
+                  >
+                    {f.properties.area_ellipsoidal_m2 != null
+                      ? formatArea(f.properties.area_ellipsoidal_m2)
+                      : ""}
+                  </span>
                 </td>
-                <td className="p-0 hidden sm:table-cell">
-                  {f.properties.hub_height_mm != null
-                    ? `${(f.properties.hub_height_mm / 1000).toLocaleString()}m`
-                    : ""}
-                </td>
-              </>
-            )}
-          </SiteDataTableRow>
-        ))}
-      </tbody>
-    </table>
+              )}
+              {isTurbineLayout && (
+                <>
+                  <td className=" hidden sm:table-cell landscape:table-cell p-0 pr-2">
+                    <span
+                      className={
+                        f.properties.status === "ARCHIVED"
+                          ? "text-base-content/50"
+                          : ""
+                      }
+                    >
+                      {f.properties.turbine_count ?? ""}
+                    </span>
+                  </td>
+                  <td className="p-0 hidden sm:table-cell">
+                    <span
+                      className={
+                        f.properties.status === "ARCHIVED"
+                          ? "text-base-content/50"
+                          : ""
+                      }
+                    >
+                      {formatTurbineMeasurement(f.properties.rotor_diameter_mm)}
+                    </span>
+                  </td>
+                  <td className="flex p-0 hidden sm:table-cell">
+                    <span
+                      className={
+                        f.properties.status === "ARCHIVED"
+                          ? "text-base-content/50"
+                          : ""
+                      }
+                    >
+                      {formatTurbineMeasurement(f.properties.hub_height_mm)}
+                    </span>
+                  </td>
+                  <td className="">
+                    <div className="flex justify-center">
+                      <input
+                        type="checkbox"
+                        className="checkbox checkbox-xs bg-base-100 "
+                        checked={showAreasMap[f.id] ?? true}
+                        disabled={!(visibilityMap[f.id] ?? false)}
+                        onChange={(e) =>
+                          setShowAreasMap((prev) => ({
+                            ...prev,
+                            [f.id]: e.target.checked,
+                          }))
+                        }
+                      />
+                    </div>
+                  </td>
+                </>
+              )}
+            </SiteDataTableRow>
+          ))}
+        </tbody>
+      </table>
+    </>
   );
 };
 
@@ -165,6 +291,9 @@ export function SiteDataTableRow({
   item,
   visible,
   onVisibleChange,
+  areasVisible = true,
+  wakePreset = "6x4",
+  windFromDeg = 225,
   projectSlug,
   collectionSlug,
 }: {
@@ -172,6 +301,9 @@ export function SiteDataTableRow({
   item: ProjectCollectionItem;
   visible: boolean;
   onVisibleChange: (val: boolean) => void;
+  areasVisible?: boolean;
+  wakePreset?: WakePreset;
+  windFromDeg?: number;
   projectSlug: string;
   collectionSlug: string;
 }) {
@@ -179,6 +311,15 @@ export function SiteDataTableRow({
     visible ? item : undefined,
     item.properties.is_primary ? primaryStyle : defaultStyle,
   );
+  const turbineAreas = useMemo(
+    () =>
+      visible && areasVisible
+        ? generateTurbineAreas(item, wakePreset, windFromDeg)
+        : null,
+    [visible, areasVisible, wakePreset, windFromDeg, item],
+  );
+  useFeatureCollectionLayer(turbineAreas?.sweptAreas, sweptAreaStyle);
+  useFeatureCollectionLayer(turbineAreas?.wakeEllipses, wakeEllipseStyle);
   const zoomToFeature = useZoomToFeature(item);
 
   return (
@@ -244,7 +385,12 @@ export function SiteDataTableRow({
         />
       </td>
       <td className="px-0 py-1 text-right">
-        <FeatureActionsDropdown item={item} zoomToFeature={zoomToFeature} projectSlug={projectSlug} collectionSlug={collectionSlug} />
+        <FeatureActionsDropdown
+          item={item}
+          zoomToFeature={zoomToFeature}
+          projectSlug={projectSlug}
+          collectionSlug={collectionSlug}
+        />
       </td>
     </tr>
   );

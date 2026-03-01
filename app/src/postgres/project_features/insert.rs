@@ -34,7 +34,7 @@ impl Insert for (&FeatureInputDTO, ProjectId, ProjectCollectionId, UserId) {
                     geom,
                     CASE
                         WHEN ST_GeometryType(geom) IN ('ST_Polygon', 'ST_MultiPolygon')
-                        THEN jsonb_build_object('area_ellipsoidal_m2', ST_Area(ST_Transform(geom, 4326)::geography))
+                        THEN jsonb_build_object('area_ellipsoidal_m2', ST_Area(ST_Transform(geom, 4326)::geography), 'area_cartesian', ST_Area(geom))
                         ELSE '{}'::jsonb
                     END
                 FROM g

@@ -1,8 +1,11 @@
 use crate::{AddedBy, IntoOGCFeature, LastUpdatedBy, enums::Status};
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize, Deserializer, Serialize, Serializer,
+    de::{self, Visitor},
+};
 use serde_json::{Map, Value, from_value, json};
-use sqlx::prelude::FromRow;
+use std::fmt;
 
 pub struct TurbineLayout {
     pub id: i32,
@@ -11,7 +14,68 @@ pub struct TurbineLayout {
     pub geometry: geojson::Geometry,
 }
 
-#[derive(Serialize, Deserialize, Default, FromRow)]
+pub enum TurbineMeasurement {
+    None,
+    Various,
+    SingleValue(i32),
+}
+
+impl Default for TurbineMeasurement {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
+impl Serialize for TurbineMeasurement {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        match self {
+            Self::None => s.serialize_none(),
+            Self::Various => s.serialize_str("various"),
+            Self::SingleValue(v) => s.serialize_i32(*v),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for TurbineMeasurement {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        d.deserialize_any(TurbineMeasurementVisitor)
+    }
+}
+
+struct TurbineMeasurementVisitor;
+
+impl<'de> Visitor<'de> for TurbineMeasurementVisitor {
+    type Value = TurbineMeasurement;
+
+    fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("null, \"various\", or an integer")
+    }
+
+    fn visit_none<E: de::Error>(self) -> Result<Self::Value, E> {
+        Ok(TurbineMeasurement::None)
+    }
+
+    fn visit_unit<E: de::Error>(self) -> Result<Self::Value, E> {
+        Ok(TurbineMeasurement::None)
+    }
+
+    fn visit_str<E: de::Error>(self, v: &str) -> Result<Self::Value, E> {
+        match v {
+            "various" => Ok(TurbineMeasurement::Various),
+            _ => Err(de::Error::unknown_variant(v, &["various"])),
+        }
+    }
+
+    fn visit_i64<E: de::Error>(self, v: i64) -> Result<Self::Value, E> {
+        Ok(TurbineMeasurement::SingleValue(v as i32))
+    }
+
+    fn visit_u64<E: de::Error>(self, v: u64) -> Result<Self::Value, E> {
+        Ok(TurbineMeasurement::SingleValue(v as i32))
+    }
+}
+
+#[derive(Serialize, Deserialize, Default)]
 pub struct Properties {
     pub collection_id: i32,
     pub project_id: i32,
@@ -27,8 +91,8 @@ pub struct Properties {
     #[serde(flatten)]
     pub last_updated_by: LastUpdatedBy,
     pub collection_title: String,
-    pub rotor_diameter_mm: Option<i32>,
-    pub hub_height_mm: Option<i32>,
+    pub rotor_diameter_mm: TurbineMeasurement,
+    pub hub_height_mm: TurbineMeasurement,
     pub turbine_count: i64,
 }
 

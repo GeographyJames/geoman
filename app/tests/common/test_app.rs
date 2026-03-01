@@ -1,9 +1,9 @@
 use crate::common::{
     Auth, configure_database,
     helpers::{
-        add_layer, add_shapefile_to_form, auth_request, create_gdal_multipolygon_bng,
-        create_gdal_point_bng, create_shapefile_dataset, dataset_to_shapefile_data,
-        handle_json_response,
+        TurbineInput, add_layer, add_shapefile_to_form, auth_request, create_gdal_multipolygon_bng,
+        create_gdal_point_bng, create_shapefile_dataset, create_turbine_layout_dataset,
+        dataset_to_shapefile_data, handle_json_response,
     },
     services::{
         ApiKeysService, AuthService, ClerkAuthService, HttpClient, HttpService, OgcService,
@@ -31,7 +31,7 @@ use domain::{
     enums::{CollectionId, GeometryType},
 };
 use dotenvy::dotenv;
-use gdal::vector::{Defn, Feature, Geometry, LayerAccess, OGRFieldType, OGRwkbGeometryType};
+use gdal::vector::{Geometry, LayerAccess};
 use reqwest::Response;
 use secrecy::ExposeSecret;
 
@@ -416,56 +416,31 @@ first_name, last_name,
         }
     }
 
-    pub async fn generate_primary_layout(
+    /// Posts a turbine layout shapefile.
+    /// Set `map_hub_height`/`map_rotor_diameter` to false to leave those fields unmapped
+    /// (producing `TurbineMeasurement::None` on the response).
+    pub async fn post_turbine_layout(
         &self,
         project_id: &ProjectId,
+        turbines: &[TurbineInput],
+        map_hub_height: bool,
+        map_rotor_diameter: bool,
+        primary: bool,
         auth: Option<&Auth>,
     ) -> reqwest::Response {
-        let (mut ds, filename) = create_shapefile_dataset();
-        {
-            let layer = add_layer(&mut ds, OGRwkbGeometryType::wkbPoint, 27700);
-            let fields = [
-                ("num", OGRFieldType::OFTInteger),
-                ("hub_m", OGRFieldType::OFTInteger),
-                ("rd_m", OGRFieldType::OFTReal),
-            ];
-            layer
-                .create_defn_fields(&fields)
-                .expect("failed to add fields to shapefile");
-
-            let defn = Defn::from_layer(&layer);
-            let num_idx = defn.field_index("num").expect("field not found");
-            let hub_idx = defn.field_index("hub_m").expect("field not found");
-            let rotor_diameter_idx = defn.field_index("rd_m").expect("field not found");
-
-            for i in 0..3 {
-                let geom = create_gdal_point_bng();
-                let mut feature = Feature::new(&defn).expect("failed to create feature");
-                feature.set_geometry(geom).expect("failed to set geometry");
-                feature
-                    .set_field_integer(num_idx, i + 1)
-                    .expect("failed to set num");
-                feature
-                    .set_field_double(hub_idx, 120.)
-                    .expect("failed to set hub_m");
-                feature
-                    .set_field_double(rotor_diameter_idx, 160.0)
-                    .expect("failed to set rd_m");
-                feature
-                    .create(&layer)
-                    .expect("failed to write feature to layer");
-            }
-            // layer and defn drop here, releasing the borrow on ds
-        }
+        let (ds, filename) = create_turbine_layout_dataset(turbines);
         let shapefile_data = dataset_to_shapefile_data(ds, &filename);
         let mut form = reqwest::multipart::Form::new();
         form = add_shapefile_to_form(&filename, shapefile_data, form)
             .text("name", uuid::Uuid::new_v4().to_string())
-            .text("primary", true.to_string())
-            .text("turbine_number_field", "num")
-            .text("rotor_diameter_field", "rd_m")
-            .text("hub_height_field", "hub_m");
-
+            .text("primary", primary.to_string())
+            .text("turbine_number_field", "num");
+        if map_hub_height {
+            form = form.text("hub_height_field", "hub_m");
+        }
+        if map_rotor_diameter {
+            form = form.text("rotor_diameter_field", "rd_m");
+        }
         self.features_service
             .post_form(
                 &self.api_client,
@@ -473,6 +448,29 @@ first_name, last_name,
                 format!("{}/{}", project_id, TURBINE_LAYOUTS_COLLECTION_ID),
                 auth,
             )
+            .await
+    }
+
+    pub async fn generate_primary_layout(
+        &self,
+        project_id: &ProjectId,
+        auth: Option<&Auth>,
+    ) -> reqwest::Response {
+        let turbines = vec![
+            TurbineInput {
+                hub_m: Some(120.0),
+                rd_m: Some(160.0),
+            },
+            TurbineInput {
+                hub_m: Some(120.0),
+                rd_m: Some(160.0),
+            },
+            TurbineInput {
+                hub_m: Some(120.0),
+                rd_m: Some(160.0),
+            },
+        ];
+        self.post_turbine_layout(project_id, &turbines, true, true, true, auth)
             .await
     }
 
