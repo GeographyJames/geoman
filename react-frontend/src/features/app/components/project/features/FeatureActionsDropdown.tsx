@@ -7,7 +7,7 @@ import { useFlash } from "@/features/app/contexts/FlashMessageContext";
 import { useEditFeature } from "@/features/app/contexts/EditFeatureContext";
 import { useDuplicateTurbineLayoutContext } from "@/features/app/contexts/DuplicateTurbineLayoutContext";
 import { DeleteFeatureButton } from "./DeleteFeatureButton";
-import { TURBINE_LAYOUT_CCOLLECTION_ID } from "@/constants";
+import { TURBINE_LAYOUTS_COLLECTION_ID } from "@/constants";
 
 export const FeatureActionsDropdown = ({
   item,
@@ -33,13 +33,17 @@ export const FeatureActionsDropdown = ({
       style="bg-base-100"
     >
       <li>
-        <button onClick={(e) => {
-          zoomToFeature();
-          const popover = (e.currentTarget as HTMLElement).closest(
-            "[popover]",
-          ) as HTMLElement | null;
-          popover?.hidePopover();
-        }}>zoom to feature</button>
+        <button
+          onClick={(e) => {
+            zoomToFeature();
+            const popover = (e.currentTarget as HTMLElement).closest(
+              "[popover]",
+            ) as HTMLElement | null;
+            popover?.hidePopover();
+          }}
+        >
+          zoom to feature
+        </button>
       </li>
       <li>
         <a
@@ -58,7 +62,7 @@ export const FeatureActionsDropdown = ({
           {isDownloading ? "downloading..." : "download shapefile"}
         </a>
       </li>
-      {item.properties.collection_id === TURBINE_LAYOUT_CCOLLECTION_ID && (
+      {item.properties.collection_id === TURBINE_LAYOUTS_COLLECTION_ID && (
         <li>
           <a
             href={`${__URLS__.api.base}${__URLS__.api.project_features}/${projectSlug}/${collectionSlug}/${item.id}?format=csv`}
@@ -80,7 +84,7 @@ export const FeatureActionsDropdown = ({
       <li>
         <button onClick={() => requestEdit(item)}>edit</button>
       </li>
-      {item.properties.collection_id === TURBINE_LAYOUT_CCOLLECTION_ID && (
+      {item.properties.collection_id === TURBINE_LAYOUTS_COLLECTION_ID && (
         <li>
           <button
             onClick={(e) => {

@@ -10,6 +10,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import UserInitials from "@/components/UserInitials";
 import SetPrimaryRadio from "./SetPrimaryRadio";
 import {
@@ -20,9 +21,11 @@ import {
 import { Stroke, Fill, Style, Circle } from "ol/style";
 import { type WakePreset, generateTurbineAreas } from "@/lib/turbineAreas";
 import { useTurbineLayoutGeojson } from "@/hooks/api/projectFeature.ts/useTurbineLayoutGeojson";
+import { useTurbineLayerWithPopup } from "@/hooks/useTurbineLayerWithPopup";
+import MapPopup from "@/components/mapComponents/MapPopup";
 
 import { FeatureActionsDropdown } from "./features/FeatureActionsDropdown";
-import { dateFormat, TURBINE_LAYOUT_CCOLLECTION_ID } from "@/constants";
+import { dateFormat, TURBINE_LAYOUTS_COLLECTION_ID } from "@/constants";
 
 const primaryStyle = new Style({
   stroke: new Stroke({
@@ -109,7 +112,7 @@ export const ProjectCollection = ({
 
   const isTurbineLayout =
     data.features[0]?.properties.collection_id ===
-    TURBINE_LAYOUT_CCOLLECTION_ID;
+    TURBINE_LAYOUTS_COLLECTION_ID;
 
   const [showAreasMap, setShowAreasMap] = useState<Record<number, boolean>>({});
   const [wakePreset, setWakePreset] = useState<WakePreset>("6x4");
@@ -308,7 +311,8 @@ export function SiteDataTableRow({
   projectSlug: string;
   collectionSlug: string;
 }) {
-  const isTurbineLayout = item.properties.collection_id === TURBINE_LAYOUT_CCOLLECTION_ID;
+  const isTurbineLayout =
+    item.properties.collection_id === TURBINE_LAYOUTS_COLLECTION_ID;
   const { data: turbineGeojson } = useTurbineLayoutGeojson(
     projectSlug,
     collectionSlug,
@@ -318,7 +322,10 @@ export function SiteDataTableRow({
 
   const style = item.properties.is_primary ? primaryStyle : defaultStyle;
   useFeatureLayer(visible && !isTurbineLayout ? item : undefined, style);
-  useFeatureCollectionLayer(visible && isTurbineLayout ? turbineGeojson : undefined, style);
+  const { popupRef, popupContent, closePopup } = useTurbineLayerWithPopup(
+    visible && isTurbineLayout ? turbineGeojson : undefined,
+    style,
+  );
 
   const turbineAreas = useMemo(
     () =>
@@ -333,6 +340,18 @@ export function SiteDataTableRow({
 
   return (
     <tr key={item.id} className="hover:bg-base-200">
+      {createPortal(
+        <MapPopup ref={popupRef} onClose={closePopup}>
+          {popupContent && (
+            <TurbinePopupContent
+              turbineNumber={popupContent.turbineNumber}
+              hubHeightMm={popupContent.hubHeightMm}
+              rotorDiameterMm={popupContent.rotorDiameterMm}
+            />
+          )}
+        </MapPopup>,
+        document.body,
+      )}
       <td className="p-0">
         <span
           className={
@@ -402,5 +421,28 @@ export function SiteDataTableRow({
         />
       </td>
     </tr>
+  );
+}
+
+function formatMm(mm: number | null): string {
+  if (mm == null) return "—";
+  return `${(mm / 1000).toLocaleString()}m`;
+}
+
+function TurbinePopupContent({
+  turbineNumber,
+  hubHeightMm,
+  rotorDiameterMm,
+}: {
+  turbineNumber: number;
+  hubHeightMm: number | null;
+  rotorDiameterMm: number | null;
+}) {
+  return (
+    <div className="space-y-0.5">
+      <p className="font-semibold">Turbine {turbineNumber}</p>
+      <p>Hub height: {formatMm(hubHeightMm)}</p>
+      <p>Rotor diameter: {formatMm(rotorDiameterMm)}</p>
+    </div>
   );
 }

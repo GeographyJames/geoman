@@ -1,4 +1,4 @@
-import { CACHE_KEY_COLLECTIONS } from "@/cache_keys"
+import { CACHE_KEY_COLLECTION_LIST_ITEMS,  CACHE_KEY_PROJECT_COLLECTIONS_ALL } from "@/cache_keys"
 import { useApiRequest } from "@/lib/api"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
@@ -21,8 +21,8 @@ export const usePatchCollection = () => {
             })
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: CACHE_KEY_COLLECTIONS })
-            queryClient.invalidateQueries({ queryKey: ["project-collections"] })
+            queryClient.invalidateQueries({ queryKey: CACHE_KEY_COLLECTION_LIST_ITEMS })
+            queryClient.invalidateQueries({ queryKey: CACHE_KEY_PROJECT_COLLECTIONS_ALL })
         },
     })
 }

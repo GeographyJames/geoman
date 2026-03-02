@@ -20,12 +20,12 @@ const DuplicateTurbineLayoutInner = () => {
         if (feature) {
             setName(feature.properties.name);
             setHubHeight(
-                feature.properties.hub_height_mm != null
+                typeof feature.properties.hub_height_mm === "number"
                     ? String(feature.properties.hub_height_mm / 1000)
                     : "",
             );
             setRotorDiameter(
-                feature.properties.rotor_diameter_mm != null
+                typeof feature.properties.rotor_diameter_mm === "number"
                     ? String(feature.properties.rotor_diameter_mm / 1000)
                     : "",
             );

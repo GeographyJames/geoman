@@ -1,8 +1,8 @@
-import { CACHE_KEY_COLLECTIONS } from "@/cache_keys"
+import { CACHE_KEY_COLLECTION_LIST_ITEMS } from "@/cache_keys"
 import { useApiRequest } from "@/lib/api"
 import { useQuery } from "@tanstack/react-query"
 
-export interface Collection {
+export interface CollectionListItem {
     id: number
     title: string
     geometry_type: string
@@ -22,7 +22,7 @@ export interface Collection {
 export function useCollections() {
     const apiRequest = useApiRequest()
     return useQuery({
-        queryKey: CACHE_KEY_COLLECTIONS,
-        queryFn: () => apiRequest<Collection[]>("/api/collections")
+        queryKey: CACHE_KEY_COLLECTION_LIST_ITEMS,
+        queryFn: () => apiRequest<CollectionListItem[]>("/api/collections")
     })
 }

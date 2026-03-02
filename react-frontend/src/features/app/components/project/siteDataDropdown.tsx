@@ -1,4 +1,4 @@
-import type { Collection } from "@/hooks/api/useProjectCollections";
+import type { ProjectOgcCollection } from "@/hooks/api/useProjectCollections";
 import ShowArchivedToggle from "../ShowArchivedToggle";
 import { useEffect, useRef, useState } from "react";
 import { ProjectCollection } from "./ProjectCollection";
@@ -14,7 +14,7 @@ export const SiteDataDropdown = ({
   collection,
   project,
 }: {
-  collection: Collection;
+  collection: ProjectOgcCollection;
   project: Project;
 }) => {
   const projectId = project.id;

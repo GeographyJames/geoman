@@ -18,8 +18,7 @@ import { ApiError } from "@/lib/api";
 import type { FeatureCollection } from "geojson";
 import { parseShp, parseDbf, combine, parseZip } from "shpjs";
 import { FaCircleInfo } from "react-icons/fa6";
-
-const TURBINE_LAYOUTS_COLLECTION_ID = -1;
+import { TURBINE_LAYOUTS_COLLECTION_ID } from "@/constants";
 
 const COMPATIBLE_GEOMETRY: Record<string, string[]> = {
   Point: ["Point"],

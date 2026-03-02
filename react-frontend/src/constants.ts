@@ -5,4 +5,4 @@ export const dateFormat = new Intl.DateTimeFormat("en-GB", {
 
 
 export const SITE_BOUNDARIES_COLLECTION_ID = 0;
-export const TURBINE_LAYOUT_CCOLLECTION_ID = -1;
+export const TURBINE_LAYOUTS_COLLECTION_ID = -1;

@@ -1,6 +1,9 @@
 import { Plus, AlertCircle, Layers, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { useCollections, type Collection } from "@/hooks/api/useCollections";
+import {
+  useCollections,
+  type CollectionListItem,
+} from "@/hooks/api/useCollections";
 import { useCurrentUser } from "@/hooks/api/useCurrentUser";
 import UserInitials from "@/components/UserInitials";
 import { dateFormat } from "@/constants";
@@ -15,11 +18,10 @@ export default function CollectionsSection() {
     if (el instanceof HTMLDialogElement) el.showModal();
   };
 
-  const [editingCollection, setEditingCollection] = useState<Collection | null>(
-    null,
-  );
+  const [editingCollection, setEditingCollection] =
+    useState<CollectionListItem | null>(null);
   const [deletingCollection, setDeletingCollection] =
-    useState<Collection | null>(null);
+    useState<CollectionListItem | null>(null);
 
   const { data: collections = [], isLoading, error } = useCollections();
   const { data: currentUser } = useCurrentUser();

@@ -4,10 +4,10 @@ import { useApiRequest } from "@/lib/api"
 import { useQuery } from "@tanstack/react-query"
 
 export interface CollectionsResponse {
-    collections: Collection[]
+    collections: ProjectOgcCollection[]
 }
 
-export interface Collection {
+export interface ProjectOgcCollection {
      title: string
      id: string
      slug: string
