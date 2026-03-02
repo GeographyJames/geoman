@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { useCreateCollection } from "@/hooks/api/useCreateCollection";
+import { usePostCollection } from "@/hooks/api/usePostCollection";
 import { Modal, useModal } from "@/components/forms/Modal";
 import { CancelButton, SubmitButton } from "@/components/Buttons";
 import { ApiError } from "@/lib/api";
@@ -26,7 +26,7 @@ export const NewCollectionInner = ({
   projectId?: number;
   onClose?: () => void;
 } = {}) => {
-  const { mutate: createCollection, isPending } = useCreateCollection();
+  const { mutate: createCollection, isPending } = usePostCollection();
   const { addError, closeDialog } = useModal();
 
   const {

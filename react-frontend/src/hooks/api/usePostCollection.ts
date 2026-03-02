@@ -9,7 +9,7 @@ interface CreateCollectionRequest {
     project_id?: number
 }
 
-export const useCreateCollection = () => {
+export const usePostCollection = () => {
     const apiRequest = useApiRequest()
     const queryClient = useQueryClient()
 
