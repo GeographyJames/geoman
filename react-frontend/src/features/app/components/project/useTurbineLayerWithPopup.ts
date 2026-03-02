@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useMapContext } from "@/features/app/contexts/MapRefContext";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
-import Overlay from "ol/Overlay";
 import GeoJSON from "ol/format/GeoJSON";
 import { Feature } from "ol";
 import { Point } from "ol/geom";
@@ -30,9 +29,8 @@ export function useTurbineLayerWithPopup(
 ) {
   const { mapRef } = useMapContext();
   const layerRef = useRef<VectorLayer | null>(null);
-  const overlayRef = useRef<Overlay | null>(null);
-  const popupRef = useRef<HTMLDivElement>(null);
   const [popupContent, setPopupContent] = useState<TurbinePopupData | null>(null);
+  const [popupPixel, setPopupPixel] = useState<[number, number] | null>(null);
   const showNumbersRef = useRef(showTurbineNumbers);
 
   useEffect(() => {
@@ -42,8 +40,7 @@ export function useTurbineLayerWithPopup(
 
   useEffect(() => {
     const map = mapRef.current;
-    const popupEl = popupRef.current;
-    if (!map || !collection || !popupEl) return;
+    if (!map || !collection) return;
 
     const format = new GeoJSON();
     const olFeatures = format.readFeatures(collection, {
@@ -89,23 +86,16 @@ export function useTurbineLayerWithPopup(
     map.getLayers().insertAt(1, layer);
     layerRef.current = layer;
 
-    const overlay = new Overlay({
-      element: popupEl,
-      positioning: "bottom-center",
-      offset: [0, -10],
-      autoPan: true,
-    });
-    map.addOverlay(overlay);
-    overlayRef.current = overlay;
-
     const handleClick = (e: MapBrowserEvent) => {
       const topHit = map.forEachFeatureAtPixel(e.pixel, (f, l) => ({ feature: f, layer: l }));
       if (topHit?.layer === layer && topHit.feature instanceof Feature) {
         const geom = topHit.feature.getGeometry() as Point;
+        const pixel = map.getPixelFromCoordinate(geom.getCoordinates());
+        const rect = map.getTargetElement().getBoundingClientRect();
+        setPopupPixel([rect.left + pixel[0], rect.top + pixel[1]]);
         setPopupContent(topHit.feature.get("_source") as TurbinePopupData);
-        overlay.setPosition(geom.getCoordinates());
       } else {
-        overlay.setPosition(undefined);
+        setPopupPixel(null);
         setPopupContent(null);
       }
     };
@@ -119,25 +109,31 @@ export function useTurbineLayerWithPopup(
       }
     };
 
+    const handleMoveStart = () => {
+      setPopupPixel(null);
+      setPopupContent(null);
+    };
+
     map.on("click", handleClick);
     map.on("pointermove", handlePointerMove);
+    map.on("movestart", handleMoveStart);
 
     return () => {
       map.removeLayer(layer);
-      map.removeOverlay(overlay);
       map.un("click", handleClick);
       map.un("pointermove", handlePointerMove);
+      map.un("movestart", handleMoveStart);
       map.getTargetElement().style.cursor = "";
       layerRef.current = null;
-      overlayRef.current = null;
+      setPopupPixel(null);
       setPopupContent(null);
     };
   }, [mapRef, collection]);
 
   const closePopup = useCallback(() => {
-    overlayRef.current?.setPosition(undefined);
+    setPopupPixel(null);
     setPopupContent(null);
   }, []);
 
-  return { popupRef, popupContent, closePopup };
+  return { popupPixel, popupContent, closePopup };
 }

@@ -50,7 +50,7 @@ export function SiteDataTableRow({
   projectSlug: string;
   collectionSlug: string;
 }) {
-  const { popupRef, popupContent, closePopup, zoomToFeature } = useCollectionItemLayer(item, {
+  const { popupPixel, popupContent, closePopup, zoomToFeature } = useCollectionItemLayer(item, {
     visible,
     areasVisible,
     wakePreset,
@@ -62,10 +62,12 @@ export function SiteDataTableRow({
 
   return (
     <tr key={item.id} className="hover:bg-base-200">
-      {createPortal(
-        <MapPopup ref={popupRef} onClose={closePopup}>
-          {popupContent && <TurbinePopupContent turbine={popupContent} />}
-        </MapPopup>,
+      {popupPixel && popupContent && createPortal(
+        <div style={{ position: "fixed", left: popupPixel[0], top: popupPixel[1] - 10, transform: "translate(-50%, -100%)", zIndex: 50 }}>
+          <MapPopup onClose={closePopup}>
+            <TurbinePopupContent turbine={popupContent} />
+          </MapPopup>
+        </div>,
         document.body,
       )}
       <td className="p-0">

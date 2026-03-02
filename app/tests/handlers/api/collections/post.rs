@@ -3,7 +3,7 @@ use domain::{ProjectCollectionId, TeamId};
 
 use crate::common::{
     AppBuilder, Auth,
-    helpers::{assert_ok, assert_status, check_error_response, handle_json_response},
+    helpers::{assert_ok, check_error_response, handle_json_response},
 };
 
 #[actix_web::test]
@@ -25,7 +25,6 @@ async fn post_collection_returns_409_for_duplicate_name() {
             &collection,
         )
         .await;
-
     let response = app
         .collections_service
         .post_json(
@@ -40,21 +39,6 @@ async fn post_collection_returns_409_for_duplicate_name() {
             .to_lowercase()
             .contains("a collection with this name")
     )
-}
-
-#[actix_web::test]
-async fn only_admins_can_create_global_collections() {
-    let app = AppBuilder::new().build().await;
-    let collection = CollectionReqPayload::default();
-    let response = app
-        .collections_service
-        .post_json(
-            &app.api_client,
-            Some(&Auth::mock_session_token()),
-            &collection,
-        )
-        .await;
-    assert_status(&response, 401);
 }
 
 #[actix_web::test]

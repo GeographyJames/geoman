@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct TeamUpdatePayload {
     pub business_unit: Option<BusinessUnitId>,
     pub name: Option<String>,
@@ -25,4 +25,27 @@ pub async fn patch_team(
     repo.update(&(body.into_inner(), id.into_inner(), user.id))
         .await?;
     Ok(HttpResponse::NoContent().finish())
+}
+
+#[cfg(test)]
+mod tests {
+    use actix_web::test;
+
+    use crate::{AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params};
+
+    use super::*;
+
+    #[actix_web::test]
+    async fn patch_team_requires_admin_permission() {
+        let req = test::TestRequest::patch()
+            .uri("/1")
+            .set_json(&TeamUpdatePayload::default());
+        let resp = mock_app_with_path_params(
+            patch_team,
+            req,
+            MockUserCredentials::User(AuthenticatedUser::default()),
+        )
+        .await;
+        assert_eq!(resp.status(), 401);
+    }
 }

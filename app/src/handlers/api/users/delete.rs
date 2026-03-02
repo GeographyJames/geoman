@@ -20,3 +20,39 @@ pub async fn delete_user(
     repo.delete_user(target_id).await?;
     Ok(HttpResponse::NoContent().finish())
 }
+
+#[cfg(test)]
+mod tests {
+    use actix_web::test;
+
+    use crate::{AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params};
+
+    use super::*;
+
+    #[actix_web::test]
+    async fn delete_user_requires_admin_permission() {
+        let req = test::TestRequest::delete().uri("/1");
+        let resp = mock_app_with_path_params(
+            delete_user,
+            req,
+            MockUserCredentials::User(AuthenticatedUser::default()),
+        )
+        .await;
+        assert_eq!(resp.status(), 401);
+    }
+
+    #[actix_web::test]
+    async fn admin_cannot_delete_themselves() {
+        let mut admin = AuthenticatedUser::default();
+        admin.admin = true;
+        admin.id = UserId(1);
+        let req = test::TestRequest::delete().uri("/1");
+        let resp = mock_app_with_path_params(
+            delete_user,
+            req,
+            MockUserCredentials::User(admin),
+        )
+        .await;
+        assert_eq!(resp.status(), 401);
+    }
+}

@@ -27,3 +27,26 @@ pub async fn post_business_unit(
         .await?;
     Ok(Json(id))
 }
+
+#[cfg(test)]
+mod tests {
+    use actix_web::test;
+
+    use crate::{AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app};
+
+    use super::*;
+
+    #[actix_web::test]
+    async fn post_business_unit_requires_admin_permission() {
+        let req = test::TestRequest::post().set_json(&BusinessUnitInputPayload {
+            name: "test".to_string(),
+        });
+        let resp = mock_app(
+            post_business_unit,
+            req,
+            MockUserCredentials::User(AuthenticatedUser::default()),
+        )
+        .await;
+        assert_eq!(resp.status(), 401);
+    }
+}

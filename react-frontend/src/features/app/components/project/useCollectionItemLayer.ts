@@ -39,7 +39,7 @@ export function useCollectionItemLayer(
   const style = item.properties.is_primary ? primaryStyle : defaultStyle;
   useFeatureLayer(visible && !isTurbineLayout ? item : undefined, style);
 
-  const { popupRef, popupContent, closePopup } = useTurbineLayerWithPopup(
+  const { popupPixel, popupContent, closePopup } = useTurbineLayerWithPopup(
     visible && isTurbineLayout ? turbineGeojson : undefined,
     style,
     showTurbineNumbers,
@@ -59,5 +59,5 @@ export function useCollectionItemLayer(
 
   const zoomToFeature = useZoomToFeature(item);
 
-  return { popupRef, popupContent, closePopup, zoomToFeature };
+  return { popupPixel, popupContent, closePopup, zoomToFeature };
 }

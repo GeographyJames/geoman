@@ -33,7 +33,7 @@ mod tests {
     async fn post_project_returns_422_for_invalid_name() {
         let mut project = PostProjectPayload::default();
         project.name = "".to_string();
-        let req = test::TestRequest::post().set_json(project);
+        let req = test::TestRequest::post().set_json(project).uri("/");
 
         let resp = mock_app(
             post_project,

@@ -56,3 +56,23 @@ pub async fn post_project_collection(
     let collection_id = repo.insert(&(&collection_input_dto, user.id)).await?;
     Ok(Json(collection_id))
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app};
+    use actix_web::test;
+
+    use super::*;
+
+    #[actix_web::test]
+    async fn only_admins_can_create_global_collections() {
+        let req = test::TestRequest::post().set_json(&CollectionReqPayload::default());
+        let resp = mock_app(
+            post_project_collection,
+            req,
+            MockUserCredentials::User(AuthenticatedUser::default()),
+        )
+        .await;
+        assert_eq!(resp.status(), 401);
+    }
+}

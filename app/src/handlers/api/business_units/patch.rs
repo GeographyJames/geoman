@@ -25,3 +25,26 @@ pub async fn patch_business_unit(
         .await?;
     Ok(HttpResponse::NoContent().finish())
 }
+
+#[cfg(test)]
+mod tests {
+    use actix_web::test;
+
+    use crate::{AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params};
+
+    use super::*;
+
+    #[actix_web::test]
+    async fn patch_business_unit_requires_admin_permission() {
+        let req = test::TestRequest::patch()
+            .uri("/1")
+            .set_json(&BusinessUnitUpdatePayload { name: None });
+        let resp = mock_app_with_path_params(
+            patch_business_unit,
+            req,
+            MockUserCredentials::User(AuthenticatedUser::default()),
+        )
+        .await;
+        assert_eq!(resp.status(), 401);
+    }
+}
