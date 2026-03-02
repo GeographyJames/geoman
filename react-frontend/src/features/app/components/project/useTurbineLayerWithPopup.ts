@@ -66,7 +66,7 @@ export function useTurbineLayerWithPopup(
           fill: base.getFill() ?? undefined,
           image: base.getImage() ?? undefined,
           text: new Text({
-            text: String(feature.get("turbine_number")),
+            text: `T${String(feature.get("turbine_number"))}`,
             offsetX: 10,
             offsetY: -10,
             textAlign: "left",

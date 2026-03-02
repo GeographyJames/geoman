@@ -84,12 +84,12 @@ export const ProjectCollection = ({
               <th className="w-12 p-0 hidden sm:table-cell text-wrap">
                 Hub height
               </th>
-              <th className="w-14 p-0 text-wrap text-center">Ellipses</th>
               <th className="w-14 p-0 text-wrap text-center">
                 Turbine
                 <br />
                 numbers
               </th>
+              <th className="w-14 p-0 text-wrap text-center">Ellipses</th>
             </>
           )}
         </SiteDataTableHeadings>
@@ -107,7 +107,7 @@ export const ProjectCollection = ({
               }
               wakePreset={wakePreset}
               windFromDeg={windFromDeg}
-              showTurbineNumbers={showTurbineNumbersMap[f.id] ?? false}
+              showTurbineNumbers={showTurbineNumbersMap[f.id] ?? true}
               projectSlug={projectSlug}
               collectionSlug={collectionSlug}
             >
@@ -165,17 +165,11 @@ export const ProjectCollection = ({
                     <div className="flex justify-center">
                       <input
                         type="checkbox"
-                        className="checkbox checkbox-xs bg-base-100 "
-                        checked={
-                          showAreasMap[f.id] ??
-                          f.properties.rotor_diameter_mm != null
-                        }
-                        disabled={
-                          !(visibilityMap[f.id] ?? false) ||
-                          f.properties.rotor_diameter_mm == null
-                        }
+                        className="checkbox checkbox-xs bg-base-100"
+                        checked={showTurbineNumbersMap[f.id] ?? true}
+                        disabled={!(visibilityMap[f.id] ?? false)}
                         onChange={(e) =>
-                          setShowAreasMap((prev) => ({
+                          setShowTurbineNumbersMap((prev) => ({
                             ...prev,
                             [f.id]: e.target.checked,
                           }))
@@ -187,11 +181,17 @@ export const ProjectCollection = ({
                     <div className="flex justify-center">
                       <input
                         type="checkbox"
-                        className="checkbox checkbox-xs bg-base-100"
-                        checked={showTurbineNumbersMap[f.id] ?? false}
-                        disabled={!(visibilityMap[f.id] ?? false)}
+                        className="checkbox checkbox-xs bg-base-100 "
+                        checked={
+                          showAreasMap[f.id] ??
+                          f.properties.rotor_diameter_mm != null
+                        }
+                        disabled={
+                          !(visibilityMap[f.id] ?? false) ||
+                          f.properties.rotor_diameter_mm == null
+                        }
                         onChange={(e) =>
-                          setShowTurbineNumbersMap((prev) => ({
+                          setShowAreasMap((prev) => ({
                             ...prev,
                             [f.id]: e.target.checked,
                           }))

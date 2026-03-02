@@ -163,26 +163,29 @@ function PopupContent({ project, projectsArray, onClose }: { project: Project; p
     ? projectsArray.join(",")
     : [...projectsArray, project.slug].join(",");
 
+  const crsLabel = project.crsName
+    ? `${project.crsName} (EPSG:${project.crsSrid})`
+    : `EPSG:${project.crsSrid}`;
+
   return (
-    <>
+    <div className="space-y-0.5 max-w-64">
       <Link
         from={"/"}
         search={{ projects: newProjects }}
         onClick={onClose}
-        className="link font-semibold"
+        className="link font-semibold text-blue-600"
       >
         {project.name}
       </Link>
-      <p>{`lat: ${project.latitude}`}</p>
-      <p>{`long: ${project.longitude}`}</p>
+      <p>Lat: {project.latitude}</p>
+      <p>Long: {project.longitude}</p>
       {project.centroidX != null && project.centroidY != null && project.crsSrid != null && (
         <>
-          {project.crsName && <p className="text-base-content/70 text-xs">{project.crsName}</p>}
-          {project.crsSrid && <p className="text-base-content/70 text-xs">EPSG:{project.crsSrid}</p>}
-          <p>{`X: ${project.centroidX.toFixed(0)}`}</p>
-          <p>{`Y: ${project.centroidY.toFixed(0)}`}</p>
+          <p className="font-semibold mt-1">{`${crsLabel} coordinates:`}</p>
+          <p>x: {project.centroidX.toFixed(1)}</p>
+          <p>y: {project.centroidY.toFixed(1)}</p>
         </>
       )}
-    </>
+    </div>
   );
 }
