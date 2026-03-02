@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { useAuth } from "@clerk/clerk-react";
+import { useApiRequest } from "@/lib/api";
 
 interface CreateApiKeyRequest {
   key_name: string;
@@ -11,26 +11,14 @@ interface CreateApiKeyResponse {
 }
 
 export function useCreateApiKey() {
-  const { getToken } = useAuth();
+  const apiRequest = useApiRequest();
 
   return useMutation({
-    mutationFn: async (request: CreateApiKeyRequest): Promise<CreateApiKeyResponse> => {
-      const token = await getToken();
-
-      const response = await fetch("/api/keys", {
+    mutationFn: (request: CreateApiKeyRequest) =>
+      apiRequest<CreateApiKeyResponse>("/api/keys", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(request),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to create API key: ${response.statusText}`);
-      }
-
-      return response.json();
-    },
+      }),
   });
 }

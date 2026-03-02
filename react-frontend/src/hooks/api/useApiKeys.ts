@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@clerk/clerk-react";
+import { useApiRequest } from "@/lib/api";
 
 export interface ApiKey {
   id: number;
@@ -12,24 +12,10 @@ export interface ApiKey {
 }
 
 export function useApiKeys() {
-  const { getToken } = useAuth();
+  const apiRequest = useApiRequest();
 
   return useQuery({
     queryKey: ["apiKeys"],
-    queryFn: async (): Promise<ApiKey[]> => {
-      const token = await getToken();
-
-      const response = await fetch("/api/keys", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch API keys: ${response.statusText}`);
-      }
-
-      return response.json();
-    },
+    queryFn: () => apiRequest<ApiKey[]>("/api/keys").then(d => d ?? []),
   });
 }
