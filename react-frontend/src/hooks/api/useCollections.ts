@@ -23,6 +23,6 @@ export function useCollections() {
     const apiRequest = useApiRequest()
     return useQuery({
         queryKey: CACHE_KEY_COLLECTION_LIST_ITEMS,
-        queryFn: () => apiRequest<CollectionListItem[]>("/api/collections")
+        queryFn: () => apiRequest<CollectionListItem[]>(__URLS__.api.base + __URLS__.api.collections)
     })
 }

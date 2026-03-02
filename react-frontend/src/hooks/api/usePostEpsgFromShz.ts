@@ -9,7 +9,7 @@ export const usePostEpsgFromShz = () => {
     mutationFn: async (shzFile) => {
       const form = new FormData();
       form.append("shz", shzFile);
-      const data = await apiRequest<CrsInfo>("/api/epsg/shz", {
+      const data = await apiRequest<CrsInfo>(`${__URLS__.api.base}${__URLS__.api.epsg}/shz`, {
         method: "POST",
         body: form,
       });

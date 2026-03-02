@@ -11,7 +11,7 @@ export const usePostEpsg = () => {
 
   return useMutation<CrsInfo, Error, string>({
     mutationFn: async (prj) => {
-      const data = await apiRequest<CrsInfo>("/api/epsg", {
+      const data = await apiRequest<CrsInfo>(__URLS__.api.base + __URLS__.api.epsg, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prj }),

@@ -6,6 +6,6 @@ export function useRenewApiKey() {
 
   return useMutation({
     mutationFn: (keyId: number) =>
-      apiRequest(`/api/keys/${keyId}/renew`, { method: "PATCH" }),
+      apiRequest(`${__URLS__.api.base}${__URLS__.api.keys}/${keyId}/renew`, { method: "PATCH" }),
   });
 }

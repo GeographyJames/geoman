@@ -6,6 +6,6 @@ export function useRevokeApiKey() {
 
   return useMutation({
     mutationFn: (keyId: number) =>
-      apiRequest(`/api/keys/${keyId}/revoke`, { method: "PATCH" }),
+      apiRequest(`${__URLS__.api.base}${__URLS__.api.keys}/${keyId}/revoke`, { method: "PATCH" }),
   });
 }

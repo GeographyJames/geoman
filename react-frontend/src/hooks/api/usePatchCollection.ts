@@ -14,7 +14,7 @@ export const usePatchCollection = () => {
 
     return useMutation<void, Error, { id: number; patch: PatchCollectionRequest }>({
         mutationFn: async ({ id, patch }) => {
-            await apiRequest(`/api/collections/${id}`, {
+            await apiRequest(`${__URLS__.api.base}${__URLS__.api.collections}/${id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(patch),

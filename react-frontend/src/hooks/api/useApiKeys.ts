@@ -16,6 +16,6 @@ export function useApiKeys() {
 
   return useQuery({
     queryKey: ["apiKeys"],
-    queryFn: () => apiRequest<ApiKey[]>("/api/keys").then(d => d ?? []),
+    queryFn: () => apiRequest<ApiKey[]>(__URLS__.api.base + __URLS__.api.keys).then(d => d ?? []),
   });
 }

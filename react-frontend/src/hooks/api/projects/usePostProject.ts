@@ -9,7 +9,7 @@ export const usePostProject = () => {
 
   return useMutation<number, Error, ProjectInputDTO>({
     mutationFn: async (dto) => {
-      const data = await apiRequest<{ id: number }>("/api/projects", {
+      const data = await apiRequest<{ id: number }>(__URLS__.api.base + __URLS__.api.projects, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

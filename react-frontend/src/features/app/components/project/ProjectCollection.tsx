@@ -18,7 +18,6 @@ import {
   useFeatureLayer,
   useZoomToFeature,
 } from "@/hooks/useFeatureLayer";
-import { Stroke, Fill, Style, Circle } from "ol/style";
 import { type WakePreset, generateTurbineAreas } from "@/lib/turbineAreas";
 import { useTurbineLayoutGeojson } from "@/hooks/api/projectFeature.ts/useTurbineLayoutGeojson";
 import { useTurbineLayerWithPopup } from "@/hooks/useTurbineLayerWithPopup";
@@ -26,50 +25,9 @@ import MapPopup from "@/components/mapComponents/MapPopup";
 
 import { FeatureActionsDropdown } from "./features/FeatureActionsDropdown";
 import { dateFormat, TURBINE_LAYOUTS_COLLECTION_ID } from "@/constants";
-
-const primaryStyle = new Style({
-  stroke: new Stroke({
-    color: "#DC2626",
-    width: 2.5,
-  }),
-  fill: new Fill({
-    color: "rgba(220, 38, 38, 0.12)",
-  }),
-  image: new Circle({
-    radius: 6,
-    fill: new Fill({ color: "#DC2626" }),
-    stroke: new Stroke({ color: "#fff", width: 1.5 }),
-  }),
-});
-
-const defaultStyle = new Style({
-  stroke: new Stroke({
-    color: "#2563EB",
-    width: 2.5,
-  }),
-  fill: new Fill({
-    color: "rgba(37, 99, 235, 0.12)",
-  }),
-  image: new Circle({
-    radius: 6,
-    fill: new Fill({ color: "#2563EB" }),
-    stroke: new Stroke({ color: "#fff", width: 1.5 }),
-  }),
-});
-
-const sweptAreaStyle = new Style({
-  stroke: new Stroke({ color: "rgba(37, 99, 235, 0.5)", width: 1 }),
-  fill: new Fill({ color: "rgba(37, 99, 235, 0.06)" }),
-});
-
-const wakeEllipseStyle = new Style({
-  stroke: new Stroke({
-    color: "rgba(217, 119, 6, 0.6)",
-    width: 1,
-    lineDash: [4, 4],
-  }),
-  fill: new Fill({ color: "rgba(217, 119, 6, 0.04)" }),
-});
+import { primaryStyle, defaultStyle, sweptAreaStyle, wakeEllipseStyle } from "./featureStyles";
+import { TurbinePopupContent } from "./TurbinePopupContent";
+import { TurbineLayoutControls } from "./TurbineLayoutControls";
 
 function formatArea(m2: number): string {
   return `${(m2 / 10_000).toLocaleString(undefined, { maximumFractionDigits: 1 })}`;
@@ -121,43 +79,13 @@ export const ProjectCollection = ({
   return (
     <>
       {isTurbineLayout && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pb-1 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="text-base-content/70">
-              Ellipse size (rotor diameters):
-            </span>
-            <div className="join">
-              <input
-                className="join-item btn btn-xs"
-                type="radio"
-                name={`wake-preset-${projectSlug}-${collectionSlug}`}
-                aria-label="6×4"
-                checked={wakePreset === "6x4"}
-                onChange={() => setWakePreset("6x4")}
-              />
-              <input
-                className="join-item btn btn-xs"
-                type="radio"
-                name={`wake-preset-${projectSlug}-${collectionSlug}`}
-                aria-label="5×3"
-                checked={wakePreset === "5x3"}
-                onChange={() => setWakePreset("5x3")}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="text-base-content/70">Wind direction:</span>
-            <input
-              type="range"
-              className="range range-xs w-24"
-              min={0}
-              max={359}
-              value={windFromDeg}
-              onChange={(e) => setWindFromDeg(Number(e.target.value))}
-            />
-            <span className="text-base-content/70 w-8">{windFromDeg}°</span>
-          </div>
-        </div>
+        <TurbineLayoutControls
+          name={`wake-preset-${projectSlug}-${collectionSlug}`}
+          wakePreset={wakePreset}
+          setWakePreset={setWakePreset}
+          windFromDeg={windFromDeg}
+          setWindFromDeg={setWindFromDeg}
+        />
       )}
       <table className="table table-fixed table-xs">
         <SiteDataTableHeadings>
@@ -424,25 +352,3 @@ export function SiteDataTableRow({
   );
 }
 
-function formatMm(mm: number | null): string {
-  if (mm == null) return "—";
-  return `${(mm / 1000).toLocaleString()}m`;
-}
-
-function TurbinePopupContent({
-  turbineNumber,
-  hubHeightMm,
-  rotorDiameterMm,
-}: {
-  turbineNumber: number;
-  hubHeightMm: number | null;
-  rotorDiameterMm: number | null;
-}) {
-  return (
-    <div className="space-y-0.5">
-      <p className="font-semibold">Turbine {turbineNumber}</p>
-      <p>Hub height: {formatMm(hubHeightMm)}</p>
-      <p>Rotor diameter: {formatMm(rotorDiameterMm)}</p>
-    </div>
-  );
-}

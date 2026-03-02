@@ -17,7 +17,7 @@ export function usePatchProject() {
 
   return useMutation<void, Error, { id: number; dto: PatchProjectDTO }>({
     mutationFn: async ({ id, dto }) => {
-      await apiRequest(`/api/projects/${id}`, {
+      await apiRequest(`${__URLS__.api.base}${__URLS__.api.projects}/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

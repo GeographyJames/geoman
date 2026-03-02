@@ -15,7 +15,7 @@ export const usePostCollection = () => {
 
     return useMutation<void, Error, CreateCollectionRequest>({
         mutationFn: async (dto) => {
-            await apiRequest("/api/collections", {
+            await apiRequest(__URLS__.api.base + __URLS__.api.collections, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(dto),
