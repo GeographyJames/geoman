@@ -53,8 +53,10 @@ async fn fetch_layout_props(
 }
 
 #[tokio::test]
-async fn post_turbine_layout_works() {
+async fn post_turbine_layout() {
     let (app, auth, project_id) = TestApp::with_project().await;
+
+    // post works end-to-end
     let response = app.generate_primary_layout(&project_id, Some(&auth)).await;
     assert_ok(&response);
     let feature_id: FeatureId = handle_json_response(response)
@@ -73,115 +75,103 @@ async fn post_turbine_layout_works() {
     let ogc_feature: ogc::Feature = handle_json_response(response)
         .await
         .expect("failed to retrieve feature");
-
     let _feature: domain::ProjectFeature = ogc_feature.try_into().unwrap();
-}
 
-// --- hub_height_mm ---
-
-#[tokio::test]
-async fn hub_height_is_single_value_when_all_turbines_match() {
-    let (app, auth, project_id) = TestApp::with_project().await;
-    let turbines = vec![
-        TurbineInput { hub_m: Some(120.0), rd_m: None },
-        TurbineInput { hub_m: Some(120.0), rd_m: None },
-        TurbineInput { hub_m: Some(120.0), rd_m: None },
-    ];
-    let props = fetch_layout_props(&app, &auth, project_id, &turbines, true, false).await;
-    assert_eq!(props.hub_height_mm, json!(120000));
-}
-
-#[tokio::test]
-async fn hub_height_is_various_when_turbines_differ() {
-    let (app, auth, project_id) = TestApp::with_project().await;
-    let turbines = vec![
-        TurbineInput { hub_m: Some(100.0), rd_m: None },
-        TurbineInput { hub_m: Some(120.0), rd_m: None },
-        TurbineInput { hub_m: Some(140.0), rd_m: None },
-    ];
-    let props = fetch_layout_props(&app, &auth, project_id, &turbines, true, false).await;
-    assert_eq!(props.hub_height_mm, json!("various"));
-}
-
-#[tokio::test]
-async fn hub_height_is_none_when_field_not_mapped() {
-    let (app, auth, project_id) = TestApp::with_project().await;
-    let turbines = vec![
-        TurbineInput { hub_m: Some(120.0), rd_m: None },
-        TurbineInput { hub_m: Some(120.0), rd_m: None },
-        TurbineInput { hub_m: Some(120.0), rd_m: None },
-    ];
-    let props = fetch_layout_props(&app, &auth, project_id, &turbines, false, false).await;
-    assert_eq!(props.hub_height_mm, json!(null));
-}
-
-#[tokio::test]
-async fn hub_height_is_various_when_some_turbines_have_no_value() {
-    let (app, auth, project_id) = TestApp::with_project().await;
-    let turbines = vec![
-        TurbineInput { hub_m: Some(120.0), rd_m: None },
-        TurbineInput { hub_m: None, rd_m: None },
-        TurbineInput { hub_m: None, rd_m: None },
-    ];
-    let props = fetch_layout_props(&app, &auth, project_id, &turbines, true, false).await;
-    assert_eq!(props.hub_height_mm, json!("various"));
-}
-
-// --- rotor_diameter_mm ---
-
-#[tokio::test]
-async fn rotor_diameter_is_single_value_when_all_turbines_match() {
-    let (app, auth, project_id) = TestApp::with_project().await;
-    let turbines = vec![
-        TurbineInput { hub_m: None, rd_m: Some(160.0) },
-        TurbineInput { hub_m: None, rd_m: Some(160.0) },
-        TurbineInput { hub_m: None, rd_m: Some(160.0) },
-    ];
-    let props = fetch_layout_props(&app, &auth, project_id, &turbines, false, true).await;
-    assert_eq!(props.rotor_diameter_mm, json!(160000));
-}
-
-#[tokio::test]
-async fn rotor_diameter_is_various_when_turbines_differ() {
-    let (app, auth, project_id) = TestApp::with_project().await;
-    let turbines = vec![
-        TurbineInput { hub_m: None, rd_m: Some(150.0) },
-        TurbineInput { hub_m: None, rd_m: Some(160.0) },
-        TurbineInput { hub_m: None, rd_m: Some(170.0) },
-    ];
-    let props = fetch_layout_props(&app, &auth, project_id, &turbines, false, true).await;
-    assert_eq!(props.rotor_diameter_mm, json!("various"));
-}
-
-#[tokio::test]
-async fn rotor_diameter_is_various_when_some_turbines_have_no_value() {
-    let (app, auth, project_id) = TestApp::with_project().await;
-    let turbines = vec![
-        TurbineInput { hub_m: None, rd_m: Some(160.0) },
-        TurbineInput { hub_m: None, rd_m: None },
-        TurbineInput { hub_m: None, rd_m: None },
-    ];
-    let props = fetch_layout_props(&app, &auth, project_id, &turbines, false, true).await;
-    assert_eq!(props.rotor_diameter_mm, json!("various"));
-}
-
-#[tokio::test]
-async fn rotor_diameter_is_none_when_field_not_mapped() {
-    let (app, auth, project_id) = TestApp::with_project().await;
-    let turbines = vec![
-        TurbineInput { hub_m: None, rd_m: Some(160.0) },
-        TurbineInput { hub_m: None, rd_m: Some(160.0) },
-        TurbineInput { hub_m: None, rd_m: Some(160.0) },
-    ];
-    let props = fetch_layout_props(&app, &auth, project_id, &turbines, false, false).await;
-    assert_eq!(props.rotor_diameter_mm, json!(null));
-}
-
-#[tokio::test]
-async fn post_turbine_layout_with_no_turbines_returns_422() {
-    let (app, auth, project_id) = TestApp::with_project().await;
+    // no turbines returns 422
     let response = app
         .post_turbine_layout(&project_id, &[], true, true, true, Some(&auth))
         .await;
     assert_status(&response, 422);
+
+    // --- hub_height_mm ---
+
+    let props = fetch_layout_props(
+        &app, &auth, project_id,
+        &[
+            TurbineInput { hub_m: Some(120.0), rd_m: None },
+            TurbineInput { hub_m: Some(120.0), rd_m: None },
+            TurbineInput { hub_m: Some(120.0), rd_m: None },
+        ],
+        true, false,
+    ).await;
+    assert_eq!(props.hub_height_mm, json!(120000), "single value when all turbines match");
+
+    let props = fetch_layout_props(
+        &app, &auth, project_id,
+        &[
+            TurbineInput { hub_m: Some(100.0), rd_m: None },
+            TurbineInput { hub_m: Some(120.0), rd_m: None },
+            TurbineInput { hub_m: Some(140.0), rd_m: None },
+        ],
+        true, false,
+    ).await;
+    assert_eq!(props.hub_height_mm, json!("various"), "various when turbines differ");
+
+    let props = fetch_layout_props(
+        &app, &auth, project_id,
+        &[
+            TurbineInput { hub_m: Some(120.0), rd_m: None },
+            TurbineInput { hub_m: Some(120.0), rd_m: None },
+            TurbineInput { hub_m: Some(120.0), rd_m: None },
+        ],
+        false, false,
+    ).await;
+    assert_eq!(props.hub_height_mm, json!(null), "null when field not mapped");
+
+    let props = fetch_layout_props(
+        &app, &auth, project_id,
+        &[
+            TurbineInput { hub_m: Some(120.0), rd_m: None },
+            TurbineInput { hub_m: None, rd_m: None },
+            TurbineInput { hub_m: None, rd_m: None },
+        ],
+        true, false,
+    ).await;
+    assert_eq!(props.hub_height_mm, json!("various"), "various when some turbines have no value");
+
+    // --- rotor_diameter_mm ---
+
+    let props = fetch_layout_props(
+        &app, &auth, project_id,
+        &[
+            TurbineInput { hub_m: None, rd_m: Some(160.0) },
+            TurbineInput { hub_m: None, rd_m: Some(160.0) },
+            TurbineInput { hub_m: None, rd_m: Some(160.0) },
+        ],
+        false, true,
+    ).await;
+    assert_eq!(props.rotor_diameter_mm, json!(160000), "single value when all turbines match");
+
+    let props = fetch_layout_props(
+        &app, &auth, project_id,
+        &[
+            TurbineInput { hub_m: None, rd_m: Some(150.0) },
+            TurbineInput { hub_m: None, rd_m: Some(160.0) },
+            TurbineInput { hub_m: None, rd_m: Some(170.0) },
+        ],
+        false, true,
+    ).await;
+    assert_eq!(props.rotor_diameter_mm, json!("various"), "various when turbines differ");
+
+    let props = fetch_layout_props(
+        &app, &auth, project_id,
+        &[
+            TurbineInput { hub_m: None, rd_m: Some(160.0) },
+            TurbineInput { hub_m: None, rd_m: None },
+            TurbineInput { hub_m: None, rd_m: None },
+        ],
+        false, true,
+    ).await;
+    assert_eq!(props.rotor_diameter_mm, json!("various"), "various when some turbines have no value");
+
+    let props = fetch_layout_props(
+        &app, &auth, project_id,
+        &[
+            TurbineInput { hub_m: None, rd_m: Some(160.0) },
+            TurbineInput { hub_m: None, rd_m: Some(160.0) },
+            TurbineInput { hub_m: None, rd_m: Some(160.0) },
+        ],
+        false, false,
+    ).await;
+    assert_eq!(props.rotor_diameter_mm, json!(null), "null when field not mapped");
 }
