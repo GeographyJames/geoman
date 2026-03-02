@@ -35,6 +35,7 @@ export function SiteDataTableRow({
   areasVisible = true,
   wakePreset = "6x4",
   windFromDeg = 225,
+  showTurbineNumbers = false,
   projectSlug,
   collectionSlug,
 }: {
@@ -45,6 +46,7 @@ export function SiteDataTableRow({
   areasVisible?: boolean;
   wakePreset?: WakePreset;
   windFromDeg?: number;
+  showTurbineNumbers?: boolean;
   projectSlug: string;
   collectionSlug: string;
 }) {
@@ -53,6 +55,7 @@ export function SiteDataTableRow({
     areasVisible,
     wakePreset,
     windFromDeg,
+    showTurbineNumbers,
     projectSlug,
     collectionSlug,
   });

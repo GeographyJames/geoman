@@ -45,9 +45,13 @@ export const ProjectCollection = ({
   );
 
   const isTurbineLayout =
-    data.features[0]?.properties.collection_id === TURBINE_LAYOUTS_COLLECTION_ID;
+    data.features[0]?.properties.collection_id ===
+    TURBINE_LAYOUTS_COLLECTION_ID;
 
   const [showAreasMap, setShowAreasMap] = useState<Record<number, boolean>>({});
+  const [showTurbineNumbersMap, setShowTurbineNumbersMap] = useState<
+    Record<number, boolean>
+  >({});
   const [wakePreset, setWakePreset] = useState<WakePreset>("6x4");
   const [windFromDeg, setWindFromDeg] = useState(225);
 
@@ -81,6 +85,11 @@ export const ProjectCollection = ({
                 Hub height
               </th>
               <th className="w-14 p-0 text-wrap text-center">Ellipses</th>
+              <th className="w-14 p-0 text-wrap text-center">
+                Turbine
+                <br />
+                numbers
+              </th>
             </>
           )}
         </SiteDataTableHeadings>
@@ -93,9 +102,12 @@ export const ProjectCollection = ({
               onVisibleChange={(val) =>
                 setVisibilityMap((prev) => ({ ...prev, [f.id]: val }))
               }
-              areasVisible={showAreasMap[f.id] ?? (f.properties.rotor_diameter_mm != null)}
+              areasVisible={
+                showAreasMap[f.id] ?? f.properties.rotor_diameter_mm != null
+              }
               wakePreset={wakePreset}
               windFromDeg={windFromDeg}
+              showTurbineNumbers={showTurbineNumbersMap[f.id] ?? false}
               projectSlug={projectSlug}
               collectionSlug={collectionSlug}
             >
@@ -154,10 +166,32 @@ export const ProjectCollection = ({
                       <input
                         type="checkbox"
                         className="checkbox checkbox-xs bg-base-100 "
-                        checked={showAreasMap[f.id] ?? (f.properties.rotor_diameter_mm != null)}
-                        disabled={!(visibilityMap[f.id] ?? false) || f.properties.rotor_diameter_mm == null}
+                        checked={
+                          showAreasMap[f.id] ??
+                          f.properties.rotor_diameter_mm != null
+                        }
+                        disabled={
+                          !(visibilityMap[f.id] ?? false) ||
+                          f.properties.rotor_diameter_mm == null
+                        }
                         onChange={(e) =>
                           setShowAreasMap((prev) => ({
+                            ...prev,
+                            [f.id]: e.target.checked,
+                          }))
+                        }
+                      />
+                    </div>
+                  </td>
+                  <td className="">
+                    <div className="flex justify-center">
+                      <input
+                        type="checkbox"
+                        className="checkbox checkbox-xs bg-base-100"
+                        checked={showTurbineNumbersMap[f.id] ?? false}
+                        disabled={!(visibilityMap[f.id] ?? false)}
+                        onChange={(e) =>
+                          setShowTurbineNumbersMap((prev) => ({
                             ...prev,
                             [f.id]: e.target.checked,
                           }))

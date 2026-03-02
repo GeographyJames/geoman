@@ -6,6 +6,10 @@ import Overlay from "ol/Overlay";
 import GeoJSON from "ol/format/GeoJSON";
 import { Feature } from "ol";
 import { Point } from "ol/geom";
+import Style from "ol/style/Style";
+import Fill from "ol/style/Fill";
+import Stroke from "ol/style/Stroke";
+import Text from "ol/style/Text";
 import type { StyleLike } from "ol/style/Style";
 import type { MapBrowserEvent } from "ol";
 import type { TurbineFeature, TurbineFeatureCollection } from "@/hooks/api/projectFeature.ts/useTurbineLayoutGeojson";
@@ -18,12 +22,19 @@ export type TurbinePopupData = TurbineFeature & {
 export function useTurbineLayerWithPopup(
   collection: TurbineFeatureCollection | undefined,
   style: StyleLike,
+  showTurbineNumbers: boolean,
 ) {
   const { mapRef } = useMapContext();
   const layerRef = useRef<VectorLayer | null>(null);
   const overlayRef = useRef<Overlay | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const [popupContent, setPopupContent] = useState<TurbinePopupData | null>(null);
+  const showNumbersRef = useRef(showTurbineNumbers);
+
+  useEffect(() => {
+    showNumbersRef.current = showTurbineNumbers;
+    layerRef.current?.changed();
+  }, [showTurbineNumbers]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -44,7 +55,29 @@ export function useTurbineLayerWithPopup(
     });
 
     const source = new VectorSource({ features: olFeatures });
-    const layer = new VectorLayer({ source, style });
+    const base = style as Style;
+    const layer = new VectorLayer({
+      source,
+      zIndex: 10,
+      style: (feature) => {
+        if (!showNumbersRef.current) return base;
+        return new Style({
+          stroke: base.getStroke() ?? undefined,
+          fill: base.getFill() ?? undefined,
+          image: base.getImage() ?? undefined,
+          text: new Text({
+            text: String(feature.get("turbine_number")),
+            offsetX: 10,
+            offsetY: -10,
+            textAlign: "left",
+            textBaseline: "bottom",
+            font: "bold 11px sans-serif",
+            fill: new Fill({ color: "#1f2937" }),
+            stroke: new Stroke({ color: "#fff", width: 3 }),
+          }),
+        });
+      },
+    });
     map.getLayers().insertAt(1, layer);
     layerRef.current = layer;
 

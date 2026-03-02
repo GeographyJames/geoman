@@ -14,6 +14,7 @@ export function useCollectionItemLayer(
     areasVisible,
     wakePreset,
     windFromDeg,
+    showTurbineNumbers,
     projectSlug,
     collectionSlug,
   }: {
@@ -21,6 +22,7 @@ export function useCollectionItemLayer(
     areasVisible: boolean;
     wakePreset: WakePreset;
     windFromDeg: number;
+    showTurbineNumbers: boolean;
     projectSlug: string;
     collectionSlug: string;
   },
@@ -40,6 +42,7 @@ export function useCollectionItemLayer(
   const { popupRef, popupContent, closePopup } = useTurbineLayerWithPopup(
     visible && isTurbineLayout ? turbineGeojson : undefined,
     style,
+    showTurbineNumbers,
   );
 
   const turbineAreas = useMemo(
