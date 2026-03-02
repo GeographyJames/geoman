@@ -122,7 +122,7 @@ pub async fn post_project_feature_shapefile(
         let turbine_number_field = turbine_number_field.map(|v| v.into_inner());
         let blade_length_field = rotor_diameter_field.map(|v| v.into_inner());
         let hub_height_field = hub_height_field.map(|v| v.into_inner());
-        let builder = InputDTOBuilder::new(&ds)?;
+        let builder = InputDTOBuilder::new(&ds).map_err(ShapefileError::InvalidData)?;
         let turbines = builder.build_turbines_geom_input_dto(
             hub_height_default_mm,
             blade_length_default_mm,
@@ -130,6 +130,12 @@ pub async fn post_project_feature_shapefile(
             blade_length_field,
             hub_height_field,
         )?;
+        if turbines.0.is_empty() {
+            return Err(ShapefileError::InvalidData(anyhow::anyhow!(
+                "Layout must contain at least one turbine with a valid point geometry"
+            ))
+            .into());
+        }
         let input_dto = TurbineLayoutInputDTO {
             name,
             primary,

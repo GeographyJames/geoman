@@ -29,4 +29,4 @@ mod business_unit;
 pub use business_unit::BusinessUnit;
 pub mod name;
 pub mod turbine_layout;
-pub use turbine_layout::TurbineLayout;
+pub use turbine_layout::{Turbine, TurbineLayout};

@@ -19,6 +19,7 @@ import {
 } from "@/hooks/useFeatureLayer";
 import { Stroke, Fill, Style, Circle } from "ol/style";
 import { type WakePreset, generateTurbineAreas } from "@/lib/turbineAreas";
+import { useTurbineLayoutGeojson } from "@/hooks/api/projectFeature.ts/useTurbineLayoutGeojson";
 
 import { FeatureActionsDropdown } from "./features/FeatureActionsDropdown";
 import { dateFormat, TURBINE_LAYOUT_CCOLLECTION_ID } from "@/constants";
@@ -307,16 +308,24 @@ export function SiteDataTableRow({
   projectSlug: string;
   collectionSlug: string;
 }) {
-  useFeatureLayer(
-    visible ? item : undefined,
-    item.properties.is_primary ? primaryStyle : defaultStyle,
+  const isTurbineLayout = item.properties.collection_id === TURBINE_LAYOUT_CCOLLECTION_ID;
+  const { data: turbineGeojson } = useTurbineLayoutGeojson(
+    projectSlug,
+    collectionSlug,
+    item.id,
+    visible && isTurbineLayout,
   );
+
+  const style = item.properties.is_primary ? primaryStyle : defaultStyle;
+  useFeatureLayer(visible && !isTurbineLayout ? item : undefined, style);
+  useFeatureCollectionLayer(visible && isTurbineLayout ? turbineGeojson : undefined, style);
+
   const turbineAreas = useMemo(
     () =>
-      visible && areasVisible
-        ? generateTurbineAreas(item, wakePreset, windFromDeg)
+      visible && areasVisible && turbineGeojson
+        ? generateTurbineAreas(turbineGeojson, wakePreset, windFromDeg)
         : null,
-    [visible, areasVisible, wakePreset, windFromDeg, item],
+    [visible, areasVisible, wakePreset, windFromDeg, turbineGeojson],
   );
   useFeatureCollectionLayer(turbineAreas?.sweptAreas, sweptAreaStyle);
   useFeatureCollectionLayer(turbineAreas?.wakeEllipses, wakeEllipseStyle);

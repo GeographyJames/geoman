@@ -1,13 +1,14 @@
 use actix_web::{HttpResponse, get, web};
 use anyhow::Context;
-use domain::FeatureId;
+use domain::{FeatureId, ProjectId, TurbineLayout};
 use geo::shapefile_builder::{self, TurbineEntry};
+use ogcapi_types::common::Crs;
 use serde::Deserialize;
 use strum::Display;
 
 use crate::{
     AuthenticatedUser, constants::TURBINE_LAYOUTS_COLLECTION_ID, errors::ApiError,
-    postgres::PostgresRepo,
+    postgres::PostgresRepo, repo::project_features::SelectOneParams,
 };
 
 #[derive(Deserialize, Display)]
@@ -16,6 +17,7 @@ use crate::{
 pub enum FeatureFormat {
     Shapefile,
     Csv,
+    Geojson,
 }
 
 impl FeatureFormat {
@@ -23,6 +25,7 @@ impl FeatureFormat {
         match self {
             FeatureFormat::Shapefile => "shz".to_string(),
             FeatureFormat::Csv => "csv".to_string(),
+            FeatureFormat::Geojson => "geojson".to_string(),
         }
     }
 }
@@ -57,6 +60,9 @@ pub async fn get_project_feature_download(
             get_shapefile(&repo, feature_id, &project_slug, &collection_slug).await
         }
         FeatureFormat::Csv => get_csv(&repo, feature_id, &project_slug, &collection_slug).await,
+        FeatureFormat::Geojson => {
+            get_geojson(&repo, feature_id, &project_slug, &collection_slug).await
+        }
     }
 }
 
@@ -200,6 +206,92 @@ async fn get_turbine_layout_shapefile(
             FeatureFormat::Shapefile,
         ),
     ))
+}
+
+async fn get_geojson(
+    repo: &PostgresRepo,
+    feature_id: FeatureId,
+    project_slug: &str,
+    collection_slug: &str,
+) -> Result<HttpResponse, ApiError> {
+    let collection_id = repo
+        .get_collection_id_by_slug(collection_slug)
+        .await
+        .context("failed to query collection id")?
+        .ok_or(ApiError::CollectionNotFound)?;
+
+    if collection_id != TURBINE_LAYOUTS_COLLECTION_ID {
+        return Err(ApiError::CollectionNotFound);
+    }
+
+    let project_id = repo
+        .get_project_id_by_slug(project_slug)
+        .await
+        .context("failed to query project id")?
+        .ok_or(ApiError::NotFound)?;
+
+    let crs = Crs::from_srid(4326);
+    let params = SelectOneParams {
+        project_id: ProjectId(project_id),
+        crs: &crs,
+    };
+
+    let layout = repo
+        .select_one_with_params::<TurbineLayout, _>(feature_id, &params)
+        .await?
+        .ok_or(ApiError::FeatureNotFound(feature_id))?;
+
+    let storage_crs_srid = layout.properties.storage_crs_srid;
+    let storage_crs_name = layout.properties.storage_crs_name.clone();
+
+    let features: Vec<geojson::Feature> = layout
+        .turbines
+        .into_iter()
+        .map(|t| {
+            let mut properties = serde_json::Map::new();
+            properties.insert(
+                "turbine_number".to_string(),
+                serde_json::json!(t.turbine_number),
+            );
+            properties.insert(
+                "hub_height_mm".to_string(),
+                serde_json::json!(t.hub_height_mm),
+            );
+            properties.insert(
+                "rotor_diameter_mm".to_string(),
+                serde_json::json!(t.rotor_diameter_mm),
+            );
+            properties.insert("x_storage_crs".to_string(), serde_json::json!(t.x_storage_crs));
+            properties.insert("y_storage_crs".to_string(), serde_json::json!(t.y_storage_crs));
+            geojson::Feature {
+                id: Some(geojson::feature::Id::Number(serde_json::Number::from(t.id))),
+                geometry: Some(t.geometry),
+                properties: Some(properties),
+                bbox: None,
+                foreign_members: None,
+            }
+        })
+        .collect();
+
+    let mut foreign_members = serde_json::Map::new();
+    foreign_members.insert(
+        "storage_crs_srid".to_string(),
+        serde_json::json!(storage_crs_srid),
+    );
+    foreign_members.insert(
+        "storage_crs_name".to_string(),
+        serde_json::json!(storage_crs_name),
+    );
+
+    let feature_collection = geojson::FeatureCollection {
+        bbox: None,
+        features,
+        foreign_members: Some(foreign_members),
+    };
+
+    Ok(HttpResponse::Ok()
+        .content_type("application/geo+json")
+        .json(feature_collection))
 }
 
 fn layer_name(collection_slug: &str, feature_id: FeatureId, name: &str) -> String {

@@ -33,3 +33,32 @@ CREATE TABLE app.turbines (
 );
 
 CREATE INDEX idx_turbines_layout ON app.turbines(layout_id);
+
+
+CREATE OR REPLACE FUNCTION app.check_turbine_layout_crs_consistency()
+RETURNS trigger AS $$
+DECLARE
+    existing_srid integer;
+BEGIN
+    SELECT ST_SRID(geom)
+      INTO existing_srid
+      FROM app.turbines
+     WHERE layout_id = NEW.layout_id
+       AND id != NEW.id
+     LIMIT 1;
+
+    IF existing_srid IS NOT NULL AND existing_srid != ST_SRID(NEW.geom) THEN
+        RAISE EXCEPTION
+            'Turbine SRID % does not match existing layout SRID %',
+            ST_SRID(NEW.geom), existing_srid
+            USING ERRCODE = 'check_violation',
+                  CONSTRAINT = 'turbine_layout_crs_consistency';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER turbine_layout_crs_consistency
+BEFORE INSERT OR UPDATE OF geom ON app.turbines
+FOR EACH ROW EXECUTE FUNCTION app.check_turbine_layout_crs_consistency();

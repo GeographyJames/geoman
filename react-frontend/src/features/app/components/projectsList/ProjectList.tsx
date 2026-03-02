@@ -59,7 +59,7 @@ function ProjectsList({ projects: projectsProp }: Props = {}) {
             />
             <div className="flex justify-end">
               <div className="flex flex-col items-end gap-y-1">
-                <span className="text-xs text-base-content/70">{`showing ${sortedProjects.length}`}</span>
+                <span className="text-xs text-base-content/60">{`showing ${sortedProjects.length}`}</span>
                 <ShowArchivedToggle
                   showArchived={showArchivedProjects}
                   setShowArchived={setShowArchivedProjects}

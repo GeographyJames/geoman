@@ -565,6 +565,23 @@ first_name, last_name,
         .await
     }
 
+    pub async fn get_feature_geojson(
+        &self,
+        auth: Option<&Auth>,
+        project_slug: &str,
+        collection_slug: &str,
+        feature_id: i32,
+    ) -> Response {
+        self.get_feature_download(
+            FeatureFormat::Geojson,
+            auth,
+            project_slug,
+            collection_slug,
+            feature_id,
+        )
+        .await
+    }
+
     pub async fn get_collection_slug(
         &self,
         project_id: ProjectId,

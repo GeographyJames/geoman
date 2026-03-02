@@ -1,10 +1,10 @@
 use chrono::{DateTime, Utc};
 use domain::{
-    AddedBy, FeatureId, LastUpdatedBy, TurbineLayout, enums::Status,
+    AddedBy, FeatureId, LastUpdatedBy, Turbine, TurbineLayout, enums::Status,
     turbine_layout::{TurbineLayoutProperties, TurbineMeasurement},
 };
 use futures::{Stream, StreamExt};
-use geojson::Geometry;
+use serde::Deserialize;
 use sqlx::types::Json;
 
 use crate::repo::{
@@ -13,6 +13,17 @@ use crate::repo::{
     traits::{SelectAllWithParamsStreaming, SelectOneWithParams},
     turbine_layout_features::SelectAllParams,
 };
+
+#[derive(Deserialize)]
+struct TurbineJson {
+    id: i32,
+    turbine_number: i32,
+    hub_height_mm: Option<i32>,
+    rotor_diameter_mm: Option<i32>,
+    x_storage_crs: f64,
+    y_storage_crs: f64,
+    geometry: geojson::Geometry,
+}
 
 struct TurbineLayoutRow {
     pub id: i32,
@@ -27,7 +38,8 @@ struct TurbineLayoutRow {
     pub added_by: AddedBy,
     pub last_updated: DateTime<Utc>,
     pub last_updated_by: LastUpdatedBy,
-    pub geometry: Json<Geometry>,
+    pub turbines: Json<Vec<TurbineJson>>,
+    pub storage_crs_name: Option<String>,
     pub number_matched: i64,
     pub rotor_diameter_mm: Option<i32>,
     pub rotor_diameter_various: bool,
@@ -47,12 +59,13 @@ impl TryInto<TurbineLayout> for TurbineLayoutRow {
             name,
             is_primary,
             storage_crs_srid,
+            storage_crs_name,
             status,
             added,
             added_by,
             last_updated,
             last_updated_by,
-            geometry,
+            turbines,
             rotor_diameter_mm,
             rotor_diameter_various,
             hub_height_mm,
@@ -70,6 +83,19 @@ impl TryInto<TurbineLayout> for TurbineLayoutRow {
             (None, true) => TurbineMeasurement::Various,
             (None, false) => TurbineMeasurement::None,
         };
+        let turbines: Vec<Turbine> = turbines
+            .0
+            .into_iter()
+            .map(|t| Turbine {
+                id: t.id,
+                turbine_number: t.turbine_number,
+                hub_height_mm: t.hub_height_mm,
+                rotor_diameter_mm: t.rotor_diameter_mm,
+                x_storage_crs: t.x_storage_crs,
+                y_storage_crs: t.y_storage_crs,
+                geometry: t.geometry,
+            })
+            .collect();
         Ok(TurbineLayout {
             id,
             properties_map: serde_json::Map::default(),
@@ -81,6 +107,7 @@ impl TryInto<TurbineLayout> for TurbineLayoutRow {
                 name,
                 is_primary,
                 storage_crs_srid: storage_crs_srid.unwrap_or(0),
+                storage_crs_name,
                 status,
                 added,
                 added_by,
@@ -90,7 +117,7 @@ impl TryInto<TurbineLayout> for TurbineLayoutRow {
                 hub_height_mm,
                 turbine_count,
             },
-            geometry: geometry.0,
+            turbines,
         })
     }
 }
@@ -129,7 +156,29 @@ impl SelectAllWithParamsStreaming for TurbineLayout {
                 ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t_ab.id, t_ab.name, t_ab.business_unit_id)::app.team))::app.user AS "added_by!: AddedBy",
                 tl.last_updated,
                 ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name, t_ub.business_unit_id)::app.team))::app.user AS "last_updated_by!: LastUpdatedBy",
-                ST_AsGeoJSON(ST_Transform(ST_Collect(t.geom), $1))::jsonb AS "geometry!: Json<Geometry>",
+                jsonb_agg(
+                    jsonb_build_object(
+                        'id', t.id,
+                        'turbine_number', t.turbine_number,
+                        'hub_height_mm', t.hub_height_mm,
+                        'rotor_diameter_mm', t.rotor_diameter_mm,
+                        'x_storage_crs', ST_X(t.geom),
+                        'y_storage_crs', ST_Y(t.geom),
+                        'geometry', ST_AsGeoJSON(ST_Transform(t.geom, $1))::jsonb
+                    ) ORDER BY t.turbine_number
+                ) AS "turbines!: Json<Vec<TurbineJson>>",
+                (
+                    SELECT substring(srtext from '"([^"]+)"')
+                    FROM spatial_ref_sys
+                    WHERE srid = (
+                        SELECT CASE WHEN COUNT(DISTINCT ST_SRID(t2.geom)) = 1
+                                    THEN MIN(ST_SRID(t2.geom))
+                                    ELSE NULL
+                               END
+                        FROM app.turbines t2
+                        WHERE t2.layout_id = tl.id
+                    )
+                ) AS storage_crs_name,
                 COUNT(*) OVER () AS "number_matched!",
                 CASE WHEN COUNT(DISTINCT t.rotor_diameter_mm) = 1 AND COUNT(t.id) = COUNT(t.rotor_diameter_mm)
                      THEN MIN(t.rotor_diameter_mm)::int
@@ -205,7 +254,29 @@ impl SelectOneWithParams<FeatureId> for TurbineLayout {
                 ROW(ab.id, ab.first_name, ab.last_name, ab.clerk_id, (ROW(t_ab.id, t_ab.name, t_ab.business_unit_id)::app.team))::app.user AS "added_by!: AddedBy",
                 tl.last_updated,
                 ROW(ub.id, ub.first_name, ub.last_name, ub.clerk_id, (ROW(t_ub.id, t_ub.name, t_ub.business_unit_id)::app.team))::app.user AS "last_updated_by!: LastUpdatedBy",
-                ST_AsGeoJSON(ST_Transform(ST_Collect(t.geom), $1))::jsonb AS "geometry!: Json<Geometry>",
+                jsonb_agg(
+                    jsonb_build_object(
+                        'id', t.id,
+                        'turbine_number', t.turbine_number,
+                        'hub_height_mm', t.hub_height_mm,
+                        'rotor_diameter_mm', t.rotor_diameter_mm,
+                        'x_storage_crs', ST_X(t.geom),
+                        'y_storage_crs', ST_Y(t.geom),
+                        'geometry', ST_AsGeoJSON(ST_Transform(t.geom, $1))::jsonb
+                    ) ORDER BY t.turbine_number
+                ) AS "turbines!: Json<Vec<TurbineJson>>",
+                (
+                    SELECT substring(srtext from '"([^"]+)"')
+                    FROM spatial_ref_sys
+                    WHERE srid = (
+                        SELECT CASE WHEN COUNT(DISTINCT ST_SRID(t2.geom)) = 1
+                                    THEN MIN(ST_SRID(t2.geom))
+                                    ELSE NULL
+                               END
+                        FROM app.turbines t2
+                        WHERE t2.layout_id = tl.id
+                    )
+                ) AS storage_crs_name,
                 1::bigint AS "number_matched!",
                 CASE WHEN COUNT(DISTINCT t.rotor_diameter_mm) = 1 AND COUNT(t.id) = COUNT(t.rotor_diameter_mm)
                      THEN MIN(t.rotor_diameter_mm)::int

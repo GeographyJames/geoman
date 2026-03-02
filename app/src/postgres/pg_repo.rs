@@ -165,6 +165,20 @@ impl PostgresRepo {
     }
 
     #[tracing::instrument(skip(self))]
+    pub async fn get_project_id_by_slug(
+        &self,
+        project_slug: &str,
+    ) -> Result<Option<i32>, RepositoryError> {
+        sqlx::query_scalar!(
+            "SELECT id FROM app.projects WHERE slug = $1",
+            project_slug
+        )
+        .fetch_optional(&self.db_pool)
+        .await
+        .map_err(RepositoryError::from)
+    }
+
+    #[tracing::instrument(skip(self))]
     pub async fn get_turbine_layout_shapefile(
         &self,
         layout_id: FeatureId,

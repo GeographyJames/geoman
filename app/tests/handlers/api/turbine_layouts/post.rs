@@ -4,7 +4,7 @@ use serde_json::json;
 
 use crate::common::{
     AppBuilder, Auth, TestApp,
-    helpers::{TurbineInput, assert_ok, handle_json_response},
+    helpers::{TurbineInput, assert_ok, assert_status, handle_json_response},
     services::ClerkAuthService,
 };
 
@@ -184,4 +184,13 @@ async fn rotor_diameter_is_none_when_field_not_mapped() {
     ];
     let props = fetch_layout_props(&app, &auth, project_id, &turbines, false, false).await;
     assert_eq!(props.rotor_diameter_mm, json!(null));
+}
+
+#[tokio::test]
+async fn post_turbine_layout_with_no_turbines_returns_422() {
+    let (app, auth, project_id) = setup().await;
+    let response = app
+        .post_turbine_layout(&project_id, &[], true, true, true, Some(&auth))
+        .await;
+    assert_status(&response, 422);
 }

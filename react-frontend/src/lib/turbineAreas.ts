@@ -1,5 +1,3 @@
-import type { ProjectCollectionItem } from "@/domain/projectCollectionItems/outputDTO";
-
 const EARTH_RADIUS_M = 6371000;
 
 function generateEllipse(
@@ -39,31 +37,32 @@ export interface TurbineAreas {
 
 /**
  * Generates swept area circles (radius = rotor_diameter / 2) and wake ellipses
- * for each turbine in a layout. Returns null if geometry or rotor diameter is missing.
- *
- * Prevailing wind bearing is 45° (SW→NE, typical for UK sites).
+ * for each turbine in a layout. Accepts the per-turbine GeoJSON FeatureCollection
+ * returned by the geojson download endpoint. Turbines without a rotor_diameter_mm
+ * are skipped. Returns null if no turbines have a rotor diameter set.
  */
 export function generateTurbineAreas(
-  item: ProjectCollectionItem,
+  fc: GeoJSON.FeatureCollection,
   wakePreset: WakePreset = "6x4",
   windFromDeg = 225,
 ): TurbineAreas | null {
-  const geom = item.geometry;
-  if (!geom || geom.type !== "MultiPoint") return null;
-
-  const rotorDiameterMm = item.properties.rotor_diameter_mm;
-  if (rotorDiameterMm == null) return null;
-
-  const rotorDiameterM = rotorDiameterMm / 1000;
-  const sweptRadius = rotorDiameterM / 2;
-  // Wake extends in the downwind direction (opposite to wind origin)
   const wakeBearing = ((windFromDeg + 180) % 360) * (Math.PI / 180);
   const { semiMajorFactor, semiMinorFactor } = WAKE_PRESETS[wakePreset];
 
   const sweptFeatures: GeoJSON.Feature[] = [];
   const wakeFeatures: GeoJSON.Feature[] = [];
 
-  for (const [lon, lat] of geom.coordinates) {
+  for (const feature of fc.features) {
+    const geom = feature.geometry;
+    if (!geom || geom.type !== "Point") continue;
+
+    const rotorDiameterMm = feature.properties?.rotor_diameter_mm;
+    if (typeof rotorDiameterMm !== "number") continue;
+
+    const [lon, lat] = geom.coordinates;
+    const rotorDiameterM = rotorDiameterMm / 1000;
+    const sweptRadius = rotorDiameterM / 2;
+
     sweptFeatures.push({
       type: "Feature",
       geometry: {
@@ -89,6 +88,8 @@ export function generateTurbineAreas(
       properties: {},
     });
   }
+
+  if (sweptFeatures.length === 0) return null;
 
   return {
     sweptAreas: { type: "FeatureCollection", features: sweptFeatures },

@@ -7,23 +7,29 @@ use serde::{
 use serde_json::{Map, Value, from_value, json};
 use std::fmt;
 
+pub struct Turbine {
+    pub id: i32,
+    pub turbine_number: i32,
+    pub hub_height_mm: Option<i32>,
+    pub rotor_diameter_mm: Option<i32>,
+    pub x_storage_crs: f64,
+    pub y_storage_crs: f64,
+    pub geometry: geojson::Geometry,
+}
+
 pub struct TurbineLayout {
     pub id: i32,
     pub properties_map: Map<String, Value>,
     pub properties: Properties,
-    pub geometry: geojson::Geometry,
+    pub turbines: Vec<Turbine>,
 }
 
+#[derive(Default)]
 pub enum TurbineMeasurement {
+    #[default]
     None,
     Various,
     SingleValue(i32),
-}
-
-impl Default for TurbineMeasurement {
-    fn default() -> Self {
-        Self::None
-    }
 }
 
 impl Serialize for TurbineMeasurement {
@@ -82,6 +88,7 @@ pub struct Properties {
     pub id: i32,
     pub name: String,
     pub storage_crs_srid: i32,
+    pub storage_crs_name: Option<String>,
     pub is_primary: bool,
     pub status: Status,
     pub added: DateTime<Utc>,
@@ -101,12 +108,28 @@ impl IntoOGCFeature for TurbineLayout {
         let TurbineLayout {
             id,
             properties,
-            geometry,
+            turbines,
             mut properties_map,
-            ..
         } = self;
         let mut additional: Map<String, Value> = from_value(json!(properties)).unwrap();
         properties_map.append(&mut additional);
-        ogc::Feature::new(id, properties_map, Some(geometry), collection_url)
+
+        let points: Vec<geojson::Position> = turbines
+            .iter()
+            .filter_map(|t| {
+                if let geojson::Value::Point(coords) = &t.geometry.value {
+                    Some(coords.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
+        let geometry = if points.is_empty() {
+            None
+        } else {
+            Some(geojson::Geometry::new(geojson::Value::MultiPoint(points)))
+        };
+
+        ogc::Feature::new(id, properties_map, geometry, collection_url)
     }
 }
