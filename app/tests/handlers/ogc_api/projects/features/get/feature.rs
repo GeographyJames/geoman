@@ -2,10 +2,9 @@ use app::constants::TURBINE_LAYOUTS_COLLECTION_ID;
 use domain::{FeatureId, ProjectCollectionId, ProjectFeature, ProjectId};
 
 use crate::common::{
-    AppBuilder, Auth, TestApp,
+    Auth, TestApp,
     helpers::{assert_ok, assert_status, handle_json_response},
 };
-use domain::TeamId;
 
 pub fn check_ogc_feature_is_project_feature(ogc_feature: ogc::Feature) {
     let _project_feature = ProjectFeature::try_from(ogc_feature)
@@ -45,9 +44,7 @@ async fn get_feature_works() {
 
 #[actix_web::test]
 async fn get_feature_works_for_turbine_layout() {
-    let app = AppBuilder::new().build().await;
-    let user = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
-    let project_id = app.generate_project_id(Some(&user)).await;
+    let (app, user, project_id) = TestApp::with_project().await;
     let layout_id = app
         .generate_primary_layout_id(&project_id, Some(&user))
         .await;
@@ -67,9 +64,7 @@ async fn get_feature_works_for_turbine_layout() {
 
 #[actix_web::test]
 async fn get_turbine_layout_feature_returns_404_for_layout_belonging_to_different_project() {
-    let app = AppBuilder::new().build().await;
-    let user = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
-    let project_a = app.generate_project_id(Some(&user)).await;
+    let (app, user, project_a) = TestApp::with_project().await;
     let project_b = app.generate_project_id(Some(&user)).await;
     let layout_id = app
         .generate_primary_layout_id(&project_a, Some(&user))
@@ -89,9 +84,7 @@ async fn get_turbine_layout_feature_returns_404_for_layout_belonging_to_differen
 
 #[actix_web::test]
 async fn get_turbine_layout_feature_returns_correct_ids() {
-    let app = AppBuilder::new().build().await;
-    let user = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
-    let project_id = app.generate_project_id(Some(&user)).await;
+    let (app, user, project_id) = TestApp::with_project().await;
     let layout_id = app
         .generate_primary_layout_id(&project_id, Some(&user))
         .await;

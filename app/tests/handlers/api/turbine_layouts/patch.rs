@@ -2,18 +2,13 @@ use app::{
     constants::TURBINE_LAYOUTS_COLLECTION_ID,
     handlers::api::features::patch::PatchProjectFeaturePayload,
 };
-use domain::{FeatureId, ProjectCollectionId, TeamId, enums::Status};
+use domain::{FeatureId, ProjectCollectionId, enums::Status};
 
-use crate::common::{
-    AppBuilder, Auth,
-    helpers::{assert_status, handle_json_response},
-};
+use crate::common::{TestApp, helpers::{assert_status, handle_json_response}};
 
 #[tokio::test]
 async fn patch_turbine_layout_works() {
-    let app = AppBuilder::new().build().await;
-    let auth = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
-    let project_id = app.generate_project_id(Some(&auth)).await;
+    let (app, auth, project_id) = TestApp::with_project().await;
     let layout_id = app
         .generate_primary_layout_id(&project_id, Some(&auth))
         .await;

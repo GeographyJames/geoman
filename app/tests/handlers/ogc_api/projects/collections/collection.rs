@@ -1,8 +1,8 @@
 use app::constants::TURBINE_LAYOUTS_COLLECTION_ID;
-use domain::{ProjectCollectionId, ProjectId, TeamId};
+use domain::{ProjectCollectionId, ProjectId};
 
 use crate::common::{
-    AppBuilder, Auth, TestApp,
+    Auth, TestApp,
     helpers::{assert_ok, assert_status, create_gdal_point_bng, create_gdal_point_wgs84},
 };
 
@@ -183,9 +183,7 @@ async fn get_project_collection_returns_404_for_turbine_layouts_when_project_has
 
 #[actix_web::test]
 async fn get_project_collection_works_for_turbine_layouts() {
-    let app = AppBuilder::new().build().await;
-    let user = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
-    let project_id = app.generate_project_id(Some(&user)).await;
+    let (app, user, project_id) = TestApp::with_project().await;
 
     let _feature_id = app.generate_primary_layout(&project_id, Some(&user)).await;
     let response = app

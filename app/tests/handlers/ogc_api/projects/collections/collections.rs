@@ -1,8 +1,7 @@
 use app::handlers::api::project_collections::CollectionReqPayload;
-use domain::TeamId;
 
 use crate::common::{
-    AppBuilder, Auth, TestApp,
+    Auth, TestApp,
     helpers::{assert_ok, handle_json_response},
 };
 
@@ -49,9 +48,7 @@ async fn get_project_collections_only_returns_collections_that_contain_items_for
 
 #[actix_web::test]
 async fn get_collections_includes_project_specific_collections() {
-    let app = AppBuilder::new().build().await;
-    let user = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
-    let project_id = app.generate_project_id(Some(&user)).await;
+    let (app, user, project_id) = TestApp::with_project().await;
     let mut collection = CollectionReqPayload::default();
     collection.project_id = Some(project_id);
     let _ = app
@@ -71,9 +68,7 @@ async fn get_collections_includes_project_specific_collections() {
 
 #[actix_web::test]
 async fn get_collections_includes_turbine_layouts() {
-    let app = AppBuilder::new().build().await;
-    let user = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
-    let project_id = app.generate_project_id(Some(&user)).await;
+    let (app, user, project_id) = TestApp::with_project().await;
     let _ = app
         .generate_primary_layout_id(&project_id, Some(&user))
         .await;
@@ -93,9 +88,7 @@ async fn get_collections_includes_turbine_layouts() {
 
 #[actix_web::test]
 async fn get_collections_does_not_include_turbine_layouts_for_other_projects() {
-    let app = AppBuilder::new().build().await;
-    let user = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
-    let project_a = app.generate_project_id(Some(&user)).await;
+    let (app, user, project_a) = TestApp::with_project().await;
     let project_b = app.generate_project_id(Some(&user)).await;
     let _ = app
         .generate_primary_layout_id(&project_a, Some(&user))

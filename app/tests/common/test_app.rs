@@ -188,6 +188,13 @@ impl TestApp<ClerkAuthService> {
         app
     }
 
+    pub async fn with_project() -> (Self, Auth, ProjectId) {
+        let app = AppBuilder::new().build().await;
+        let auth = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
+        let project_id = app.generate_project_id(Some(&auth)).await;
+        (app, auth, project_id)
+    }
+
     pub async fn generate_project_collection_id(&self) -> ProjectCollectionId {
         let admin = self.generate_user(true, TeamId(0)).await;
         let admin_auth = Auth::MockUserCredentials(admin);

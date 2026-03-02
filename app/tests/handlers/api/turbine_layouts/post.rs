@@ -1,9 +1,9 @@
 use app::constants::TURBINE_LAYOUTS_COLLECTION_ID;
-use domain::{FeatureId, ProjectCollectionId, ProjectId, TeamId};
+use domain::{FeatureId, ProjectCollectionId, ProjectId};
 use serde_json::json;
 
 use crate::common::{
-    AppBuilder, Auth, TestApp,
+    Auth, TestApp,
     helpers::{TurbineInput, assert_ok, assert_status, handle_json_response},
     services::ClerkAuthService,
 };
@@ -12,13 +12,6 @@ use crate::common::{
 struct LayoutProps {
     hub_height_mm: serde_json::Value,
     rotor_diameter_mm: serde_json::Value,
-}
-
-async fn setup() -> (TestApp<ClerkAuthService>, Auth, ProjectId) {
-    let app = AppBuilder::new().build().await;
-    let auth = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
-    let project_id = app.generate_project_id(Some(&auth)).await;
-    (app, auth, project_id)
 }
 
 async fn fetch_layout_props(
@@ -61,9 +54,7 @@ async fn fetch_layout_props(
 
 #[tokio::test]
 async fn post_turbine_layout_works() {
-    let app = AppBuilder::new().build().await;
-    let auth = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
-    let project_id = app.generate_project_id(Some(&auth)).await;
+    let (app, auth, project_id) = TestApp::with_project().await;
     let response = app.generate_primary_layout(&project_id, Some(&auth)).await;
     assert_ok(&response);
     let feature_id: FeatureId = handle_json_response(response)
@@ -90,7 +81,7 @@ async fn post_turbine_layout_works() {
 
 #[tokio::test]
 async fn hub_height_is_single_value_when_all_turbines_match() {
-    let (app, auth, project_id) = setup().await;
+    let (app, auth, project_id) = TestApp::with_project().await;
     let turbines = vec![
         TurbineInput { hub_m: Some(120.0), rd_m: None },
         TurbineInput { hub_m: Some(120.0), rd_m: None },
@@ -102,7 +93,7 @@ async fn hub_height_is_single_value_when_all_turbines_match() {
 
 #[tokio::test]
 async fn hub_height_is_various_when_turbines_differ() {
-    let (app, auth, project_id) = setup().await;
+    let (app, auth, project_id) = TestApp::with_project().await;
     let turbines = vec![
         TurbineInput { hub_m: Some(100.0), rd_m: None },
         TurbineInput { hub_m: Some(120.0), rd_m: None },
@@ -114,7 +105,7 @@ async fn hub_height_is_various_when_turbines_differ() {
 
 #[tokio::test]
 async fn hub_height_is_none_when_field_not_mapped() {
-    let (app, auth, project_id) = setup().await;
+    let (app, auth, project_id) = TestApp::with_project().await;
     let turbines = vec![
         TurbineInput { hub_m: Some(120.0), rd_m: None },
         TurbineInput { hub_m: Some(120.0), rd_m: None },
@@ -126,7 +117,7 @@ async fn hub_height_is_none_when_field_not_mapped() {
 
 #[tokio::test]
 async fn hub_height_is_various_when_some_turbines_have_no_value() {
-    let (app, auth, project_id) = setup().await;
+    let (app, auth, project_id) = TestApp::with_project().await;
     let turbines = vec![
         TurbineInput { hub_m: Some(120.0), rd_m: None },
         TurbineInput { hub_m: None, rd_m: None },
@@ -140,7 +131,7 @@ async fn hub_height_is_various_when_some_turbines_have_no_value() {
 
 #[tokio::test]
 async fn rotor_diameter_is_single_value_when_all_turbines_match() {
-    let (app, auth, project_id) = setup().await;
+    let (app, auth, project_id) = TestApp::with_project().await;
     let turbines = vec![
         TurbineInput { hub_m: None, rd_m: Some(160.0) },
         TurbineInput { hub_m: None, rd_m: Some(160.0) },
@@ -152,7 +143,7 @@ async fn rotor_diameter_is_single_value_when_all_turbines_match() {
 
 #[tokio::test]
 async fn rotor_diameter_is_various_when_turbines_differ() {
-    let (app, auth, project_id) = setup().await;
+    let (app, auth, project_id) = TestApp::with_project().await;
     let turbines = vec![
         TurbineInput { hub_m: None, rd_m: Some(150.0) },
         TurbineInput { hub_m: None, rd_m: Some(160.0) },
@@ -164,7 +155,7 @@ async fn rotor_diameter_is_various_when_turbines_differ() {
 
 #[tokio::test]
 async fn rotor_diameter_is_various_when_some_turbines_have_no_value() {
-    let (app, auth, project_id) = setup().await;
+    let (app, auth, project_id) = TestApp::with_project().await;
     let turbines = vec![
         TurbineInput { hub_m: None, rd_m: Some(160.0) },
         TurbineInput { hub_m: None, rd_m: None },
@@ -176,7 +167,7 @@ async fn rotor_diameter_is_various_when_some_turbines_have_no_value() {
 
 #[tokio::test]
 async fn rotor_diameter_is_none_when_field_not_mapped() {
-    let (app, auth, project_id) = setup().await;
+    let (app, auth, project_id) = TestApp::with_project().await;
     let turbines = vec![
         TurbineInput { hub_m: None, rd_m: Some(160.0) },
         TurbineInput { hub_m: None, rd_m: Some(160.0) },
@@ -188,7 +179,7 @@ async fn rotor_diameter_is_none_when_field_not_mapped() {
 
 #[tokio::test]
 async fn post_turbine_layout_with_no_turbines_returns_422() {
-    let (app, auth, project_id) = setup().await;
+    let (app, auth, project_id) = TestApp::with_project().await;
     let response = app
         .post_turbine_layout(&project_id, &[], true, true, true, Some(&auth))
         .await;

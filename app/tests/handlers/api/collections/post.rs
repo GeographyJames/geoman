@@ -1,8 +1,8 @@
 use app::handlers::api::project_collections::CollectionReqPayload;
-use domain::{ProjectCollectionId, TeamId};
+use domain::ProjectCollectionId;
 
 use crate::common::{
-    AppBuilder, Auth,
+    AppBuilder, Auth, TestApp,
     helpers::{assert_ok, check_error_response, handle_json_response},
 };
 
@@ -43,9 +43,7 @@ async fn post_collection_returns_409_for_duplicate_name() {
 
 #[actix_web::test]
 async fn non_admin_users_can_create_project_specific_collections() {
-    let app = AppBuilder::new().build().await;
-    let user = Auth::MockUserCredentials(app.generate_user(false, TeamId(0)).await);
-    let project_id = app.generate_project_id(Some(&user)).await;
+    let (app, user, project_id) = TestApp::with_project().await;
     let mut collection = CollectionReqPayload::default();
     collection.project_id = Some(project_id);
     let response = app
