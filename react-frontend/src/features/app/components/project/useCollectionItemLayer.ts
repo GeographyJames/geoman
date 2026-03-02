@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import type { ProjectCollectionItem } from "@/domain/projectCollectionItems/outputDTO";
 import { useFeatureCollectionLayer, useFeatureLayer, useZoomToFeature } from "@/hooks/useFeatureLayer";
 import { useTurbineLayoutGeojson } from "@/hooks/api/projectFeature.ts/useTurbineLayoutGeojson";
-import { useTurbineLayerWithPopup } from "@/hooks/useTurbineLayerWithPopup";
+import { useTurbineLayerWithPopup } from "@/features/app/components/project/useTurbineLayerWithPopup";
 import { type WakePreset, generateTurbineAreas } from "@/lib/turbineAreas";
 import { primaryStyle, defaultStyle, sweptAreaStyle, wakeEllipseStyle } from "./featureStyles";
 import { TURBINE_LAYOUTS_COLLECTION_ID } from "@/constants";

@@ -61,13 +61,7 @@ export function SiteDataTableRow({
     <tr key={item.id} className="hover:bg-base-200">
       {createPortal(
         <MapPopup ref={popupRef} onClose={closePopup}>
-          {popupContent && (
-            <TurbinePopupContent
-              turbineNumber={popupContent.turbineNumber}
-              hubHeightMm={popupContent.hubHeightMm}
-              rotorDiameterMm={popupContent.rotorDiameterMm}
-            />
-          )}
+          {popupContent && <TurbinePopupContent turbine={popupContent} />}
         </MapPopup>,
         document.body,
       )}

@@ -8,22 +8,22 @@ import { Feature } from "ol";
 import { Point } from "ol/geom";
 import type { StyleLike } from "ol/style/Style";
 import type { MapBrowserEvent } from "ol";
+import type { TurbineFeature, TurbineFeatureCollection } from "@/hooks/api/projectFeature.ts/useTurbineLayoutGeojson";
 
-export interface TurbinePopupContent {
-  turbineNumber: number;
-  hubHeightMm: number | null;
-  rotorDiameterMm: number | null;
-}
+export type TurbinePopupData = TurbineFeature & {
+  storage_crs_srid: number;
+  storage_crs_name: string | null;
+};
 
 export function useTurbineLayerWithPopup(
-  collection: GeoJSON.FeatureCollection | undefined,
+  collection: TurbineFeatureCollection | undefined,
   style: StyleLike,
 ) {
   const { mapRef } = useMapContext();
   const layerRef = useRef<VectorLayer | null>(null);
   const overlayRef = useRef<Overlay | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
-  const [popupContent, setPopupContent] = useState<TurbinePopupContent | null>(null);
+  const [popupContent, setPopupContent] = useState<TurbinePopupData | null>(null);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -33,6 +33,14 @@ export function useTurbineLayerWithPopup(
     const olFeatures = format.readFeatures(collection, {
       featureProjection: "EPSG:3857",
       dataProjection: "EPSG:4326",
+    });
+    olFeatures.forEach((olFeature, i) => {
+      const data: TurbinePopupData = {
+        ...collection.features[i],
+        storage_crs_srid: collection.storage_crs_srid,
+        storage_crs_name: collection.storage_crs_name,
+      };
+      olFeature.set("_source", data);
     });
 
     const source = new VectorSource({ features: olFeatures });
@@ -72,11 +80,7 @@ export function useTurbineLayerWithPopup(
 
       if (hit instanceof Feature) {
         const geom = hit.getGeometry() as Point;
-        setPopupContent({
-          turbineNumber: hit.get("turbine_number"),
-          hubHeightMm: hit.get("hub_height_mm") ?? null,
-          rotorDiameterMm: hit.get("rotor_diameter_mm") ?? null,
-        });
+        setPopupContent(hit.get("_source") as TurbinePopupData);
         overlay.setPosition(geom.getCoordinates());
       } else {
         overlay.setPosition(undefined);
