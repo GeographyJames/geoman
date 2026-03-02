@@ -17,12 +17,16 @@ import type { TurbineFeature, TurbineFeatureCollection } from "@/hooks/api/proje
 export type TurbinePopupData = TurbineFeature & {
   storage_crs_srid: number;
   storage_crs_name: string | null;
+  layout_id: number;
+  layout_name: string;
 };
 
 export function useTurbineLayerWithPopup(
   collection: TurbineFeatureCollection | undefined,
   style: StyleLike,
   showTurbineNumbers: boolean,
+  layoutId: number,
+  layoutName: string,
 ) {
   const { mapRef } = useMapContext();
   const layerRef = useRef<VectorLayer | null>(null);
@@ -38,7 +42,8 @@ export function useTurbineLayerWithPopup(
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !collection) return;
+    const popupEl = popupRef.current;
+    if (!map || !collection || !popupEl) return;
 
     const format = new GeoJSON();
     const olFeatures = format.readFeatures(collection, {
@@ -50,6 +55,8 @@ export function useTurbineLayerWithPopup(
         ...collection.features[i],
         storage_crs_srid: collection.storage_crs_srid,
         storage_crs_name: collection.storage_crs_name,
+        layout_id: layoutId,
+        layout_name: layoutName,
       };
       olFeature.set("_source", data);
     });
@@ -78,21 +85,9 @@ export function useTurbineLayerWithPopup(
         });
       },
     });
+    layer.set("interactive", true);
     map.getLayers().insertAt(1, layer);
     layerRef.current = layer;
-
-    return () => {
-      map.removeLayer(layer);
-      layerRef.current = null;
-      overlayRef.current?.setPosition(undefined);
-      setPopupContent(null);
-    };
-  }, [mapRef, collection]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    const popupEl = popupRef.current;
-    if (!map || !popupEl) return;
 
     const overlay = new Overlay({
       element: popupEl,
@@ -104,16 +99,10 @@ export function useTurbineLayerWithPopup(
     overlayRef.current = overlay;
 
     const handleClick = (e: MapBrowserEvent) => {
-      const layer = layerRef.current;
-      if (!layer) return;
-
-      const hit = map.forEachFeatureAtPixel(e.pixel, (f) => f, {
-        layerFilter: (l) => l === layer,
-      });
-
-      if (hit instanceof Feature) {
-        const geom = hit.getGeometry() as Point;
-        setPopupContent(hit.get("_source") as TurbinePopupData);
+      const topHit = map.forEachFeatureAtPixel(e.pixel, (f, l) => ({ feature: f, layer: l }));
+      if (topHit?.layer === layer && topHit.feature instanceof Feature) {
+        const geom = topHit.feature.getGeometry() as Point;
+        setPopupContent(topHit.feature.get("_source") as TurbinePopupData);
         overlay.setPosition(geom.getCoordinates());
       } else {
         overlay.setPosition(undefined);
@@ -121,14 +110,29 @@ export function useTurbineLayerWithPopup(
       }
     };
 
+    const handlePointerMove = (e: MapBrowserEvent) => {
+      const topLayer = map.forEachFeatureAtPixel(e.pixel, (f, l) => l);
+      if (topLayer === layer) {
+        map.getTargetElement().style.cursor = "pointer";
+      } else if (!topLayer || !topLayer.get("interactive")) {
+        map.getTargetElement().style.cursor = "";
+      }
+    };
+
     map.on("click", handleClick);
+    map.on("pointermove", handlePointerMove);
 
     return () => {
+      map.removeLayer(layer);
       map.removeOverlay(overlay);
       map.un("click", handleClick);
+      map.un("pointermove", handlePointerMove);
+      map.getTargetElement().style.cursor = "";
+      layerRef.current = null;
       overlayRef.current = null;
+      setPopupContent(null);
     };
-  }, [mapRef]);
+  }, [mapRef, collection]);
 
   const closePopup = useCallback(() => {
     overlayRef.current?.setPosition(undefined);

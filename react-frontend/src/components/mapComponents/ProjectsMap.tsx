@@ -85,6 +85,7 @@ export default function ProjectsMap() {
       autoPan: true,
     });
 
+    vectorLayer.set("interactive", true);
     map.addLayer(vectorLayer);
     map.addOverlay(overlay);
 
@@ -123,7 +124,12 @@ export default function ProjectsMap() {
         hoveredFeatureRef.current = hit;
       }
 
-      map.getTargetElement().style.cursor = hit ? "pointer" : "";
+      const topLayer = map.forEachFeatureAtPixel(e.pixel, (f, l) => l);
+      if (topLayer === vectorLayer) {
+        map.getTargetElement().style.cursor = "pointer";
+      } else if (!topLayer || !topLayer.get("interactive")) {
+        map.getTargetElement().style.cursor = "";
+      }
     };
 
     map.on("click", handleClick);
@@ -168,7 +174,7 @@ function PopupContent({ project, projectsArray, onClose }: { project: Project; p
     : `EPSG:${project.crsSrid}`;
 
   return (
-    <div className="space-y-0.5 max-w-64">
+    <div className="space-y-0.5 max-w-64 break-words">
       <Link
         from={"/"}
         search={{ projects: newProjects }}

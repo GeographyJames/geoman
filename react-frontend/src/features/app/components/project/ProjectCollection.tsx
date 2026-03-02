@@ -6,7 +6,7 @@ import { TurbineLayoutControls } from "./TurbineLayoutControls";
 import { SiteDataTableHeadings, SiteDataTableRow } from "./SiteDataTableRow";
 
 function formatArea(m2: number): string {
-  return `${(m2 / 10_000).toLocaleString(undefined, { maximumFractionDigits: 1 })}`;
+  return `${(m2 / 10_000).toLocaleString(undefined, { maximumFractionDigits: 1 })}ha`;
 }
 
 function formatTurbineMeasurement(
@@ -68,9 +68,7 @@ export const ProjectCollection = ({
       )}
       <table className="table table-fixed table-xs">
         <SiteDataTableHeadings>
-          {hasArea && (
-            <th className="w-18 p-0 hidden sm:table-cell">Area (ha)</th>
-          )}
+          {hasArea && <th className="w-18 p-0 hidden sm:table-cell">Area</th>}
           {isTurbineLayout && (
             <>
               <th className="hidden sm:table-cell landscape:table-cell w-14 p-0">

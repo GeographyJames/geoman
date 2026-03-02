@@ -43,6 +43,8 @@ export function useCollectionItemLayer(
     visible && isTurbineLayout ? turbineGeojson : undefined,
     style,
     showTurbineNumbers,
+    item.id,
+    item.properties.name,
   );
 
   const turbineAreas = useMemo(

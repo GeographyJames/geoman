@@ -15,7 +15,8 @@ export function TurbinePopupContent({
     ? `${turbine.storage_crs_name} (EPSG:${turbine.storage_crs_srid})`
     : `EPSG:${turbine.storage_crs_srid}`;
   return (
-    <div className="space-y-0.5 max-w-64">
+    <div className="space-y-0.5 max-w-64 break-words">
+      <p className="font-semibold">{turbine.layout_name} ({turbine.layout_id})</p>
       <p className="font-semibold">
         Turbine {turbine.properties.turbine_number}
       </p>
