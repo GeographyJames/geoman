@@ -4,7 +4,10 @@ use app::{
 };
 use domain::{FeatureId, LayoutId};
 
-use crate::common::{TestApp, helpers::{assert_status, handle_json_response}};
+use crate::common::{
+    TestApp,
+    helpers::{assert_status, handle_json_response},
+};
 
 #[tokio::test]
 async fn duplicate_turbine_layout_works() {

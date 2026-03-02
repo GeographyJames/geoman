@@ -25,7 +25,9 @@ pub async fn delete_user(
 mod tests {
     use actix_web::test;
 
-    use crate::{AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params};
+    use crate::{
+        AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params,
+    };
 
     use super::*;
 
@@ -47,12 +49,8 @@ mod tests {
         admin.admin = true;
         admin.id = UserId(1);
         let req = test::TestRequest::delete().uri("/1");
-        let resp = mock_app_with_path_params(
-            delete_user,
-            req,
-            MockUserCredentials::User(admin),
-        )
-        .await;
+        let resp =
+            mock_app_with_path_params(delete_user, req, MockUserCredentials::User(admin)).await;
         assert_eq!(resp.status(), 401);
     }
 }

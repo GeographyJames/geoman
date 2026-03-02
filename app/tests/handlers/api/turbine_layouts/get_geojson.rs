@@ -13,9 +13,18 @@ async fn get_turbine_layout_geojson_works() {
     let project_id = app.generate_project_id(Some(&auth)).await;
 
     let turbines = vec![
-        TurbineInput { hub_m: Some(120.0), rd_m: Some(160.0) },
-        TurbineInput { hub_m: Some(100.0), rd_m: Some(140.0) },
-        TurbineInput { hub_m: None, rd_m: None },
+        TurbineInput {
+            hub_m: Some(120.0),
+            rd_m: Some(160.0),
+        },
+        TurbineInput {
+            hub_m: Some(100.0),
+            rd_m: Some(140.0),
+        },
+        TurbineInput {
+            hub_m: None,
+            rd_m: None,
+        },
     ];
     let response = app
         .post_turbine_layout(&project_id, &turbines, true, true, true, Some(&auth))
@@ -26,7 +35,10 @@ async fn get_turbine_layout_geojson_works() {
         .expect("failed to parse layout id");
 
     let collection_slug = app
-        .get_collection_slug(project_id, ProjectCollectionId(TURBINE_LAYOUTS_COLLECTION_ID))
+        .get_collection_slug(
+            project_id,
+            ProjectCollectionId(TURBINE_LAYOUTS_COLLECTION_ID),
+        )
         .await;
     let project_slug = app.get_project_slug(project_id).await;
 
@@ -66,7 +78,10 @@ async fn get_turbine_layout_geojson_works() {
             );
         }
 
-        let props = feature.properties.as_ref().expect("feature has no properties");
+        let props = feature
+            .properties
+            .as_ref()
+            .expect("feature has no properties");
         assert_eq!(
             props["turbine_number"].as_i64(),
             Some(turbine_number),
@@ -78,8 +93,14 @@ async fn get_turbine_layout_geojson_works() {
     let props0 = fc.features[0].properties.as_ref().unwrap();
     assert_eq!(props0["hub_height_mm"].as_i64(), Some(120_000));
     assert_eq!(props0["rotor_diameter_mm"].as_i64(), Some(160_000));
-    assert!(props0["x_storage_crs"].is_number(), "x_storage_crs should be a number");
-    assert!(props0["y_storage_crs"].is_number(), "y_storage_crs should be a number");
+    assert!(
+        props0["x_storage_crs"].is_number(),
+        "x_storage_crs should be a number"
+    );
+    assert!(
+        props0["y_storage_crs"].is_number(),
+        "y_storage_crs should be a number"
+    );
 
     let props1 = fc.features[1].properties.as_ref().unwrap();
     assert_eq!(props1["hub_height_mm"].as_i64(), Some(100_000));
@@ -92,6 +113,12 @@ async fn get_turbine_layout_geojson_works() {
 
     // FeatureCollection foreign members should include storage CRS info
     let fm = fc.foreign_members.as_ref().expect("no foreign members");
-    assert!(fm["storage_crs_srid"].is_number(), "storage_crs_srid should be a number");
-    assert!(fm["storage_crs_name"].is_string(), "storage_crs_name should be a string");
+    assert!(
+        fm["storage_crs_srid"].is_number(),
+        "storage_crs_srid should be a number"
+    );
+    assert!(
+        fm["storage_crs_name"].is_string(),
+        "storage_crs_name should be a string"
+    );
 }

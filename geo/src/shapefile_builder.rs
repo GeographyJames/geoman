@@ -39,8 +39,8 @@ pub fn build_project_feature_shapefile(
             options: None,
         })
         .context("failed to create layer")?;
-    let geom = gdal::vector::Geometry::from_wkb(geom_wkb)
-        .context("failed to parse geometry from wkb")?;
+    let geom =
+        gdal::vector::Geometry::from_wkb(geom_wkb).context("failed to parse geometry from wkb")?;
     layer
         .create_feature(geom)
         .context("failed to add feature to layer")?;

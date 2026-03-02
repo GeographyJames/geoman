@@ -21,7 +21,9 @@ pub async fn delete_team(
 mod tests {
     use actix_web::test;
 
-    use crate::{AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params};
+    use crate::{
+        AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params,
+    };
 
     use super::*;
 

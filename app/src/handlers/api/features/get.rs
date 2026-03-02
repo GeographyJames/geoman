@@ -261,8 +261,14 @@ async fn get_geojson(
                 "rotor_diameter_mm".to_string(),
                 serde_json::json!(t.rotor_diameter_mm),
             );
-            properties.insert("x_storage_crs".to_string(), serde_json::json!(t.x_storage_crs));
-            properties.insert("y_storage_crs".to_string(), serde_json::json!(t.y_storage_crs));
+            properties.insert(
+                "x_storage_crs".to_string(),
+                serde_json::json!(t.x_storage_crs),
+            );
+            properties.insert(
+                "y_storage_crs".to_string(),
+                serde_json::json!(t.y_storage_crs),
+            );
             geojson::Feature {
                 id: Some(geojson::feature::Id::Number(serde_json::Number::from(t.id))),
                 geometry: Some(t.geometry),

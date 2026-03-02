@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.owner AS owner_id,\n                u.team_id AS project_owner_team_id\n           FROM app.projects p\n           JOIN app.users u ON p.owner = u.id\n          WHERE p.id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "owner_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "project_owner_team_id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "beb048da7786748d7ee07895d2bb643f719c5f23a13b1d270cf7da60e528a53f"
+}

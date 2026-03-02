@@ -13,4 +13,3 @@ async fn delete_team_works() {
         .await;
     assert_status(&response, 204);
 }
-

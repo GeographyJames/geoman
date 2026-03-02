@@ -4,7 +4,10 @@ use app::{
 };
 use domain::{FeatureId, ProjectCollectionId, enums::Status};
 
-use crate::common::{TestApp, helpers::{assert_status, handle_json_response}};
+use crate::common::{
+    TestApp,
+    helpers::{assert_status, handle_json_response},
+};
 
 #[tokio::test]
 async fn patch_turbine_layout_works() {

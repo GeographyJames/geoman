@@ -23,4 +23,3 @@ async fn patch_team_works() {
         .await;
     assert_status(&response, 204);
 }
-

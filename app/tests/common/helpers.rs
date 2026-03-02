@@ -1,7 +1,9 @@
 use app::{ErrorResponse, MockUserCredentials};
 use gdal::{
     Dataset,
-    vector::{Defn, Feature, Geometry, Layer, LayerAccess, LayerOptions, OGRFieldType, OGRwkbGeometryType},
+    vector::{
+        Defn, Feature, Geometry, Layer, LayerAccess, LayerOptions, OGRFieldType, OGRwkbGeometryType,
+    },
 };
 use geo::virtual_shapefile::ShapefileData;
 use rand::RngExt;
@@ -243,7 +245,9 @@ pub fn create_turbine_layout_dataset(turbines: &[TurbineInput]) -> (Dataset, Str
                     .set_field_double(rd_idx, rd)
                     .expect("failed to set rd_m");
             }
-            feature.create(&layer).expect("failed to write feature to layer");
+            feature
+                .create(&layer)
+                .expect("failed to write feature to layer");
         }
     }
     (ds, filename)

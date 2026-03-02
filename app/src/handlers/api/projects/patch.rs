@@ -33,15 +33,13 @@ pub async fn patch_project(
     let is_owner = res.owner_id == user.id.0;
     let same_team = res.project_owner_team_id == user.team_id.0;
 
-    if let Some(ref status) = body.status {
-        if status == &Status::Deleted {
-            if !(user.admin || is_owner) {
+    if let Some(ref status) = body.status
+        && status == &Status::Deleted
+            && !(user.admin || is_owner) {
                 return Err(ApiError::Forbidden(
                     "User does not have permission to delete project".to_string(),
                 ));
-            }
-        }
-    };
+            };
 
     if !(is_admin || same_team) {
         return Err(ApiError::Forbidden(

@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use domain::{
-    AddedBy, FeatureId, LastUpdatedBy, Turbine, TurbineLayout, enums::Status,
+    AddedBy, FeatureId, LastUpdatedBy, Turbine, TurbineLayout,
+    enums::Status,
     turbine_layout::{TurbineLayoutProperties, TurbineMeasurement},
 };
 use futures::{Stream, StreamExt};

@@ -63,4 +63,3 @@ async fn patch_user_works() {
         .await;
     assert_status(&response, 204);
 }
-

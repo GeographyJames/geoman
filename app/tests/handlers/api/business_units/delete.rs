@@ -13,4 +13,3 @@ async fn delete_business_unit_works() {
         .await;
     assert_status(&response, 204);
 }
-

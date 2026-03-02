@@ -21,4 +21,3 @@ async fn patch_business_unit_works() {
         .await;
     assert_status(&response, 204);
 }
-

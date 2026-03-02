@@ -13,4 +13,3 @@ async fn delete_user_works() {
         .await;
     assert_status(&response, 204);
 }
-
