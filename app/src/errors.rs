@@ -74,6 +74,8 @@ pub enum ApiError {
     InvalidName(String),
     #[error("One or more turbines are within 1 metre of each other in this layout.")]
     TurbineProximityViolation,
+    #[error("Action not available to guest users")]
+    UnassignedUser,
 }
 
 impl From<RepositoryError> for ApiError {
@@ -136,6 +138,7 @@ impl ResponseError for ApiError {
             ApiError::AdminOnly => StatusCode::UNAUTHORIZED,
             ApiError::InvalidName(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::TurbineProximityViolation => StatusCode::UNPROCESSABLE_ENTITY,
+            ApiError::UnassignedUser => StatusCode::UNAUTHORIZED,
         }
     }
 

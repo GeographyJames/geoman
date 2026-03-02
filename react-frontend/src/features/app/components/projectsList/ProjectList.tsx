@@ -7,6 +7,8 @@ import ShowArchivedToggle from "../ShowArchivedToggle";
 import { useProjectsFilter } from "@/features/app/contexts/ProjectsFilterContext";
 
 import type Project from "@/domain/project/entity";
+import { useCurrentUser } from "@/hooks/api/useCurrentUser";
+import { UNASSIGNED_USERS_TEAM_ID } from "@/constants";
 
 interface Props {
   projects?: Project[];
@@ -20,7 +22,7 @@ function ProjectsList({ projects: projectsProp }: Props = {}) {
     setShowArchivedProjects,
   } = useProjectsFilter();
   const [sortBy, setSortBy] = useState(SORT_OPTIONS.NAME_ASCENDING);
-
+  const { data: currentUser } = useCurrentUser();
   const sortedProjects = useMemo(
     () =>
       (projectsProp ?? contextProjects).slice().sort((a, b) => {
@@ -39,6 +41,7 @@ function ProjectsList({ projects: projectsProp }: Props = {}) {
       }),
     [projectsProp, contextProjects, sortBy],
   );
+  const isDisabled = !currentUser || currentUser.team.id === -1;
 
   return (
     <div className="flex flex-col min-h-0 h-full pb-2 pt-4 gap-2">
@@ -48,15 +51,23 @@ function ProjectsList({ projects: projectsProp }: Props = {}) {
             <SortBy sortBy={sortBy} setSortBy={setSortBy} />
           </div>
           <div className=" flex flex-col gap-2 items-end">
-            <CreateButton
-              text="Create project"
-              onClick={() => {
-                const el = document.getElementById("create_project");
-                if (el instanceof HTMLDialogElement) {
-                  el.showModal();
-                }
-              }}
-            />
+            <div
+              className={`tooltip tooltip-left ${!isDisabled ? "tooltip-disabled" : ""}`}
+              data-tip={isDisabled ? "Guest users cannot create projects" : ""}
+            >
+              <span>
+                <CreateButton
+                  text="Create project"
+                  disabled={isDisabled}
+                  onClick={() => {
+                    const el = document.getElementById("create_project");
+                    if (el instanceof HTMLDialogElement) {
+                      el.showModal();
+                    }
+                  }}
+                />
+              </span>
+            </div>
             <div className="flex justify-end">
               <div className="flex flex-col items-end gap-y-1">
                 <span className="text-xs text-base-content/60">{`showing ${sortedProjects.length}`}</span>

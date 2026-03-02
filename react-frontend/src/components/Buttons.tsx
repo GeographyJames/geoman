@@ -73,12 +73,18 @@ export const SubmitButton = ({
 export const CreateButton = ({
   text,
   onClick,
+  disabled,
 }: {
   text: string;
   onClick: () => void;
+  disabled?: boolean;
 }) => {
   return (
-    <button className={"btn btn-primary btn-sm w-32"} onClick={onClick}>
+    <button
+      className={"btn btn-primary btn-sm w-32"}
+      onClick={onClick}
+      disabled={disabled}
+    >
       <FaPlus />
       {text}
     </button>
