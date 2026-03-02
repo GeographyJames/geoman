@@ -14,11 +14,13 @@ export function useCreateApiKey() {
   const apiRequest = useApiRequest();
 
   return useMutation({
-    mutationFn: (request: CreateApiKeyRequest) =>
-      apiRequest<CreateApiKeyResponse>(__URLS__.api.base + __URLS__.api.keys, {
+    mutationFn: async (request: CreateApiKeyRequest) => {
+      const result = await apiRequest<CreateApiKeyResponse>(__URLS__.api.base + __URLS__.api.keys, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(request),
-      }),
+      });
+      return result!;
+    },
   });
 }
