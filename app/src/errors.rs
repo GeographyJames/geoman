@@ -76,6 +76,8 @@ pub enum ApiError {
     TurbineProximityViolation,
     #[error("Action not available to guest users")]
     UnassignedUser,
+    #[error("{0}")]
+    Forbidden(String),
 }
 
 impl From<RepositoryError> for ApiError {
@@ -139,6 +141,7 @@ impl ResponseError for ApiError {
             ApiError::InvalidName(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::TurbineProximityViolation => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::UnassignedUser => StatusCode::UNAUTHORIZED,
+            ApiError::Forbidden(_) => StatusCode::UNAUTHORIZED,
         }
     }
 

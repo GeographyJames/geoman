@@ -5,6 +5,7 @@ use crate::{
 
 use super::{ProjectNameInputDTO, ProjectSlugInputDto};
 
+#[derive(Default)]
 pub struct ProjectUpdateDto {
     pub id: ProjectId,
     pub status: Option<Status>,

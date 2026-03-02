@@ -27,7 +27,7 @@ const EditProjectInner = () => {
     defaultValues: {
       projectName: "",
       srid: "",
-      visibility: "PRIVATE",
+      visibility: "PUBLIC",
     },
   });
 

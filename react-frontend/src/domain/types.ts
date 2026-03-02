@@ -14,7 +14,7 @@ export const Status = {
 export type Status = typeof Status[keyof typeof Status];
 
 export const Visibility = {
-  Private: "PRIVATE",
+  // Private: "PRIVATE",
   Team: "TEAM",
   Public: "PUBLIC"
 } as const;
@@ -22,11 +22,11 @@ export type Visibility = typeof Visibility[keyof typeof Visibility];
 
   // Configuration for visibility icons
   export const VisibilityConfig: Record<Visibility, { icon: IconType; label: string; description: string }> = {
-    [Visibility.Private]: {
-      icon: FiLock,
-      label: "Private",
-      description: "only visible to you and other project members"
-    },
+    // [Visibility.Private]: {
+    //   icon: FiLock,
+    //   label: "Private",
+    //   description: "only visible to you and other project members"
+    // },
     [Visibility.Team]: {
       icon: FiUsers,
       label: "Team",

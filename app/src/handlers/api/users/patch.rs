@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct PatchUserPayload {
     pub team_id: Option<TeamId>,
     pub admin: Option<bool>,
@@ -32,7 +32,9 @@ pub async fn patch_user(
 mod tests {
     use actix_web::test;
 
-    use crate::{AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params};
+    use crate::{
+        AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params,
+    };
 
     use super::*;
 

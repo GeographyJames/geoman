@@ -131,14 +131,14 @@ export const SiteDataDropdown = ({
               </div>
             )}
             <div className="flex gap-1">
-              <button
+              {/* <button
                 type="button"
                 className="btn btn-outline btn-xs btn-square px-1 !shadow-btn"
                 title="Download collection"
                 onClick={(e) => e.preventDefault()}
               >
                 <Download size={12} />
-              </button>
+              </button> */}
               <CreateIconButton
                 title="Add feature"
                 onClick={() => requestAddFeature(project, collectionId)}

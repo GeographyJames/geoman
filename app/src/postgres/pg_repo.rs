@@ -169,13 +169,10 @@ impl PostgresRepo {
         &self,
         project_slug: &str,
     ) -> Result<Option<i32>, RepositoryError> {
-        sqlx::query_scalar!(
-            "SELECT id FROM app.projects WHERE slug = $1",
-            project_slug
-        )
-        .fetch_optional(&self.db_pool)
-        .await
-        .map_err(RepositoryError::from)
+        sqlx::query_scalar!("SELECT id FROM app.projects WHERE slug = $1", project_slug)
+            .fetch_optional(&self.db_pool)
+            .await
+            .map_err(RepositoryError::from)
     }
 
     #[tracing::instrument(skip(self))]
@@ -184,7 +181,8 @@ impl PostgresRepo {
         layout_id: FeatureId,
         project_slug: &str,
         collection_slug: &str,
-    ) -> Result<Vec<super::turbine_layouts::get_shapefile::TurbineShapefileRow>, RepositoryError> {
+    ) -> Result<Vec<super::turbine_layouts::get_shapefile::TurbineShapefileRow>, RepositoryError>
+    {
         super::turbine_layouts::get_shapefile::get_turbine_layout_shapefile(
             &self.db_pool,
             layout_id,

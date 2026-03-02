@@ -32,7 +32,7 @@ pub async fn mock_auth_middlewear(
                 first_name: uuid::Uuid::new_v4().to_string(),
                 last_name: uuid::Uuid::new_v4().to_string(),
                 username: None,
-                team_id: TeamId(-1),
+                team_id: TeamId(0),
                 admin: false,
             },
             MockUserCredentials::User(authenticated_user) => authenticated_user,

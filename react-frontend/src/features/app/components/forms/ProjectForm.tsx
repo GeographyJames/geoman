@@ -21,7 +21,6 @@ export const ProjectForm = ({ control, watch }: ProjectFormProps) => {
   const projectName = watch("projectName");
   const slug = slugify(projectName);
 
-  const priv = VisibilityConfig[Visibility.Private];
   const team = VisibilityConfig[Visibility.Team];
   const pub = VisibilityConfig[Visibility.Public];
 
@@ -103,9 +102,6 @@ export const ProjectForm = ({ control, watch }: ProjectFormProps) => {
             </option>
             <option value={Visibility.Public}>
               {`${pub.label} (${pub.description})`}
-            </option>
-            <option value={Visibility.Private}>
-              {`${priv.label} (${priv.description})`}
             </option>
           </Select>
         )}

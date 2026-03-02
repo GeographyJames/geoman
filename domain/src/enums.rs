@@ -19,7 +19,6 @@ pub enum Status {
 #[sqlx(type_name = "app.visibility", rename_all = "UPPERCASE")]
 #[serde(rename_all = "UPPERCASE")]
 pub enum Visibility {
-    Private,
     Team,
     #[default]
     Public,

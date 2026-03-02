@@ -8,7 +8,7 @@ import { useProjectsFilter } from "@/features/app/contexts/ProjectsFilterContext
 
 import type Project from "@/domain/project/entity";
 import { useCurrentUser } from "@/hooks/api/useCurrentUser";
-import { UNASSIGNED_USERS_TEAM_ID } from "@/constants";
+import { UNASSIGNED_USERS_NAME, UNASSIGNED_USERS_TEAM_ID } from "@/constants";
 
 interface Props {
   projects?: Project[];
@@ -41,7 +41,8 @@ function ProjectsList({ projects: projectsProp }: Props = {}) {
       }),
     [projectsProp, contextProjects, sortBy],
   );
-  const isDisabled = !currentUser || currentUser.team.id === -1;
+  const isDisabled =
+    !currentUser || currentUser.team.id === UNASSIGNED_USERS_TEAM_ID;
 
   return (
     <div className="flex flex-col min-h-0 h-full pb-2 pt-4 gap-2">
@@ -53,7 +54,11 @@ function ProjectsList({ projects: projectsProp }: Props = {}) {
           <div className=" flex flex-col gap-2 items-end">
             <div
               className={`tooltip tooltip-left ${!isDisabled ? "tooltip-disabled" : ""}`}
-              data-tip={isDisabled ? "Guest users cannot create projects" : ""}
+              data-tip={
+                isDisabled
+                  ? `${UNASSIGNED_USERS_NAME} users cannot create projects`
+                  : ""
+              }
             >
               <span>
                 <CreateButton
