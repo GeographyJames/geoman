@@ -7,25 +7,17 @@ import {
   type Dispatch,
   type ReactNode,
   type SetStateAction,
-  useMemo,
   useState,
 } from "react";
 import { createPortal } from "react-dom";
 import UserInitials from "@/components/UserInitials";
 import SetPrimaryRadio from "./SetPrimaryRadio";
-import {
-  useFeatureCollectionLayer,
-  useFeatureLayer,
-  useZoomToFeature,
-} from "@/hooks/useFeatureLayer";
-import { type WakePreset, generateTurbineAreas } from "@/lib/turbineAreas";
-import { useTurbineLayoutGeojson } from "@/hooks/api/projectFeature.ts/useTurbineLayoutGeojson";
-import { useTurbineLayerWithPopup } from "@/hooks/useTurbineLayerWithPopup";
+import { type WakePreset } from "@/lib/turbineAreas";
 import MapPopup from "@/components/mapComponents/MapPopup";
+import { useCollectionItemLayer } from "./useCollectionItemLayer";
 
 import { FeatureActionsDropdown } from "./features/FeatureActionsDropdown";
 import { dateFormat, TURBINE_LAYOUTS_COLLECTION_ID } from "@/constants";
-import { primaryStyle, defaultStyle, sweptAreaStyle, wakeEllipseStyle } from "./featureStyles";
 import { TurbinePopupContent } from "./TurbinePopupContent";
 import { TurbineLayoutControls } from "./TurbineLayoutControls";
 
@@ -118,7 +110,7 @@ export const ProjectCollection = ({
               onVisibleChange={(val) =>
                 setVisibilityMap((prev) => ({ ...prev, [f.id]: val }))
               }
-              areasVisible={showAreasMap[f.id] ?? true}
+              areasVisible={showAreasMap[f.id] ?? (f.properties.rotor_diameter_mm != null)}
               wakePreset={wakePreset}
               windFromDeg={windFromDeg}
               projectSlug={projectSlug}
@@ -179,8 +171,8 @@ export const ProjectCollection = ({
                       <input
                         type="checkbox"
                         className="checkbox checkbox-xs bg-base-100 "
-                        checked={showAreasMap[f.id] ?? true}
-                        disabled={!(visibilityMap[f.id] ?? false)}
+                        checked={showAreasMap[f.id] ?? (f.properties.rotor_diameter_mm != null)}
+                        disabled={!(visibilityMap[f.id] ?? false) || f.properties.rotor_diameter_mm == null}
                         onChange={(e) =>
                           setShowAreasMap((prev) => ({
                             ...prev,
@@ -239,32 +231,14 @@ export function SiteDataTableRow({
   projectSlug: string;
   collectionSlug: string;
 }) {
-  const isTurbineLayout =
-    item.properties.collection_id === TURBINE_LAYOUTS_COLLECTION_ID;
-  const { data: turbineGeojson } = useTurbineLayoutGeojson(
+  const { popupRef, popupContent, closePopup, zoomToFeature } = useCollectionItemLayer(item, {
+    visible,
+    areasVisible,
+    wakePreset,
+    windFromDeg,
     projectSlug,
     collectionSlug,
-    item.id,
-    visible && isTurbineLayout,
-  );
-
-  const style = item.properties.is_primary ? primaryStyle : defaultStyle;
-  useFeatureLayer(visible && !isTurbineLayout ? item : undefined, style);
-  const { popupRef, popupContent, closePopup } = useTurbineLayerWithPopup(
-    visible && isTurbineLayout ? turbineGeojson : undefined,
-    style,
-  );
-
-  const turbineAreas = useMemo(
-    () =>
-      visible && areasVisible && turbineGeojson
-        ? generateTurbineAreas(turbineGeojson, wakePreset, windFromDeg)
-        : null,
-    [visible, areasVisible, wakePreset, windFromDeg, turbineGeojson],
-  );
-  useFeatureCollectionLayer(turbineAreas?.sweptAreas, sweptAreaStyle);
-  useFeatureCollectionLayer(turbineAreas?.wakeEllipses, wakeEllipseStyle);
-  const zoomToFeature = useZoomToFeature(item);
+  });
 
   return (
     <tr key={item.id} className="hover:bg-base-200">
