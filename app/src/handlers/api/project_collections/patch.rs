@@ -1,8 +1,13 @@
 use actix_web::{HttpResponse, patch, web};
-use domain::{CollectionUpdateDto, ProjectCollectionId, enums::Status, name::NameInputDTO};
+use domain::{
+    CollectionUpdateDto, ProjectCollectionId, ProjectId, enums::Status, name::NameInputDTO,
+};
 use serde::{Deserialize, Serialize};
 
-use crate::{errors::ApiError, postgres::PostgresRepo, types::AuthenticatedUser};
+use crate::{
+    errors::ApiError, handlers::api::guard::check_project_write_access, postgres::PostgresRepo,
+    types::AuthenticatedUser,
+};
 
 fn deserialize_optional_field<'de, T, D>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
 where
@@ -42,6 +47,15 @@ pub async fn patch_collection(
 
     if !user.admin && project_id.is_none() {
         return Err(ApiError::AdminOnly);
+    }
+    if let Some(pid) = project_id {
+        check_project_write_access(
+            &repo.db_pool,
+            ProjectId(pid),
+            &user,
+            "alter project collections",
+        )
+        .await?;
     }
 
     if let Some(ref new_title) = payload.title

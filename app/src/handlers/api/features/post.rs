@@ -22,8 +22,11 @@ use std::io::Read;
 use uuid::Uuid;
 
 use crate::{
-    AuthenticatedUser, constants::TURBINE_LAYOUTS_COLLECTION_ID, errors::ApiError,
-    handlers::api::features::payload::FeatureInputPayload, postgres::PostgresRepo,
+    AuthenticatedUser,
+    constants::TURBINE_LAYOUTS_COLLECTION_ID,
+    errors::ApiError,
+    handlers::api::{features::payload::FeatureInputPayload, guard::check_project_write_access},
+    postgres::PostgresRepo,
 };
 
 fn dataset_from_shz(mut shz: TempFile) -> Result<Dataset, ShapefileError> {
@@ -77,6 +80,7 @@ pub async fn post_project_feature_shapefile(
     path: web::Path<(ProjectId, ProjectCollectionId)>,
 ) -> Result<Json<i32>, ApiError> {
     let (project_id, collection_id) = path.into_inner();
+    check_project_write_access(&repo.db_pool, project_id, &user, "create project data").await?;
     let projcet_srid = repo.get_project_srid(project_id).await?;
     let FeatureInputPayload {
         shp,

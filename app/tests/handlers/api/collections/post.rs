@@ -1,9 +1,11 @@
 use app::handlers::api::project_collections::CollectionReqPayload;
 use domain::ProjectCollectionId;
 
+use domain::TeamId;
+
 use crate::common::{
     AppBuilder, Auth, TestApp,
-    helpers::{assert_ok, check_error_response, handle_json_response},
+    helpers::{assert_ok, assert_status, check_error_response, handle_json_response},
 };
 
 #[actix_web::test]
@@ -58,4 +60,21 @@ async fn non_admin_users_can_create_project_specific_collections() {
         .ogc_service
         .get_project_collection_ogc(&app.api_client, project_id, collection_id)
         .await;
+}
+
+#[actix_web::test]
+async fn only_project_team_can_post_collection() {
+    let (app, _, project_id) = TestApp::with_project().await;
+    let admin = Auth::MockUserCredentials(app.generate_user(true, TeamId(0)).await);
+    let other_team = app.generate_team_id(Some(&admin)).await;
+    let outsider = Auth::MockUserCredentials(app.generate_user(false, other_team).await);
+    let collection = CollectionReqPayload {
+        project_id: Some(project_id),
+        ..CollectionReqPayload::default()
+    };
+    let response = app
+        .collections_service
+        .post_json(&app.api_client, Some(&outsider), &collection)
+        .await;
+    assert_status(&response, 401);
 }

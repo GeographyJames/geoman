@@ -58,7 +58,7 @@ function TeamCard({
         <div className="flex items-center justify-between">
           <h3 className="card-title text-base flex items-center gap-2">
             <Users size={16} />
-            {team.name}
+            {`${team.name} (${members.length})`}
             {isCurrentUserTeam && (
               <span className="text-base-content/50 text-sm font-normal">
                 (your team)
@@ -110,10 +110,14 @@ function TeamCard({
                       firstName={member.firstName}
                       lastName={member.lastName}
                     />
-                    <span className={`text-sm ${currentUser?.id === member.id ? "font-bold" : ""}`}>
+                    <span
+                      className={`text-sm ${currentUser?.id === member.id ? "font-bold" : ""}`}
+                    >
                       {member.firstName} {member.lastName}
                       {currentUser?.id === member.id && (
-                        <span className="text-xs text-base-content/50 ml-1 font-normal">(you)</span>
+                        <span className="text-xs text-base-content/50 ml-1 font-normal">
+                          (you)
+                        </span>
                       )}
                       {member.isAdmin && (
                         <span className="text-xs text-base-content/50 ml-1 font-normal">
@@ -196,11 +200,13 @@ function UnassignedUsersCard({
   const { data: currentUser } = useCurrentUser();
 
   return (
-    <div className={`card border border-base-300 ${users.some(u => u.id === currentUser?.id) ? "bg-primary/10" : "bg-base-100"}`}>
+    <div
+      className={`card border border-base-300 ${users.some((u) => u.id === currentUser?.id) ? "bg-primary/10" : "bg-base-100"}`}
+    >
       <div className="card-body gap-3">
         <h3 className="card-title text-base flex items-center gap-2">
           <Users size={16} />
-          Guests
+          {`Guests (${users.length})`}
         </h3>
         <ul className="space-y-1">
           {[...users]
@@ -215,10 +221,14 @@ function UnassignedUsersCard({
                     firstName={user.firstName}
                     lastName={user.lastName}
                   />
-                  <span className={`text-sm ${currentUser?.id === user.id ? "font-bold" : ""}`}>
+                  <span
+                    className={`text-sm ${currentUser?.id === user.id ? "font-bold" : ""}`}
+                  >
                     {user.firstName} {user.lastName}
                     {currentUser?.id === user.id && (
-                      <span className="text-xs text-base-content/50 ml-1 font-normal">(you)</span>
+                      <span className="text-xs text-base-content/50 ml-1 font-normal">
+                        (you)
+                      </span>
                     )}
                     {user.isAdmin && (
                       <span className="text-xs text-base-content/50 ml-1 font-normal">
@@ -324,7 +334,9 @@ function TeamGroup({
     <div className="mb-8">
       {label != null && (
         <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-lg font-semibold text-base-content/80">{label}</h2>
+          <h2 className="text-lg font-semibold text-base-content/80">
+            {label}
+          </h2>
           {businessUnit && currentUser?.isAdmin && onEditBU && onDeleteBU && (
             <div className="flex gap-1">
               <button
@@ -355,7 +367,9 @@ function TeamGroup({
         </div>
       )}
       {sortedTeams.length > 0 ? (
-        <div className={`grid grid-cols-1 gap-4 ${sortedTeams.length > 1 ? "sm:grid-cols-2" : ""}`}>
+        <div
+          className={`grid grid-cols-1 gap-4 ${sortedTeams.length > 1 ? "sm:grid-cols-2" : ""}`}
+        >
           {sortedTeams.map((team) => (
             <TeamCard
               key={team.id}
@@ -481,7 +495,9 @@ export default function TeamsSection() {
 
       {unassignedUsers.length > 0 && (
         <div className="mb-8">
-          {businessUnits.length > 0 && unassignedTeams.length === 0 && <div className="divider" />}
+          {businessUnits.length > 0 && unassignedTeams.length === 0 && (
+            <div className="divider" />
+          )}
           <UnassignedUsersCard
             users={unassignedUsers}
             teams={teams}

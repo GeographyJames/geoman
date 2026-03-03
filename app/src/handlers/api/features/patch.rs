@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     AuthenticatedUser, constants::TURBINE_LAYOUTS_COLLECTION_ID, errors::ApiError,
-    postgres::PostgresRepo,
+    handlers::api::guard::check_project_write_access, postgres::PostgresRepo,
 };
 
 #[derive(Serialize, Default, Deserialize)]
@@ -25,6 +25,7 @@ pub async fn patch_project_feature(
     body: web::Json<PatchProjectFeaturePayload>,
 ) -> Result<HttpResponse, ApiError> {
     let (project_id, collection_id, feature_id) = path.into_inner();
+    check_project_write_access(&repo.db_pool, project_id, &user, "alter project data").await?;
     let payload = body.into_inner();
 
     if collection_id.0 == TURBINE_LAYOUTS_COLLECTION_ID {

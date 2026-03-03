@@ -6,8 +6,10 @@ use actix_web::{
 use domain::{ProjectCollectionId, ProjectCollectionInputDto};
 
 use crate::{
-    errors::ApiError, handlers::api::project_collections::CollectionReqPayload,
-    postgres::PostgresRepo, types::AuthenticatedUser,
+    errors::ApiError,
+    handlers::api::{guard::check_project_write_access, project_collections::CollectionReqPayload},
+    postgres::PostgresRepo,
+    types::AuthenticatedUser,
 };
 
 #[post("")]
@@ -19,6 +21,15 @@ pub async fn post_project_collection(
 ) -> Result<Json<ProjectCollectionId>, ApiError> {
     if payload.project_id.is_none() && !user.admin {
         return Err(ApiError::AdminOnly);
+    }
+    if let Some(project_id) = payload.project_id {
+        check_project_write_access(
+            &repo.db_pool,
+            project_id,
+            &user,
+            "create project collections",
+        )
+        .await?;
     }
     let collection_input_dto: ProjectCollectionInputDto = payload
         .into_inner()

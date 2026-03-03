@@ -6,13 +6,13 @@ use gdal::{
 };
 
 use crate::common::{
-    AppBuilder, Auth,
+    AppBuilder, Auth, TestApp,
     helpers::{
-        add_layer, add_shapefile_to_form, add_shz_to_form, assert_ok, create_gdal_multipolygon_bng,
-        create_shapefile_dataset, dataset_to_shapefile_data, handle_json_response,
+        add_layer, add_shapefile_to_form, add_shz_to_form, assert_ok, assert_status,
+        create_gdal_multipolygon_bng, create_shapefile_dataset, dataset_to_shapefile_data,
+        handle_json_response,
     },
 };
-
 #[actix_web::test]
 async fn post_shapefile_works() {
     let app = AppBuilder::new().build().await;
@@ -113,4 +113,24 @@ async fn post_shapefile_works_with_shz() {
         .await;
     assert_ok(&response);
     let _ogc_ft: ogc::features::Feature = handle_json_response(response).await.unwrap();
+}
+
+#[actix_web::test]
+async fn only_project_team_can_post_feature() {
+    let (app, _, project_id) = TestApp::with_project().await;
+    let admin = Auth::MockUserCredentials(app.generate_user(true, TeamId(0)).await);
+    let other_team = app.generate_team_id(Some(&admin)).await;
+    let outsider = Auth::MockUserCredentials(app.generate_user(false, other_team).await);
+    let collection_id = app.generate_project_collection_id().await;
+    let form = reqwest::multipart::Form::new().text("name", "test");
+    let response = app
+        .features_service
+        .post_form(
+            &app.api_client,
+            form,
+            format!("{}/{}", project_id, collection_id),
+            Some(&outsider),
+        )
+        .await;
+    assert_status(&response, 401);
 }

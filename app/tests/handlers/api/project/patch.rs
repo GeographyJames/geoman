@@ -3,7 +3,7 @@ use app::{
     handlers::api::{projects::PatchProjectPayload, users::PatchUserPayload},
 };
 use domain::{
-    TeamId,
+    ProjectId, TeamId,
     enums::{CollectionId, Status},
     project::Project,
 };
@@ -41,7 +41,7 @@ async fn patch_project_works() {
 
 #[actix_web::test]
 async fn only_project_owner_and_admins_can_delete_project() {
-    let (app, _, project_id) = TestApp::with_project().await;
+    let (app, project_owner, project_id) = TestApp::with_project().await;
     let update_dto = PatchProjectPayload {
         status: Some(Status::Deleted),
         ..Default::default()
@@ -51,13 +51,36 @@ async fn only_project_owner_and_admins_can_delete_project() {
         .projects_service
         .patch_json(&app.api_client, project_id, Some(&user_2), &update_dto)
         .await;
-    assert_status(&response, 401);
-    let user_3 = Auth::MockUserCredentials(app.generate_user(true, TeamId(0)).await);
+    assert_eq!(
+        response.status().as_u16(),
+        401,
+        "non admin non project owner should not be able to delete project"
+    );
+    let admin_user = Auth::MockUserCredentials(app.generate_user(true, TeamId(0)).await);
     let response = app
         .projects_service
-        .patch_json(&app.api_client, project_id, Some(&user_3), &update_dto)
+        .patch_json(&app.api_client, project_id, Some(&admin_user), &update_dto)
         .await;
-    assert_status(&response, 204);
+    assert_eq!(
+        response.status().as_u16(),
+        204,
+        "admin should be able to delete project"
+    );
+    let project_id = app.generate_project_id(Some(&project_owner)).await;
+    let response = app
+        .projects_service
+        .patch_json(
+            &app.api_client,
+            project_id,
+            Some(&project_owner),
+            &update_dto,
+        )
+        .await;
+    assert_eq!(
+        response.status().as_u16(),
+        204,
+        "project owner should be able to delete project"
+    );
 }
 
 #[actix_web::test]
@@ -96,6 +119,16 @@ async fn patch_project_privileges_check() {
         204,
         "admin on another team should be able to edit project"
     );
+    let teammate = Auth::MockUserCredentials(app.generate_user(false, project_owner_team).await);
+    let response = app
+        .projects_service
+        .patch_json(&app.api_client, project_id, Some(&teammate), &update_dto)
+        .await;
+    assert_eq!(
+        response.status().as_u16(),
+        204,
+        "teammate should be able to update project"
+    );
     // change owner team to Unassigned users
     let updated_owner = PatchUserPayload {
         team_id: Some(TeamId(UNASSIGNED_USERS_TEAM_ID)),
@@ -128,5 +161,21 @@ async fn patch_project_privileges_check() {
         response.status().as_u16(),
         401,
         "unassigned users should not be able to update projects"
-    )
+    );
+}
+
+#[actix_web::test]
+async fn patch_nonexistent_project_returns_404() {
+    let (app, user, _) = TestApp::with_project().await;
+    let update_dto = PatchProjectPayload::default();
+    let response = app
+        .projects_service
+        .patch_json(
+            &app.api_client,
+            ProjectId(i32::MAX),
+            Some(&user),
+            &update_dto,
+        )
+        .await;
+    assert_status(&response, 404);
 }
