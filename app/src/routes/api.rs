@@ -5,6 +5,7 @@ use crate::{
         business_units::{
             delete_business_unit, get_business_units, patch_business_unit, post_business_unit,
         },
+        tiles::get_tile,
         epsg::{post_epsg, post_epsg_from_shz},
         features::{
             duplicate::duplicate_project_feature, get::get_project_feature_download,
@@ -49,7 +50,8 @@ pub fn api_routes(cfg: &mut web::ServiceConfig, _clerk: Clerk, run_environment: 
         .configure(project_features_routes)
         .configure(epsg_routes)
         .configure(teams_routes)
-        .configure(business_units_routes);
+        .configure(business_units_routes)
+        .configure(tile_routes);
 
     match run_environment {
         GeoManEnvironment::Development => {
@@ -124,6 +126,10 @@ pub fn teams_routes(cfg: &mut web::ServiceConfig) {
             .service(patch_team)
             .service(delete_team),
     );
+}
+
+pub fn tile_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(scope(&URLS.api.tiles).service(get_tile));
 }
 
 pub fn business_units_routes(cfg: &mut web::ServiceConfig) {

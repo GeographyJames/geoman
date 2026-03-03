@@ -13,6 +13,7 @@ api:
   teams: "/teams"
   business_units: "/business-units"
   turbine_layouts: "/turbine-layouts"
+  tiles: "/tiles"
 
 docs:
   base: "/docs"

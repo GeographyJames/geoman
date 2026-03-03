@@ -50,6 +50,7 @@ geo = { path = "../geo" }
 gdal = { workspace = true }
 slug = "0.1.6"
 base64 = "0.22"
+reqwest = "0.13"
 
 
 [dev-dependencies]

@@ -1,5 +1,5 @@
 use crate::{
-    config::{clerk::ClerkAuthSettings, db::DatabaseSettings},
+    config::{GeoserverSettings, clerk::ClerkAuthSettings, db::DatabaseSettings},
     constants::ENVIRONMENT_VARIABLE_PREFIX,
     enums::GeoManEnvironment,
     helpers::get_configuration_directory,
@@ -15,6 +15,7 @@ pub struct AppConfig {
     pub auth_settings: ClerkAuthSettings,
     pub app_settings: AppSettings,
     pub db_settings: DatabaseSettings,
+    pub geoserver: GeoserverSettings,
 }
 
 #[derive(Deserialize, Clone)]
