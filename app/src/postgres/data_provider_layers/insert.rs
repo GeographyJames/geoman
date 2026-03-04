@@ -1,5 +1,5 @@
-use domain::{DataProviderLayerId, UserId};
 use domain::enums::LayerCategory;
+use domain::{DataProviderLayerId, UserId};
 use serde_json::json;
 
 use crate::{

@@ -1,5 +1,4 @@
 use actix_web::{HttpResponse, get, web};
-use secrecy::ExposeSecret;
 use serde::Deserialize;
 
 use crate::{config::GeoserverSettings, errors::ApiError};

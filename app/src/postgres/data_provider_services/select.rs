@@ -1,5 +1,5 @@
-use domain::{DataProviderService, DataProviderServiceId, DataProviderId};
 use domain::enums::DataProviderServiceType;
+use domain::{DataProviderId, DataProviderService, DataProviderServiceId};
 
 use crate::repo::traits::SelectAll;
 
@@ -16,8 +16,7 @@ impl SelectAll for DataProviderService {
                    provider_id as "provider_id: DataProviderId",
                    name,
                    service_type as "service_type: DataProviderServiceType",
-                   base_url,
-                   description
+                   base_url
             FROM app.data_provider_services
             ORDER BY name ASC
             "#

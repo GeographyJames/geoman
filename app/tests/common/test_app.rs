@@ -18,12 +18,12 @@ use app::{
     handlers::{
         self,
         api::{
-            business_units::BusinessUnitInputPayload, features::get::FeatureFormat,
+            business_units::BusinessUnitInputPayload,
+            data_provider_layers::DataProviderLayerInputPayload,
+            data_provider_services::DataProviderServiceInputPayload,
+            data_providers::DataProviderInputPayload, features::get::FeatureFormat,
             project_collections::CollectionReqPayload, projects::PostProjectPayload,
             teams::TeamInputPayload,
-            data_providers::DataProviderInputPayload,
-            data_provider_services::DataProviderServiceInputPayload,
-            data_provider_layers::DataProviderLayerInputPayload,
         },
     },
     telemetry::{get_subscriber, init_subscriber},

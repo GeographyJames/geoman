@@ -20,7 +20,9 @@ pub async fn delete_data_provider(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params};
+    use crate::{
+        AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params,
+    };
     use actix_web::test;
 
     #[actix_web::test]

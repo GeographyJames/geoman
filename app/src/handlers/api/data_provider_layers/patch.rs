@@ -45,7 +45,9 @@ pub async fn patch_data_provider_layer(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params};
+    use crate::{
+        AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params,
+    };
     use actix_web::test;
 
     #[actix_web::test]

@@ -1,6 +1,7 @@
 # Data Providers Feature — Design Summary
 
 ## Overview
+
 A system allowing admins to configure external map data services and expose curated layers from those services to all users on the map view. Data is organised in a three-level hierarchy:
 
 ```
@@ -15,63 +16,7 @@ DataMap Wales →  WMS      →  SSSI (Wales)
 
 Three tables reflecting the Provider → Service → Layer hierarchy:
 
-```sql
-CREATE TYPE app.data_provider_service_type AS ENUM (
-    'ImageWMS', 'TileWMS', 'WMTS', 'WFS', 'ArcGISRest', 'MVT', 'OGCAPIFeatures', 'XYZ'
-);
-
-CREATE TYPE app.layer_category AS ENUM (
-    'overlay', 'basemap'
-);
-
-CREATE TABLE app.data_providers (
-    id           INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    name         TEXT NOT NULL,
-    description  TEXT,
-    country_code CHAR(2),     -- ISO 3166-1 alpha-2, NULL = global
-    subdivision  VARCHAR(10), -- ISO 3166-2, e.g. 'GB-SCT', NULL = whole country
-    status       app.status NOT NULL DEFAULT 'ACTIVE',
-    added_by     INTEGER NOT NULL REFERENCES app.users(id),
-    added        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    last_updated_by INTEGER NOT NULL REFERENCES app.users(id),
-    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE app.data_provider_services (
-    id           INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    provider_id  INTEGER NOT NULL REFERENCES app.data_providers(id) ON DELETE CASCADE,
-    name         TEXT NOT NULL,
-    service_type app.data_provider_service_type NOT NULL,
-    base_url     TEXT NOT NULL,
-    description  TEXT,
-    status       app.status NOT NULL DEFAULT 'ACTIVE',
-    added_by     INTEGER NOT NULL REFERENCES app.users(id),
-    added        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    last_updated_by INTEGER NOT NULL REFERENCES app.users(id),
-    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE app.data_provider_layers (
-    id           INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    service_id   INTEGER NOT NULL REFERENCES app.data_provider_services(id) ON DELETE CASCADE,
-    name         TEXT NOT NULL,
-    abbreviation TEXT,        -- short label for map legend, e.g. 'SSSI', 'AONB'
-    source       JSONB NOT NULL DEFAULT '{}', -- shape varies by service type (see design notes)
-    category     app.layer_category NOT NULL DEFAULT 'overlay',
-    description  TEXT,
-    enabled      BOOLEAN NOT NULL DEFAULT true,
-    style_config JSONB NOT NULL DEFAULT '{}',    -- {"sld": "<StyledLayerDescriptor>..."}
-    display_options JSONB NOT NULL DEFAULT '{}', -- {"opacity": 0.8, "min_zoom": 10, "max_zoom": 18}
-    country_code CHAR(2),     -- overrides provider if set
-    subdivision  VARCHAR(10), -- overrides provider if set
-    sort_order   INTEGER NOT NULL DEFAULT 0,
-    status       app.status NOT NULL DEFAULT 'ACTIVE',
-    added_by     INTEGER NOT NULL REFERENCES app.users(id),
-    added        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    last_updated_by INTEGER NOT NULL REFERENCES app.users(id),
-    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
+The database schema can be seen here: migrations/20260304164248_create_data_providers_services_and_layers_tables.sql
 
 ### Why three tables
 
@@ -87,16 +32,16 @@ A single service (e.g. Ordnance Survey OS Maps API WMTS) can have both basemap l
 
 Each service type maps to an OL source and hook:
 
-| Type | OL Source | Hook |
-|---|---|---|
-| `ImageWMS` | `ImageWMS` | `useWmsLayer` |
-| `TileWMS` | `TileWMS` | to be built |
-| `WMTS` | `WMTS` | to be built |
-| `WFS` | `VectorSource` + WFS loader | to be built |
-| `ArcGISRest` | `VectorSource` + bbox strategy | `useArcGISFeatureLayer` |
-| `MVT` | `VectorTileSource` | `useVectorTileLayer` |
-| `OGCAPIFeatures` | `VectorSource` + OGC API Features loader | to be built |
-| `XYZ` | `XYZ` | to be built |
+| Type             | OL Source                                | Hook                    |
+| ---------------- | ---------------------------------------- | ----------------------- |
+| `ImageWMS`       | `ImageWMS`                               | `useWmsLayer`           |
+| `TileWMS`        | `TileWMS`                                | to be built             |
+| `WMTS`           | `WMTS`                                   | to be built             |
+| `WFS`            | `VectorSource` + WFS loader              | to be built             |
+| `ArcGISRest`     | `VectorSource` + bbox strategy           | `useArcGISFeatureLayer` |
+| `MVT`            | `VectorTileSource`                       | `useVectorTileLayer`    |
+| `OGCAPIFeatures` | `VectorSource` + OGC API Features loader | to be built             |
+| `XYZ`            | `XYZ`                                    | to be built             |
 
 **`ImageWMS` vs `TileWMS`**: Use `ImageWMS` for pay-per-request services (one request per viewport) and `TileWMS` for self-hosted or unlimited services where tile caching (e.g. GeoServer GeoWebCache) gives a performance benefit.
 
@@ -106,10 +51,10 @@ Each service type maps to an OL source and hook:
 
 Each layer belongs to one of two categories (stored on `data_provider_layers.category`):
 
-| Category | Behaviour | UI Control |
-|---|---|---|
-| `overlay` | Multiple active simultaneously, toggled on/off | Checkboxes in layer panel |
-| `basemap` | Only one active at a time | Separate base map selector (design deferred) |
+| Category  | Behaviour                                      | UI Control                                   |
+| --------- | ---------------------------------------------- | -------------------------------------------- |
+| `overlay` | Multiple active simultaneously, toggled on/off | Checkboxes in layer panel                    |
+| `basemap` | Only one active at a time                      | Separate base map selector (design deferred) |
 
 Base maps typically use XYZ tile URLs (OpenStreetMap, Mapbox, Google Maps) or WMTS (Ordnance Survey). Overlay layers are WMS, WFS, or ArcGIS.
 
@@ -207,14 +152,15 @@ The colour picker uses separate inputs for fill colour, fill opacity, stroke col
 
 **ISO standards for region tagging — stored on the provider:**
 
-| Field | Standard | Example |
-|---|---|---|
-| `country_code` | ISO 3166-1 alpha-2 | `GB`, `DE`, `FR` |
-| `subdivision` | ISO 3166-2 | `GB-SCT`, `GB-WLS`, `GB-ENG` |
+| Field          | Standard           | Example                      |
+| -------------- | ------------------ | ---------------------------- |
+| `country_code` | ISO 3166-1 alpha-2 | `GB`, `DE`, `FR`             |
+| `subdivision`  | ISO 3166-2         | `GB-SCT`, `GB-WLS`, `GB-ENG` |
 
 Country and subdivision live on `data_providers`, not on services. This avoids repeating the same country on every service row for the same provider. Individual layers can override if needed (e.g. an OS service tagged `GB` with a specific layer tagged `GB-ENG`).
 
 Effective region resolves as:
+
 ```
 layer.country_code ?? provider.country_code ?? NULL (global)
 ```
@@ -244,13 +190,13 @@ United Kingdom
   Northern Ireland
 ```
 
-**Filtering by user**: the existing `operating_country_code` on each user filters the map layer panel — users only see layers relevant to their operating country by default. The backend supports this via a query parameter:
+**Potential future addition Filtering by user**: the existing `operating_country_code` on each user could allow filtering the map layer panel — users only see layers relevant to their operating country by default. The backend could supports this via a query parameter:
 
 ```
 GET /api/data-provider-layers?country_code=GB
 ```
 
-A "Show all layers" toggle bypasses the filter for users who need to cross-reference across regions.
+A "Show all layers" toggle could bypasses the filter for users who need to cross-reference across regions.
 
 ---
 
@@ -262,6 +208,35 @@ A "Show all layers" toggle bypasses the filter for users who need to cross-refer
 4. **Add/Edit/Delete modals** — one set per level, following the existing `Modal` + inner form pattern
 5. **Discover from Capabilities** — WMS/WMTS GetCapabilities parser and layer picker UI
 6. **Map-side rendering** — wiring enabled overlay layers into `MapLayerControls`, base map selector UI
+
+---
+
+## Implementation Notes (post-build)
+
+### Source schema and layer identifier display
+
+The `source` column is a JSONB blob representing the OL source configuration for a layer. Its shape varies by service type — for example:
+
+| Service type | Expected shape (indicative)                        |
+| ------------ | -------------------------------------------------- |
+| `ImageWMS`   | `{"layers": "inspire-nrw:NRW_SSSI", "format": "image/png"}` |
+| `TileWMS`    | `{"layers": "NE.SSSI", "format": "image/png"}`     |
+| `ArcGISRest` | `{"url": "https://...", "layer": 0}`               |
+| `XYZ`        | `{"url": "https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png"}` |
+| `MVT`        | `{"url": "https://..."}`                           |
+| `WFS`        | `{"typeName": "inspire-nrw:NRW_SSSI"}`             |
+
+The original admin UI design included an **Identifier** column in the layers table showing the layer name within the service (e.g. `inspire-nrw:NRW_SSSI`). This was dropped in the initial implementation because the value is embedded inside `source` with no consistent key across service types.
+
+Once the `source` schema is settled per service type, a helper should be added to extract and display the meaningful identifier in the layers table. This makes the table significantly more useful at a glance — the layer name alone doesn't tell you which server-side layer it maps to.
+
+### Forms for structured source fields
+
+The Add/Edit Layer forms currently use a raw JSON textarea for `source`, `style_config`, and `display_options`. This is pragmatic but fragile. Once the `source` schema is settled, the Create/Edit Layer forms should offer structured inputs per service type — e.g. a WMS form with a `layers` text field, `format` dropdown, etc. — rather than requiring the admin to hand-author JSON.
+
+### Service description field removed
+
+The `description` field was removed from `data_provider_services` during initial build — it had no display surface in the UI and added form complexity without value. The column has been dropped from the database. If a description is ever needed at the service level it can be re-added as a migration.
 
 ---
 

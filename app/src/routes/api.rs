@@ -16,7 +16,6 @@ use crate::{
         data_providers::{
             delete_data_provider, get_data_providers, patch_data_provider, post_data_provider,
         },
-        tiles::get_tile,
         epsg::{post_epsg, post_epsg_from_shz},
         features::{
             duplicate::duplicate_project_feature, get::get_project_feature_download,
@@ -26,6 +25,7 @@ use crate::{
         project_collections::{get_collections, patch_collection, post_project_collection},
         projects::{patch_project, post_project},
         teams::{delete_team, get_teams, patch_team, post_team},
+        tiles::get_tile,
         users::{delete_user, get_user, get_users, patch_user},
     },
     middleware::{auth_middleware, mock_auth_middlewear},

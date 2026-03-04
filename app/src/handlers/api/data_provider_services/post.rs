@@ -2,8 +2,8 @@ use actix_web::{
     post,
     web::{self, Json},
 };
-use domain::{DataProviderId, DataProviderServiceId};
 use domain::enums::DataProviderServiceType;
+use domain::{DataProviderId, DataProviderServiceId};
 use serde::{Deserialize, Serialize};
 
 use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
@@ -14,7 +14,6 @@ pub struct DataProviderServiceInputPayload {
     pub name: String,
     pub service_type: DataProviderServiceType,
     pub base_url: String,
-    pub description: Option<String>,
 }
 
 #[post("")]
@@ -41,8 +40,7 @@ mod tests {
 
     #[actix_web::test]
     async fn post_data_provider_service_requires_admin_permission() {
-        let req =
-            test::TestRequest::post().set_json(&DataProviderServiceInputPayload::default());
+        let req = test::TestRequest::post().set_json(&DataProviderServiceInputPayload::default());
         let resp = mock_app(
             post_data_provider_service,
             req,

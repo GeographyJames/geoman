@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE app.data_provider_services\n            SET name = COALESCE($1, name),\n                service_type = COALESCE($2, service_type),\n                base_url = COALESCE($3, base_url),\n                last_updated = NOW(),\n                last_updated_by = $5\n            WHERE id = $4\n            RETURNING id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        {
+          "Custom": {
+            "name": "app.data_provider_service_type",
+            "kind": {
+              "Enum": [
+                "ImageWMS",
+                "TileWMS",
+                "WMTS",
+                "WFS",
+                "ArcGISRest",
+                "MVT",
+                "OGCAPIFeatures",
+                "XYZ"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8354a5051b39cdffac8e0fb3adc02ca1368c4c7407d826a69b7c5c0f5fc36fcb"
+}

@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO app.data_providers(name, description, country_code, subdivision, added_by, last_updated_by)\n             VALUES ($1, $2, $3, $4, $5, $5) RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Bpchar",
+        "Varchar",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7b73fd90924f2c02d71f2f52e6a08cd13f631998dd3318904da1bbfaecb40c9e"
+}

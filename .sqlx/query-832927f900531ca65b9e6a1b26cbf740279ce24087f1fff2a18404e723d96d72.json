@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE app.data_provider_layers\n            SET name = COALESCE($1, name),\n                abbreviation = CASE WHEN $2 THEN $3 ELSE abbreviation END,\n                source = COALESCE($4, source),\n                category = COALESCE($5, category),\n                description = CASE WHEN $6 THEN $7 ELSE description END,\n                enabled = COALESCE($8, enabled),\n                style_config = COALESCE($9, style_config),\n                display_options = COALESCE($10, display_options),\n                country_code = CASE WHEN $11 THEN $12 ELSE country_code END,\n                subdivision = CASE WHEN $13 THEN $14 ELSE subdivision END,\n                sort_order = COALESCE($15, sort_order),\n                last_updated = NOW(),\n                last_updated_by = $17\n            WHERE id = $16\n            RETURNING id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Text",
+        "Jsonb",
+        {
+          "Custom": {
+            "name": "app.layer_category",
+            "kind": {
+              "Enum": [
+                "overlay",
+                "basemap"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Text",
+        "Bool",
+        "Jsonb",
+        "Jsonb",
+        "Bool",
+        "Bpchar",
+        "Bool",
+        "Varchar",
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "832927f900531ca65b9e6a1b26cbf740279ce24087f1fff2a18404e723d96d72"
+}

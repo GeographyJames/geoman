@@ -1,0 +1,102 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id as \"id: DataProviderLayerId\",\n                   service_id as \"service_id: DataProviderServiceId\",\n                   name,\n                   abbreviation,\n                   source as \"source: serde_json::Value\",\n                   category as \"category: LayerCategory\",\n                   description,\n                   enabled,\n                   style_config as \"style_config: serde_json::Value\",\n                   display_options as \"display_options: serde_json::Value\",\n                   country_code,\n                   subdivision,\n                   sort_order\n            FROM app.data_provider_layers\n            ORDER BY sort_order ASC, name ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: DataProviderLayerId",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "service_id: DataProviderServiceId",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "abbreviation",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "source: serde_json::Value",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 5,
+        "name": "category: LayerCategory",
+        "type_info": {
+          "Custom": {
+            "name": "app.layer_category",
+            "kind": {
+              "Enum": [
+                "overlay",
+                "basemap"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "enabled",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "style_config: serde_json::Value",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 9,
+        "name": "display_options: serde_json::Value",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 10,
+        "name": "country_code",
+        "type_info": "Bpchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "subdivision",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 12,
+        "name": "sort_order",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "d50f5be7d0dee3a5ec377ab98e961fe8de26fb1a55c531547eabbe73aa9fa2e6"
+}

@@ -4,9 +4,9 @@ import { Route } from "@/routes/admin";
 import { Map } from "lucide-react";
 
 import ApiKeysSection from "./sections/apiKey/ApiKeysSection";
-import TeamsSection from "./sections/TeamsSection";
+import TeamsSection from "./sections/teams/TeamsSection";
 import CollectionsSection from "./sections/collections/CollectionsSection";
-import DataProvidersSection from "./sections/DataProvidersSection";
+import DataProvidersSection from "./sections/dataProviders/DataProvidersSection";
 
 type Tab = "teams" | "collections" | "api-keys" | "data-providers";
 

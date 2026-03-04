@@ -1,5 +1,5 @@
-use domain::{DataProviderLayer, DataProviderLayerId, DataProviderServiceId};
 use domain::enums::LayerCategory;
+use domain::{DataProviderLayer, DataProviderLayerId, DataProviderServiceId};
 
 use crate::repo::traits::SelectAll;
 

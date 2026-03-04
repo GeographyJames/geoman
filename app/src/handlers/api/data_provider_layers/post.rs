@@ -2,8 +2,8 @@ use actix_web::{
     post,
     web::{self, Json},
 };
-use domain::{DataProviderLayerId, DataProviderServiceId};
 use domain::enums::LayerCategory;
+use domain::{DataProviderLayerId, DataProviderServiceId};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -49,8 +49,7 @@ mod tests {
 
     #[actix_web::test]
     async fn post_data_provider_layer_requires_admin_permission() {
-        let req =
-            test::TestRequest::post().set_json(&DataProviderLayerInputPayload::default());
+        let req = test::TestRequest::post().set_json(&DataProviderLayerInputPayload::default());
         let resp = mock_app(
             post_data_provider_layer,
             req,

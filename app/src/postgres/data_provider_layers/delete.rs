@@ -7,12 +7,9 @@ impl PostgresRepo {
         &self,
         id: DataProviderLayerId,
     ) -> Result<(), RepositoryError> {
-        sqlx::query!(
-            "DELETE FROM app.data_provider_layers WHERE id = $1",
-            id.0
-        )
-        .execute(&self.db_pool)
-        .await?;
+        sqlx::query!("DELETE FROM app.data_provider_layers WHERE id = $1", id.0)
+            .execute(&self.db_pool)
+            .await?;
         Ok(())
     }
 }

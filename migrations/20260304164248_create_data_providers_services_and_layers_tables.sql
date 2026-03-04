@@ -37,7 +37,6 @@ CREATE TABLE app.data_provider_services (
     name text NOT NULL,
     service_type app.data_provider_service_type NOT NULL,
     base_url text NOT NULL,
-    description text,
 
     added_by integer NOT NULL REFERENCES app.users(id),
     added timestamptz NOT NULL DEFAULT now(),

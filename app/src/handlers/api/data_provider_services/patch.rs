@@ -10,8 +10,6 @@ pub struct DataProviderServiceUpdatePayload {
     pub name: Option<String>,
     pub service_type: Option<DataProviderServiceType>,
     pub base_url: Option<String>,
-    #[serde(default, deserialize_with = "crate::serde_helpers::double_option")]
-    pub description: Option<Option<String>>,
 }
 
 #[patch("/{id}")]
@@ -34,7 +32,9 @@ pub async fn patch_data_provider_service(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params};
+    use crate::{
+        AuthenticatedUser, MockUserCredentials, testing::test_helpers::mock_app_with_path_params,
+    };
     use actix_web::test;
 
     #[actix_web::test]

@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO app.data_provider_services(provider_id, name, service_type, base_url, added_by, last_updated_by)\n             VALUES ($1, $2, $3, $4, $5, $5) RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        {
+          "Custom": {
+            "name": "app.data_provider_service_type",
+            "kind": {
+              "Enum": [
+                "ImageWMS",
+                "TileWMS",
+                "WMTS",
+                "WFS",
+                "ArcGISRest",
+                "MVT",
+                "OGCAPIFeatures",
+                "XYZ"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0a2d425061d69df01d21ea323281eae5a3a0dec207332198df51c42cf681765e"
+}

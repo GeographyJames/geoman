@@ -21,7 +21,6 @@ pub struct DataProviderService {
     pub name: String,
     pub service_type: DataProviderServiceType,
     pub base_url: String,
-    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

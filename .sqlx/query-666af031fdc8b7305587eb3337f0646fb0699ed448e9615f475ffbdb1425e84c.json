@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO app.data_provider_layers(\n                service_id, name, abbreviation, source, category, description,\n                enabled, style_config, display_options, country_code, subdivision,\n                sort_order, added_by, last_updated_by\n             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $13)\n             RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Text",
+        "Jsonb",
+        {
+          "Custom": {
+            "name": "app.layer_category",
+            "kind": {
+              "Enum": [
+                "overlay",
+                "basemap"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Bool",
+        "Jsonb",
+        "Jsonb",
+        "Bpchar",
+        "Varchar",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "666af031fdc8b7305587eb3337f0646fb0699ed448e9615f475ffbdb1425e84c"
+}

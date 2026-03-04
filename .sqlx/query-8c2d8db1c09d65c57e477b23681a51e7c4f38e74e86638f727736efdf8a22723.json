@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE app.teams\n            SET name = COALESCE($1, name),\n                business_unit_id = CASE WHEN $2 THEN $3 ELSE business_unit_id END,\n                last_updated = NOW(),\n                last_updated_by = $5\n            WHERE id = $4\n            RETURNING id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8c2d8db1c09d65c57e477b23681a51e7c4f38e74e86638f727736efdf8a22723"
+}
