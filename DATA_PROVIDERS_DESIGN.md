@@ -4,7 +4,7 @@
 A system allowing admins to configure external map data services and expose curated layers from those services to all users on the map view. Data is organised in a three-level hierarchy:
 
 ```
-Organisation  →  Service  →  Layer
+Provider      →  Service  →  Layer
 DataMap Wales →  WMS      →  SSSI (Wales)
               →  WFS      →  SSSI Boundaries
 ```
@@ -13,50 +13,69 @@ DataMap Wales →  WMS      →  SSSI (Wales)
 
 ## Database Schema
 
-Three tables reflecting the Organisation → Service → Layer hierarchy:
+Three tables reflecting the Provider → Service → Layer hierarchy:
 
 ```sql
-CREATE TABLE data_provider_organisations (
-  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name         TEXT NOT NULL,
-  description  TEXT,
-  country_code CHAR(2),     -- ISO 3166-1 alpha-2, NULL = global
-  subdivision  VARCHAR(10), -- ISO 3166-2, e.g. 'GB-SCT', NULL = whole country
-  created_by   TEXT NOT NULL,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+CREATE TYPE app.data_provider_service_type AS ENUM (
+    'ImageWMS', 'TileWMS', 'WMTS', 'WFS', 'ArcGISRest', 'MVT', 'OGCAPIFeatures', 'XYZ'
 );
 
-CREATE TABLE data_provider_services (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  organisation_id UUID NOT NULL REFERENCES data_provider_organisations(id) ON DELETE CASCADE,
-  name            TEXT NOT NULL,
-  service_type    TEXT NOT NULL CHECK (service_type IN ('WMS', 'WMTS', 'WFS', 'ArcGIS', 'XYZ')),
-  base_url        TEXT NOT NULL,
-  description     TEXT,
-  created_by      TEXT NOT NULL,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+CREATE TYPE app.layer_category AS ENUM (
+    'overlay', 'basemap'
 );
 
-CREATE TABLE data_provider_layers (
-  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  service_id       UUID NOT NULL REFERENCES data_provider_services(id) ON DELETE CASCADE,
-  name             TEXT NOT NULL,
-  layer_identifier TEXT NOT NULL,
-  category         TEXT NOT NULL DEFAULT 'overlay' CHECK (category IN ('overlay', 'basemap')),
-  description      TEXT,
-  enabled          BOOLEAN NOT NULL DEFAULT true,
-  style_config     JSONB NOT NULL DEFAULT '{}',  -- stores SLD XML string
-  display_options  JSONB NOT NULL DEFAULT '{}',  -- opacity, min_zoom, max_zoom
-  country_code     CHAR(2),     -- overrides organisation if set
-  subdivision      VARCHAR(10), -- overrides organisation if set
-  sort_order       INT NOT NULL DEFAULT 0,
-  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+CREATE TABLE app.data_providers (
+    id           INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name         TEXT NOT NULL,
+    description  TEXT,
+    country_code CHAR(2),     -- ISO 3166-1 alpha-2, NULL = global
+    subdivision  VARCHAR(10), -- ISO 3166-2, e.g. 'GB-SCT', NULL = whole country
+    status       app.status NOT NULL DEFAULT 'ACTIVE',
+    added_by     INTEGER NOT NULL REFERENCES app.users(id),
+    added        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated_by INTEGER NOT NULL REFERENCES app.users(id),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE app.data_provider_services (
+    id           INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    provider_id  INTEGER NOT NULL REFERENCES app.data_providers(id) ON DELETE CASCADE,
+    name         TEXT NOT NULL,
+    service_type app.data_provider_service_type NOT NULL,
+    base_url     TEXT NOT NULL,
+    description  TEXT,
+    status       app.status NOT NULL DEFAULT 'ACTIVE',
+    added_by     INTEGER NOT NULL REFERENCES app.users(id),
+    added        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated_by INTEGER NOT NULL REFERENCES app.users(id),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE app.data_provider_layers (
+    id           INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    service_id   INTEGER NOT NULL REFERENCES app.data_provider_services(id) ON DELETE CASCADE,
+    name         TEXT NOT NULL,
+    abbreviation TEXT,        -- short label for map legend, e.g. 'SSSI', 'AONB'
+    source       JSONB NOT NULL DEFAULT '{}', -- shape varies by service type (see design notes)
+    category     app.layer_category NOT NULL DEFAULT 'overlay',
+    description  TEXT,
+    enabled      BOOLEAN NOT NULL DEFAULT true,
+    style_config JSONB NOT NULL DEFAULT '{}',    -- {"sld": "<StyledLayerDescriptor>..."}
+    display_options JSONB NOT NULL DEFAULT '{}', -- {"opacity": 0.8, "min_zoom": 10, "max_zoom": 18}
+    country_code CHAR(2),     -- overrides provider if set
+    subdivision  VARCHAR(10), -- overrides provider if set
+    sort_order   INTEGER NOT NULL DEFAULT 0,
+    status       app.status NOT NULL DEFAULT 'ACTIVE',
+    added_by     INTEGER NOT NULL REFERENCES app.users(id),
+    added        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated_by INTEGER NOT NULL REFERENCES app.users(id),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
 
 ### Why three tables
 
-An organisation (e.g. DataMap Wales) can expose multiple service types (WMS, WFS) from the same or different endpoints. Modelled on QGIS's own approach — each service type is a separate connection. The organisation table is the natural home for country/subdivision, avoiding duplication across every service row for the same organisation.
+A provider (e.g. DataMap Wales) can expose multiple service types (WMS, WFS) from the same or different endpoints. Modelled on QGIS's own approach — each service type is a separate connection. The provider table is the natural home for country/subdivision, avoiding duplication across every service row for the same provider.
 
 ### Category lives on the layer, not the service
 
@@ -70,11 +89,16 @@ Each service type maps to an OL source and hook:
 
 | Type | OL Source | Hook |
 |---|---|---|
-| WMS | `ImageWMS` | `useWmsLayer` |
-| WMTS | `WMTS` | to be built |
-| WFS | `VectorSource` + WFS loader | to be built |
-| ArcGIS | `VectorSource` + bbox strategy | `useArcGISFeatureLayer` |
-| XYZ | `XYZ` | to be built |
+| `ImageWMS` | `ImageWMS` | `useWmsLayer` |
+| `TileWMS` | `TileWMS` | to be built |
+| `WMTS` | `WMTS` | to be built |
+| `WFS` | `VectorSource` + WFS loader | to be built |
+| `ArcGISRest` | `VectorSource` + bbox strategy | `useArcGISFeatureLayer` |
+| `MVT` | `VectorTileSource` | `useVectorTileLayer` |
+| `OGCAPIFeatures` | `VectorSource` + OGC API Features loader | to be built |
+| `XYZ` | `XYZ` | to be built |
+
+**`ImageWMS` vs `TileWMS`**: Use `ImageWMS` for pay-per-request services (one request per viewport) and `TileWMS` for self-hosted or unlimited services where tile caching (e.g. GeoServer GeoWebCache) gives a performance benefit.
 
 ---
 
@@ -103,34 +127,34 @@ Base maps typically use XYZ tile URLs (OpenStreetMap, Mapbox, Google Maps) or WM
 
 New **Data Providers** tab in the admin section. Two-column layout.
 
-### Left panel — organisations with accordion services
+### Left panel — providers with accordion services
 
-Organisations are listed with a DaisyUI accordion. Clicking an organisation expands it to reveal its services and simultaneously populates the right panel.
+Providers are listed with a DaisyUI accordion. Clicking a provider expands it to reveal its services and simultaneously populates the right panel.
 
 ```
 ┌─────────────────────────────────────────────────┐
-│ [Overlays]              [Base Maps]              │  ← category tabs
+│ Region: [All regions ▼]         [+ Add Provider] │  ← region filter
 ├─────────────────────────────────────────────────┤
-│ Region: [All regions ▼]                         │  ← region filter
+│ DataMap Wales (4)  [Wales]  [+ Service] [✏] [🗑] │  ← provider row (collapsed)
 ├─────────────────────────────────────────────────┤
-│ DataMap Wales  [Wales]  [+ Service] [✏] [🗑]    │  ← org row (collapsed)
-├─────────────────────────────────────────────────┤
-│ Natural England  [England]  [+ Service] [✏] [🗑] │  ← org row (expanded)
+│ Natural England (3)  [England]  [+ Service] [✏] [🗑] │  ← provider row (expanded)
 │   🌐 Natural England WMS  [WMS]  [✏] [🗑]        │  ← service rows
 ├─────────────────────────────────────────────────┤
-│ Scottish Natural Heritage  [Scotland]  ...       │
+│ Scottish Natural Heritage (1)  [Scotland]  ...   │
 └─────────────────────────────────────────────────┘
 ```
 
-- Clicking an expanded org collapses it and clears the right panel
+- Clicking an expanded provider collapses it and clears the right panel
 - Service rows are **informational only** — not clickable. Admins manage services via edit/delete buttons on each row.
 - Admin buttons use `stopPropagation` so they don't trigger the accordion
+- Layer count shown in brackets next to provider name (total across all categories)
 
-### Right panel — all layers for the selected organisation
+### Right panel — layers table
 
 ```
-Natural England  [England]  [WMS]          [+ Add Layer]
-3 layers across 1 service
+[Overlays (8)]              [Base Maps (4)]          ← category tabs
+─────────────────────────────────────────────────
+Natural England  [England]  [WMS]
 ┌──────────────────┬─────────┬──────────────┬──────┬────────┬──┐
 │ Name             │ Service │ Identifier   │ Zoom │ Enabled│  │
 ├──────────────────┼─────────┼──────────────┼──────┼────────┼──┤
@@ -140,10 +164,11 @@ Natural England  [England]  [WMS]          [+ Add Layer]
 └──────────────────┴─────────┴──────────────┴──────┴────────┴──┘
 ```
 
-- Right panel gathers **all layers across all services** of the selected organisation (filtered by current category)
-- Each layer row shows a service type badge so the source is clear at a glance
-- Right panel header shows org name, region badge, all service type badges, and a layer/service count summary
-- The Style column only appears when at least one layer in the org has a style configured
+- When no provider is selected, the right panel shows **all layers across all providers** with a "Provider" column; clicking a provider name in the table selects it
+- When a provider is selected, the Provider column is hidden
+- Category tabs filter the layers; counts in the tabs reflect the current scope (all or selected provider)
+- The region filter on the left also narrows the right panel when no provider is selected
+- The Style column only appears when at least one visible layer has a style configured
 - The `enabled` toggle fires a `PATCH` inline — no modal needed
 - Edit/Delete via the existing `Modal` + inner form pattern
 - **Discover from Capabilities** button on the Add Layer form — fetches `GetCapabilities` (WMS/WMTS) or `FeatureServer?f=json` (ArcGIS) client-side using OL's built-in parsers, presents a checklist of available layers for the admin to select from
@@ -180,21 +205,21 @@ The colour picker uses separate inputs for fill colour, fill opacity, stroke col
 
 ## Geographic Coverage & Filtering
 
-**ISO standards for region tagging — stored on the organisation:**
+**ISO standards for region tagging — stored on the provider:**
 
 | Field | Standard | Example |
 |---|---|---|
 | `country_code` | ISO 3166-1 alpha-2 | `GB`, `DE`, `FR` |
 | `subdivision` | ISO 3166-2 | `GB-SCT`, `GB-WLS`, `GB-ENG` |
 
-Country and subdivision live on `data_provider_organisations`, not on services. This avoids repeating the same country on every service row for the same organisation. Individual layers can override if needed (e.g. an OS service tagged `GB` with a specific layer tagged `GB-ENG`).
+Country and subdivision live on `data_providers`, not on services. This avoids repeating the same country on every service row for the same provider. Individual layers can override if needed (e.g. an OS service tagged `GB` with a specific layer tagged `GB-ENG`).
 
 Effective region resolves as:
 ```
-layer.country_code ?? organisation.country_code ?? NULL (global)
+layer.country_code ?? provider.country_code ?? NULL (global)
 ```
 
-**Admin UI filter** — a region dropdown above the organisations list filters by `country_code` / `subdivision`:
+**Admin UI filter** — a region dropdown above the providers list filters by `country_code` / `subdivision`:
 
 ```
 All regions
@@ -206,7 +231,7 @@ United Kingdom (all)
   Northern Ireland
 ```
 
-Organisations are only shown if they have at least one service in the current category matching the selected region.
+When no provider is selected, the region filter also narrows the layers shown in the right panel.
 
 **Map layer panel grouping:**
 

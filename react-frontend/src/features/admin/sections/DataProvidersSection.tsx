@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Globe, Plus, Pencil, Trash2, Layers, MapPin, Map } from "lucide-react";
 import { useCurrentUser } from "@/hooks/api/useCurrentUser";
 
-type ServiceType = "WMS" | "WMTS" | "WFS" | "ArcGIS" | "XYZ";
+type ServiceType = "ImageWMS" | "TileWMS" | "WMTS" | "WFS" | "ArcGISRest" | "MVT" | "OGCAPIFeatures" | "XYZ";
 type ServiceCategory = "overlay" | "basemap";
 
 interface StyleConfig {
@@ -10,7 +10,7 @@ interface StyleConfig {
   strokeColor: string;
 }
 
-interface DataOrganisation {
+interface DataProvider {
   id: string;
   name: string;
   description?: string;
@@ -20,7 +20,7 @@ interface DataOrganisation {
 
 interface DataService {
   id: string;
-  organisation_id: string;
+  provider_id: string;
   name: string;
   service_type: ServiceType;
   base_url: string;
@@ -39,26 +39,27 @@ interface DataProviderLayer {
   style_config?: StyleConfig;
 }
 
-type LayerRow = DataProviderLayer & { service: DataService; org: DataOrganisation };
+type LayerRow = DataProviderLayer & { service: DataService; provider: DataProvider };
 
-const MOCK_ORGANISATIONS: DataOrganisation[] = [
-  { id: "org1", name: "DataMap Wales", country_code: "GB", subdivision: "GB-WLS" },
-  { id: "org2", name: "Natural England", country_code: "GB", subdivision: "GB-ENG" },
-  { id: "org3", name: "Scottish Natural Heritage", country_code: "GB", subdivision: "GB-SCT" },
-  { id: "org4", name: "Ordnance Survey", country_code: "GB", subdivision: null },
-  { id: "org5", name: "OpenStreetMap", country_code: null, subdivision: null },
-  { id: "org6", name: "Mapbox", country_code: null, subdivision: null },
+const MOCK_PROVIDERS: DataProvider[] = [
+  { id: "p1", name: "DataMap Wales",            country_code: "GB", subdivision: "GB-WLS" },
+  { id: "p2", name: "Natural England",           country_code: "GB", subdivision: "GB-ENG" },
+  { id: "p3", name: "Scottish Natural Heritage", country_code: "GB", subdivision: "GB-SCT" },
+  { id: "p4", name: "Ordnance Survey",           country_code: "GB", subdivision: null },
+  { id: "p5", name: "OpenStreetMap",             country_code: null, subdivision: null },
+  { id: "p6", name: "Mapbox",                    country_code: null, subdivision: null },
 ];
 
 const MOCK_SERVICES: DataService[] = [
-  { id: "svc1", organisation_id: "org1", name: "DataMap Wales WMS", service_type: "WMS",    base_url: "https://datamap.gov.wales/geoserver/ows" },
-  { id: "svc2", organisation_id: "org1", name: "DataMap Wales WFS", service_type: "WFS",    base_url: "https://datamap.gov.wales/geoserver/ows" },
-  { id: "svc3", organisation_id: "org2", name: "Natural England WMS", service_type: "WMS",  base_url: "https://environment.data.gov.uk/spatialdata/sites-of-special-scientific-interest-sssi/wms" },
-  { id: "svc4", organisation_id: "org3", name: "Scottish SNH ArcGIS", service_type: "ArcGIS", base_url: "https://services1.arcgis.com/LM9GyVFsughzHdbO/ArcGIS/rest/services" },
-  { id: "svc5", organisation_id: "org4", name: "OS Maps API",         service_type: "WMTS", base_url: "https://api.os.uk/maps/raster/v1/wmts" },
-  { id: "svc6", organisation_id: "org5", name: "OpenStreetMap",       service_type: "XYZ",  base_url: "https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png" },
-  { id: "svc7", organisation_id: "org6", name: "Mapbox Streets",      service_type: "XYZ",  base_url: "https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}" },
-  { id: "svc8", organisation_id: "org6", name: "Mapbox Satellite",    service_type: "XYZ",  base_url: "https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}" },
+  { id: "svc1", provider_id: "p1", name: "DataMap Wales WMS",       service_type: "ImageWMS",      base_url: "https://datamap.gov.wales/geoserver/ows" },
+  { id: "svc2", provider_id: "p1", name: "DataMap Wales WFS",       service_type: "WFS",           base_url: "https://datamap.gov.wales/geoserver/ows" },
+  { id: "svc3", provider_id: "p2", name: "Natural England WMS",     service_type: "ImageWMS",      base_url: "https://environment.data.gov.uk/spatialdata/sites-of-special-scientific-interest-sssi/wms" },
+  { id: "svc4", provider_id: "p3", name: "Scottish SNH ArcGIS",     service_type: "ArcGISRest",    base_url: "https://services1.arcgis.com/LM9GyVFsughzHdbO/ArcGIS/rest/services" },
+  { id: "svc5", provider_id: "p4", name: "OS Maps API",             service_type: "WMTS",          base_url: "https://api.os.uk/maps/raster/v1/wmts" },
+  { id: "svc6", provider_id: "p5", name: "OpenStreetMap",           service_type: "XYZ",           base_url: "https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png" },
+  { id: "svc7", provider_id: "p6", name: "Mapbox Streets",          service_type: "XYZ",           base_url: "https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}" },
+  { id: "svc8", provider_id: "p6", name: "Mapbox Satellite",        service_type: "XYZ",           base_url: "https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}" },
+  { id: "svc9", provider_id: "p6", name: "Mapbox Vector Tiles",     service_type: "MVT",           base_url: "https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt" },
 ];
 
 const MOCK_LAYERS: Record<string, DataProviderLayer[]> = {
@@ -79,11 +80,11 @@ const MOCK_LAYERS: Record<string, DataProviderLayer[]> = {
     { id: "l8",  service_id: "svc4", name: "Scottish SSSI", layer_identifier: "/0", category: "overlay", enabled: true, min_zoom: 12, style_config: { fillColor: "rgba(220, 38, 38, 0.15)", strokeColor: "#DC2626" } },
   ],
   "svc5": [
-    { id: "l9",  service_id: "svc5", name: "OS Road",           layer_identifier: "Road_3857",         category: "basemap",  enabled: true  },
-    { id: "l10", service_id: "svc5", name: "OS Outdoor",        layer_identifier: "Outdoor_3857",      category: "basemap",  enabled: true  },
-    { id: "l11", service_id: "svc5", name: "OS Light",          layer_identifier: "Light_3857",        category: "basemap",  enabled: true  },
-    { id: "l12", service_id: "svc5", name: "OS Greenspace",     layer_identifier: "Greenspace_3857",   category: "overlay",  enabled: true  },
-    { id: "l13", service_id: "svc5", name: "OS Open Zoomstack", layer_identifier: "OpenZoomstack_3857",category: "overlay",  enabled: false },
+    { id: "l9",  service_id: "svc5", name: "OS Road",           layer_identifier: "Road_3857",          category: "basemap", enabled: true  },
+    { id: "l10", service_id: "svc5", name: "OS Outdoor",        layer_identifier: "Outdoor_3857",       category: "basemap", enabled: true  },
+    { id: "l11", service_id: "svc5", name: "OS Light",          layer_identifier: "Light_3857",         category: "basemap", enabled: true  },
+    { id: "l12", service_id: "svc5", name: "OS Greenspace",     layer_identifier: "Greenspace_3857",    category: "overlay", enabled: true  },
+    { id: "l13", service_id: "svc5", name: "OS Open Zoomstack", layer_identifier: "OpenZoomstack_3857", category: "overlay", enabled: false },
   ],
   "svc6": [
     { id: "l14", service_id: "svc6", name: "OpenStreetMap Standard", layer_identifier: "{z}/{x}/{y}.png", category: "basemap", enabled: true },
@@ -97,11 +98,14 @@ const MOCK_LAYERS: Record<string, DataProviderLayer[]> = {
 };
 
 const SERVICE_TYPE_BADGE: Record<ServiceType, string> = {
-  WMS:    "badge-info",
-  WMTS:   "badge-warning",
-  WFS:    "badge-success",
-  ArcGIS: "badge-secondary",
-  XYZ:    "badge-accent",
+  ImageWMS:      "badge-info",
+  TileWMS:       "badge-info",
+  WMTS:          "badge-warning",
+  WFS:           "badge-success",
+  ArcGISRest:    "badge-secondary",
+  MVT:           "badge-primary",
+  OGCAPIFeatures:"badge-success",
+  XYZ:           "badge-accent",
 };
 
 const SUBDIVISION_LABELS: Record<string, string> = {
@@ -120,11 +124,11 @@ const COUNTRY_LABELS: Record<string, string> = {
 
 type RegionFilter = "" | "global" | string;
 
-function matchesFilter(org: DataOrganisation, filter: RegionFilter): boolean {
+function matchesFilter(provider: DataProvider, filter: RegionFilter): boolean {
   if (!filter) return true;
-  if (filter === "global") return org.country_code === null;
-  if (filter.includes("-")) return org.subdivision === filter;
-  return org.country_code === filter && org.subdivision === null;
+  if (filter === "global") return provider.country_code === null;
+  if (filter.includes("-")) return provider.subdivision === filter;
+  return provider.country_code === filter && provider.subdivision === null;
 }
 
 function RegionBadge({ countryCode, subdivision }: { countryCode: string | null; subdivision: string | null }) {
@@ -152,29 +156,31 @@ function ColourSwatch({ styleConfig }: { styleConfig?: StyleConfig }) {
 
 export default function DataProvidersSection() {
   const { data: currentUser } = useCurrentUser();
-  const [selectedOrg, setSelectedOrg] = useState<DataOrganisation | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<DataProvider | null>(null);
   const [layers, setLayers] = useState(MOCK_LAYERS);
   const [regionFilter, setRegionFilter] = useState<RegionFilter>("");
   const [category, setCategory] = useState<ServiceCategory>("overlay");
 
   const isAdmin = currentUser?.isAdmin ?? false;
 
-  const filteredOrgs = MOCK_ORGANISATIONS.filter((org) => {
-    if (!matchesFilter(org, regionFilter)) return false;
-    return MOCK_SERVICES.some((s) => s.organisation_id === org.id);
+  const filteredProviders = MOCK_PROVIDERS.filter((provider) => {
+    if (!matchesFilter(provider, regionFilter)) return false;
+    return MOCK_SERVICES.some((s) => s.provider_id === provider.id);
   });
 
-  const orgServices = selectedOrg
-    ? MOCK_SERVICES.filter((s) => s.organisation_id === selectedOrg.id)
+  const providerServices = selectedProvider
+    ? MOCK_SERVICES.filter((s) => s.provider_id === selectedProvider.id)
     : [];
 
-  const activeServices = selectedOrg ? orgServices : MOCK_SERVICES;
+  const activeServices = selectedProvider
+    ? providerServices
+    : MOCK_SERVICES.filter((s) => filteredProviders.some((p) => p.id === s.provider_id));
 
   const displayLayers: LayerRow[] = activeServices.flatMap((service) => {
-    const org = MOCK_ORGANISATIONS.find((o) => o.id === service.organisation_id)!;
+    const provider = MOCK_PROVIDERS.find((p) => p.id === service.provider_id)!;
     return (layers[service.id] ?? [])
       .filter((l) => l.category === category)
-      .map((l) => ({ ...l, service, org }));
+      .map((l) => ({ ...l, service, provider }));
   });
 
   const overlayCount = activeServices.reduce((n, s) => n + (layers[s.id] ?? []).filter((l) => l.category === "overlay").length, 0);
@@ -184,7 +190,7 @@ export default function DataProvidersSection() {
 
   const handleFilterChange = (value: RegionFilter) => {
     setRegionFilter(value);
-    if (selectedOrg && !matchesFilter(selectedOrg, value)) setSelectedOrg(null);
+    if (selectedProvider && !matchesFilter(selectedProvider, value)) setSelectedProvider(null);
   };
 
   const toggleEnabled = (layerId: string, serviceId: string) => {
@@ -202,7 +208,7 @@ export default function DataProvidersSection() {
       <div className="mb-6 flex justify-between items-start gap-2">
         <div>
           <h1 className="text-2xl font-semibold mb-1">Data Providers</h1>
-          <p className="text-base-content/70">Organisations, their services, and available layers.</p>
+          <p className="text-base-content/70">Providers, their services, and available layers.</p>
         </div>
         {isAdmin && (
           <button className="btn btn-primary gap-2">
@@ -214,10 +220,10 @@ export default function DataProvidersSection() {
 
       <div className="grid grid-cols-2 gap-6 items-start">
 
-        {/* Left: Organisations + Services */}
+        {/* Left: Providers + Services */}
         <div className="card bg-base-100 border border-base-300 overflow-hidden">
 
-          {/* Region filter + Add Organisation */}
+          {/* Region filter + Add Provider */}
           <div className="px-4 py-2.5 border-b border-base-300 flex items-center gap-2">
             <span className="text-sm text-base-content/60 shrink-0">Region</span>
             <select
@@ -238,38 +244,40 @@ export default function DataProvidersSection() {
             {isAdmin && (
               <button className="btn btn-sm btn-outline gap-1 shrink-0">
                 <Plus size={14} />
-                Add Org
+                Add Provider
               </button>
             )}
           </div>
 
-          {filteredOrgs.length === 0 ? (
+          {filteredProviders.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-base-content/50 text-sm">No organisations for this region</p>
+              <p className="text-base-content/50 text-sm">No providers for this region</p>
             </div>
           ) : (
             <div>
-              {filteredOrgs.map((org) => {
+              {filteredProviders.map((provider) => {
                 const services = MOCK_SERVICES.filter(
-                  (s) => s.organisation_id === org.id,
+                  (s) => s.provider_id === provider.id,
                 );
-                const isOpen = selectedOrg?.id === org.id;
+                const layerCount = services.reduce((n, s) => n + (MOCK_LAYERS[s.id] ?? []).length, 0);
+                const isOpen = selectedProvider?.id === provider.id;
 
                 return (
                   <div
-                    key={`org-${org.id}-${category}`}
+                    key={`provider-${provider.id}`}
                     className={`collapse rounded-none border-b border-base-300 ${isOpen ? "collapse-open" : ""}`}
                   >
-                    {/* Organisation header — clicking opens accordion + selects org */}
+                    {/* Provider header — clicking opens accordion + selects provider */}
                     <div
                       className={`collapse-title flex items-center justify-between gap-2 py-2.5 px-4 cursor-pointer min-h-0 ${isOpen ? "bg-primary/10" : "bg-base-200 hover:bg-base-200/80"}`}
-                      onClick={() => setSelectedOrg(isOpen ? null : org)}
+                      onClick={() => setSelectedProvider(isOpen ? null : provider)}
                     >
                       <div className="flex items-center gap-2">
                         <span className={`text-sm ${isOpen ? "font-bold" : "font-semibold"}`}>
-                          {org.name}
+                          {provider.name}
                         </span>
-                        <RegionBadge countryCode={org.country_code} subdivision={org.subdivision} />
+                        <span className="text-xs text-base-content/40">({layerCount})</span>
+                        <RegionBadge countryCode={provider.country_code} subdivision={provider.subdivision} />
                       </div>
                       {isAdmin && (
                         <div
@@ -280,10 +288,10 @@ export default function DataProvidersSection() {
                             <Plus size={12} />
                             <span className="text-xs">Service</span>
                           </button>
-                          <button className="btn btn-ghost btn-xs" title="Edit organisation">
+                          <button className="btn btn-ghost btn-xs" title="Edit provider">
                             <Pencil size={13} />
                           </button>
-                          <button className="btn btn-ghost btn-xs text-error" title="Delete organisation">
+                          <button className="btn btn-ghost btn-xs text-error" title="Delete provider">
                             <Trash2 size={13} />
                           </button>
                         </div>
@@ -360,28 +368,18 @@ export default function DataProvidersSection() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-base-300">
             <div>
-              {selectedOrg ? (
-                <>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{selectedOrg.name}</span>
-                    <RegionBadge countryCode={selectedOrg.country_code} subdivision={selectedOrg.subdivision} />
-                    {orgServices.map((s) => (
-                      <span key={s.id} className={`badge badge-sm badge-outline ${SERVICE_TYPE_BADGE[s.service_type]}`}>
-                        {s.service_type}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="text-xs text-base-content/50 mt-0.5">
-                    {displayLayers.length} layer{displayLayers.length !== 1 ? "s" : ""} across {orgServices.length} service{orgServices.length !== 1 ? "s" : ""}
-                  </div>
-                </>
+              {selectedProvider ? (
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{selectedProvider.name}</span>
+                  <RegionBadge countryCode={selectedProvider.country_code} subdivision={selectedProvider.subdivision} />
+                  {providerServices.map((s) => (
+                    <span key={s.id} className={`badge badge-sm badge-outline ${SERVICE_TYPE_BADGE[s.service_type]}`}>
+                      {s.service_type}
+                    </span>
+                  ))}
+                </div>
               ) : (
-                <>
-                  <div className="font-medium">All organisations</div>
-                  <div className="text-xs text-base-content/50 mt-0.5">
-                    {displayLayers.length} layer{displayLayers.length !== 1 ? "s" : ""} across {MOCK_SERVICES.length} service{MOCK_SERVICES.length !== 1 ? "s" : ""}
-                  </div>
-                </>
+                <div className="font-medium">All providers</div>
               )}
             </div>
           </div>
@@ -397,7 +395,7 @@ export default function DataProvidersSection() {
                 <thead>
                   <tr>
                     <th>Name</th>
-                    {!selectedOrg && <th>Organisation</th>}
+                    {!selectedProvider && <th>Provider</th>}
                     <th>Service</th>
                     <th>Identifier</th>
                     <th>Zoom</th>
@@ -415,13 +413,13 @@ export default function DataProvidersSection() {
                           <div className="text-xs text-base-content/50">{layer.description}</div>
                         )}
                       </td>
-                      {!selectedOrg && (
+                      {!selectedProvider && (
                         <td>
                           <button
                             className="text-sm text-base-content/70 hover:text-base-content underline-offset-2 hover:underline"
-                            onClick={() => setSelectedOrg(layer.org)}
+                            onClick={() => setSelectedProvider(layer.provider)}
                           >
-                            {layer.org.name}
+                            {layer.provider.name}
                           </button>
                         </td>
                       )}
