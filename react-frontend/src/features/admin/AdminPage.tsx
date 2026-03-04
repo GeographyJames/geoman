@@ -6,8 +6,9 @@ import { Map } from "lucide-react";
 import ApiKeysSection from "./sections/apiKey/ApiKeysSection";
 import TeamsSection from "./sections/TeamsSection";
 import CollectionsSection from "./sections/collections/CollectionsSection";
+import DataProvidersSection from "./sections/DataProvidersSection";
 
-type Tab = "teams" | "collections" | "api-keys";
+type Tab = "teams" | "collections" | "api-keys" | "data-providers";
 
 export default function AdminPage() {
   const { tab } = Route.useSearch();
@@ -47,6 +48,12 @@ export default function AdminPage() {
               >
                 API Keys
               </a>
+              <a
+                className={`tab ${activeTab === "data-providers" ? "tab-active" : ""}`}
+                onClick={() => setActiveTab("data-providers")}
+              >
+                Data Providers
+              </a>
             </div>
           </div>
         </div>
@@ -71,6 +78,7 @@ export default function AdminPage() {
         {activeTab === "teams" && <TeamsSection />}
         {activeTab === "collections" && <CollectionsSection />}
         {activeTab === "api-keys" && <ApiKeysSection />}
+        {activeTab === "data-providers" && <DataProvidersSection />}
       </div>
     </div>
   );
