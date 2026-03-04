@@ -16,7 +16,7 @@ CREATE TYPE app.layer_category AS ENUM (
 
 CREATE TABLE app.data_providers (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    name text NOT NULL,
+    name text UNIQUE NOT NULL,
     description text,
     country_code char(2),      -- ISO 3166-1 alpha-2, NULL = global
     subdivision varchar(10),   -- ISO 3166-2, e.g. 'GB-SCT', NULL = whole country

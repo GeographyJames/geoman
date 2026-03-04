@@ -28,7 +28,10 @@ pub struct Api {
     pub teams: String,
     pub business_units: String,
     pub turbine_layouts: String,
-  pub tiles: String,
+    pub tiles: String,
+    pub data_providers: String,
+    pub data_provider_services: String,
+    pub data_provider_layers: String,
 }
 
 #[derive(Deserialize)]

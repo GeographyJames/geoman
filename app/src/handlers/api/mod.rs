@@ -1,4 +1,7 @@
 pub mod business_units;
+pub mod data_provider_layers;
+pub mod data_provider_services;
+pub mod data_providers;
 pub mod tiles;
 pub mod guard;
 pub mod epsg;

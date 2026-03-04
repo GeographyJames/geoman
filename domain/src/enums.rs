@@ -80,6 +80,28 @@ impl std::fmt::Display for CollectionId {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Type, Clone, PartialEq, Default)]
+#[sqlx(type_name = "app.data_provider_service_type")]
+pub enum DataProviderServiceType {
+    #[default]
+    ImageWMS,
+    TileWMS,
+    WMTS,
+    WFS,
+    ArcGISRest,
+    MVT,
+    OGCAPIFeatures,
+    XYZ,
+}
+
+#[derive(Serialize, Deserialize, Debug, Type, Clone, PartialEq)]
+#[sqlx(type_name = "app.layer_category", rename_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
+pub enum LayerCategory {
+    Overlay,
+    Basemap,
+}
+
 impl<'de> Deserialize<'de> for CollectionId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where

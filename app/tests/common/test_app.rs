@@ -21,13 +21,16 @@ use app::{
             business_units::BusinessUnitInputPayload, features::get::FeatureFormat,
             project_collections::CollectionReqPayload, projects::PostProjectPayload,
             teams::TeamInputPayload,
+            data_providers::DataProviderInputPayload,
+            data_provider_services::DataProviderServiceInputPayload,
+            data_provider_layers::DataProviderLayerInputPayload,
         },
     },
     telemetry::{get_subscriber, init_subscriber},
 };
 use domain::{
-    BusinessUnitId, FeatureId, LayoutId, ProjectCollectionId, ProjectFeatureId, ProjectId,
-    TableName, TeamId, UserId,
+    BusinessUnitId, DataProviderId, DataProviderLayerId, DataProviderServiceId, FeatureId,
+    LayoutId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName, TeamId, UserId,
     enums::{CollectionId, GeometryType},
 };
 use dotenvy::dotenv;
@@ -69,6 +72,9 @@ pub struct TestApp<T: AuthService> {
     pub epsg_service: HttpService,
     pub teams_service: HttpService,
     pub business_units_service: HttpService,
+    pub data_providers_service: HttpService,
+    pub data_provider_services_service: HttpService,
+    pub data_provider_layers_service: HttpService,
 }
 
 pub struct AppBuilder {
@@ -178,6 +184,15 @@ impl TestApp<ClerkAuthService> {
             },
             business_units_service: HttpService {
                 endpoint: format!("{}{}", URLS.api.base, URLS.api.business_units),
+            },
+            data_providers_service: HttpService {
+                endpoint: format!("{}{}", URLS.api.base, URLS.api.data_providers),
+            },
+            data_provider_services_service: HttpService {
+                endpoint: format!("{}{}", URLS.api.base, URLS.api.data_provider_services),
+            },
+            data_provider_layers_service: HttpService {
+                endpoint: format!("{}{}", URLS.api.base, URLS.api.data_provider_layers),
             },
         }
     }
@@ -401,6 +416,68 @@ impl TestApp<ClerkAuthService> {
         )
         .await
         .expect("failed to generate team id")
+    }
+
+    pub async fn generate_data_provider_id(&self, auth: Option<&Auth>) -> DataProviderId {
+        handle_json_response(
+            self.data_providers_service
+                .post_json(
+                    &self.api_client,
+                    auth,
+                    &DataProviderInputPayload {
+                        name: uuid::Uuid::new_v4().to_string(),
+                        ..Default::default()
+                    },
+                )
+                .await,
+        )
+        .await
+        .expect("failed to generate data provider id")
+    }
+
+    pub async fn generate_data_provider_service_id(
+        &self,
+        provider_id: DataProviderId,
+        auth: Option<&Auth>,
+    ) -> DataProviderServiceId {
+        handle_json_response(
+            self.data_provider_services_service
+                .post_json(
+                    &self.api_client,
+                    auth,
+                    &DataProviderServiceInputPayload {
+                        provider_id,
+                        name: uuid::Uuid::new_v4().to_string(),
+                        base_url: "https://example.com/wms".to_string(),
+                        ..Default::default()
+                    },
+                )
+                .await,
+        )
+        .await
+        .expect("failed to generate data provider service id")
+    }
+
+    pub async fn generate_data_provider_layer_id(
+        &self,
+        service_id: DataProviderServiceId,
+        auth: Option<&Auth>,
+    ) -> DataProviderLayerId {
+        handle_json_response(
+            self.data_provider_layers_service
+                .post_json(
+                    &self.api_client,
+                    auth,
+                    &DataProviderLayerInputPayload {
+                        service_id,
+                        name: uuid::Uuid::new_v4().to_string(),
+                        ..Default::default()
+                    },
+                )
+                .await,
+        )
+        .await
+        .expect("failed to generate data provider layer id")
     }
 
     pub async fn generate_user(&self, admin: bool, team_id: TeamId) -> AuthenticatedUser {
