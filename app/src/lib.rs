@@ -2,6 +2,7 @@
 
 mod config;
 mod helpers;
+pub mod serde_helpers;
 mod startup;
 mod urls;
 mod utoipa;

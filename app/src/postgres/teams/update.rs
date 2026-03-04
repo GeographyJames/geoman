@@ -17,14 +17,15 @@ impl Update for (TeamUpdatePayload, TeamId, UserId) {
             r#"
             UPDATE app.teams
             SET name = COALESCE($1, name),
-                business_unit_id = COALESCE($2, business_unit_id),
+                business_unit_id = CASE WHEN $2 THEN $3 ELSE business_unit_id END,
                 last_updated = NOW(),
-                last_updated_by = $4
-            WHERE id = $3
+                last_updated_by = $5
+            WHERE id = $4
             RETURNING id
             "#,
             payload.name,
-            payload.business_unit.map(|id| id.0),
+            payload.business_unit.is_some(),
+            payload.business_unit.clone().flatten().map(|id| id.0),
             team_id.0,
             user_id.0
         )

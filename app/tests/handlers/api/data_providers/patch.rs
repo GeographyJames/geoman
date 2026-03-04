@@ -17,7 +17,7 @@ async fn patch_data_provider_works() {
             Some(&auth),
             &DataProviderUpdatePayload {
                 name: Some(uuid::Uuid::new_v4().to_string()),
-                country_code: Some("GB".to_string()),
+                country_code: Some(Some("GB".to_string())),
                 ..Default::default()
             },
         )

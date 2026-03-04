@@ -6,7 +6,8 @@ use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct TeamUpdatePayload {
-    pub business_unit: Option<BusinessUnitId>,
+    #[serde(default, deserialize_with = "crate::serde_helpers::double_option")]
+    pub business_unit: Option<Option<BusinessUnitId>>,
     pub name: Option<String>,
 }
 

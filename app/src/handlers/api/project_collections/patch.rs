@@ -9,18 +9,10 @@ use crate::{
     types::AuthenticatedUser,
 };
 
-fn deserialize_optional_field<'de, T, D>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
-where
-    T: Deserialize<'de>,
-    D: serde::Deserializer<'de>,
-{
-    Ok(Some(Option::deserialize(deserializer)?))
-}
-
 #[derive(Deserialize, Default, Serialize)]
 pub struct PatchCollectionPayload {
     pub title: Option<String>,
-    #[serde(default, deserialize_with = "deserialize_optional_field")]
+    #[serde(default, deserialize_with = "crate::serde_helpers::double_option")]
     pub description: Option<Option<String>>,
     pub status: Option<Status>,
 }

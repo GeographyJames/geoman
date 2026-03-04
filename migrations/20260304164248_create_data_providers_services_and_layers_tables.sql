@@ -20,14 +20,14 @@ CREATE TABLE app.data_providers (
     description text,
     country_code char(2),      -- ISO 3166-1 alpha-2, NULL = global
     subdivision varchar(10),   -- ISO 3166-2, e.g. 'GB-SCT', NULL = whole country
-    status app.status NOT NULL DEFAULT 'ACTIVE',
+
     added_by integer NOT NULL REFERENCES app.users(id),
     added timestamptz NOT NULL DEFAULT now(),
     last_updated_by integer NOT NULL REFERENCES app.users(id),
     last_updated timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_data_providers_status ON app.data_providers(status);
+
 CREATE INDEX idx_data_providers_country ON app.data_providers(country_code, subdivision);
 
 
@@ -38,7 +38,7 @@ CREATE TABLE app.data_provider_services (
     service_type app.data_provider_service_type NOT NULL,
     base_url text NOT NULL,
     description text,
-    status app.status NOT NULL DEFAULT 'ACTIVE',
+
     added_by integer NOT NULL REFERENCES app.users(id),
     added timestamptz NOT NULL DEFAULT now(),
     last_updated_by integer NOT NULL REFERENCES app.users(id),
@@ -46,7 +46,7 @@ CREATE TABLE app.data_provider_services (
 );
 
 CREATE INDEX idx_data_provider_services_provider ON app.data_provider_services(provider_id);
-CREATE INDEX idx_data_provider_services_status ON app.data_provider_services(status);
+
 
 
 CREATE TABLE app.data_provider_layers (
@@ -70,7 +70,7 @@ CREATE TABLE app.data_provider_layers (
     country_code char(2),      -- overrides provider if set
     subdivision varchar(10),   -- overrides provider if set
     sort_order integer NOT NULL DEFAULT 0,
-    status app.status NOT NULL DEFAULT 'ACTIVE',
+
     added_by integer NOT NULL REFERENCES app.users(id),
     added timestamptz NOT NULL DEFAULT now(),
     last_updated_by integer NOT NULL REFERENCES app.users(id),
@@ -78,6 +78,6 @@ CREATE TABLE app.data_provider_layers (
 );
 
 CREATE INDEX idx_data_provider_layers_service ON app.data_provider_layers(service_id);
-CREATE INDEX idx_data_provider_layers_status ON app.data_provider_layers(status);
+
 CREATE INDEX idx_data_provider_layers_enabled ON app.data_provider_layers(enabled) WHERE enabled = true;
 CREATE INDEX idx_data_provider_layers_category ON app.data_provider_layers(category);

@@ -5,6 +5,17 @@ use crate::{
         business_units::{
             delete_business_unit, get_business_units, patch_business_unit, post_business_unit,
         },
+        data_provider_layers::{
+            delete_data_provider_layer, get_data_provider_layers, patch_data_provider_layer,
+            post_data_provider_layer,
+        },
+        data_provider_services::{
+            delete_data_provider_service, get_data_provider_services, patch_data_provider_service,
+            post_data_provider_service,
+        },
+        data_providers::{
+            delete_data_provider, get_data_providers, patch_data_provider, post_data_provider,
+        },
         tiles::get_tile,
         epsg::{post_epsg, post_epsg_from_shz},
         features::{
@@ -51,7 +62,10 @@ pub fn api_routes(cfg: &mut web::ServiceConfig, _clerk: Clerk, run_environment: 
         .configure(epsg_routes)
         .configure(teams_routes)
         .configure(business_units_routes)
-        .configure(tile_routes);
+        .configure(tile_routes)
+        .configure(data_providers_routes)
+        .configure(data_provider_services_routes)
+        .configure(data_provider_layers_routes);
 
     match run_environment {
         GeoManEnvironment::Development => {
@@ -139,5 +153,35 @@ pub fn business_units_routes(cfg: &mut web::ServiceConfig) {
             .service(post_business_unit)
             .service(patch_business_unit)
             .service(delete_business_unit),
+    );
+}
+
+pub fn data_providers_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        scope(&URLS.api.data_providers)
+            .service(get_data_providers)
+            .service(post_data_provider)
+            .service(patch_data_provider)
+            .service(delete_data_provider),
+    );
+}
+
+pub fn data_provider_services_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        scope(&URLS.api.data_provider_services)
+            .service(get_data_provider_services)
+            .service(post_data_provider_service)
+            .service(patch_data_provider_service)
+            .service(delete_data_provider_service),
+    );
+}
+
+pub fn data_provider_layers_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        scope(&URLS.api.data_provider_layers)
+            .service(get_data_provider_layers)
+            .service(post_data_provider_layer)
+            .service(patch_data_provider_layer)
+            .service(delete_data_provider_layer),
     );
 }

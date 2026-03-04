@@ -13,9 +13,6 @@ impl Update for (&CollectionUpdateDto, UserId) {
     {
         let (dto, user_id) = self;
 
-        let description_provided = dto.description.is_some();
-        let description_value = dto.description.as_ref().and_then(|d| d.as_deref());
-
         let mut executor = conn.acquire().await?;
         sqlx::query_scalar!(
             r#"
@@ -31,8 +28,8 @@ impl Update for (&CollectionUpdateDto, UserId) {
             "#,
             dto.title.as_ref().map(|t| t.as_ref()),
             dto.slug,
-            description_provided,
-            description_value,
+            dto.description.is_some(),
+            dto.description.clone().flatten(),
             &dto.status as &Option<Status>,
             user_id.0,
             dto.id.0
