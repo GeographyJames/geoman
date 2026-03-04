@@ -8,7 +8,7 @@ const style = new Style({
   stroke: new Stroke({ color: "#2563EB", width: 1 }),
 });
 
-export default function DevelopableAreasLayer() {
-  useVectorTileLayer(DEVELOPABLE_AREAS_URL, style);
+export default function DevelopableAreasLayer({ visible }: { visible: boolean }) {
+  useVectorTileLayer(DEVELOPABLE_AREAS_URL, style, visible);
   return null;
 }
