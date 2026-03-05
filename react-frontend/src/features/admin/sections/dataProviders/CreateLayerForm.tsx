@@ -6,21 +6,7 @@ import { usePostDataProviderLayer } from "@/hooks/api/usePostDataProviderLayer";
 import { useDataProviderServices } from "@/hooks/api/useDataProviderServices";
 import { useDataProviders } from "@/hooks/api/useDataProviders";
 import { ApiError } from "@/lib/api";
-import type { LayerCategory } from "@/domain/data_provider/types";
-
-interface FormData {
-  service_id: string;
-  name: string;
-  abbreviation: string;
-  source: string;
-  category: LayerCategory;
-  description: string;
-  style_config: string;
-  display_options: string;
-  country_code: string;
-  subdivision: string;
-  sort_order: string;
-}
+import { LayerForm, LAYER_FORM_DEFAULTS, type LayerFormData } from "./LayerForm";
 
 const MODAL_ID = "create_data_provider_layer";
 
@@ -35,35 +21,30 @@ const CreateLayerInner = () => {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
     setError,
-  } = useForm<FormData>({
-    defaultValues: {
-      service_id: "",
-      name: "",
-      abbreviation: "",
-      source: "{}",
-      category: "overlay",
-      description: "",
-      style_config: "",
-      display_options: "",
-      country_code: "",
-      subdivision: "",
-      sort_order: "",
-    },
-  });
+  } = useForm<LayerFormData>({ defaultValues: LAYER_FORM_DEFAULTS });
 
   const filteredServices = selectedProviderId
     ? services.filter((s) => s.provider_id === Number(selectedProviderId))
     : [];
 
-  const onSubmit = (data: FormData) => {
+  const selectedServiceId = watch("service_id");
+  const selectedService = filteredServices.find((s) => String(s.id) === selectedServiceId);
+  const isMVT = selectedService?.service_type === "MVT";
+
+  const onSubmit = (data: LayerFormData) => {
     let source: unknown;
-    try {
-      source = JSON.parse(data.source);
-    } catch {
-      setError("source", { message: "Must be valid JSON" });
-      return;
+    if (isMVT) {
+      source = { url: data.mvt_url };
+    } else {
+      try {
+        source = JSON.parse(data.source);
+      } catch {
+        setError("source", { message: "Must be valid JSON" });
+        return;
+      }
     }
 
     let style_config: unknown = undefined;
@@ -122,7 +103,6 @@ const CreateLayerInner = () => {
           value={selectedProviderId}
           onChange={(e) => {
             setSelectedProviderId(e.target.value);
-            // reset service selection when provider changes
             reset((prev) => ({ ...prev, service_id: "" }));
           }}
         >
@@ -153,147 +133,7 @@ const CreateLayerInner = () => {
         {errors.service_id && <span className="label-text-alt text-error mt-1">{errors.service_id.message}</span>}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="form-control">
-          <label className="label" htmlFor="layer-name">
-            <span className="label-text">Name</span>
-          </label>
-          <input
-            id="layer-name"
-            type="text"
-            placeholder="e.g. SSSI England"
-            className={`input input-bordered w-full ${errors.name ? "input-error" : ""}`}
-            {...register("name", { required: "Name is required" })}
-          />
-          {errors.name && <span className="label-text-alt text-error mt-1">{errors.name.message}</span>}
-        </div>
-
-        <div className="form-control">
-          <label className="label" htmlFor="layer-abbr">
-            <span className="label-text">Abbreviation</span>
-            <span className="label-text-alt text-base-content/50">optional</span>
-          </label>
-          <input
-            id="layer-abbr"
-            type="text"
-            placeholder="e.g. SSSI"
-            className="input input-bordered w-full"
-            {...register("abbreviation")}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="form-control">
-          <label className="label" htmlFor="layer-category">
-            <span className="label-text">Category</span>
-          </label>
-          <select
-            id="layer-category"
-            className="select select-bordered w-full"
-            {...register("category")}
-          >
-            <option value="overlay">Overlay</option>
-            <option value="basemap">Base map</option>
-          </select>
-        </div>
-
-        <div className="form-control">
-          <label className="label" htmlFor="layer-sort-order">
-            <span className="label-text">Sort order</span>
-            <span className="label-text-alt text-base-content/50">optional</span>
-          </label>
-          <input
-            id="layer-sort-order"
-            type="number"
-            className="input input-bordered w-full"
-            {...register("sort_order")}
-          />
-        </div>
-      </div>
-
-      <div className="form-control">
-        <label className="label" htmlFor="layer-description">
-          <span className="label-text">Description</span>
-          <span className="label-text-alt text-base-content/50">optional</span>
-        </label>
-        <input
-          id="layer-description"
-          type="text"
-          className="input input-bordered w-full"
-          {...register("description")}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="form-control">
-          <label className="label" htmlFor="layer-country">
-            <span className="label-text">Country code</span>
-            <span className="label-text-alt text-base-content/50">optional</span>
-          </label>
-          <input
-            id="layer-country"
-            type="text"
-            placeholder="e.g. GB"
-            className="input input-bordered w-full"
-            {...register("country_code")}
-          />
-        </div>
-        <div className="form-control">
-          <label className="label" htmlFor="layer-subdivision">
-            <span className="label-text">Subdivision</span>
-            <span className="label-text-alt text-base-content/50">optional</span>
-          </label>
-          <input
-            id="layer-subdivision"
-            type="text"
-            placeholder="e.g. GB-ENG"
-            className="input input-bordered w-full"
-            {...register("subdivision")}
-          />
-        </div>
-      </div>
-
-      <div className="form-control">
-        <label className="label" htmlFor="layer-source">
-          <span className="label-text">Source (JSON)</span>
-        </label>
-        <textarea
-          id="layer-source"
-          rows={3}
-          className={`textarea textarea-bordered w-full font-mono text-xs ${errors.source ? "textarea-error" : ""}`}
-          {...register("source", { required: "Source is required" })}
-        />
-        {errors.source && <span className="label-text-alt text-error mt-1">{errors.source.message}</span>}
-      </div>
-
-      <div className="form-control">
-        <label className="label" htmlFor="layer-style">
-          <span className="label-text">Style config (JSON)</span>
-          <span className="label-text-alt text-base-content/50">optional</span>
-        </label>
-        <textarea
-          id="layer-style"
-          rows={2}
-          className={`textarea textarea-bordered w-full font-mono text-xs ${errors.style_config ? "textarea-error" : ""}`}
-          {...register("style_config")}
-        />
-        {errors.style_config && <span className="label-text-alt text-error mt-1">{errors.style_config.message}</span>}
-      </div>
-
-      <div className="form-control">
-        <label className="label" htmlFor="layer-display-options">
-          <span className="label-text">Display options (JSON)</span>
-          <span className="label-text-alt text-base-content/50">optional</span>
-        </label>
-        <textarea
-          id="layer-display-options"
-          rows={2}
-          className={`textarea textarea-bordered w-full font-mono text-xs ${errors.display_options ? "textarea-error" : ""}`}
-          {...register("display_options")}
-        />
-        {errors.display_options && <span className="label-text-alt text-error mt-1">{errors.display_options.message}</span>}
-      </div>
+      <LayerForm register={register} errors={errors} isMVT={isMVT} mode="create" />
 
       <div className="modal-action">
         <CancelButton onClick={() => { reset(); setSelectedProviderId(""); closeDialog(); }} disabled={isPending} />

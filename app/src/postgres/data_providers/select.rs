@@ -13,7 +13,6 @@ impl SelectAll for DataProvider {
             r#"
             SELECT id as "id: DataProviderId",
                    name,
-                   description,
                    country_code,
                    subdivision
             FROM app.data_providers

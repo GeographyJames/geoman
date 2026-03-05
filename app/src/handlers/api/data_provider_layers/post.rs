@@ -14,7 +14,7 @@ pub struct DataProviderLayerInputPayload {
     pub service_id: DataProviderServiceId,
     pub name: String,
     pub abbreviation: Option<String>,
-    pub source: Value,
+    pub source: LayerSource,
     pub category: Option<LayerCategory>,
     pub description: Option<String>,
     pub enabled: Option<bool>,
@@ -23,6 +23,18 @@ pub struct DataProviderLayerInputPayload {
     pub country_code: Option<String>,
     pub subdivision: Option<String>,
     pub sort_order: Option<i32>,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum LayerSource {
+    MVT { url: String },
+}
+
+impl Default for LayerSource {
+    fn default() -> Self {
+        Self::MVT { url: String::new() }
+    }
 }
 
 #[post("")]

@@ -83,7 +83,7 @@ export function useArcGISFeatureLayer(
       cleanups.push(() => map.un("moveend", onMoveEnd));
     }
 
-    const onPointerMove = (evt: MapBrowserEvent<PointerEvent>) => {
+    const onPointerMove = (evt: MapBrowserEvent<PointerEvent | KeyboardEvent | WheelEvent>) => {
       if (evt.dragging) return;
       let name: string | null = null;
       map.forEachFeatureAtPixel(

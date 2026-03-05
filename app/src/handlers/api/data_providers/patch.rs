@@ -8,8 +8,6 @@ use crate::{AuthenticatedUser, errors::ApiError, postgres::PostgresRepo};
 pub struct DataProviderUpdatePayload {
     pub name: Option<String>,
     #[serde(default, deserialize_with = "crate::serde_helpers::double_option")]
-    pub description: Option<Option<String>>,
-    #[serde(default, deserialize_with = "crate::serde_helpers::double_option")]
     pub country_code: Option<Option<String>>,
     #[serde(default, deserialize_with = "crate::serde_helpers::double_option")]
     pub subdivision: Option<Option<String>>,

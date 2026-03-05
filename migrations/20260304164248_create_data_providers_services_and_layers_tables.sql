@@ -17,10 +17,8 @@ CREATE TYPE app.layer_category AS ENUM (
 CREATE TABLE app.data_providers (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name text UNIQUE NOT NULL,
-    description text,
     country_code char(2),      -- ISO 3166-1 alpha-2, NULL = global
     subdivision varchar(10),   -- ISO 3166-2, e.g. 'GB-SCT', NULL = whole country
-
     added_by integer NOT NULL REFERENCES app.users(id),
     added timestamptz NOT NULL DEFAULT now(),
     last_updated_by integer NOT NULL REFERENCES app.users(id),
@@ -36,7 +34,7 @@ CREATE TABLE app.data_provider_services (
     provider_id integer NOT NULL REFERENCES app.data_providers(id) ON DELETE CASCADE,
     name text NOT NULL,
     service_type app.data_provider_service_type NOT NULL,
-    base_url text NOT NULL,
+    base_url text,
 
     added_by integer NOT NULL REFERENCES app.users(id),
     added timestamptz NOT NULL DEFAULT now(),

@@ -17,17 +17,14 @@ impl Update for (DataProviderUpdatePayload, DataProviderId, UserId) {
             r#"
             UPDATE app.data_providers
             SET name = COALESCE($1, name),
-                description = CASE WHEN $2 THEN $3 ELSE description END,
-                country_code = CASE WHEN $4 THEN $5 ELSE country_code END,
-                subdivision = CASE WHEN $6 THEN $7 ELSE subdivision END,
+                country_code = CASE WHEN $2 THEN $3 ELSE country_code END,
+                subdivision = CASE WHEN $4 THEN $5 ELSE subdivision END,
                 last_updated = NOW(),
-                last_updated_by = $9
-            WHERE id = $8
+                last_updated_by = $7
+            WHERE id = $6
             RETURNING id
             "#,
             payload.name,
-            payload.description.is_some(),
-            payload.description.clone().flatten(),
             payload.country_code.is_some(),
             payload.country_code.clone().flatten(),
             payload.subdivision.is_some(),

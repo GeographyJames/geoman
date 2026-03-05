@@ -13,7 +13,7 @@ pub struct DataProviderServiceInputPayload {
     pub provider_id: DataProviderId,
     pub name: String,
     pub service_type: DataProviderServiceType,
-    pub base_url: String,
+    pub base_url: Option<String>,
 }
 
 #[post("")]

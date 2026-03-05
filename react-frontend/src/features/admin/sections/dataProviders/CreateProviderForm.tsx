@@ -3,13 +3,7 @@ import { Modal, useModal } from "@/components/forms/Modal";
 import { CancelButton, SubmitButton } from "@/components/Buttons";
 import { usePostDataProvider } from "@/hooks/api/usePostDataProvider";
 import { ApiError } from "@/lib/api";
-
-interface FormData {
-  name: string;
-  description: string;
-  country_code: string;
-  subdivision: string;
-}
+import { ProviderForm, PROVIDER_FORM_DEFAULTS, type ProviderFormData } from "./ProviderForm";
 
 const MODAL_ID = "create_data_provider";
 
@@ -17,18 +11,14 @@ const CreateProviderInner = () => {
   const { mutate: postProvider, isPending } = usePostDataProvider();
   const { addError, closeDialog } = useModal();
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<FormData>({ defaultValues: { name: "", description: "", country_code: "", subdivision: "" } });
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<ProviderFormData>({
+    defaultValues: PROVIDER_FORM_DEFAULTS,
+  });
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: ProviderFormData) => {
     postProvider(
       {
         name: data.name,
-        description: data.description || null,
         country_code: data.country_code || null,
         subdivision: data.subdivision || null,
       },
@@ -44,62 +34,7 @@ const CreateProviderInner = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="form-control">
-        <label className="label" htmlFor="provider-name">
-          <span className="label-text">Name</span>
-        </label>
-        <input
-          id="provider-name"
-          type="text"
-          placeholder="e.g. Natural England"
-          className={`input input-bordered w-full ${errors.name ? "input-error" : ""}`}
-          {...register("name", { required: "Name is required" })}
-        />
-        {errors.name && <span className="label-text-alt text-error mt-1">{errors.name.message}</span>}
-      </div>
-
-      <div className="form-control">
-        <label className="label" htmlFor="provider-description">
-          <span className="label-text">Description</span>
-          <span className="label-text-alt text-base-content/50">optional</span>
-        </label>
-        <input
-          id="provider-description"
-          type="text"
-          className="input input-bordered w-full"
-          {...register("description")}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="form-control">
-          <label className="label" htmlFor="provider-country">
-            <span className="label-text">Country code</span>
-            <span className="label-text-alt text-base-content/50">optional</span>
-          </label>
-          <input
-            id="provider-country"
-            type="text"
-            placeholder="e.g. GB"
-            className="input input-bordered w-full"
-            {...register("country_code")}
-          />
-        </div>
-        <div className="form-control">
-          <label className="label" htmlFor="provider-subdivision">
-            <span className="label-text">Subdivision</span>
-            <span className="label-text-alt text-base-content/50">optional</span>
-          </label>
-          <input
-            id="provider-subdivision"
-            type="text"
-            placeholder="e.g. GB-ENG"
-            className="input input-bordered w-full"
-            {...register("subdivision")}
-          />
-        </div>
-      </div>
-
+      <ProviderForm register={register} errors={errors} mode="create" />
       <div className="modal-action">
         <CancelButton onClick={() => { reset(); closeDialog(); }} disabled={isPending} />
         <SubmitButton text="Create provider" loadingText="Creating..." loading={isPending} />

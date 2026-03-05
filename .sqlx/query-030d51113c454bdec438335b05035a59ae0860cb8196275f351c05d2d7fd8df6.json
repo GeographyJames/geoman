@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE app.data_providers\n            SET name = COALESCE($1, name),\n                country_code = CASE WHEN $2 THEN $3 ELSE country_code END,\n                subdivision = CASE WHEN $4 THEN $5 ELSE subdivision END,\n                last_updated = NOW(),\n                last_updated_by = $7\n            WHERE id = $6\n            RETURNING id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Bpchar",
+        "Bool",
+        "Varchar",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "030d51113c454bdec438335b05035a59ae0860cb8196275f351c05d2d7fd8df6"
+}

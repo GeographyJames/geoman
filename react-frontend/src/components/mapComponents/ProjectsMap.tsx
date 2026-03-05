@@ -124,7 +124,7 @@ export default function ProjectsMap() {
         hoveredFeatureRef.current = hit;
       }
 
-      const topLayer = map.forEachFeatureAtPixel(e.pixel, (f, l) => l);
+      const topLayer = map.forEachFeatureAtPixel(e.pixel, (_f, l) => l);
       if (topLayer === vectorLayer) {
         map.getTargetElement().style.cursor = "pointer";
       } else if (!topLayer || !topLayer.get("interactive")) {

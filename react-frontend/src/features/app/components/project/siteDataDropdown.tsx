@@ -7,7 +7,7 @@ import { useEditProjectCollection } from "../../contexts/EditProjectCollectionCo
 import { useDeleteProjectCollection } from "../../contexts/DeleteProjectCollectionContext";
 import { useAddFeature } from "../../contexts/AddFeatureContext";
 import { CreateIconButton } from "@/components/Buttons";
-import { Download, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import type Project from "@/domain/project/entity";
 
 export const SiteDataDropdown = ({

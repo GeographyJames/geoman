@@ -4,7 +4,6 @@ import { CACHE_KEY_DATA_PROVIDERS } from "@/cache_keys";
 
 interface PostDataProviderRequest {
   name: string;
-  description?: string | null;
   country_code?: string | null;
   subdivision?: string | null;
 }

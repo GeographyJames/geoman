@@ -6,7 +6,7 @@ import { CACHE_KEY_DATA_PROVIDER_SERVICES } from "@/cache_keys";
 interface PatchDataProviderServiceRequest {
   name?: string;
   service_type?: DataProviderServiceType;
-  base_url?: string;
+  base_url?: string | null;
   description?: string | null;
 }
 

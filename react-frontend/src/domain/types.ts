@@ -1,5 +1,5 @@
 
-import { FiUsers, FiLock, FiGlobe } from "react-icons/fi";
+import { FiUsers, FiGlobe } from "react-icons/fi";
 
 
 import type { IconType } from "react-icons";

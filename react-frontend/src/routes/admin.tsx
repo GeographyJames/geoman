@@ -3,7 +3,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 
 type AdminSearch = {
-  tab?: "teams" | "collections" | "api-keys";
+  tab?: "teams" | "collections" | "api-keys" | "data-providers";
 };
 
 export const Route = createFileRoute("/admin")({

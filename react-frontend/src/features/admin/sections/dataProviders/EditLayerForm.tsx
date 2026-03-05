@@ -2,22 +2,10 @@ import { useForm } from "react-hook-form";
 import { Modal, useModal } from "@/components/forms/Modal";
 import { CancelButton, SubmitButton } from "@/components/Buttons";
 import { usePatchDataProviderLayer } from "@/hooks/api/usePatchDataProviderLayer";
+import { useDataProviderServices } from "@/hooks/api/useDataProviderServices";
 import { ApiError } from "@/lib/api";
-import type { DataProviderLayer, LayerCategory } from "@/domain/data_provider/types";
-
-interface FormData {
-  name: string;
-  abbreviation: string;
-  source: string;
-  category: LayerCategory;
-  description: string;
-  enabled: boolean;
-  style_config: string;
-  display_options: string;
-  country_code: string;
-  subdivision: string;
-  sort_order: string;
-}
+import type { DataProviderLayer } from "@/domain/data_provider/types";
+import { LayerForm, LAYER_FORM_DEFAULTS, jsonFieldValue, type LayerFormData } from "./LayerForm";
 
 const MODAL_ID = "edit_data_provider_layer";
 
@@ -29,24 +17,34 @@ const EditLayerInner = ({
   onClose: () => void;
 }) => {
   const { mutate: patchLayer, isPending } = usePatchDataProviderLayer();
+  const { data: services = [] } = useDataProviderServices();
   const { addError, closeDialog } = useModal();
+
+  const service = services.find((s) => s.id === layer?.service_id);
+  const isMVT = service?.service_type === "MVT";
+
+  const mvtUrl = isMVT && typeof layer?.source === "object" && layer.source !== null && "url" in layer.source
+    ? String((layer.source as { url: string }).url)
+    : "";
 
   const {
     register,
     handleSubmit,
     formState: { errors, isDirty, dirtyFields },
     setError,
-  } = useForm<FormData>({
+  } = useForm<LayerFormData>({
     values: layer
       ? {
+          ...LAYER_FORM_DEFAULTS,
           name: layer.name,
           abbreviation: layer.abbreviation ?? "",
-          source: JSON.stringify(layer.source, null, 2),
+          mvt_url: mvtUrl,
+          source: isMVT ? "{}" : (JSON.stringify(layer.source, null, 2) ?? "{}"),
           category: layer.category,
           description: layer.description ?? "",
           enabled: layer.enabled,
-          style_config: layer.style_config ? JSON.stringify(layer.style_config, null, 2) : "",
-          display_options: layer.display_options ? JSON.stringify(layer.display_options, null, 2) : "",
+          style_config: jsonFieldValue(layer.style_config),
+          display_options: jsonFieldValue(layer.display_options),
           country_code: layer.country_code ?? "",
           subdivision: layer.subdivision ?? "",
           sort_order: String(layer.sort_order),
@@ -54,7 +52,7 @@ const EditLayerInner = ({
       : undefined,
   });
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: LayerFormData) => {
     if (!layer) return;
 
     const patch: Parameters<typeof patchLayer>[0]["patch"] = {};
@@ -68,7 +66,9 @@ const EditLayerInner = ({
     if (dirtyFields.subdivision) patch.subdivision = data.subdivision || null;
     if (dirtyFields.sort_order) patch.sort_order = data.sort_order ? Number(data.sort_order) : undefined;
 
-    if (dirtyFields.source) {
+    if (isMVT && dirtyFields.mvt_url) {
+      patch.source = { url: data.mvt_url };
+    } else if (!isMVT && dirtyFields.source) {
       try {
         patch.source = JSON.parse(data.source);
       } catch {
@@ -115,146 +115,9 @@ const EditLayerInner = ({
     );
   };
 
-  const handleCancel = () => { closeDialog(); onClose(); };
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="form-control">
-          <label className="label" htmlFor="edit-layer-name">
-            <span className="label-text">Name</span>
-          </label>
-          <input
-            id="edit-layer-name"
-            type="text"
-            className={`input input-bordered w-full ${errors.name ? "input-error" : ""}`}
-            {...register("name", { required: "Name is required" })}
-          />
-          {errors.name && <span className="label-text-alt text-error mt-1">{errors.name.message}</span>}
-        </div>
-
-        <div className="form-control">
-          <label className="label" htmlFor="edit-layer-abbr">
-            <span className="label-text">Abbreviation</span>
-            <span className="label-text-alt text-base-content/50">clear to remove</span>
-          </label>
-          <input
-            id="edit-layer-abbr"
-            type="text"
-            className="input input-bordered w-full"
-            {...register("abbreviation")}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="form-control">
-          <label className="label" htmlFor="edit-layer-category">
-            <span className="label-text">Category</span>
-          </label>
-          <select
-            id="edit-layer-category"
-            className="select select-bordered w-full"
-            {...register("category")}
-          >
-            <option value="overlay">Overlay</option>
-            <option value="basemap">Base map</option>
-          </select>
-        </div>
-
-        <div className="form-control">
-          <label className="label" htmlFor="edit-layer-sort-order">
-            <span className="label-text">Sort order</span>
-          </label>
-          <input
-            id="edit-layer-sort-order"
-            type="number"
-            className="input input-bordered w-full"
-            {...register("sort_order")}
-          />
-        </div>
-      </div>
-
-      <div className="form-control">
-        <label className="label" htmlFor="edit-layer-description">
-          <span className="label-text">Description</span>
-          <span className="label-text-alt text-base-content/50">clear to remove</span>
-        </label>
-        <input
-          id="edit-layer-description"
-          type="text"
-          className="input input-bordered w-full"
-          {...register("description")}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="form-control">
-          <label className="label" htmlFor="edit-layer-country">
-            <span className="label-text">Country code</span>
-          </label>
-          <input
-            id="edit-layer-country"
-            type="text"
-            placeholder="e.g. GB"
-            className="input input-bordered w-full"
-            {...register("country_code")}
-          />
-        </div>
-        <div className="form-control">
-          <label className="label" htmlFor="edit-layer-subdivision">
-            <span className="label-text">Subdivision</span>
-          </label>
-          <input
-            id="edit-layer-subdivision"
-            type="text"
-            placeholder="e.g. GB-ENG"
-            className="input input-bordered w-full"
-            {...register("subdivision")}
-          />
-        </div>
-      </div>
-
-      <div className="form-control">
-        <label className="label" htmlFor="edit-layer-source">
-          <span className="label-text">Source (JSON)</span>
-        </label>
-        <textarea
-          id="edit-layer-source"
-          rows={3}
-          className={`textarea textarea-bordered w-full font-mono text-xs ${errors.source ? "textarea-error" : ""}`}
-          {...register("source", { required: "Source is required" })}
-        />
-        {errors.source && <span className="label-text-alt text-error mt-1">{errors.source.message}</span>}
-      </div>
-
-      <div className="form-control">
-        <label className="label" htmlFor="edit-layer-style">
-          <span className="label-text">Style config (JSON)</span>
-          <span className="label-text-alt text-base-content/50">clear to remove</span>
-        </label>
-        <textarea
-          id="edit-layer-style"
-          rows={2}
-          className={`textarea textarea-bordered w-full font-mono text-xs ${errors.style_config ? "textarea-error" : ""}`}
-          {...register("style_config")}
-        />
-        {errors.style_config && <span className="label-text-alt text-error mt-1">{errors.style_config.message}</span>}
-      </div>
-
-      <div className="form-control">
-        <label className="label" htmlFor="edit-layer-display-options">
-          <span className="label-text">Display options (JSON)</span>
-          <span className="label-text-alt text-base-content/50">clear to remove</span>
-        </label>
-        <textarea
-          id="edit-layer-display-options"
-          rows={2}
-          className={`textarea textarea-bordered w-full font-mono text-xs ${errors.display_options ? "textarea-error" : ""}`}
-          {...register("display_options")}
-        />
-        {errors.display_options && <span className="label-text-alt text-error mt-1">{errors.display_options.message}</span>}
-      </div>
+      <LayerForm register={register} errors={errors} isMVT={isMVT} mode="edit" />
 
       <div className="form-control flex-row items-center gap-3">
         <label className="label cursor-pointer gap-2" htmlFor="edit-layer-enabled">
@@ -269,7 +132,7 @@ const EditLayerInner = ({
       </div>
 
       <div className="modal-action">
-        <CancelButton onClick={handleCancel} disabled={isPending} />
+        <CancelButton onClick={() => { closeDialog(); onClose(); }} disabled={isPending} />
         <SubmitButton text="Save changes" loadingText="Saving..." loading={isPending} disabled={!isDirty} />
       </div>
     </form>

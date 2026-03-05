@@ -9,7 +9,6 @@ use crate::{
 pub struct DataProvider {
     pub id: DataProviderId,
     pub name: String,
-    pub description: Option<String>,
     pub country_code: Option<String>,
     pub subdivision: Option<String>,
 }
@@ -20,7 +19,7 @@ pub struct DataProviderService {
     pub provider_id: DataProviderId,
     pub name: String,
     pub service_type: DataProviderServiceType,
-    pub base_url: String,
+    pub base_url: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

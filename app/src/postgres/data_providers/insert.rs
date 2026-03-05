@@ -13,10 +13,9 @@ impl Insert for (DataProviderInputPayload, UserId) {
         let mut conn = executor.acquire().await?;
         let (dto, user) = self;
         let res = sqlx::query!(
-            "INSERT INTO app.data_providers(name, description, country_code, subdivision, added_by, last_updated_by)
-             VALUES ($1, $2, $3, $4, $5, $5) RETURNING id",
+            "INSERT INTO app.data_providers(name, country_code, subdivision, added_by, last_updated_by)
+             VALUES ($1, $2, $3, $4, $4) RETURNING id",
             dto.name,
-            dto.description,
             dto.country_code,
             dto.subdivision,
             user.0

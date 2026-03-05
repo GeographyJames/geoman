@@ -13,7 +13,6 @@ export type LayerCategory = "overlay" | "basemap";
 export interface DataProvider {
   id: number;
   name: string;
-  description: string | null;
   country_code: string | null;
   subdivision: string | null;
 }
@@ -23,7 +22,7 @@ export interface DataProviderService {
   provider_id: number;
   name: string;
   service_type: DataProviderServiceType;
-  base_url: string;
+  base_url: string | null;
 }
 
 export interface DataProviderLayer {

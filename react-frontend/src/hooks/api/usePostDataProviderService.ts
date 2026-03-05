@@ -7,7 +7,7 @@ interface PostDataProviderServiceRequest {
   provider_id: number;
   name: string;
   service_type: DataProviderServiceType;
-  base_url: string;
+  base_url?: string | null;
   description?: string | null;
 }
 

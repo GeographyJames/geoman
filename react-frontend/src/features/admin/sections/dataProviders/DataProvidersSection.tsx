@@ -5,9 +5,15 @@ import { useDataProviders } from "@/hooks/api/useDataProviders";
 import { useDataProviderServices } from "@/hooks/api/useDataProviderServices";
 import { useDataProviderLayers } from "@/hooks/api/useDataProviderLayers";
 import { usePatchDataProviderLayer } from "@/hooks/api/usePatchDataProviderLayer";
-import { CreateProviderForm, openCreateProviderModal } from "./CreateProviderForm";
+import {
+  CreateProviderForm,
+  openCreateProviderModal,
+} from "./CreateProviderForm";
 import { EditProviderForm, openEditProviderModal } from "./EditProviderForm";
-import { DeleteProviderForm, openDeleteProviderModal } from "./DeleteProviderForm";
+import {
+  DeleteProviderForm,
+  openDeleteProviderModal,
+} from "./DeleteProviderForm";
 import { CreateServiceForm, openCreateServiceModal } from "./CreateServiceForm";
 import { EditServiceForm, openEditServiceModal } from "./EditServiceForm";
 import { DeleteServiceForm, openDeleteServiceModal } from "./DeleteServiceForm";
@@ -22,7 +28,10 @@ import type {
   LayerCategory,
 } from "@/domain/data_provider/types";
 
-type LayerRow = DataProviderLayer & { service: DataProviderService; provider: DataProvider };
+type LayerRow = DataProviderLayer & {
+  service: DataProviderService;
+  provider: DataProvider;
+};
 
 const SERVICE_TYPE_BADGE: Record<DataProviderServiceType, string> = {
   ImageWMS: "badge-info",
@@ -81,13 +90,19 @@ function RegionBadge({
 }
 
 function StyleSwatch({ styleConfig }: { styleConfig: unknown }) {
-  if (!styleConfig || typeof styleConfig !== "object") return <span className="text-base-content/30">—</span>;
+  if (!styleConfig || typeof styleConfig !== "object")
+    return <span className="text-base-content/30">—</span>;
   const cfg = styleConfig as Record<string, string>;
-  if (!cfg.fillColor && !cfg.strokeColor) return <span className="text-base-content/30">—</span>;
+  if (!cfg.fillColor && !cfg.strokeColor)
+    return <span className="text-base-content/30">—</span>;
   return (
     <svg width="24" height="16" className="shrink-0">
       <rect
-        x="1" y="1" width="22" height="14" rx="2"
+        x="1"
+        y="1"
+        width="22"
+        height="14"
+        rx="2"
         fill={cfg.fillColor ?? "transparent"}
         stroke={cfg.strokeColor ?? "currentColor"}
         strokeWidth="1.5"
@@ -103,17 +118,30 @@ export default function DataProvidersSection() {
   const { data: layers = [] } = useDataProviderLayers();
   const { mutate: patchLayer } = usePatchDataProviderLayer();
 
-  const [selectedProvider, setSelectedProvider] = useState<DataProvider | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<DataProvider | null>(
+    null,
+  );
   const [regionFilter, setRegionFilter] = useState<RegionFilter>("");
   const [category, setCategory] = useState<LayerCategory>("overlay");
 
-  const [creatingServiceForProvider, setCreatingServiceForProvider] = useState<DataProvider | null>(null);
-  const [editingProvider, setEditingProvider] = useState<DataProvider | null>(null);
-  const [deletingProvider, setDeletingProvider] = useState<DataProvider | null>(null);
-  const [editingService, setEditingService] = useState<DataProviderService | null>(null);
-  const [deletingService, setDeletingService] = useState<DataProviderService | null>(null);
-  const [editingLayer, setEditingLayer] = useState<DataProviderLayer | null>(null);
-  const [deletingLayer, setDeletingLayer] = useState<DataProviderLayer | null>(null);
+  const [creatingServiceForProvider, setCreatingServiceForProvider] =
+    useState<DataProvider | null>(null);
+  const [editingProvider, setEditingProvider] = useState<DataProvider | null>(
+    null,
+  );
+  const [deletingProvider, setDeletingProvider] = useState<DataProvider | null>(
+    null,
+  );
+  const [editingService, setEditingService] =
+    useState<DataProviderService | null>(null);
+  const [deletingService, setDeletingService] =
+    useState<DataProviderService | null>(null);
+  const [editingLayer, setEditingLayer] = useState<DataProviderLayer | null>(
+    null,
+  );
+  const [deletingLayer, setDeletingLayer] = useState<DataProviderLayer | null>(
+    null,
+  );
 
   const isAdmin = currentUser?.isAdmin ?? false;
 
@@ -123,12 +151,15 @@ export default function DataProvidersSection() {
 
   const handleFilterChange = (value: RegionFilter) => {
     setRegionFilter(value);
-    if (selectedProvider && !matchesFilter(selectedProvider, value)) setSelectedProvider(null);
+    if (selectedProvider && !matchesFilter(selectedProvider, value))
+      setSelectedProvider(null);
   };
 
   const activeServices = selectedProvider
     ? services.filter((s) => s.provider_id === selectedProvider.id)
-    : services.filter((s) => filteredProviders.some((p) => p.id === s.provider_id));
+    : services.filter((s) =>
+        filteredProviders.some((p) => p.id === s.provider_id),
+      );
 
   const displayLayers: LayerRow[] = activeServices.flatMap((service) => {
     const provider = providers.find((p) => p.id === service.provider_id);
@@ -139,39 +170,71 @@ export default function DataProvidersSection() {
   });
 
   const overlayCount = activeServices.reduce(
-    (n, s) => n + layers.filter((l) => l.service_id === s.id && l.category === "overlay").length,
+    (n, s) =>
+      n +
+      layers.filter((l) => l.service_id === s.id && l.category === "overlay")
+        .length,
     0,
   );
   const basemapCount = activeServices.reduce(
-    (n, s) => n + layers.filter((l) => l.service_id === s.id && l.category === "basemap").length,
+    (n, s) =>
+      n +
+      layers.filter((l) => l.service_id === s.id && l.category === "basemap")
+        .length,
     0,
   );
 
   const hasAnyStyle = displayLayers.some(
-    (l) => l.style_config && typeof l.style_config === "object" &&
+    (l) =>
+      l.style_config &&
+      typeof l.style_config === "object" &&
       Object.keys(l.style_config as object).length > 0,
   );
 
   return (
     <>
       <CreateProviderForm />
-      <EditProviderForm provider={editingProvider} onClose={() => setEditingProvider(null)} />
-      <DeleteProviderForm provider={deletingProvider} onClose={() => setDeletingProvider(null)} />
+      <EditProviderForm
+        provider={editingProvider}
+        onClose={() => setEditingProvider(null)}
+      />
+      <DeleteProviderForm
+        provider={deletingProvider}
+        onClose={() => setDeletingProvider(null)}
+      />
       <CreateServiceForm provider={creatingServiceForProvider} />
-      <EditServiceForm service={editingService} onClose={() => setEditingService(null)} />
-      <DeleteServiceForm service={deletingService} onClose={() => setDeletingService(null)} />
+      <EditServiceForm
+        service={editingService}
+        onClose={() => setEditingService(null)}
+      />
+      <DeleteServiceForm
+        service={deletingService}
+        onClose={() => setDeletingService(null)}
+      />
       <CreateLayerForm />
-      <EditLayerForm layer={editingLayer} onClose={() => setEditingLayer(null)} />
-      <DeleteLayerForm layer={deletingLayer} onClose={() => setDeletingLayer(null)} />
+      <EditLayerForm
+        layer={editingLayer}
+        onClose={() => setEditingLayer(null)}
+      />
+      <DeleteLayerForm
+        layer={deletingLayer}
+        onClose={() => setDeletingLayer(null)}
+      />
 
       {/* Page Header */}
       <div className="mb-6 flex justify-between items-start gap-2">
         <div>
           <h1 className="text-2xl font-semibold mb-1">Data Providers</h1>
-          <p className="text-base-content/70">Providers, their services, and available layers.</p>
+          <p className="text-base-content/70">
+            Providers, their services, and available layers.
+          </p>
         </div>
         {isAdmin && (
-          <button type="button" className="btn btn-primary gap-2" onClick={openCreateLayerModal}>
+          <button
+            type="button"
+            className="btn btn-primary gap-2"
+            onClick={openCreateLayerModal}
+          >
             <Plus size={20} />
             Add Layer
           </button>
@@ -179,13 +242,13 @@ export default function DataProvidersSection() {
       </div>
 
       <div className="grid grid-cols-2 gap-6 items-start">
-
         {/* Left: Providers + Services */}
         <div className="card bg-base-100 border border-base-300 overflow-hidden">
-
           {/* Region filter + Add Provider */}
           <div className="px-4 py-2.5 border-b border-base-300 flex items-center gap-2">
-            <span className="text-sm text-base-content/60 shrink-0">Region</span>
+            <span className="text-sm text-base-content/60 shrink-0">
+              Region
+            </span>
             <select
               className="select select-sm select-bordered w-full"
               value={regionFilter}
@@ -215,15 +278,20 @@ export default function DataProvidersSection() {
 
           {filteredProviders.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-base-content/50 text-sm">No providers for this region</p>
+              <p className="text-base-content/50 text-sm">
+                No providers for this region
+              </p>
             </div>
           ) : (
             <div>
               {filteredProviders.map((provider) => {
-                const providerServices = services.filter((s) => s.provider_id === provider.id);
+                const providerServices = services.filter(
+                  (s) => s.provider_id === provider.id,
+                );
                 const serviceCount = providerServices.length;
                 const layerCount = providerServices.reduce(
-                  (n, s) => n + layers.filter((l) => l.service_id === s.id).length,
+                  (n, s) =>
+                    n + layers.filter((l) => l.service_id === s.id).length,
                   0,
                 );
                 const isOpen = selectedProvider?.id === provider.id;
@@ -235,14 +303,23 @@ export default function DataProvidersSection() {
                   >
                     <div
                       className={`collapse-title flex items-center justify-between gap-2 py-2.5 px-4 cursor-pointer min-h-0 ${isOpen ? "bg-primary/10" : "bg-base-200 hover:bg-base-200/80"}`}
-                      onClick={() => setSelectedProvider(isOpen ? null : provider)}
+                      onClick={() =>
+                        setSelectedProvider(isOpen ? null : provider)
+                      }
                     >
                       <div className="flex items-center gap-2">
-                        <span className={`text-sm ${isOpen ? "font-bold" : "font-semibold"}`}>
+                        <span
+                          className={`text-sm ${isOpen ? "font-bold" : "font-semibold"}`}
+                        >
                           {provider.name}
                         </span>
-                        <span className="text-xs text-base-content/40">{serviceCount}s / {layerCount}l</span>
-                        <RegionBadge countryCode={provider.country_code} subdivision={provider.subdivision} />
+                        <span className="text-xs text-base-content/40">
+                          {serviceCount}s / {layerCount}l
+                        </span>
+                        <RegionBadge
+                          countryCode={provider.country_code}
+                          subdivision={provider.subdivision}
+                        />
                       </div>
                       {isAdmin && (
                         <div
@@ -289,7 +366,9 @@ export default function DataProvidersSection() {
 
                     <div className="collapse-content px-0 pb-0">
                       {providerServices.length === 0 ? (
-                        <p className="px-8 py-2 text-xs text-base-content/40 italic">No services added</p>
+                        <p className="px-8 py-2 text-xs text-base-content/40 italic">
+                          No services added
+                        </p>
                       ) : (
                         providerServices.map((service) => (
                           <div
@@ -297,14 +376,25 @@ export default function DataProvidersSection() {
                             className="flex items-center justify-between gap-2 px-4 pl-8 py-2 border-t border-base-200 hover:bg-base-50"
                           >
                             <div className="flex items-center gap-2 min-w-0">
-                              <Globe size={13} className="opacity-40 shrink-0" />
+                              <Globe
+                                size={13}
+                                className="opacity-40 shrink-0"
+                              />
                               <div className="min-w-0">
-                                <div className="text-sm text-base-content/70">{service.name}</div>
-                                <div className="text-xs text-base-content/40 truncate max-w-52">{service.base_url}</div>
+                                <div className="text-sm text-base-content/70">
+                                  {service.name}
+                                </div>
+                                {service.base_url && (
+                                  <div className="text-xs text-base-content/40 truncate max-w-52">
+                                    {service.base_url}
+                                  </div>
+                                )}
                               </div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className={`badge badge-sm badge-outline ${SERVICE_TYPE_BADGE[service.service_type]}`}>
+                              <span
+                                className={`badge badge-sm badge-outline ${SERVICE_TYPE_BADGE[service.service_type]}`}
+                              >
                                 {service.service_type}
                               </span>
                               {isAdmin && (
@@ -347,6 +437,30 @@ export default function DataProvidersSection() {
 
         {/* Right: Layers */}
         <div className="card bg-base-100 border border-base-300 overflow-hidden">
+          {/* Header */}
+          <div className="px-4 py-3 border-b border-base-300">
+            {selectedProvider ? (
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{selectedProvider.name}</span>
+                <RegionBadge
+                  countryCode={selectedProvider.country_code}
+                  subdivision={selectedProvider.subdivision}
+                />
+                {services
+                  .filter((s) => s.provider_id === selectedProvider.id)
+                  .map((s) => (
+                    <span
+                      key={s.id}
+                      className={`badge badge-sm badge-outline ${SERVICE_TYPE_BADGE[s.service_type]}`}
+                    >
+                      {s.service_type}
+                    </span>
+                  ))}
+              </div>
+            ) : (
+              <div className="font-medium">All providers</div>
+            )}
+          </div>
           {/* Category tabs */}
           <div className="flex border-b border-base-300">
             <button
@@ -370,33 +484,12 @@ export default function DataProvidersSection() {
               <span className="text-xs opacity-60">({basemapCount})</span>
             </button>
           </div>
-
-          {/* Header */}
-          <div className="px-4 py-3 border-b border-base-300">
-            {selectedProvider ? (
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{selectedProvider.name}</span>
-                <RegionBadge
-                  countryCode={selectedProvider.country_code}
-                  subdivision={selectedProvider.subdivision}
-                />
-                {services
-                  .filter((s) => s.provider_id === selectedProvider.id)
-                  .map((s) => (
-                    <span key={s.id} className={`badge badge-sm badge-outline ${SERVICE_TYPE_BADGE[s.service_type]}`}>
-                      {s.service_type}
-                    </span>
-                  ))}
-              </div>
-            ) : (
-              <div className="font-medium">All providers</div>
-            )}
-          </div>
-
           {displayLayers.length === 0 ? (
             <div className="card-body items-center text-center py-16">
               <MapPin size={40} className="opacity-20 mb-2" />
-              <p className="text-base-content/50 text-sm">No layers added yet</p>
+              <p className="text-base-content/50 text-sm">
+                No layers added yet
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -417,7 +510,9 @@ export default function DataProvidersSection() {
                       <td>
                         <div className="font-medium text-sm">{layer.name}</div>
                         {layer.description && (
-                          <div className="text-xs text-base-content/50">{layer.description}</div>
+                          <div className="text-xs text-base-content/50">
+                            {layer.description}
+                          </div>
                         )}
                       </td>
                       {!selectedProvider && (
@@ -432,7 +527,9 @@ export default function DataProvidersSection() {
                         </td>
                       )}
                       <td>
-                        <span className={`badge badge-sm badge-outline ${SERVICE_TYPE_BADGE[layer.service.service_type]}`}>
+                        <span
+                          className={`badge badge-sm badge-outline ${SERVICE_TYPE_BADGE[layer.service.service_type]}`}
+                        >
                           {layer.service.service_type}
                         </span>
                       </td>
@@ -447,7 +544,10 @@ export default function DataProvidersSection() {
                           className="toggle toggle-sm toggle-primary"
                           checked={layer.enabled}
                           onChange={() =>
-                            patchLayer({ id: layer.id, patch: { enabled: !layer.enabled } })
+                            patchLayer({
+                              id: layer.id,
+                              patch: { enabled: !layer.enabled },
+                            })
                           }
                         />
                       </td>

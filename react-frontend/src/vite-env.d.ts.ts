@@ -13,6 +13,9 @@ declare const __URLS__: {
         business_units: string
         epsg: string
         turbine_layouts: string
+        data_providers: string
+        data_provider_services: string
+        data_provider_layers: string
     }
     docs: { base: string }
     ogc_api: {

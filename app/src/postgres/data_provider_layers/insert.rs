@@ -17,6 +17,7 @@ impl Insert for (DataProviderLayerInputPayload, UserId) {
         let mut conn = executor.acquire().await?;
         let (dto, user) = self;
         let category = dto.category.clone().unwrap_or(LayerCategory::Overlay);
+        let source = serde_json::to_value(&dto.source).unwrap_or_default();
         let style_config = dto.style_config.clone().unwrap_or_else(|| json!({}));
         let display_options = dto.display_options.clone().unwrap_or_else(|| json!({}));
         let enabled = dto.enabled.unwrap_or(true);
@@ -31,7 +32,7 @@ impl Insert for (DataProviderLayerInputPayload, UserId) {
             dto.service_id.0,
             dto.name,
             dto.abbreviation,
-            dto.source as _,
+            source as _,
             category as _,
             dto.description,
             enabled,
