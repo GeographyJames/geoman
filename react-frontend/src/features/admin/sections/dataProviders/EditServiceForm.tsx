@@ -28,7 +28,9 @@ const EditServiceInner = ({
       : SERVICE_FORM_DEFAULTS,
   });
 
-  const needsBaseUrl = watch("service_type") !== "MVT";
+  const serviceType = watch("service_type");
+  const baseUrl = watch("base_url");
+  const needsBaseUrl = serviceType !== "MVT";
 
   const onSubmit = (data: ServiceFormData) => {
     if (!service) return;
@@ -51,7 +53,7 @@ const EditServiceInner = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <ServiceForm register={register} errors={errors} needsBaseUrl={needsBaseUrl} mode="edit" />
+      <ServiceForm register={register} errors={errors} needsBaseUrl={needsBaseUrl} mode="edit" serviceType={serviceType} baseUrl={baseUrl} />
       <div className="modal-action">
         <CancelButton onClick={() => { reset(); closeDialog(); onClose(); }} disabled={isPending} />
         <SubmitButton text="Save changes" loadingText="Saving..." loading={isPending} disabled={!isDirty} />

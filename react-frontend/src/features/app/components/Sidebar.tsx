@@ -26,6 +26,12 @@ export const Sidebar = () => {
               API Keys
             </Link>
           </li>
+
+          <li>
+            <Link to="/admin" search={{ tab: "data-providers" }}>
+              Data Providers
+            </Link>
+          </li>
         </ul>
       </li>
       <li>

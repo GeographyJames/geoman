@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import type { DataProviderServiceType } from "@/domain/data_provider/types";
+import { useArcGISServiceInfo } from "@/hooks/useArcGISServiceInfo";
 
 export interface ServiceFormData {
   name: string;
@@ -24,13 +26,46 @@ const SERVICE_TYPE_LABELS: Record<DataProviderServiceType, string> = {
   XYZ: "XYZ — XYZ Tile Layer",
 };
 
-const SERVICE_TYPES = Object.keys(SERVICE_TYPE_LABELS) as DataProviderServiceType[];
+const SERVICE_TYPES = Object.keys(
+  SERVICE_TYPE_LABELS,
+) as DataProviderServiceType[];
+
+function useDebounce(value: string, delay: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
+
+function ArcGISHealthCheck({ baseUrl }: { baseUrl: string }) {
+  const { data: services, isLoading, isError } = useArcGISServiceInfo(baseUrl);
+
+  if (!baseUrl) return null;
+  if (isLoading) return <p className="label">Checking service…</p>;
+  if (isError)
+    return <p className="label text-error">Could not reach service</p>;
+  if (services) {
+    return (
+      <p className="label text-success flex items-center gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+        {services.length} service{services.length !== 1 ? "s" : ""} available
+      </p>
+    );
+  }
+  return null;
+}
 
 interface ServiceFormProps {
   register: UseFormRegister<ServiceFormData>;
   errors: FieldErrors<ServiceFormData>;
   needsBaseUrl: boolean;
   mode: "create" | "edit";
+  serviceType: DataProviderServiceType | "";
+  baseUrl: string;
 }
 
 export const ServiceForm = ({
@@ -38,65 +73,67 @@ export const ServiceForm = ({
   errors,
   needsBaseUrl,
   mode,
-}: ServiceFormProps) => (
-  <>
-    <div className="form-control">
-      <label className="label" htmlFor="service-type">
-        <span className="label-text">Service type</span>
-      </label>
-      <select
-        id="service-type"
-        className={`select select-bordered w-full ${errors.service_type ? "select-error" : ""}`}
-        {...register("service_type", { required: "Service type is required" })}
-      >
-        <option value="" disabled>Select a service type…</option>
-        {SERVICE_TYPES.map((t) => (
-          <option key={t} value={t}>
-            {SERVICE_TYPE_LABELS[t]}
+  serviceType,
+  baseUrl,
+}: ServiceFormProps) => {
+  const debouncedBaseUrl = useDebounce(baseUrl, 500);
+
+  return (
+    <>
+      <fieldset className="fieldset">
+        <legend className="fieldset-legend">Service type</legend>
+        <select
+          className={`select w-full ${errors.service_type ? "select-error" : ""}`}
+          {...register("service_type", {
+            required: "Service type is required",
+          })}
+        >
+          <option value="" disabled>
+            Select a service type…
           </option>
-        ))}
-      </select>
-      {errors.service_type && (
-        <span className="label-text-alt text-error mt-1">{errors.service_type.message}</span>
-      )}
-    </div>
-
-    <div className="form-control">
-      <label className="label" htmlFor="service-name">
-        <span className="label-text">Name</span>
-      </label>
-      <input
-        id="service-name"
-        type="text"
-        placeholder={mode === "create" ? "e.g. Natural England WMS" : undefined}
-        className={`input input-bordered w-full ${errors.name ? "input-error" : ""}`}
-        {...register("name", { required: "Name is required" })}
-      />
-      {errors.name && (
-        <span className="label-text-alt text-error mt-1">
-          {errors.name.message}
-        </span>
-      )}
-    </div>
-
-    {needsBaseUrl && (
-      <div className="form-control">
-        <label className="label" htmlFor="service-url">
-          <span className="label-text">Base URL</span>
-        </label>
-        <input
-          id="service-url"
-          type="text"
-          placeholder="https://..."
-          className={`input input-bordered w-full ${errors.base_url ? "input-error" : ""}`}
-          {...register("base_url", { required: "Base URL is required" })}
-        />
-        {errors.base_url && (
-          <span className="label-text-alt text-error mt-1">
-            {errors.base_url.message}
-          </span>
+          {SERVICE_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {SERVICE_TYPE_LABELS[t]}
+            </option>
+          ))}
+        </select>
+        {errors.service_type && (
+          <p className="label text-error">{errors.service_type.message}</p>
         )}
-      </div>
-    )}
-  </>
-);
+      </fieldset>
+
+      <fieldset className="fieldset">
+        <legend className="fieldset-legend">Name</legend>
+        <input
+          type="text"
+          placeholder={
+            mode === "create" ? "e.g. Natural England WMS" : undefined
+          }
+          className={`input w-full ${errors.name ? "input-error" : ""}`}
+          {...register("name", { required: "Name is required" })}
+        />
+        {errors.name && (
+          <p className="label text-error">{errors.name.message}</p>
+        )}
+      </fieldset>
+
+      {needsBaseUrl && (
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Base URL</legend>
+          <input
+            type="text"
+            placeholder="https://..."
+            className={`input w-full ${errors.base_url ? "input-error" : ""}`}
+            {...register("base_url", { required: "Base URL is required" })}
+          />
+          {errors.base_url && (
+            <p className="label text-error">{errors.base_url.message}</p>
+          )}
+          {serviceType === "ArcGISRest" && (
+            <ArcGISHealthCheck baseUrl={debouncedBaseUrl} />
+          )}
+        </fieldset>
+      )}
+    </>
+  );
+};

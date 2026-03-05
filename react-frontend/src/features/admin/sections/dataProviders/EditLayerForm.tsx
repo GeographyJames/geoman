@@ -21,11 +21,19 @@ const EditLayerInner = ({
   const { addError, closeDialog } = useModal();
 
   const service = services.find((s) => s.id === layer?.service_id);
-  const isMVT = service?.service_type === "MVT";
+  const serviceType = service?.service_type ?? "";
+  const isMVT = serviceType === "MVT";
+  const isArcGIS = serviceType === "ArcGISRest";
 
   const mvtUrl = isMVT && typeof layer?.source === "object" && layer.source !== null && "url" in layer.source
     ? String((layer.source as { url: string }).url)
     : "";
+
+  const arcgisSrc = isArcGIS && typeof layer?.source === "object" && layer.source !== null
+    ? layer.source as { service_name?: string; layer_id?: number }
+    : null;
+  const arcgisServiceName = arcgisSrc?.service_name ?? "";
+  const arcgisLayerId = arcgisSrc?.layer_id != null ? String(arcgisSrc.layer_id) : "";
 
   const {
     register,
@@ -39,7 +47,9 @@ const EditLayerInner = ({
           name: layer.name,
           abbreviation: layer.abbreviation ?? "",
           mvt_url: mvtUrl,
-          source: isMVT ? "{}" : (JSON.stringify(layer.source, null, 2) ?? "{}"),
+          arcgis_service_name: arcgisServiceName,
+          arcgis_layer_id: arcgisLayerId,
+          source: (isMVT || isArcGIS) ? "{}" : (JSON.stringify(layer.source, null, 2) ?? "{}"),
           category: layer.category,
           description: layer.description ?? "",
           enabled: layer.enabled,
@@ -68,7 +78,9 @@ const EditLayerInner = ({
 
     if (isMVT && dirtyFields.mvt_url) {
       patch.source = { url: data.mvt_url };
-    } else if (!isMVT && dirtyFields.source) {
+    } else if (isArcGIS && (dirtyFields.arcgis_service_name || dirtyFields.arcgis_layer_id)) {
+      patch.source = { service_name: data.arcgis_service_name, layer_id: Number(data.arcgis_layer_id) };
+    } else if (!isMVT && !isArcGIS && dirtyFields.source) {
       try {
         patch.source = JSON.parse(data.source);
       } catch {
@@ -117,7 +129,7 @@ const EditLayerInner = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <LayerForm register={register} errors={errors} isMVT={isMVT} mode="edit" />
+      <LayerForm register={register} errors={errors} serviceType={serviceType} serviceBaseUrl={service?.base_url} mode="edit" />
 
       <div className="form-control flex-row items-center gap-3">
         <label className="label cursor-pointer gap-2" htmlFor="edit-layer-enabled">

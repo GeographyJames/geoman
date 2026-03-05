@@ -1,12 +1,16 @@
+import { useState } from "react";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
-import type { LayerCategory } from "@/domain/data_provider/types";
+import type { DataProviderServiceType, LayerCategory } from "@/domain/data_provider/types";
+import { useArcGISServiceInfo, useArcGISFeatureServerLayers } from "@/hooks/useArcGISServiceInfo";
 
 export interface LayerFormData {
   service_id: string; // create only — provider/service dropdowns in CreateLayerForm
   name: string;
   abbreviation: string;
   mvt_url: string; // MVT source URL
-  source: string; // non-MVT source JSON
+  arcgis_service_name: string; // ArcGISRest service name within the directory
+  arcgis_layer_id: string; // ArcGISRest layer index within the FeatureServer
+  source: string; // other source types — raw JSON
   category: LayerCategory;
   description: string;
   style_config: string;
@@ -22,6 +26,8 @@ export const LAYER_FORM_DEFAULTS: LayerFormData = {
   name: "",
   abbreviation: "",
   mvt_url: "",
+  arcgis_service_name: "",
+  arcgis_layer_id: "",
   source: "{}",
   category: "overlay",
   description: "",
@@ -40,207 +46,244 @@ export function jsonFieldValue(v: unknown): string {
   return JSON.stringify(v, null, 2);
 }
 
+function ArcGISPicker({
+  baseUrl,
+  register,
+  errors,
+}: {
+  baseUrl: string | null;
+  register: UseFormRegister<LayerFormData>;
+  errors: FieldErrors<LayerFormData>;
+}) {
+  const [selectedServiceName, setSelectedServiceName] = useState("");
+
+  const { data: services, isLoading: servicesLoading } = useArcGISServiceInfo(baseUrl ?? "");
+
+  const featureServerUrl =
+    baseUrl && selectedServiceName
+      ? `${baseUrl}/${selectedServiceName}/FeatureServer`
+      : "";
+  const { data: layers, isLoading: layersLoading } =
+    useArcGISFeatureServerLayers(featureServerUrl);
+
+  return (
+    <>
+      <fieldset className="fieldset">
+        <legend className="fieldset-legend">
+          Service
+          {servicesLoading && <span className="text-base-content/50 font-normal ml-1">Loading…</span>}
+        </legend>
+        {services && services.length > 0 ? (
+          <select
+            className={`select w-full ${errors.arcgis_service_name ? "select-error" : ""}`}
+            {...register("arcgis_service_name", { required: "Service is required" })}
+            onChange={(e) => setSelectedServiceName(e.target.value)}
+          >
+            <option value="">Select a service…</option>
+            {services
+              .filter((s) => s.type === "FeatureServer")
+              .map((s) => (
+                <option key={s.name} value={s.name}>{s.name}</option>
+              ))}
+          </select>
+        ) : (
+          <input
+            type="text"
+            placeholder="ServiceName"
+            className={`input w-full ${errors.arcgis_service_name ? "input-error" : ""}`}
+            {...register("arcgis_service_name", { required: "Service name is required" })}
+            onChange={(e) => setSelectedServiceName(e.target.value)}
+          />
+        )}
+        {errors.arcgis_service_name && (
+          <p className="label text-error">{errors.arcgis_service_name.message}</p>
+        )}
+      </fieldset>
+
+      <fieldset className="fieldset">
+        <legend className="fieldset-legend">
+          Layer
+          {layersLoading && <span className="text-base-content/50 font-normal ml-1">Loading…</span>}
+        </legend>
+        {layers && layers.length > 0 ? (
+          <select
+            className={`select w-full ${errors.arcgis_layer_id ? "select-error" : ""}`}
+            {...register("arcgis_layer_id", { required: "Layer is required" })}
+          >
+            <option value="">Select a layer…</option>
+            {layers.map((l) => (
+              <option key={l.id} value={l.id}>{l.id}: {l.name}</option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type="number"
+            min={0}
+            placeholder="0"
+            className={`input w-full ${errors.arcgis_layer_id ? "input-error" : ""}`}
+            {...register("arcgis_layer_id", { required: "Layer ID is required" })}
+          />
+        )}
+        {errors.arcgis_layer_id && (
+          <p className="label text-error">{errors.arcgis_layer_id.message}</p>
+        )}
+      </fieldset>
+    </>
+  );
+}
+
 interface LayerFormProps {
   register: UseFormRegister<LayerFormData>;
   errors: FieldErrors<LayerFormData>;
-  isMVT: boolean;
+  serviceType: DataProviderServiceType | "";
+  serviceBaseUrl?: string | null; // for ArcGIS layer picker
   mode: "create" | "edit";
 }
 
 export const LayerForm = ({
   register,
   errors,
-  isMVT,
+  serviceType,
+  serviceBaseUrl,
   mode,
 }: LayerFormProps) => {
-  const optional =
-    mode === "create" ? (
-      <span className="label-text-alt text-base-content/50">optional</span>
-    ) : (
-      <span className="label-text-alt text-base-content/50">
-        clear to remove
-      </span>
-    );
+  const isMVT = serviceType === "MVT";
+  const isArcGIS = serviceType === "ArcGISRest";
+  const optionalLabel = mode === "create" ? "optional" : "clear to remove";
 
   return (
     <>
       <div className="grid grid-cols-2 gap-3">
-        <div className="form-control">
-          <label className="label" htmlFor="layer-name">
-            <span className="label-text">Name</span>
-          </label>
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Name</legend>
           <input
-            id="layer-name"
             type="text"
             placeholder={mode === "create" ? "e.g. SSSI England" : undefined}
-            className={`input input-bordered w-full ${errors.name ? "input-error" : ""}`}
+            className={`input w-full ${errors.name ? "input-error" : ""}`}
             {...register("name", { required: "Name is required" })}
           />
-          {errors.name && (
-            <span className="label-text-alt text-error mt-1">
-              {errors.name.message}
-            </span>
-          )}
-        </div>
+          {errors.name && <p className="label text-error">{errors.name.message}</p>}
+        </fieldset>
 
-        <div className="form-control">
-          <label className="label" htmlFor="layer-abbr">
-            <span className="label-text">Abbreviation</span>
-            {optional}
-          </label>
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Abbreviation</legend>
           <input
-            id="layer-abbr"
             type="text"
             placeholder={mode === "create" ? "e.g. SSSI" : undefined}
-            className="input input-bordered w-full"
+            className="input w-full"
             {...register("abbreviation")}
           />
-        </div>
+          <p className="label">{optionalLabel}</p>
+        </fieldset>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="form-control">
-          <label className="label" htmlFor="layer-category">
-            <span className="label-text">Category</span>
-          </label>
-          <select
-            id="layer-category"
-            className="select select-bordered w-full"
-            {...register("category")}
-          >
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Category</legend>
+          <select className="select w-full" {...register("category")}>
             <option value="overlay">Overlay</option>
             <option value="basemap">Base map</option>
           </select>
-        </div>
+        </fieldset>
 
-        <div className="form-control">
-          <label className="label" htmlFor="layer-sort-order">
-            <span className="label-text">Sort order</span>
-            {optional}
-          </label>
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Sort order</legend>
           <input
-            id="layer-sort-order"
             type="number"
-            className="input input-bordered w-full"
+            className="input w-full"
             {...register("sort_order")}
           />
-        </div>
+          <p className="label">{optionalLabel}</p>
+        </fieldset>
       </div>
 
-      <div className="form-control">
-        <label className="label" htmlFor="layer-description">
-          <span className="label-text">Description</span>
-          {optional}
-        </label>
-        <input
-          id="layer-description"
-          type="text"
-          className="input input-bordered w-full"
-          {...register("description")}
-        />
-      </div>
+      <fieldset className="fieldset">
+        <legend className="fieldset-legend">Description</legend>
+        <input type="text" className="input w-full" {...register("description")} />
+        <p className="label">{optionalLabel}</p>
+      </fieldset>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="form-control">
-          <label className="label" htmlFor="layer-country">
-            <span className="label-text">Country code</span>
-            {optional}
-          </label>
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Country code</legend>
           <input
-            id="layer-country"
             type="text"
             placeholder="e.g. GB"
-            className="input input-bordered w-full"
+            className="input w-full"
             {...register("country_code")}
           />
-        </div>
-        <div className="form-control">
-          <label className="label" htmlFor="layer-subdivision">
-            <span className="label-text">Subdivision</span>
-            {optional}
-          </label>
+          <p className="label">{optionalLabel}</p>
+        </fieldset>
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Subdivision</legend>
           <input
-            id="layer-subdivision"
             type="text"
             placeholder="e.g. GB-ENG"
-            className="input input-bordered w-full"
+            className="input w-full"
             {...register("subdivision")}
           />
-        </div>
+          <p className="label">{optionalLabel}</p>
+        </fieldset>
       </div>
 
-      {isMVT ? (
-        <div className="form-control">
-          <label className="label" htmlFor="layer-mvt-url">
-            <span className="label-text">Tile URL</span>
-          </label>
+      {isMVT && (
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Tile URL</legend>
           <input
-            id="layer-mvt-url"
             type="text"
             placeholder="/api/tiles/{workspace}/{layer}/{z}/{x}/{-y}"
-            className={`input input-bordered w-full font-mono text-sm ${errors.mvt_url ? "input-error" : ""}`}
+            className={`input w-full font-mono text-sm ${errors.mvt_url ? "input-error" : ""}`}
             {...register("mvt_url", { required: "Tile URL is required" })}
           />
-          {errors.mvt_url && (
-            <span className="label-text-alt text-error mt-1">
-              {errors.mvt_url.message}
-            </span>
-          )}
-        </div>
-      ) : (
-        <div className="form-control">
-          <label className="label" htmlFor="layer-source">
-            <span className="label-text">Source (JSON)</span>
-          </label>
-          <textarea
-            id="layer-source"
-            rows={3}
-            className={`textarea textarea-bordered w-full font-mono text-xs ${errors.source ? "textarea-error" : ""}`}
-            {...register("source", { required: "Source is required" })}
-          />
-          {errors.source && (
-            <span className="label-text-alt text-error mt-1">
-              {errors.source.message}
-            </span>
-          )}
-        </div>
+          {errors.mvt_url && <p className="label text-error">{errors.mvt_url.message}</p>}
+        </fieldset>
       )}
 
-      <div className="form-control">
-        <label className="label" htmlFor="layer-style">
-          <span className="label-text">Style config (JSON)</span>
-          {optional}
-        </label>
+      {isArcGIS && (
+        <ArcGISPicker
+          baseUrl={serviceBaseUrl ?? null}
+          register={register}
+          errors={errors}
+        />
+      )}
+
+      {!isMVT && !isArcGIS && (
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Source (JSON)</legend>
+          <textarea
+            rows={3}
+            className={`textarea w-full font-mono text-xs ${errors.source ? "textarea-error" : ""}`}
+            {...register("source", { required: "Source is required" })}
+          />
+          {errors.source && <p className="label text-error">{errors.source.message}</p>}
+        </fieldset>
+      )}
+
+      <fieldset className="fieldset">
+        <legend className="fieldset-legend">Style config (JSON)</legend>
         <textarea
-          id="layer-style"
           rows={2}
-          className={`textarea textarea-bordered w-full font-mono text-xs ${errors.style_config ? "textarea-error" : ""}`}
+          className={`textarea w-full font-mono text-xs ${errors.style_config ? "textarea-error" : ""}`}
           {...register("style_config")}
         />
-        {errors.style_config && (
-          <span className="label-text-alt text-error mt-1">
-            {errors.style_config.message}
-          </span>
-        )}
-      </div>
+        {errors.style_config
+          ? <p className="label text-error">{errors.style_config.message}</p>
+          : <p className="label">{optionalLabel}</p>
+        }
+      </fieldset>
 
-      <div className="form-control">
-        <label className="label" htmlFor="layer-display-options">
-          <span className="label-text">Display options (JSON)</span>
-          {optional}
-        </label>
+      <fieldset className="fieldset">
+        <legend className="fieldset-legend">Display options (JSON)</legend>
         <textarea
-          id="layer-display-options"
           rows={2}
-          className={`textarea textarea-bordered w-full font-mono text-xs ${errors.display_options ? "textarea-error" : ""}`}
+          className={`textarea w-full font-mono text-xs ${errors.display_options ? "textarea-error" : ""}`}
           {...register("display_options")}
         />
-        {errors.display_options && (
-          <span className="label-text-alt text-error mt-1">
-            {errors.display_options.message}
-          </span>
-        )}
-      </div>
+        {errors.display_options
+          ? <p className="label text-error">{errors.display_options.message}</p>
+          : <p className="label">{optionalLabel}</p>
+        }
+      </fieldset>
     </>
   );
 };

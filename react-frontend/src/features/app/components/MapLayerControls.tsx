@@ -1,5 +1,6 @@
 import { useState } from "react";
 import DynamicMVTLayer from "@/components/mapComponents/DynamicMVTLayer";
+import DynamicArcGISLayer from "@/components/mapComponents/DynamicArcGISLayer";
 import SSSILayer from "@/components/mapComponents/SSSILayer";
 import ScottishSSSILayer from "@/components/mapComponents/ScottishSSSILayer";
 import { useMapZoom } from "@/hooks/useMapZoom";
@@ -75,12 +76,20 @@ export function MapLayerControls() {
   const { data: allLayers = [] } = useDataProviderLayers();
   const { data: services = [] } = useDataProviderServices();
 
+  const serviceById = new Map(services.map((s) => [s.id, s]));
+
   const mvtServiceIds = new Set(
     services.filter((s) => s.service_type === "MVT").map((s) => s.id),
   );
   const mvtOverlays = allLayers.filter(
-    (l) =>
-      l.enabled && l.category === "overlay" && mvtServiceIds.has(l.service_id),
+    (l) => l.enabled && l.category === "overlay" && mvtServiceIds.has(l.service_id),
+  );
+
+  const arcgisServiceIds = new Set(
+    services.filter((s) => s.service_type === "ArcGISRest").map((s) => s.id),
+  );
+  const arcgisOverlays = allLayers.filter(
+    (l) => l.enabled && l.category === "overlay" && arcgisServiceIds.has(l.service_id),
   );
 
   const handleFeatureHover = (
@@ -102,6 +111,18 @@ export function MapLayerControls() {
           visible={dynamicVisibility[layer.id] ?? false}
         />
       ))}
+      {arcgisOverlays.map((layer) => {
+        const svc = serviceById.get(layer.service_id);
+        if (!svc?.base_url) return null;
+        return (
+          <DynamicArcGISLayer
+            key={layer.id}
+            layer={layer}
+            baseUrl={svc.base_url}
+            visible={dynamicVisibility[layer.id] ?? false}
+          />
+        );
+      })}
       <SSSILayer visible={showSSSI} />
       <ScottishSSSILayer
         visible={showScottishSSSI}
@@ -204,7 +225,7 @@ export function MapLayerControls() {
               )}
             </label>
 
-            {mvtOverlays.map((layer) => (
+            {[...mvtOverlays, ...arcgisOverlays].map((layer) => (
               <label
                 key={layer.id}
                 className="flex items-center gap-2 cursor-pointer text-sm"

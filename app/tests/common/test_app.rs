@@ -448,7 +448,7 @@ impl TestApp<ClerkAuthService> {
                     &DataProviderServiceInputPayload {
                         provider_id,
                         name: uuid::Uuid::new_v4().to_string(),
-                        base_url: "https://example.com/wms".to_string(),
+                        base_url: Some("https://example.com/wms".to_string()),
                         ..Default::default()
                     },
                 )

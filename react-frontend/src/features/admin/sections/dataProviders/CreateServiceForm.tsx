@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Modal, useModal } from "@/components/forms/Modal";
 import { CancelButton, SubmitButton } from "@/components/Buttons";
@@ -25,13 +26,21 @@ const CreateServiceInner = ({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<ServiceFormData>({
     defaultValues: SERVICE_FORM_DEFAULTS,
   });
 
   const serviceType = watch("service_type");
+  const baseUrl = watch("base_url");
   const needsBaseUrl = serviceType !== "" && serviceType !== "MVT";
+
+  useEffect(() => {
+    if (provider && serviceType) {
+      setValue("name", `${provider.name} ${serviceType}`);
+    }
+  }, [provider, serviceType, setValue]);
 
   const onSubmit = (data: ServiceFormData) => {
     if (!provider) return;
@@ -71,6 +80,8 @@ const CreateServiceInner = ({
         errors={errors}
         needsBaseUrl={needsBaseUrl}
         mode="create"
+        serviceType={serviceType}
+        baseUrl={baseUrl}
       />
       <div className="modal-action">
         <CancelButton

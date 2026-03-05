@@ -32,12 +32,14 @@ const CreateLayerInner = () => {
 
   const selectedServiceId = watch("service_id");
   const selectedService = filteredServices.find((s) => String(s.id) === selectedServiceId);
-  const isMVT = selectedService?.service_type === "MVT";
+  const serviceType = selectedService?.service_type ?? "";
 
   const onSubmit = (data: LayerFormData) => {
     let source: unknown;
-    if (isMVT) {
+    if (serviceType === "MVT") {
       source = { url: data.mvt_url };
+    } else if (serviceType === "ArcGISRest") {
+      source = { service_name: data.arcgis_service_name, layer_id: Number(data.arcgis_layer_id) };
     } else {
       try {
         source = JSON.parse(data.source);
@@ -133,7 +135,7 @@ const CreateLayerInner = () => {
         {errors.service_id && <span className="label-text-alt text-error mt-1">{errors.service_id.message}</span>}
       </div>
 
-      <LayerForm register={register} errors={errors} isMVT={isMVT} mode="create" />
+      <LayerForm register={register} errors={errors} serviceType={serviceType} serviceBaseUrl={selectedService?.base_url} mode="create" />
 
       <div className="modal-action">
         <CancelButton onClick={() => { reset(); setSelectedProviderId(""); closeDialog(); }} disabled={isPending} />

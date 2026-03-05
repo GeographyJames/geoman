@@ -19,53 +19,42 @@ interface ProviderFormProps {
 }
 
 export const ProviderForm = ({ register, errors, mode }: ProviderFormProps) => {
-  const optional = mode === "create"
-    ? <span className="label-text-alt text-base-content/50">optional</span>
-    : <span className="label-text-alt text-base-content/50">clear to remove</span>;
+  const optionalLabel = mode === "create" ? "optional" : "clear to remove";
 
   return (
     <>
-      <div className="form-control">
-        <label className="label" htmlFor="provider-name">
-          <span className="label-text">Name</span>
-        </label>
+      <fieldset className="fieldset">
+        <legend className="fieldset-legend">Name</legend>
         <input
-          id="provider-name"
           type="text"
           placeholder={mode === "create" ? "e.g. Natural England" : undefined}
-          className={`input input-bordered w-full ${errors.name ? "input-error" : ""}`}
+          className={`input w-full ${errors.name ? "input-error" : ""}`}
           {...register("name", { required: "Name is required" })}
         />
-        {errors.name && <span className="label-text-alt text-error mt-1">{errors.name.message}</span>}
-      </div>
+        {errors.name && <p className="label text-error">{errors.name.message}</p>}
+      </fieldset>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="form-control">
-          <label className="label" htmlFor="provider-country">
-            <span className="label-text">Country code</span>
-            {optional}
-          </label>
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Country code</legend>
           <input
-            id="provider-country"
             type="text"
             placeholder="e.g. GB"
-            className="input input-bordered w-full"
+            className="input w-full"
             {...register("country_code")}
           />
-        </div>
-        <div className="form-control">
-          <label className="label" htmlFor="provider-subdivision">
-            <span className="label-text">Subdivision</span>
-            {optional}
-          </label>
+          <p className="label">{optionalLabel}</p>
+        </fieldset>
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Subdivision</legend>
           <input
-            id="provider-subdivision"
             type="text"
             placeholder="e.g. GB-ENG"
-            className="input input-bordered w-full"
+            className="input w-full"
             {...register("subdivision")}
           />
-        </div>
+          <p className="label">{optionalLabel}</p>
+        </fieldset>
       </div>
     </>
   );
