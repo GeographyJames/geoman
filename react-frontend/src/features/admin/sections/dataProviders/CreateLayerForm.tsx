@@ -34,6 +34,15 @@ const CreateLayerInner = () => {
   const selectedService = filteredServices.find((s) => String(s.id) === selectedServiceId);
   const serviceType = selectedService?.service_type ?? "";
 
+  const arcgisServiceName = watch("arcgis_service_name");
+  const arcgisLayerId = watch("arcgis_layer_id");
+  const mvtUrl = watch("mvt_url");
+
+  const sourceComplete =
+    serviceType === "ArcGISRest" ? !!(arcgisServiceName && arcgisLayerId) :
+    serviceType === "MVT" ? !!mvtUrl :
+    !!selectedServiceId;
+
   const onSubmit = (data: LayerFormData) => {
     let source: unknown;
     if (serviceType === "MVT") {
@@ -95,51 +104,55 @@ const CreateLayerInner = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="form-control">
-        <label className="label" htmlFor="layer-provider">
-          <span className="label-text">Provider</span>
-        </label>
+      <fieldset className="fieldset">
+        <legend className="fieldset-legend">Provider</legend>
         <select
-          id="layer-provider"
-          className="select select-bordered w-full"
+          className="select w-full"
           value={selectedProviderId}
           onChange={(e) => {
             setSelectedProviderId(e.target.value);
             reset((prev) => ({ ...prev, service_id: "" }));
           }}
         >
-          <option value="">Select a provider…</option>
+          <option value="" disabled>Select a provider…</option>
           {providers.map((p) => (
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}
         </select>
-      </div>
+      </fieldset>
 
-      <div className="form-control">
-        <label className="label" htmlFor="layer-service">
-          <span className="label-text">Service</span>
-        </label>
-        <select
-          id="layer-service"
-          className={`select select-bordered w-full ${errors.service_id ? "select-error" : ""}`}
-          disabled={!selectedProviderId}
-          {...register("service_id", { required: "Service is required" })}
-        >
-          <option value="">
-            {selectedProviderId ? "Select a service…" : "Select a provider first"}
-          </option>
-          {filteredServices.map((s) => (
-            <option key={s.id} value={s.id}>{s.name} ({s.service_type})</option>
-          ))}
-        </select>
-        {errors.service_id && <span className="label-text-alt text-error mt-1">{errors.service_id.message}</span>}
-      </div>
+      {selectedProviderId && (
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Service</legend>
+          <select
+            className={`select w-full ${errors.service_id ? "select-error" : ""}`}
+            {...register("service_id", { required: "Service is required" })}
+          >
+            <option value="" disabled>Select a service…</option>
+            {filteredServices.map((s) => (
+              <option key={s.id} value={s.id}>{s.name} ({s.service_type})</option>
+            ))}
+          </select>
+          {errors.service_id && <p className="label text-error">{errors.service_id.message}</p>}
+        </fieldset>
+      )}
 
-      <LayerForm register={register} errors={errors} serviceType={serviceType} serviceBaseUrl={selectedService?.base_url} mode="create" />
+      {selectedServiceId && (
+        <LayerForm
+          register={register}
+          errors={errors}
+          serviceType={serviceType}
+          serviceBaseUrl={selectedService?.base_url}
+          sourceComplete={sourceComplete}
+          mode="create"
+        />
+      )}
 
       <div className="modal-action">
         <CancelButton onClick={() => { reset(); setSelectedProviderId(""); closeDialog(); }} disabled={isPending} />
-        <SubmitButton text="Create layer" loadingText="Creating..." loading={isPending} />
+        {sourceComplete && (
+          <SubmitButton text="Create layer" loadingText="Creating..." loading={isPending} />
+        )}
       </div>
     </form>
   );

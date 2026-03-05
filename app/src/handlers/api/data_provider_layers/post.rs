@@ -28,8 +28,19 @@ pub struct DataProviderLayerInputPayload {
 #[derive(Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum LayerSource {
-    MVT { url: String },
-    ArcGISRest { service_name: String, layer_id: i64 },
+    MVT {
+        url: String,
+    },
+    ArcGISRest {
+        service_name: String,
+        layer_id: i64,
+        name_field: Option<String>,
+    },
+    WFS {
+        layer_name: String,
+        name_field: Option<String>,
+        url: String,
+    },
 }
 
 impl Default for LayerSource {

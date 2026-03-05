@@ -129,7 +129,7 @@ const EditLayerInner = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <LayerForm register={register} errors={errors} serviceType={serviceType} serviceBaseUrl={service?.base_url} mode="edit" />
+      <LayerForm register={register} errors={errors} serviceType={serviceType} serviceBaseUrl={service?.base_url} sourceComplete={true} mode="edit" />
 
       <div className="form-control flex-row items-center gap-3">
         <label className="label cursor-pointer gap-2" htmlFor="edit-layer-enabled">
