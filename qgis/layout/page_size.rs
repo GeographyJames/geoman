@@ -1,4 +1,4 @@
-use crate::qgis::layout::components::SizeInteger;
+use crate::layout::components::SizeInteger;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 

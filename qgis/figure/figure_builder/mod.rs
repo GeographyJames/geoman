@@ -1,16 +1,13 @@
 use uuid::Uuid;
 
 use crate::{
-    app::configuration::QgisFigureConfig,
-    domain::dtos::FigureOutputDTO,
-    qgis::{
-        enums::EPSGID,
-        figure::PrintResolution,
-        layer::MapLayer,
-        layout::{
-            QgisLayoutBuilder, QgisLayoutMapBuilder, Size,
-            components::{ComposerMapGrid, LayoutItem, Position},
-        },
+    config::QgisFigureConfig,
+    enums::EPSGID,
+    figure::spec::{PrintResolution, QgisFigureSpec},
+    layer::MapLayer,
+    layout::{
+        QgisLayoutBuilder, QgisLayoutMapBuilder, Size,
+        components::{ComposerMapGrid, LayoutItem, Position},
     },
 };
 
@@ -23,14 +20,14 @@ mod text_box;
 
 pub const FIG_TITLE_HEIGHT: f32 = 13.;
 pub const FIG_SUBTITLE_HEIGHT: f32 = 12.;
-const TEXT_BOX_HEIGHT: f32 = 10.;
+pub const TEXT_BOX_HEIGHT: f32 = 10.;
 
 pub struct FigureBuilder<'a> {
     pub layout_map_builders: Vec<QgisLayoutMapBuilder>,
     pub main_layout_map_uuid: Uuid,
     pub overview_map_uuid: Uuid,
 
-    pub fig: &'a FigureOutputDTO,
+    pub fig: &'a QgisFigureSpec,
     pub print_resolution: &'a PrintResolution,
     pub print_right: f32,
     pub print_bottom: f32,
@@ -51,7 +48,7 @@ pub struct FigureBuilder<'a> {
 
 impl<'a> FigureBuilder<'a> {
     pub fn new(
-        fig: &'a FigureOutputDTO,
+        fig: &'a QgisFigureSpec,
         print_resolution: &'a PrintResolution,
         config: Option<&'a QgisFigureConfig>,
         layers: &'a Vec<MapLayer>,
@@ -64,7 +61,7 @@ impl<'a> FigureBuilder<'a> {
             - FIG_SUBTITLE_HEIGHT
             - FIG_TITLE_HEIGHT
             - fig
-                .overview_map_base_map
+                .overview_basemap
                 .as_ref()
                 .map_or(0, |_| fig.legend_width_mm) as f32;
 
@@ -93,7 +90,7 @@ impl<'a> FigureBuilder<'a> {
     }
 
     pub fn build(mut self, include_ids: bool) -> Result<QgisLayoutBuilder, anyhow::Error> {
-        if self.fig.legend_width_mm > 0 && self.fig.overview_map_base_map.is_some() {
+        if self.fig.legend_width_mm > 0 && self.fig.overview_basemap.is_some() {
             let overview_map = QgisLayoutMapBuilder {
                 size: Size {
                     width_mm: self.legend_width as f64,

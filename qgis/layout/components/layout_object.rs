@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::qgis::data_defined_properties::DataDefinedProperties;
+use crate::data_defined_properties::DataDefinedProperties;
 
 #[derive(Serialize, Default)]
 pub struct LayoutObject {

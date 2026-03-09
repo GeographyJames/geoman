@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::qgis::{
+use crate::{
     Extent, LayerTreeGroup,
     enums::EPSGID,
     layer::MapLayer,

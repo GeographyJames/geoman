@@ -1,4 +1,4 @@
-use crate::qgis::{
+use crate::{
     enums::{HorizontalAlignment, NamedTextStyle, Units, VerticalAlignment},
     layout::components::{Color, LayoutItem, LayoutObject, Length, TextStyle},
 };
@@ -43,7 +43,7 @@ impl LayoutItem {
 #[cfg(test)]
 mod tests {
 
-    use crate::qgis::{
+    use crate::{
         layout::{Size, components::Position},
         tests::test_helpers::{SkipNode, xml_comparison},
     };

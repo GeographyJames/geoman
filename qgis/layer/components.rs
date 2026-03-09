@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::qgis::layer::DataProvider;
+use crate::layer::DataProvider;
 
 #[derive(Serialize, Default, Clone)]
 pub struct AuxiliaryLayer {}

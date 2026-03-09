@@ -404,7 +404,7 @@ pub fn insert_renderer_v2_into_project(
 
 #[cfg(test)]
 mod tests {
-    use crate::qgis::{helpers::extract_renderer_v2, tests::test_helpers::xml_comparison};
+    use crate::{helpers::extract_renderer_v2, tests::test_helpers::xml_comparison};
 
     #[test]
     fn extract_renderer_v2_works() {

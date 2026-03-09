@@ -14,11 +14,11 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use zip::{ZipWriter, result::ZipError, write::FileOptions};
 
-use crate::qgis::helpers::insert_renderer_v2_into_project;
 use crate::{
-    domain::dtos::{FigureLayerOutputDTO, Id},
-    qgis::helpers::unzip_content,
+    figure::spec::QgisLayerSpec,
+    helpers::{insert_renderer_v2_into_project, unzip_content},
 };
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QgisProjectMetadata {
     last_modified_time: chrono::DateTime<Utc>,
@@ -29,7 +29,7 @@ pub struct QgisProject {
     pub name: String,
     pub metadata: sqlx::types::Json<QgisProjectMetadata>,
     pub content: Vec<u8>,
-    pub figure_id: Id,
+    pub figure_id: i32,
     pub low_res: bool,
 }
 
@@ -42,7 +42,7 @@ impl QgisProject {
 
 pub struct QgisProjectBuilder {
     pub project_name: String,
-    pub figure_id: Id,
+    pub figure_id: i32,
     pub low_res: bool,
     pub root: ProjectRoot,
 }
@@ -65,36 +65,34 @@ impl QgisProjectBuilder {
         };
         Ok(project)
     }
+
     pub fn build_with_layer_styles(
         self,
-        layers: Option<Vec<FigureLayerOutputDTO>>,
+        layers: Vec<QgisLayerSpec>,
     ) -> Result<QgisProject, anyhow::Error> {
-        use crate::qgis::helpers::extract_all_style_elements;
+        use crate::helpers::extract_all_style_elements;
 
         let mut xml =
             quick_xml::se::to_string(&self.root).context("failed to serialize QgisRoot to xml")?;
 
-        // Insert each layer style
-        if let Some(layers) = layers {
-            for layer in layers {
-                if let Some(styleqml) = layer.styleqml {
-                    let style_elements = extract_all_style_elements(&styleqml).map_err(|e| {
+        for layer in layers {
+            if let Some(styleqml) = layer.styleqml {
+                let style_elements = extract_all_style_elements(&styleqml).map_err(|e| {
+                    anyhow::anyhow!(
+                        "failed to extract style elements for layer '{}': {}",
+                        layer.name,
+                        e
+                    )
+                })?;
+
+                xml = insert_renderer_v2_into_project(&xml, &style_elements, &layer.name)
+                    .map_err(|e| {
                         anyhow::anyhow!(
-                            "failed to extract style elements for layer '{}': {}",
+                            "failed to insert style for layer '{}': {}",
                             layer.name,
                             e
                         )
                     })?;
-
-                    xml = insert_renderer_v2_into_project(&xml, &style_elements, &layer.name)
-                        .map_err(|e| {
-                            anyhow::anyhow!(
-                                "failed to insert style for layer '{}': {}",
-                                layer.name,
-                                e
-                            )
-                        })?;
-                }
             }
         }
 

@@ -1,7 +1,7 @@
-use crate::qgis::enums::LineCapStyle;
-use crate::qgis::layout::components::LayoutObject;
-use crate::qgis::layout::components::layout_item::Length;
-use crate::qgis::{
+use crate::enums::LineCapStyle;
+use crate::layout::components::LayoutObject;
+use crate::layout::components::layout_item::Length;
+use crate::{
     Symbol,
     enums::{LineJoinStyle, Units},
     layout::{
@@ -68,7 +68,7 @@ impl LayoutItem {
 
 #[cfg(test)]
 mod tests {
-    use crate::qgis::{
+    use crate::{
         layout::components::{LayoutItem, Position},
         tests::test_helpers::{SkipNode, xml_comparison},
     };

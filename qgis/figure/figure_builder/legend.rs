@@ -1,15 +1,12 @@
 use crate::{
-    qgis::{
-        enums::{HorizontalAlignment, NamedTextStyle, ReferencePoint, VerticalAlignment},
-        figure::figure_builder::{
-            FIG_SUBTITLE_HEIGHT, FIG_TITLE_HEIGHT, FigureBuilder, TEXT_BOX_HEIGHT,
-        },
-        layout::{
-            PageSize, Size,
-            components::{Color, LayoutItem, LegendTextStyles, Position, SizeInteger},
-        },
+    enums::{HorizontalAlignment, NamedTextStyle, ReferencePoint, VerticalAlignment},
+    figure::figure_builder::{
+        FIG_SUBTITLE_HEIGHT, FIG_TITLE_HEIGHT, FigureBuilder, TEXT_BOX_HEIGHT,
     },
-    utils,
+    layout::{
+        PageSize, Size,
+        components::{Color, LayoutItem, LegendTextStyles, Position, SizeInteger},
+    },
 };
 
 impl FigureBuilder<'_> {

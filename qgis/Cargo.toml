@@ -1,0 +1,21 @@
+[package]
+name = "qgis"
+version = "0.1.0"
+edition = "2024"
+autotests = false
+
+[lib]
+path = "mod.rs"
+
+[dependencies]
+utils = { path = "../utils" }
+serde = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+anyhow = { workspace = true }
+quick-xml = { version = "0.37", features = ["serialize"] }
+zip = "2"
+sqlx = { workspace = true }
+slug = "0.1.6"
+strum = { workspace = true }
+strum_macros = "0.27"

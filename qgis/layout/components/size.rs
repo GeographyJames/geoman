@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::qgis::layout::PageSize;
+use crate::layout::PageSize;
 
 #[derive(Default, Clone, Copy)]
 pub struct Size {

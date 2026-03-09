@@ -1,4 +1,4 @@
-use crate::qgis::{
+use crate::{
     enums::ReferencePoint,
     figure::figure_builder::FigureBuilder,
     layout::{

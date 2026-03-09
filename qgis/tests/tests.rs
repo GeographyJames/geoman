@@ -1,17 +1,15 @@
-use crate::domain::dtos::Id;
-
-use crate::qgis::enums::EPSGID;
-use crate::qgis::helpers::unzip_content;
-use crate::qgis::layer::{
+use crate::enums::EPSGID;
+use crate::helpers::unzip_content;
+use crate::layer::{
     DataSource, PgSource, PgTable, QgisMapLayerBuilder, WkbType, XYZDataSource,
 };
 
-use crate::qgis::layout::components::{Color, LayoutItem, Position};
-use crate::qgis::layout::{PageOrientation, PageSize, QgisLayoutBuilder, QgisLayoutMapBuilder};
+use crate::layout::components::{Color, LayoutItem, Position};
+use crate::layout::{PageOrientation, PageSize, QgisLayoutBuilder, QgisLayoutMapBuilder};
 
-use crate::qgis::project::{MapCanvas, ProjectRoot, QgisProjectBuilder};
-use crate::qgis::srs::SpatialRefSys;
-use crate::qgis::tests::test_helpers::{
+use crate::project::{MapCanvas, ProjectRoot, QgisProjectBuilder};
+use crate::srs::SpatialRefSys;
+use crate::tests::test_helpers::{
     SkipNode, generate_pg_datasource, generate_pg_map_layer, layout_skip_config,
     map_layer_skip_config, minimal_project_skip_config, xml_comparison,
 };
@@ -22,7 +20,7 @@ fn build_minimal_qgs_xml_works() {
 
     let project = QgisProjectBuilder {
         project_name: uuid::Uuid::new_v4().to_string(),
-        figure_id: Id(1),
+        figure_id: 1,
         low_res: false,
         root,
     }
@@ -49,7 +47,7 @@ fn build_minimal_qgs_with_layout_xml_works() {
 
     let project = QgisProjectBuilder {
         project_name: uuid::Uuid::new_v4().to_string(),
-        figure_id: Id(1),
+        figure_id: 1,
         low_res: false,
         root,
     }
@@ -87,7 +85,7 @@ fn layout_with_polyline() {
 
     let project = QgisProjectBuilder {
         project_name: uuid::Uuid::new_v4().to_string(),
-        figure_id: Id(1),
+        figure_id: 1,
         low_res: false,
         root,
     }
@@ -126,7 +124,7 @@ fn layout_with_text() {
 
     let project = QgisProjectBuilder {
         project_name: uuid::Uuid::new_v4().to_string(),
-        figure_id: Id(1),
+        figure_id: 1,
         low_res: false,
         root,
     }
@@ -152,7 +150,7 @@ fn build_minimal_qgs_with_primary_boundaries_xml_works() {
 
     let project = QgisProjectBuilder {
         project_name: uuid::Uuid::new_v4().to_string(),
-        figure_id: Id(1),
+        figure_id: 1,
         low_res: false,
         root,
     }
@@ -192,7 +190,7 @@ fn build_minimal_qgs_with_primary_boundaries_and_layout_xml_works() {
 
     let project = QgisProjectBuilder {
         project_name: uuid::Uuid::new_v4().to_string(),
-        figure_id: Id(1),
+        figure_id: 1,
         low_res: false,
         root,
     }
@@ -245,7 +243,7 @@ fn build_layout_with_bng_and_two_layers_works() {
     root.map_canvases.push(layout_canvas);
     let project = QgisProjectBuilder {
         project_name: uuid::Uuid::new_v4().to_string(),
-        figure_id: Id(1),
+        figure_id: 1,
         low_res: false,
         root,
     }
@@ -297,7 +295,7 @@ fn build_project_with_single_site_boundary_works() {
     root.add_layer(layer);
     let project = QgisProjectBuilder {
         project_name: uuid::Uuid::new_v4().to_string(),
-        figure_id: Id(1),
+        figure_id: 1,
         low_res: false,
         root,
     }
@@ -320,7 +318,7 @@ fn project_with_bng_and_extent_set() {
     let root = ProjectRoot::new(EPSGID::BNG, EPSGID::default_extent(&EPSGID::BNG));
     let project = QgisProjectBuilder {
         project_name: uuid::Uuid::new_v4().to_string(),
-        figure_id: Id(1),
+        figure_id: 1,
         low_res: false,
         root,
     }
@@ -356,7 +354,7 @@ fn project_with_bng_and_extent_set_with_osm_works() {
     root.add_layer(layer);
     let project = QgisProjectBuilder {
         project_name: uuid::Uuid::new_v4().to_string(),
-        figure_id: Id(1),
+        figure_id: 1,
         low_res: false,
         root,
     }
@@ -467,7 +465,7 @@ fn project_with_bng_and_extent_set_with_osm_works() {
 //         legend_text: None,
 //         include_on_legend: true,
 //         datasource: DataSource::WMS(WMSDataSource {
-//             r#type: crate::qgis::layer::WMSDataSourceType::XYZ,
+//             r#type: crate::layer::WMSDataSourceType::XYZ,
 //             url: "https://tile.openstreetmap.org/%7Bz%7D/%7Bx%7D/%7By%7D.png&zmax=19&zmin=0".into(),
 //         }),
 //         srs: Some(SpatialRefSys::web_mercator()),
@@ -477,7 +475,7 @@ fn project_with_bng_and_extent_set_with_osm_works() {
 //     let mut root = ProjectRoot::new_bng();
 //     let project = QgisProjectBuilder {
 //         project_name: uuid::Uuid::new_v4().to_string(),
-//         figure_id: Id(1),
+//         figure_id: 1,
 //         low_res: false,
 //         root,
 //     }

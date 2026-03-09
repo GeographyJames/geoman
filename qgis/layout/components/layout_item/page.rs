@@ -1,4 +1,4 @@
-use crate::qgis::{
+use crate::{
     enums::Units,
     layout::{
         Size,

@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::qgis::{
+use crate::{
     enums::{LineCapStyle, LineJoinStyle},
     layout::components::Color,
 };

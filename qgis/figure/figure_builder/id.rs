@@ -1,4 +1,4 @@
-use crate::qgis::{
+use crate::{
     enums::{HorizontalAlignment, ReferencePoint, VerticalAlignment},
     figure::figure_builder::FigureBuilder,
     layout::{
@@ -12,7 +12,7 @@ impl FigureBuilder<'_> {
         let mut figure_id = LayoutItem::text(
             format!(
                 "{:06}:{}",
-                self.fig.id.as_ref(),
+                self.fig.id,
                 self.fig.qgis_project_name(self.print_resolution).0
             ),
             8,
@@ -38,7 +38,7 @@ impl FigureBuilder<'_> {
         let mut asset_ids = String::new();
         let project_id = format!(
             "P{:05}{}",
-            self.fig.project_id.as_ref(),
+            self.fig.project_id,
             self.fig
                 .project_name
                 .chars()
@@ -51,7 +51,7 @@ impl FigureBuilder<'_> {
         if !boundry_ids.is_empty() {
             let boundary_ids: Vec<String> = boundry_ids
                 .iter()
-                .map(|id| format!("SB{:05}", id.as_ref()))
+                .map(|id| format!("SB{:05}", id))
                 .collect();
             asset_ids.push_str(&format!(" {}", boundary_ids.join(" ")));
         }
@@ -59,7 +59,7 @@ impl FigureBuilder<'_> {
         if !layout_ids.is_empty() {
             let layout_ids: Vec<String> = layout_ids
                 .iter()
-                .map(|id| format!("TL{:05}", id.as_ref()))
+                .map(|id| format!("TL{:05}", id))
                 .collect();
 
             asset_ids.push_str(&format!(" {}", layout_ids.join(" ")));

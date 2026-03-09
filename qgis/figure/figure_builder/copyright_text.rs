@@ -1,6 +1,6 @@
-use crate::qgis::{
+use crate::{
     enums::{HorizontalAlignment, ReferencePoint, VerticalAlignment},
-    figure::figure_builder::FigureBuilder,
+    figure::{figure_builder::FigureBuilder, spec::CopyrightText},
     layout::{
         Size,
         components::{Color, LayoutItem, Position, TextBuffer},
@@ -11,21 +11,21 @@ impl FigureBuilder<'_> {
     pub fn add_copyright_text(&mut self) {
         if let Some(ref copyright_text) = self.fig.properties.copyright_text {
             let text = match copyright_text {
-                crate::domain::enums::CopyrightText::Default => {
-                    if let Some(ref main_map) = self.fig.main_map_base_map {
+                CopyrightText::Default => {
+                    if let Some(ref main_map) = self.fig.basemap {
                         main_map.data_provider.copyright_text.clone()
                     } else {
                         None
                     }
                 }
-                crate::domain::enums::CopyrightText::Custom => self
+                CopyrightText::Custom => self
                     .fig
                     .properties
                     .custom_copyright_text
                     .as_ref()
                     .map(|s| s.to_owned()),
 
-                crate::domain::enums::CopyrightText::None => None,
+                CopyrightText::None => None,
             };
             if let Some(text) = text {
                 let mut copyright_text = LayoutItem::text(text, 10, None, Color::black());
@@ -57,7 +57,7 @@ impl FigureBuilder<'_> {
     }
 
     pub fn add_overview_map_copyright_text(&mut self) {
-        if let Some(ref map) = self.fig.overview_map_base_map
+        if let Some(ref map) = self.fig.overview_basemap
             && let Some(ref text) = map.data_provider.copyright_text
         {
             let mut cp_text = LayoutItem::text(text.clone(), 7, None, Color::black());

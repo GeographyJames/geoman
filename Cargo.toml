@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["app", "domain", "ogc", "geo", "utils"]
+members = ["app", "domain", "ogc", "geo", "utils", "qgis"]
 
 [workspace.dependencies]
 sqlx = { version = "0.8", features = [

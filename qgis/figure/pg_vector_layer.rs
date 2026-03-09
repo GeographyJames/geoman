@@ -1,26 +1,20 @@
 use crate::{
-    domain::{
-        dtos::{FigureLayerOutputDTO, PgTableOutputDTO},
-        enums::{FigureLayerDatasourceOutput, ProjectLayer, SupportedEpsg},
-    },
-    qgis::layer::{
-        MapLayer, PgConfig, PgDataSource, PgSource, PgTable, QgisMapLayerBuilder, WkbType,
-    },
+    figure::spec::{QgisLayerSource, QgisLayerSpec, QgisProjectLayer, SupportedEpsg},
+    layer::{MapLayer, PgConfig, PgDataSource, PgSource, PgTable, QgisMapLayerBuilder, WkbType},
 };
 
 pub fn generate_pg_vector_layer(
-    layer: &FigureLayerOutputDTO,
+    layer: &QgisLayerSpec,
     authcfg: Option<String>,
     pg_config: PgConfig,
 ) -> Option<MapLayer> {
     if let Some((source, wkb_type, epsg_id)) = match &layer.source {
-        FigureLayerDatasourceOutput::ProjectLayer(ProjectLayer::Valid(PgTableOutputDTO {
+        QgisLayerSource::ProjectLayer(QgisProjectLayer::Valid {
             table,
             schema,
             wkb_type,
             epsg_id,
-            ..
-        })) => Some((
+        }) => Some((
             PgSource::PgTable(PgTable {
                 schema: schema.to_owned(),
                 table_name: table.to_owned(),
@@ -29,12 +23,12 @@ pub fn generate_pg_vector_layer(
             (*epsg_id),
         )),
 
-        FigureLayerDatasourceOutput::SiteBoundary(ds) => {
-            match layer.properties.convert_boundary_to_singleparts {
+        QgisLayerSource::SiteBoundary { id } => {
+            match layer.convert_boundary_to_singleparts {
                 false => Some((
                     PgSource::SQL(format!(
-                        "SELECT id, name, geom FROM app.site_boundaries WHERE id = {}",
-                        ds.id
+                        "SELECT id, name, geom FROM app.project_features WHERE id = {}",
+                        id
                     )),
                     WkbType::MultiPolygon,
                     SupportedEpsg::WGS84,
@@ -44,18 +38,18 @@ pub fn generate_pg_vector_layer(
                     PgSource::SQL(format!(
                         r"SELECT row_number() over (ORDER BY path) as id, {0} as boundary_id, name, geom
   FROM (
-      SELECT sb.name, dump.path, dump.geom
-      FROM app.site_boundaries sb, ST_Dump(sb.geom) as dump
-      WHERE sb.id = {0}
+      SELECT pf.name, dump.path, dump.geom
+      FROM app.project_features pf, ST_Dump(pf.geom) as dump
+      WHERE pf.id = {0}
   ) parts",
-                        ds.id
+                        id
                     )),
                     WkbType::Polygon,
                     SupportedEpsg::WGS84,
                 )),
             }
         }
-        FigureLayerDatasourceOutput::TurbineLayout(ds) => Some((
+        QgisLayerSource::TurbineLayout { id } => Some((
             PgSource::SQL(format!(
                 "SELECT t.id,
         l.name as layout_name,
@@ -67,12 +61,12 @@ pub fn generate_pg_vector_layer(
    FROM app.turbines t
    JOIN app.turbine_layouts l ON l.id = t.layout_id
   WHERE t.layout_id = {0}",
-                ds.id
+                id
             )),
             WkbType::Point,
             SupportedEpsg::WGS84,
         )),
-        FigureLayerDatasourceOutput::ProjectLayer(ProjectLayer::Invalid(_)) => None,
+        QgisLayerSource::ProjectLayer(QgisProjectLayer::Invalid(_)) => None,
     } {
         let ds = PgDataSource {
             pg_config,
@@ -88,9 +82,9 @@ pub fn generate_pg_vector_layer(
         return Some(
             QgisMapLayerBuilder {
                 layer_name: layer.name.clone(),
-                legend_text: layer.properties.legend_text.clone(),
-                include_on_legend: layer.properties.include_on_legend,
-                datasource: crate::qgis::layer::DataSource::Postgres(ds),
+                legend_text: layer.legend_text.clone(),
+                include_on_legend: layer.include_on_legend,
+                datasource: crate::layer::DataSource::Postgres(ds),
                 srs: Some(epsg_id.into()),
             }
             .build_vector(wkb_type),

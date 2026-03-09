@@ -1,4 +1,4 @@
-use crate::qgis::{
+use crate::{
     enums::{HorizontalAlignment, VerticalAlignment},
     figure::figure_builder::{FigureBuilder, TEXT_BOX_HEIGHT},
     layout::{

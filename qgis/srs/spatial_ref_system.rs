@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::domain::enums::SupportedEpsg;
+use crate::figure::spec::SupportedEpsg;
 #[derive(Serialize, Clone)]
 #[serde(rename = "spatialrefsys")]
 pub struct SpatialRefSys {

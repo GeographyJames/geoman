@@ -1,3 +1,4 @@
+pub mod config;
 pub mod clipping_settings;
 
 pub mod data_defined_properties;

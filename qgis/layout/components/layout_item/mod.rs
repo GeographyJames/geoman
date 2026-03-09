@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::qgis::{
+use crate::{
     LayerTreeGroup, QgisUuid,
     clipping_settings::ClippingSettings,
     enums::{HorizontalAlignment, LineJoinStyle, ReferencePoint, VerticalAlignment},

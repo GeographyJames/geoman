@@ -3,7 +3,7 @@ pub use layer_option::LayerOption;
 
 use serde::Serialize;
 
-use crate::qgis::{
+use crate::{
     data_defined_properties::{DataDefinedProperties, PropertyOption},
     enums::{LineCapStyle, LineJoinStyle},
     layout::components::Color,
