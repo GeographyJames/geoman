@@ -15,26 +15,29 @@ impl Update for (DataProviderLayerUpdatePayload, DataProviderLayerId, UserId) {
     {
         let mut executor = conn.acquire().await?;
         let (payload, id, user_id) = self;
+        let slug = payload.name.as_deref().map(slug::slugify);
         let res = sqlx::query!(
             r#"
             UPDATE app.data_provider_layers
             SET name = COALESCE($1, name),
-                abbreviation = CASE WHEN $2 THEN $3 ELSE abbreviation END,
-                source = COALESCE($4, source),
-                category = COALESCE($5, category),
-                description = CASE WHEN $6 THEN $7 ELSE description END,
-                enabled = COALESCE($8, enabled),
-                style_config = COALESCE($9, style_config),
-                display_options = COALESCE($10, display_options),
-                country_code = CASE WHEN $11 THEN $12 ELSE country_code END,
-                subdivision = CASE WHEN $13 THEN $14 ELSE subdivision END,
-                sort_order = COALESCE($15, sort_order),
+                slug = COALESCE($2, slug),
+                abbreviation = CASE WHEN $3 THEN $4 ELSE abbreviation END,
+                source = COALESCE($5, source),
+                category = COALESCE($6, category),
+                description = CASE WHEN $7 THEN $8 ELSE description END,
+                enabled = COALESCE($9, enabled),
+                style_config = COALESCE($10, style_config),
+                display_options = COALESCE($11, display_options),
+                country_code = CASE WHEN $12 THEN $13 ELSE country_code END,
+                subdivision = CASE WHEN $14 THEN $15 ELSE subdivision END,
+                sort_order = COALESCE($16, sort_order),
                 last_updated = NOW(),
-                last_updated_by = $17
-            WHERE id = $16
+                last_updated_by = $18
+            WHERE id = $17
             RETURNING id
             "#,
             payload.name,
+            slug,
             payload.abbreviation.is_some(),
             payload.abbreviation.clone().flatten(),
             payload.source as _,
