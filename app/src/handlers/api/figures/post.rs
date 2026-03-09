@@ -1,12 +1,12 @@
 use actix_web::{
-    HttpResponse, post,
+    post,
     web::{self, Json},
 };
 use domain::FigureId;
 
 use crate::{
     AuthenticatedUser, config::QgisServerSettings, errors::ApiError,
-    handlers::api::figures::FigurePayload, postgres::PostgresRepo, repo::user_id,
+    handlers::api::figures::FigurePayload, postgres::PostgresRepo,
 };
 
 #[post("")]

@@ -20,6 +20,10 @@ pub struct FigureId(pub i32);
 
 #[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
 #[sqlx(transparent)]
+pub struct FigureLayerId(pub i32);
+
+#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
+#[sqlx(transparent)]
 pub struct LayoutId(pub i32);
 
 #[derive(Clone, Copy, Default, Debug, sqlx::Type, Serialize, Deserialize, PartialEq)]

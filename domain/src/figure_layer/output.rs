@@ -2,16 +2,17 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 
-use crate::domain::{
-    dtos::{BoundingBox, Id, LayerProperties, UserId},
-    enums::FigureLayerDatasourceOutput,
+use crate::{
+    FigureId, FigureLayerId, StyleId, UserId,
+    bounding_box::BoundingBox,
+    figure_layer::{LayerProperties, figure_layer_datasource::FigureLayerDatasourceOutput},
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone, FromRow)]
 pub struct FigureLayerOutputDTO {
-    pub id: Id,
-    pub style_id: Option<Id>,
-    pub figure_id: Id,
+    pub id: FigureLayerId,
+    pub style_id: Option<StyleId>,
+    pub figure_id: FigureId,
     pub name: String,
 
     pub source: FigureLayerDatasourceOutput,

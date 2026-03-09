@@ -1,4 +1,4 @@
 mod input;
-// mod output;
+mod output;
 pub use input::PgTableInputDTO;
-// pub use output::{PgTableInvalidOutputDTO, PgTableOutputDTO};
+pub use output::{PgTableInvalidOutputDTO, PgTableOutputDTO};

@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{FeatureId, LayoutId, pg_table::PgTableInputDTO};
+use crate::{
+    FeatureId, LayoutId,
+    pg_table::{PgTableInputDTO, PgTableInvalidOutputDTO, PgTableOutputDTO},
+};
 
 #[derive(Debug, Clone, Serialize)]
 pub enum FigureLayerDatasourceInput {
@@ -48,23 +51,8 @@ impl FigureLayerDatasourceInput {
     }
 }
 
-// #[derive(Debug, Clone, Serialize, Deserialize)]
-// pub enum ProjectLayer {
-//     Valid(PgTableOutputDTO),
-//     Invalid(PgTableInvalidOutputDTO),
-// }
-
-#[derive(Debug, Clone, Deserialize, Copy)]
-pub enum SupportedEpsg {
-    BNG = 27700,
-    WGS84 = 4326,
-}
-
-impl Serialize for SupportedEpsg {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_i32(*self as i32)
-    }
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ProjectLayer {
+    Valid(PgTableOutputDTO),
+    Invalid(PgTableInvalidOutputDTO),
 }
