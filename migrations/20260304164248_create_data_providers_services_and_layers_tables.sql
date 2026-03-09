@@ -22,7 +22,8 @@ CREATE TABLE app.data_providers (
     added_by integer NOT NULL REFERENCES app.users(id),
     added timestamptz NOT NULL DEFAULT now(),
     last_updated_by integer NOT NULL REFERENCES app.users(id),
-    last_updated timestamptz NOT NULL DEFAULT now()
+    last_updated timestamptz NOT NULL DEFAULT now(),
+    copyright_text TEXT
 );
 
 
@@ -49,7 +50,8 @@ CREATE INDEX idx_data_provider_services_provider ON app.data_provider_services(p
 CREATE TABLE app.data_provider_layers (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     service_id integer NOT NULL REFERENCES app.data_provider_services(id) ON DELETE CASCADE,
-    name text NOT NULL,
+    name text NOT NULL UNIQUE,
+    slug text NOT NULL UNIQUE CHECK (slug ~ '[a-z]' AND slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
     abbreviation text,         -- short label for map legend, e.g. 'SSSI', 'AONB'
     -- Flexible source config — shape varies by service type, e.g.:
     -- ImageWMS/TileWMS: {"layers": "inspire-nrw:NRW_SSSI", "styles": "", "format": "image/png"}
@@ -67,6 +69,8 @@ CREATE TABLE app.data_provider_layers (
     country_code char(2),      -- overrides provider if set
     subdivision varchar(10),   -- overrides provider if set
     sort_order integer NOT NULL DEFAULT 0,
+    figure_default_main_map_base_map BOOLEAN NOT NULL DEFAULT false,
+    figure_default_overview_map_base_map BOOLEAN NOT NULL DEFAULT false,
 
     added_by integer NOT NULL REFERENCES app.users(id),
     added timestamptz NOT NULL DEFAULT now(),
@@ -78,3 +82,11 @@ CREATE INDEX idx_data_provider_layers_service ON app.data_provider_layers(servic
 
 CREATE INDEX idx_data_provider_layers_enabled ON app.data_provider_layers(enabled) WHERE enabled = true;
 CREATE INDEX idx_data_provider_layers_category ON app.data_provider_layers(category);
+  -- Create partial unique indexes to enforce single default constraint
+  CREATE UNIQUE INDEX idx_single_default_main_map
+      ON app.data_provider_layers (figure_default_main_map_base_map)
+      WHERE figure_default_main_map_base_map = true;
+
+  CREATE UNIQUE INDEX idx_single_default_overview_map
+      ON app.data_provider_layers (figure_default_overview_map_base_map)
+      WHERE figure_default_overview_map_base_map = true;

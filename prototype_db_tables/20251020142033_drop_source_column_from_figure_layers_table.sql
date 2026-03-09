@@ -1,0 +1,1 @@
+ALTER TABLE app.figure_layers DROP COLUMN source;

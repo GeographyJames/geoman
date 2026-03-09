@@ -1,0 +1,1 @@
+ALTER TABLE app.base_maps ADD COLUMN alt_project_download_url TEXT

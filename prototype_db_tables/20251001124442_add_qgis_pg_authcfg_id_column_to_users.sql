@@ -1,0 +1,1 @@
+ALTER TABLE app.users ADD COLUMN qgis_pg_authcfg_id TEXT
