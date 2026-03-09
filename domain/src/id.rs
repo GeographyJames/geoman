@@ -12,6 +12,14 @@ pub struct ProjectId(pub i32);
 
 #[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
 #[sqlx(transparent)]
+pub struct StyleId(pub i32);
+
+#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
+#[sqlx(transparent)]
+pub struct FigureId(pub i32);
+
+#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
+#[sqlx(transparent)]
 pub struct LayoutId(pub i32);
 
 #[derive(Clone, Copy, Default, Debug, sqlx::Type, Serialize, Deserialize, PartialEq)]
@@ -72,6 +80,12 @@ impl Display for ProjectId {
 }
 
 impl Display for FeatureId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl Display for LayoutId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }

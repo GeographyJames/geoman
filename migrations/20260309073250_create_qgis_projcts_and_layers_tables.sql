@@ -43,7 +43,7 @@ CREATE TABLE app.figure_layers (
     name TEXT NOT NULL,
     layer_order INTEGER NOT NULL,
     properties JSONB NOT NULL,
-    project_feature_id INTEGER REFERENCES app.project_features(id),
+    site_boundary_id INTEGER REFERENCES app.project_features(id),
     turbine_layout_id INTEGER REFERENCES app.turbine_layouts(id),
     project_layer_source JSONB,
     added TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -51,9 +51,9 @@ CREATE TABLE app.figure_layers (
     CONSTRAINT unique_layer_order_per_figure UNIQUE (figure_id, layer_order),
     CONSTRAINT unique_layer_name_per_figure UNIQUE (figure_id, name),
     CONSTRAINT check_single_datasource CHECK (
-        (project_feature_id IS NOT NULL AND turbine_layout_id IS NULL AND project_layer_source IS NULL) OR
-        (project_feature_id IS NULL AND turbine_layout_id IS NOT NULL AND project_layer_source IS NULL) OR
-        (project_feature_id IS NULL AND turbine_layout_id IS NULL AND project_layer_source IS NOT NULL)
+        (site_boundary_id IS NOT NULL AND turbine_layout_id IS NULL AND project_layer_source IS NULL) OR
+        (site_boundary_id IS NULL AND turbine_layout_id IS NOT NULL AND project_layer_source IS NULL) OR
+        (site_boundary_id IS NULL AND turbine_layout_id IS NULL AND project_layer_source IS NOT NULL)
     )
 );
 

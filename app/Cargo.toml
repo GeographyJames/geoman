@@ -51,7 +51,7 @@ gdal = { workspace = true }
 slug = "0.1.6"
 base64 = "0.22"
 reqwest = "0.13"
-
+qgis = { path = "../qgis" }
 
 [dev-dependencies]
 reqwest = { version = "0.13", features = ["json", "query", "multipart"] }

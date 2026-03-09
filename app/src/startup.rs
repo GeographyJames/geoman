@@ -69,6 +69,7 @@ pub async fn run(
     let repo = web::Data::new(PostgresRepo::new(db_pool));
     let http_client = web::Data::new(reqwest::Client::new());
     let geoserver = web::Data::new(config.geoserver.clone());
+    let qgis = web::Data::new(config.qgis_server.clone());
     let clerk_authoriser = web::Data::new(ClerkAuthorizer::new(
         MemoryCacheJwksProvider::new(clerk.clone()),
         true,
@@ -81,6 +82,7 @@ pub async fn run(
             .app_data(clerk_authoriser.clone())
             .app_data(http_client.clone())
             .app_data(geoserver.clone())
+            .app_data(qgis.clone())
             .wrap(TracingLogger::default())
             .route(
                 &format!("{}{}", URLS.webhooks.base, URLS.webhooks.clerk),

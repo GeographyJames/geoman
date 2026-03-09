@@ -13,3 +13,14 @@ db_settings:
 geoserver:
   username: "geoman_local"
   url: "https://geoserver.geodata-manager.com/geoserver/"
+
+qgis_server:
+  url: "http://localhost:8001"
+  figure_config:
+    figure_assets_directory: "static/figure_assets"
+    logo_filename: "logo_edf_power_solutions_RGB.svg"
+    logo_height_pixels: 296
+    logo_width_pixels: 678
+    north_arrow_filename: "NorthArrow_11.svg"
+    north_arrow_height_pixels: 77
+    north_arrow_width_pixels: 61

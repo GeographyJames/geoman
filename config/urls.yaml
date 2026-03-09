@@ -17,6 +17,7 @@ api:
   data_providers: "/data-providers"
   data_provider_services: "/data-provider-services"
   data_provider_layers: "/data-provider-layers"
+  figures: "/figures"
 
 docs:
   base: "/docs"

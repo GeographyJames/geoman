@@ -128,3 +128,32 @@ impl TryFrom<String> for CollectionId {
 
     type Error = String;
 }
+
+use std::str::FromStr;
+
+#[derive(Serialize, Debug, Default, Clone, EnumString)]
+#[strum(ascii_case_insensitive)]
+#[serde(rename_all = "lowercase")]
+pub enum CopyrightText {
+    #[default]
+    Default,
+    Custom,
+    None,
+}
+
+impl<'de> Deserialize<'de> for CopyrightText {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s: String = Deserialize::deserialize(deserializer)?;
+        CopyrightText::from_str(&s).map_err(serde::de::Error::custom)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+pub enum ScalebarUnits {
+    #[default]
+    Kilometers,
+    Meters,
+}

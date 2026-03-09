@@ -78,6 +78,8 @@ pub enum ApiError {
     UnassignedUser,
     #[error("{0}")]
     Forbidden(String),
+    #[error("{0}")]
+    FigureValidation(String),
 }
 
 impl From<RepositoryError> for ApiError {
@@ -142,6 +144,7 @@ impl ResponseError for ApiError {
             ApiError::TurbineProximityViolation => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::UnassignedUser => StatusCode::UNAUTHORIZED,
             ApiError::Forbidden(_) => StatusCode::UNAUTHORIZED,
+            ApiError::FigureValidation(_) => StatusCode::UNPROCESSABLE_ENTITY,
         }
     }
 

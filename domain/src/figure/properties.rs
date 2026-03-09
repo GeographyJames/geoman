@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{domain::enums::CopyrightText, qgis::enums::ScalebarUnits};
+use crate::enums::{CopyrightText, ScalebarUnits};
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct FigureProperties {

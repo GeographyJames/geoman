@@ -22,15 +22,16 @@ use app::{
             data_provider_layers::DataProviderLayerInputPayload,
             data_provider_services::DataProviderServiceInputPayload,
             data_providers::DataProviderInputPayload, features::get::FeatureFormat,
-            project_collections::CollectionReqPayload, projects::PostProjectPayload,
-            teams::TeamInputPayload,
+            figures::FigurePayload, project_collections::CollectionReqPayload,
+            projects::PostProjectPayload, teams::TeamInputPayload,
         },
     },
     telemetry::{get_subscriber, init_subscriber},
 };
 use domain::{
     BusinessUnitId, DataProviderId, DataProviderLayerId, DataProviderServiceId, FeatureId,
-    LayoutId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName, TeamId, UserId,
+    FigureId, LayoutId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName, TeamId,
+    UserId,
     enums::{CollectionId, GeometryType},
 };
 use dotenvy::dotenv;
@@ -75,6 +76,7 @@ pub struct TestApp<T: AuthService> {
     pub data_providers_service: HttpService,
     pub data_provider_services_service: HttpService,
     pub data_provider_layers_service: HttpService,
+    pub figures_service: HttpService,
 }
 
 pub struct AppBuilder {
@@ -193,6 +195,9 @@ impl TestApp<ClerkAuthService> {
             },
             data_provider_layers_service: HttpService {
                 endpoint: format!("{}{}", URLS.api.base, URLS.api.data_provider_layers),
+            },
+            figures_service: HttpService {
+                endpoint: format!("{}{}", URLS.api.base, URLS.api.figures),
             },
         }
     }
@@ -701,5 +706,23 @@ first_name, last_name,
             serde_json::Value::String(slug) => slug,
             _ => panic!("project slug not a string"),
         }
+    }
+    pub async fn post_figure<B: Serialize>(
+        &self,
+        auth: Option<&Auth>,
+        figure: &B,
+    ) -> reqwest::Response {
+        self.figures_service
+            .post_json(&self.api_client, auth, &figure)
+            .await
+    }
+
+    pub async fn generate_figure_id(&self, auth: Option<&Auth>, project_id: ProjectId) -> FigureId {
+        let figure = FigurePayload::new(project_id);
+        self.post_figure(auth, &figure)
+            .await
+            .json()
+            .await
+            .expect("failed to deserialize json")
     }
 }

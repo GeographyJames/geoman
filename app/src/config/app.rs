@@ -1,5 +1,7 @@
 use crate::{
-    config::{GeoserverSettings, clerk::ClerkAuthSettings, db::DatabaseSettings},
+    config::{
+        GeoserverSettings, QgisServerSettings, clerk::ClerkAuthSettings, db::DatabaseSettings,
+    },
     constants::ENVIRONMENT_VARIABLE_PREFIX,
     enums::GeoManEnvironment,
     helpers::get_configuration_directory,
@@ -16,6 +18,7 @@ pub struct AppConfig {
     pub app_settings: AppSettings,
     pub db_settings: DatabaseSettings,
     pub geoserver: GeoserverSettings,
+    pub qgis_server: QgisServerSettings,
 }
 
 #[derive(Deserialize, Clone)]

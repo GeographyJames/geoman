@@ -4,6 +4,7 @@ pub mod data_provider_services;
 pub mod data_providers;
 pub mod epsg;
 pub mod features;
+pub mod figures;
 pub mod guard;
 pub mod keys;
 pub mod project_collections;

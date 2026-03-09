@@ -1,11 +1,11 @@
-use crate::domain::{
-    dtos::{Id, LayerProperties},
-    enums::FigureLayerDatasourceInput,
+use crate::{
+    StyleId,
+    figure_layer::{FigureLayerDatasourceInput, LayerProperties},
 };
 
 #[derive(Debug)]
 pub struct FigureLayerInputDTO {
-    pub style_id: Option<Id>,
+    pub style_id: Option<StyleId>,
     pub name: LayerNameInputDTO,
     pub properties: LayerProperties,
     pub source: FigureLayerDatasourceInput,

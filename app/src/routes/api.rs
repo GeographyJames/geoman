@@ -21,6 +21,7 @@ use crate::{
             duplicate::duplicate_project_feature, get::get_project_feature_download,
             patch::patch_project_feature, post::post_project_feature_shapefile,
         },
+        figures::post_figure,
         keys::{generate_api_key, get_api_keys, renew_api_key, revoke_api_key},
         project_collections::{get_collections, patch_collection, post_project_collection},
         projects::{patch_project, post_project},
@@ -65,7 +66,8 @@ pub fn api_routes(cfg: &mut web::ServiceConfig, _clerk: Clerk, run_environment: 
         .configure(tile_routes)
         .configure(data_providers_routes)
         .configure(data_provider_services_routes)
-        .configure(data_provider_layers_routes);
+        .configure(data_provider_layers_routes)
+        .configure(figure_roots);
 
     match run_environment {
         GeoManEnvironment::Development => {
@@ -184,4 +186,8 @@ pub fn data_provider_layers_routes(cfg: &mut web::ServiceConfig) {
             .service(patch_data_provider_layer)
             .service(delete_data_provider_layer),
     );
+}
+
+pub fn figure_roots(cfg: &mut web::ServiceConfig) {
+    cfg.service(scope(&URLS.api.figures).service(post_figure));
 }

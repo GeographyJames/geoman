@@ -1,6 +1,6 @@
 mod input;
-pub use input::FigureInputDTO;
+pub use input::{FigStaticConfig, FigureInputDTO};
 mod properties;
 pub use properties::FigureProperties;
-mod output;
-pub use output::{FigureOutputDTO, OVERVIEW_MAP_SCALE, QgisProjectName};
+// mod output;
+// pub use output::{FigureOutputDTO, OVERVIEW_MAP_SCALE, QgisProjectName};

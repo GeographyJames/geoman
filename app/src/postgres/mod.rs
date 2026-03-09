@@ -8,6 +8,8 @@ mod data_provider_layers;
 mod data_provider_services;
 mod data_providers;
 mod features;
+mod figure;
+mod figure_layer;
 mod gis_data_table;
 mod projcet_collections;
 mod sql_fragments;

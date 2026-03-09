@@ -32,6 +32,7 @@ pub struct Api {
     pub data_providers: String,
     pub data_provider_services: String,
     pub data_provider_layers: String,
+    pub figures: String,
 }
 
 #[derive(Deserialize)]

@@ -32,3 +32,6 @@ pub use data_provider::{DataProvider, DataProviderLayer, DataProviderService};
 pub mod name;
 pub mod turbine_layout;
 pub use turbine_layout::{Turbine, TurbineLayout};
+pub mod figure;
+pub mod figure_layer;
+pub mod pg_table;

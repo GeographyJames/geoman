@@ -7,6 +7,7 @@ mod data_provider_services;
 mod data_providers;
 mod epsg_code;
 mod features;
+mod figures;
 mod project;
 mod teams;
 mod turbine_layouts;

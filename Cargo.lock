@@ -395,6 +395,7 @@ dependencies = [
  "log",
  "ogc",
  "ogcapi-types",
+ "qgis",
  "rand 0.10.0",
  "reqwest 0.13.1",
  "rstest",
