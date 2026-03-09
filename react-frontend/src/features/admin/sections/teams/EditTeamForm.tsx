@@ -61,27 +61,21 @@ const EditTeamInner = ({ team, onClose }: { team: Team | null; onClose: () => vo
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="form-control">
-        <label className="label" htmlFor="edit-team-name">
-          <span className="label-text">Team name</span>
-        </label>
+      <fieldset className="fieldset w-full">
+        <legend className="fieldset-legend">Team name</legend>
         <input
-          id="edit-team-name"
           type="text"
           className={`input input-bordered w-full ${errors.name ? "input-error" : ""}`}
           {...register("name", { required: "Team name is required" })}
         />
         {errors.name && (
-          <span className="label-text-alt text-error mt-1">{errors.name.message}</span>
+          <p className="label text-error">{errors.name.message}</p>
         )}
-      </div>
+      </fieldset>
 
-      <div className="form-control">
-        <label className="label" htmlFor="edit-team-bu">
-          <span className="label-text">Business unit</span>
-        </label>
+      <fieldset className="fieldset w-full">
+        <legend className="fieldset-legend">Business unit</legend>
         <select
-          id="edit-team-bu"
           className="select select-bordered w-full"
           {...register("businessUnitId")}
         >
@@ -92,7 +86,7 @@ const EditTeamInner = ({ team, onClose }: { team: Team | null; onClose: () => vo
             </option>
           ))}
         </select>
-      </div>
+      </fieldset>
 
       <div className="modal-action">
         <CancelButton onClick={handleCancel} disabled={isPending} />

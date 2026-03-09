@@ -22,7 +22,7 @@ export const Select = ({
   defaultValue,
 }: SelectProps) => {
   return (
-    <fieldset className="fieldset">
+    <fieldset className="fieldset w-full">
       <legend className="fieldset-legend">{label}</legend>
 
       <select

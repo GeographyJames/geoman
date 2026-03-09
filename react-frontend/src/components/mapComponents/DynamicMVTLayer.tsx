@@ -7,6 +7,11 @@ interface MvtSource {
   url: string;
 }
 
+interface DisplayOptions {
+  minZoom?: number;
+  maxZoom?: number;
+}
+
 export default function DynamicMVTLayer({
   layer,
   visible,
@@ -16,6 +21,7 @@ export default function DynamicMVTLayer({
 }) {
   const url = (layer.source as MvtSource).url;
   const style = useMemo(() => buildLayerStyle(layer.style_config), [layer.style_config]);
-  useVectorTileLayer(url, style, visible);
+  const { minZoom, maxZoom } = (layer.display_options as DisplayOptions | null) ?? {};
+  useVectorTileLayer(url, style, visible, { minZoom, maxZoom });
   return null;
 }

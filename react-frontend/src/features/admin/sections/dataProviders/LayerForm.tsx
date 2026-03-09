@@ -1,13 +1,8 @@
-import { useState } from "react";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import type {
   DataProviderServiceType,
   LayerCategory,
 } from "@/domain/data_provider/types";
-import {
-  useArcGISServiceInfo,
-  useArcGISFeatureServerLayers,
-} from "@/hooks/useArcGISServiceInfo";
 import { ArcGISPicker } from "./ArcGISRest/ArcGISPicker";
 
 export interface LayerFormData {
@@ -20,8 +15,9 @@ export interface LayerFormData {
   source: string; // other source types — raw JSON
   category: LayerCategory;
   description: string;
-  style_config: string;
-  display_options: string;
+  style_color: string;
+  min_zoom: string;
+  max_zoom: string;
   country_code: string;
   subdivision: string;
   sort_order: string;
@@ -38,8 +34,9 @@ export const LAYER_FORM_DEFAULTS: LayerFormData = {
   source: "{}",
   category: "overlay",
   description: "",
-  style_config: "",
-  display_options: "",
+  style_color: "#3388ff",
+  min_zoom: "",
+  max_zoom: "",
   country_code: "",
   subdivision: "",
   sort_order: "",
@@ -53,12 +50,63 @@ export function jsonFieldValue(v: unknown): string {
   return JSON.stringify(v, null, 2);
 }
 
+type StyleFields = Pick<LayerFormData, "style_color">;
+
+/** Builds the style_config JSONB value from the colour picker fields, or undefined if style is disabled. */
+export function buildStyleConfig(data: StyleFields): object | undefined {
+  return {
+    fillColor: data.style_color,
+    fillOpacity: 0.2,
+    strokeColor: data.style_color,
+    strokeWidth: 2,
+  };
+}
+
+/** Parses a stored style_config JSONB value back into colour picker form fields. */
+export function parseStyleConfig(styleConfig: unknown): StyleFields {
+  const defaults: StyleFields = {
+    style_color: "#3388ff",
+  };
+  if (!styleConfig || typeof styleConfig !== "object") return defaults;
+  const cfg = styleConfig as Record<string, unknown>;
+  const color = typeof cfg.fillColor === "string" ? cfg.fillColor : null;
+  if (!color) return defaults;
+  return { style_color: color };
+}
+
+type ZoomFields = Pick<LayerFormData, "min_zoom" | "max_zoom">;
+
+/** Builds the display_options JSONB value from zoom fields, or undefined if neither is set. */
+export function buildDisplayOptions(data: ZoomFields): object | undefined {
+  const minZoom = data.min_zoom ? Number(data.min_zoom) : undefined;
+  const maxZoom = data.max_zoom ? Number(data.max_zoom) : undefined;
+  if (minZoom === undefined && maxZoom === undefined) return undefined;
+  return {
+    ...(minZoom !== undefined && { minZoom }),
+    ...(maxZoom !== undefined && { maxZoom }),
+  };
+}
+
+/** Parses a stored display_options JSONB value back into zoom form fields. */
+export function parseDisplayOptions(displayOptions: unknown): ZoomFields {
+  const defaults: ZoomFields = { min_zoom: "", max_zoom: "" };
+  if (!displayOptions || typeof displayOptions !== "object") return defaults;
+  const cfg = displayOptions as Record<string, unknown>;
+  return {
+    min_zoom: typeof cfg.minZoom === "number" ? String(cfg.minZoom) : "",
+    max_zoom: typeof cfg.maxZoom === "number" ? String(cfg.maxZoom) : "",
+  };
+}
+
+const ZOOM_OPTIONS = Array.from({ length: 20 }, (_, i) => i + 1);
+
 interface LayerFormProps {
   register: UseFormRegister<LayerFormData>;
   errors: FieldErrors<LayerFormData>;
   serviceType: DataProviderServiceType | "";
   serviceBaseUrl?: string | null;
   sourceComplete: boolean;
+
   mode: "create" | "edit";
 }
 
@@ -67,7 +115,6 @@ export const LayerForm = ({
   errors,
   serviceType,
   serviceBaseUrl,
-  sourceComplete,
   mode,
 }: LayerFormProps) => {
   const isMVT = serviceType === "MVT";
@@ -76,7 +123,7 @@ export const LayerForm = ({
 
   return (
     <>
-      {isArcGIS && (
+      {isArcGIS && mode === "create" && (
         <ArcGISPicker
           baseUrl={serviceBaseUrl ?? null}
           register={register}
@@ -84,7 +131,7 @@ export const LayerForm = ({
         />
       )}
 
-      {isMVT && (
+      {isMVT && mode === "create" && (
         <fieldset className="fieldset">
           <legend className="fieldset-legend">Tile URL</legend>
           <input
@@ -113,120 +160,117 @@ export const LayerForm = ({
         </fieldset>
       )}
 
-      {sourceComplete && (
-        <>
-          <div className="grid grid-cols-2 gap-3">
-            <fieldset className="fieldset">
-              <legend className="fieldset-legend">Layer name</legend>
-              <input
-                type="text"
-                placeholder={
-                  mode === "create" ? "e.g. SSSI England" : undefined
-                }
-                className={`input w-full ${errors.name ? "input-error" : ""}`}
-                {...register("name", { required: "Name is required" })}
-              />
-              {errors.name && (
-                <p className="label text-error">{errors.name.message}</p>
-              )}
-            </fieldset>
-
-            <fieldset className="fieldset">
-              <legend className="fieldset-legend">Abbreviation</legend>
-              <input
-                type="text"
-                placeholder={mode === "create" ? "e.g. SSSI" : undefined}
-                className="input w-full"
-                {...register("abbreviation")}
-              />
-              <p className="label">{optionalLabel}</p>
-            </fieldset>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <fieldset className="fieldset">
-              <legend className="fieldset-legend">Category</legend>
-              <select className="select w-full" {...register("category")}>
-                <option value="overlay">Overlay</option>
-                <option value="basemap">Base map</option>
-              </select>
-            </fieldset>
-
-            <fieldset className="fieldset">
-              <legend className="fieldset-legend">Sort order</legend>
-              <input
-                type="number"
-                className="input w-full"
-                {...register("sort_order")}
-              />
-              <p className="label">{optionalLabel}</p>
-            </fieldset>
-          </div>
-
+      <>
+        <div className="grid grid-cols-2 gap-3">
           <fieldset className="fieldset">
-            <legend className="fieldset-legend">Description</legend>
+            <legend className="fieldset-legend">Layer name</legend>
             <input
               type="text"
+              placeholder={mode === "create" ? "e.g. SSSI England" : undefined}
+              className={`input w-full ${errors.name ? "input-error" : ""}`}
+              {...register("name", { required: "Name is required" })}
+            />
+            {errors.name && (
+              <p className="label text-error">{errors.name.message}</p>
+            )}
+          </fieldset>
+
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">Abbreviation</legend>
+            <input
+              type="text"
+              placeholder={mode === "create" ? "e.g. SSSI" : undefined}
               className="input w-full"
-              {...register("description")}
+              {...register("abbreviation")}
             />
             <p className="label">{optionalLabel}</p>
           </fieldset>
+        </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <fieldset className="fieldset">
-              <legend className="fieldset-legend">Country code</legend>
-              <input
-                type="text"
-                placeholder="e.g. GB"
-                className="input w-full"
-                {...register("country_code")}
-              />
-              <p className="label">optional (overides data provider)</p>
-            </fieldset>
-            <fieldset className="fieldset">
-              <legend className="fieldset-legend">Subdivision</legend>
-              <input
-                type="text"
-                placeholder="e.g. GB-ENG"
-                className="input w-full"
-                {...register("subdivision")}
-              />
-              <p className="label">optional (overides data provider)</p>
-            </fieldset>
-          </div>
-
+        <div className="grid grid-cols-2 gap-3">
           <fieldset className="fieldset">
-            <legend className="fieldset-legend">Style config (JSON)</legend>
-            <textarea
-              rows={2}
-              className={`textarea w-full font-mono text-xs ${errors.style_config ? "textarea-error" : ""}`}
-              {...register("style_config")}
-            />
-            {errors.style_config ? (
-              <p className="label text-error">{errors.style_config.message}</p>
-            ) : (
-              <p className="label">{optionalLabel}</p>
-            )}
+            <legend className="fieldset-legend">Category</legend>
+            <select className="select w-full" {...register("category")}>
+              <option value="overlay">Overlay</option>
+              <option value="basemap">Base map</option>
+            </select>
           </fieldset>
 
           <fieldset className="fieldset">
-            <legend className="fieldset-legend">Display options (JSON)</legend>
-            <textarea
-              rows={2}
-              className={`textarea w-full font-mono text-xs ${errors.display_options ? "textarea-error" : ""}`}
-              {...register("display_options")}
+            <legend className="fieldset-legend">Sort order</legend>
+            <input
+              type="number"
+              className="input w-full"
+              {...register("sort_order")}
             />
-            {errors.display_options ? (
-              <p className="label text-error">
-                {errors.display_options.message}
-              </p>
-            ) : (
-              <p className="label">{optionalLabel}</p>
-            )}
+            <p className="label">{optionalLabel}</p>
           </fieldset>
-        </>
-      )}
+        </div>
+
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Description</legend>
+          <textarea className="textarea w-full" {...register("description")} />
+          <p className="label">{optionalLabel}</p>
+        </fieldset>
+
+        <div className="grid grid-cols-2 gap-3">
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">Country code</legend>
+            <input
+              type="text"
+              placeholder="e.g. GB"
+              className="input w-full"
+              {...register("country_code")}
+            />
+            <p className="label">optional (overides data provider)</p>
+          </fieldset>
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">Subdivision</legend>
+            <input
+              type="text"
+              placeholder="e.g. GB-ENG"
+              className="input w-full"
+              {...register("subdivision")}
+            />
+            <p className="label">optional (overides data provider)</p>
+          </fieldset>
+        </div>
+
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Style</legend>
+
+          <input
+            type="color"
+            className="mt-2 input w-full h-10 cursor-pointer p-1"
+            {...register("style_color")}
+          />
+        </fieldset>
+
+        <div className="grid grid-cols-2 gap-3">
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">Min zoom</legend>
+            <select className="select w-full" {...register("min_zoom")}>
+              <option value="">— (any)</option>
+              {ZOOM_OPTIONS.map((z) => (
+                <option key={z} value={z}>
+                  z{z}
+                </option>
+              ))}
+            </select>
+          </fieldset>
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">Max zoom</legend>
+            <select className="select w-full" {...register("max_zoom")}>
+              <option value="">— (any)</option>
+              {ZOOM_OPTIONS.map((z) => (
+                <option key={z} value={z}>
+                  z{z}
+                </option>
+              ))}
+            </select>
+          </fieldset>
+        </div>
+      </>
     </>
   );
 };

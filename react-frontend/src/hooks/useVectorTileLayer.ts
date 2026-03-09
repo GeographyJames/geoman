@@ -6,7 +6,12 @@ import MVT from "ol/format/MVT";
 import type { StyleLike } from "ol/style/Style";
 
 /** Adds an MVT vector tile layer to the shared map. Adds on mount, removes on unmount. Visibility is toggled via setVisible. */
-export function useVectorTileLayer(url: string, style?: StyleLike, visible = true) {
+export function useVectorTileLayer(
+  url: string,
+  style?: StyleLike,
+  visible = true,
+  { minZoom, maxZoom }: { minZoom?: number; maxZoom?: number } = {},
+) {
   const { mapRef } = useMapContext();
   const layerRef = useRef<VectorTileLayer | null>(null);
 
@@ -20,6 +25,8 @@ export function useVectorTileLayer(url: string, style?: StyleLike, visible = tru
         url,
       }),
       style,
+      minZoom,
+      maxZoom,
       visible,
     });
 

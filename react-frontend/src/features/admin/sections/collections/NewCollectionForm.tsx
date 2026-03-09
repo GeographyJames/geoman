@@ -33,7 +33,7 @@ export const NewCollectionInner = ({
     register,
     handleSubmit,
     reset,
-    formState: { isValid },
+    formState: { isValid, errors },
   } = useForm<NewCollectionFormData>({
     defaultValues: {
       title: "",

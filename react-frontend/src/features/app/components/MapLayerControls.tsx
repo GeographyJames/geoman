@@ -2,7 +2,7 @@ import { useState } from "react";
 import DynamicMVTLayer from "@/components/mapComponents/DynamicMVTLayer";
 import DynamicArcGISLayer from "@/components/mapComponents/DynamicArcGISLayer";
 import SSSILayer from "@/components/mapComponents/SSSILayer";
-import ScottishSSSILayer from "@/components/mapComponents/ScottishSSSILayer";
+
 import { useMapZoom } from "@/hooks/useMapZoom";
 import { useDataProviderLayers } from "@/hooks/api/useDataProviderLayers";
 import { useDataProviderServices } from "@/hooks/api/useDataProviderServices";
@@ -64,14 +64,19 @@ function LayersIcon() {
 export function MapLayerControls() {
   const [panelOpen, setPanelOpen] = useState(() => window.innerWidth >= 768);
   const [showSSSI, setShowSSSI] = useState(false);
-  const [showScottishSSSI, setShowScottishSSSI] = useState(false);
-  const [scottishSSSILoading, setScottishSSSILoading] = useState(false);
-  const [scottishSSSICount, setScottishSSSICount] = useState(0);
+
   const [hoveredName, setHoveredName] = useState<string | null>(null);
   const [hoverPixel, setHoverPixel] = useState<[number, number] | null>(null);
   const [dynamicVisibility, setDynamicVisibility] = useState<
     Record<number, boolean>
   >({});
+  const [loadingLayers, setLoadingLayers] = useState<Record<number, boolean>>(
+    {},
+  );
+
+  const handleLoadingChange = (layerId: number, loading: boolean) => {
+    setLoadingLayers((prev) => ({ ...prev, [layerId]: loading }));
+  };
 
   const { data: allLayers = [] } = useDataProviderLayers();
   const { data: services = [] } = useDataProviderServices();
@@ -82,14 +87,18 @@ export function MapLayerControls() {
     services.filter((s) => s.service_type === "MVT").map((s) => s.id),
   );
   const mvtOverlays = allLayers.filter(
-    (l) => l.enabled && l.category === "overlay" && mvtServiceIds.has(l.service_id),
+    (l) =>
+      l.enabled && l.category === "overlay" && mvtServiceIds.has(l.service_id),
   );
 
   const arcgisServiceIds = new Set(
     services.filter((s) => s.service_type === "ArcGISRest").map((s) => s.id),
   );
   const arcgisOverlays = allLayers.filter(
-    (l) => l.enabled && l.category === "overlay" && arcgisServiceIds.has(l.service_id),
+    (l) =>
+      l.enabled &&
+      l.category === "overlay" &&
+      arcgisServiceIds.has(l.service_id),
   );
 
   const handleFeatureHover = (
@@ -120,16 +129,12 @@ export function MapLayerControls() {
             layer={layer}
             baseUrl={svc.base_url}
             visible={dynamicVisibility[layer.id] ?? false}
+            onLoadingChange={(loading) => handleLoadingChange(layer.id, loading)}
           />
         );
       })}
       <SSSILayer visible={showSSSI} />
-      <ScottishSSSILayer
-        visible={showScottishSSSI}
-        onLoadingChange={setScottishSSSILoading}
-        onFeatureCountChange={setScottishSSSICount}
-        onFeatureHover={handleFeatureHover}
-      />
+
       {hoveredName && hoverPixel && (
         <div
           className="absolute pointer-events-none bg-base-100 text-sm px-2 py-1 rounded shadow-md border border-base-300 z-10 max-w-xs"
@@ -183,68 +188,47 @@ export function MapLayerControls() {
               SSSI (Wales)
             </label>
 
-            <label
-              className={`flex items-center gap-2 cursor-pointer text-sm transition-opacity ${scottishSSSIVisible ? "opacity-100" : "opacity-40"}`}
-            >
-              <input
-                type="checkbox"
-                className="checkbox checkbox-sm"
-                checked={showScottishSSSI}
-                onChange={(e) => setShowScottishSSSI(e.target.checked)}
-              />
-              <svg width="20" height="14" className="shrink-0">
-                <rect
-                  x="1"
-                  y="1"
-                  width="18"
-                  height="12"
-                  rx="2"
-                  fill="rgba(220, 38, 38, 0.15)"
-                  stroke="#DC2626"
-                  strokeWidth="1.5"
-                />
-              </svg>
-              <span className="flex items-center gap-1">
-                Scottish SSSI
-                {!scottishSSSIVisible && (
-                  <span className="badge badge-xs text-base-content/50 font-mono">
-                    z{SCOTTISH_SSSI_MIN_ZOOM}+
-                  </span>
-                )}
-              </span>
-              {scottishSSSILoading ? (
-                <span className="loading loading-spinner loading-xs ml-auto" />
-              ) : (
-                showScottishSSSI &&
-                scottishSSSIVisible &&
-                scottishSSSICount > 0 && (
-                  <span className="text-xs text-base-content/50 ml-auto">
-                    {scottishSSSICount.toLocaleString()}
-                  </span>
-                )
-              )}
-            </label>
-
-            {[...mvtOverlays, ...arcgisOverlays].map((layer) => (
-              <label
-                key={layer.id}
-                className="flex items-center gap-2 cursor-pointer text-sm"
-              >
-                <input
-                  type="checkbox"
-                  className="checkbox checkbox-sm"
-                  checked={dynamicVisibility[layer.id] ?? false}
-                  onChange={(e) =>
-                    setDynamicVisibility((prev) => ({
-                      ...prev,
-                      [layer.id]: e.target.checked,
-                    }))
-                  }
-                />
-                <LayerSwatch styleConfig={layer.style_config} />
-                {layer.name}
-              </label>
-            ))}
+            {[...mvtOverlays, ...arcgisOverlays].map((layer) => {
+              const { minZoom: lMin, maxZoom: lMax } =
+                (layer.display_options as {
+                  minZoom?: number;
+                  maxZoom?: number;
+                } | null) ?? {};
+              const outOfZoom =
+                (lMin !== undefined && (zoom ?? 0) < lMin) ||
+                (lMax !== undefined && (zoom ?? 0) > lMax);
+              const isVisible = dynamicVisibility[layer.id] ?? false;
+              const isLoading = isVisible && !!loadingLayers[layer.id];
+              return (
+                <label
+                  key={layer.id}
+                  className={`flex items-center gap-2 cursor-pointer text-sm${outOfZoom ? " opacity-50" : ""}`}
+                >
+                  <input
+                    type="checkbox"
+                    className="checkbox checkbox-sm"
+                    checked={isVisible}
+                    onChange={(e) =>
+                      setDynamicVisibility((prev) => ({
+                        ...prev,
+                        [layer.id]: e.target.checked,
+                      }))
+                    }
+                  />
+                  {isLoading ? (
+                    <span className="loading loading-spinner loading-xs shrink-0" />
+                  ) : (
+                    <LayerSwatch styleConfig={layer.style_config} />
+                  )}
+                  <span className="flex-1">{layer.name}</span>
+                  {lMin !== undefined && (
+                    <span className="badge badge-xs text-base-content/50">
+                      z{lMin}+
+                    </span>
+                  )}
+                </label>
+              );
+            })}
           </div>
         ) : (
           <button

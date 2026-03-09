@@ -92,9 +92,15 @@ function RegionBadge({
 function StyleSwatch({ styleConfig }: { styleConfig: unknown }) {
   if (!styleConfig || typeof styleConfig !== "object")
     return <span className="text-base-content/30">—</span>;
-  const cfg = styleConfig as Record<string, string>;
+  const cfg = styleConfig as { fillColor?: string; fillOpacity?: number; strokeColor?: string };
   if (!cfg.fillColor && !cfg.strokeColor)
     return <span className="text-base-content/30">—</span>;
+  const fillColor = cfg.fillColor ?? "#3388ff";
+  const fillOpacity = cfg.fillOpacity ?? 0.2;
+  const strokeColor = cfg.strokeColor ?? fillColor;
+  const r = parseInt(fillColor.slice(1, 3), 16);
+  const g = parseInt(fillColor.slice(3, 5), 16);
+  const b = parseInt(fillColor.slice(5, 7), 16);
   return (
     <svg width="24" height="16" className="shrink-0">
       <rect
@@ -103,8 +109,8 @@ function StyleSwatch({ styleConfig }: { styleConfig: unknown }) {
         width="22"
         height="14"
         rx="2"
-        fill={cfg.fillColor ?? "transparent"}
-        stroke={cfg.strokeColor ?? "currentColor"}
+        fill={`rgba(${r}, ${g}, ${b}, ${fillOpacity})`}
+        stroke={strokeColor}
         strokeWidth="1.5"
       />
     </svg>

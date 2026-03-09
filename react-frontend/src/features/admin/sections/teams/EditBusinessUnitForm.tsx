@@ -56,21 +56,18 @@ const EditBusinessUnitInner = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="form-control">
-        <label className="label" htmlFor="edit-bu-name">
-          <span className="label-text">Business unit name</span>
-        </label>
+      <fieldset className="fieldset w-full">
+        <legend className="fieldset-legend">Business unit name</legend>
         <input
-          id="edit-bu-name"
           type="text"
           className={`input input-bordered w-full ${errors.name ? "input-error" : ""}`}
           autoFocus
           {...register("name", { required: "Business unit name is required" })}
         />
         {errors.name && (
-          <span className="label-text-alt text-error mt-1">{errors.name.message}</span>
+          <p className="label text-error">{errors.name.message}</p>
         )}
-      </div>
+      </fieldset>
 
       <div className="modal-action">
         <CancelButton onClick={handleCancel} disabled={isPending} />

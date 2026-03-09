@@ -6,7 +6,13 @@ import { usePostDataProviderLayer } from "@/hooks/api/usePostDataProviderLayer";
 import { useDataProviderServices } from "@/hooks/api/useDataProviderServices";
 import { useDataProviders } from "@/hooks/api/useDataProviders";
 import { ApiError } from "@/lib/api";
-import { LayerForm, LAYER_FORM_DEFAULTS, type LayerFormData } from "./LayerForm";
+import {
+  LayerForm,
+  LAYER_FORM_DEFAULTS,
+  buildStyleConfig,
+  buildDisplayOptions,
+  type LayerFormData,
+} from "./LayerForm";
 
 const MODAL_ID = "create_data_provider_layer";
 
@@ -31,7 +37,9 @@ const CreateLayerInner = () => {
     : [];
 
   const selectedServiceId = watch("service_id");
-  const selectedService = filteredServices.find((s) => String(s.id) === selectedServiceId);
+  const selectedService = filteredServices.find(
+    (s) => String(s.id) === selectedServiceId,
+  );
   const serviceType = selectedService?.service_type ?? "";
 
   const arcgisServiceName = watch("arcgis_service_name");
@@ -39,16 +47,21 @@ const CreateLayerInner = () => {
   const mvtUrl = watch("mvt_url");
 
   const sourceComplete =
-    serviceType === "ArcGISRest" ? !!(arcgisServiceName && arcgisLayerId) :
-    serviceType === "MVT" ? !!mvtUrl :
-    !!selectedServiceId;
+    serviceType === "ArcGISRest"
+      ? !!(arcgisServiceName && arcgisLayerId)
+      : serviceType === "MVT"
+        ? !!mvtUrl
+        : !!selectedServiceId;
 
   const onSubmit = (data: LayerFormData) => {
     let source: unknown;
     if (serviceType === "MVT") {
       source = { url: data.mvt_url };
     } else if (serviceType === "ArcGISRest") {
-      source = { service_name: data.arcgis_service_name, layer_id: Number(data.arcgis_layer_id) };
+      source = {
+        service_name: data.arcgis_service_name,
+        layer_id: Number(data.arcgis_layer_id),
+      };
     } else {
       try {
         source = JSON.parse(data.source);
@@ -58,25 +71,9 @@ const CreateLayerInner = () => {
       }
     }
 
-    let style_config: unknown = undefined;
-    if (data.style_config.trim()) {
-      try {
-        style_config = JSON.parse(data.style_config);
-      } catch {
-        setError("style_config", { message: "Must be valid JSON" });
-        return;
-      }
-    }
+    const style_config = buildStyleConfig(data);
 
-    let display_options: unknown = undefined;
-    if (data.display_options.trim()) {
-      try {
-        display_options = JSON.parse(data.display_options);
-      } catch {
-        setError("display_options", { message: "Must be valid JSON" });
-        return;
-      }
-    }
+    const display_options = buildDisplayOptions(data);
 
     postLayer(
       {
@@ -93,9 +90,16 @@ const CreateLayerInner = () => {
         sort_order: data.sort_order ? Number(data.sort_order) : undefined,
       },
       {
-        onSuccess: () => { reset(); setSelectedProviderId(""); closeDialog(); },
+        onSuccess: () => {
+          reset();
+          setSelectedProviderId("");
+          closeDialog();
+        },
         onError: (error) => {
-          const message = error instanceof ApiError && error.status === 500 ? "internal server error" : error.message;
+          const message =
+            error instanceof ApiError && error.status === 500
+              ? "internal server error"
+              : error.message;
           addError(`Unable to create layer: ${message}`);
         },
       },
@@ -114,9 +118,13 @@ const CreateLayerInner = () => {
             reset((prev) => ({ ...prev, service_id: "" }));
           }}
         >
-          <option value="" disabled>Select a provider…</option>
+          <option value="" disabled>
+            Select a provider…
+          </option>
           {providers.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
           ))}
         </select>
       </fieldset>
@@ -128,12 +136,18 @@ const CreateLayerInner = () => {
             className={`select w-full ${errors.service_id ? "select-error" : ""}`}
             {...register("service_id", { required: "Service is required" })}
           >
-            <option value="" disabled>Select a service…</option>
+            <option value="" disabled>
+              Select a service…
+            </option>
             {filteredServices.map((s) => (
-              <option key={s.id} value={s.id}>{s.name} ({s.service_type})</option>
+              <option key={s.id} value={s.id}>
+                {s.name} ({s.service_type})
+              </option>
             ))}
           </select>
-          {errors.service_id && <p className="label text-error">{errors.service_id.message}</p>}
+          {errors.service_id && (
+            <p className="label text-error">{errors.service_id.message}</p>
+          )}
         </fieldset>
       )}
 
@@ -149,9 +163,20 @@ const CreateLayerInner = () => {
       )}
 
       <div className="modal-action">
-        <CancelButton onClick={() => { reset(); setSelectedProviderId(""); closeDialog(); }} disabled={isPending} />
+        <CancelButton
+          onClick={() => {
+            reset();
+            setSelectedProviderId("");
+            closeDialog();
+          }}
+          disabled={isPending}
+        />
         {sourceComplete && (
-          <SubmitButton text="Create layer" loadingText="Creating..." loading={isPending} />
+          <SubmitButton
+            text="Create layer"
+            loadingText="Creating..."
+            loading={isPending}
+          />
         )}
       </div>
     </form>
