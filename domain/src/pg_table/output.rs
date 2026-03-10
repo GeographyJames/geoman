@@ -70,3 +70,13 @@ pub enum Geometry {
     Line,
     Point,
 }
+
+impl From<&WkbType> for Geometry {
+    fn from(wkb: &WkbType) -> Self {
+        match wkb {
+            WkbType::MultiPolygon | WkbType::Polygon => Geometry::Polygon,
+            WkbType::MultiLineString | WkbType::LineString => Geometry::Line,
+            WkbType::Point | WkbType::MultiPoint => Geometry::Point,
+        }
+    }
+}

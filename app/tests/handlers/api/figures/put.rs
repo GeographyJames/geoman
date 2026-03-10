@@ -1,39 +1,16 @@
-use geoman::domain::dtos::FigureOutputDTO;
+use app::handlers::api::figures::FigurePayload;
 
-use crate::{app::TestApp, helpers::assert_ok};
+use crate::common::{TestApp, helpers::assert_status};
 
 #[tokio::test]
-async fn put_figure_works() {
-    let app = TestApp::spawn_and_login().await;
-    let project_id = app.generate_project_id().await;
-    let figure_id = app.generate_figure_id(project_id).await;
-    let mut figure: FigureOutputDTO = app
-        .figures_service
-        .get_by_id(&app.api_client, &figure_id)
-        .await
-        .json()
-        .await
-        .expect("failed to deserialize json");
-    // let mut updated_figure_payload = FigurePayload::from(figure);
-    let new_title = uuid::Uuid::new_v4().to_string();
-    figure.properties.title = Some(new_title.clone());
+async fn patch_figure_works() {
+    let (app, auth, project_id) = TestApp::with_project().await;
+    let figure_id = app.generate_figure_id(Some(&auth), project_id).await;
+    let mut payload = FigurePayload::new(project_id);
+    payload.scale = Some(25000);
     let response = app
         .figures_service
-        .put_json(&app.api_client, &figure_id, &figure.clone())
+        .patch_json(&app.api_client, figure_id.0, Some(&auth), &payload)
         .await;
-    assert_ok(&response);
-    let updated_figure: FigureOutputDTO = app
-        .figures_service
-        .get_by_id(&app.api_client, figure_id)
-        .await
-        .json()
-        .await
-        .expect("failedo to deserialize json");
-    assert_eq!(
-        updated_figure
-            .properties
-            .title
-            .expect("updated figure has no title"),
-        new_title
-    );
+    assert_status(&response, 204);
 }

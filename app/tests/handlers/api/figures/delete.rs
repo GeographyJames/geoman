@@ -1,31 +1,28 @@
-use geoman::domain::dtos::FigureOutputDTO;
+use app::URLS;
 
-use crate::{app::TestApp, helpers::assert_ok};
+use crate::common::{TestApp, helpers::{assert_ok, assert_status, auth_request}};
 
 #[tokio::test]
 async fn delete_figure_works() {
-    let app = TestApp::spawn_and_login().await;
-    let project_id = app.generate_project_id().await;
-    let figure_id = app.generate_figure_id(project_id).await;
-    let figures: Vec<FigureOutputDTO> = app
-        .figures_service
-        .get_all_for_project(&app.api_client, project_id)
-        .await
-        .json()
-        .await
-        .expect("failed to deserialize json");
-    assert_eq!(figures.len(), 1);
+    let (app, auth, project_id) = TestApp::with_project().await;
+    let figure_id = app.generate_figure_id(Some(&auth), project_id).await;
+
     let response = app
         .figures_service
-        .delete(&app.api_client, &figure_id)
+        .delete(&app.api_client, figure_id.0, Some(&auth))
         .await;
-    assert_ok(&response);
-    let figures: Vec<FigureOutputDTO> = app
-        .figures_service
-        .get_all_for_project(&app.api_client, project_id)
-        .await
-        .json()
-        .await
-        .expect("failed to deserialzie json");
-    assert!(figures.is_empty())
+    assert_status(&response, 204);
+
+    let list_response = auth_request(
+        app.api_client
+            .get(&format!("{}{}", URLS.api.base, URLS.api.figures))
+            .query(&[("project_id", project_id.0)]),
+        Some(&auth),
+    )
+    .send()
+    .await
+    .expect("failed to execute request");
+    assert_ok(&list_response);
+    let figures: Vec<serde_json::Value> = list_response.json().await.expect("failed to deserialize");
+    assert!(figures.is_empty());
 }

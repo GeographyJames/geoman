@@ -1,21 +1,14 @@
-use actix_web::{HttpResponse, web};
+use actix_web::{HttpResponse, delete, web};
+use domain::FigureId;
 
-use crate::{
-    app::handlers::api::ApiError,
-    domain::{dtos::Id, entities::Figure},
-    postgres::PostgresRepo,
-};
+use crate::{errors::ApiError, postgres::PostgresRepo};
 
+#[delete("/{id}")]
 #[tracing::instrument(skip(repo))]
 pub async fn delete_figure(
     repo: web::Data<PostgresRepo>,
-    figure_id: web::Path<Id>,
-) -> Result<HttpResponse, actix_web::Error> {
-    repo.delete::<Figure, _>(&figure_id.into_inner())
-        .await
-        .map_err(|e| ApiError::Repository {
-            source: e,
-            message: "failed to delete figure".into(),
-        })?;
-    Ok(HttpResponse::Ok().finish())
+    figure_id: web::Path<FigureId>,
+) -> Result<HttpResponse, ApiError> {
+    repo.delete_figure(figure_id.into_inner()).await?;
+    Ok(HttpResponse::NoContent().finish())
 }

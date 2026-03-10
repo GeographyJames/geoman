@@ -1,18 +1,15 @@
-use sqlx::PgExecutor;
+use domain::{FigureId, enums::Status};
 
-use crate::{domain::entities::Figure, repo::Delete};
+use crate::{postgres::PostgresRepo, repo::RepositoryError};
 
-impl<REPO, ID> Delete<REPO, ID> for Figure
-where
-    for<'a> REPO: PgExecutor<'a>,
-    ID: AsRef<i32>,
-{
-    async fn delete(executor: REPO, id: &ID) -> Result<(), crate::repo::RepositoryError> {
+impl PostgresRepo {
+    pub async fn delete_figure(&self, id: FigureId) -> Result<(), RepositoryError> {
         sqlx::query!(
-            "UPDATE app.figures SET status='deleted' WHERE id = $1",
-            id.as_ref()
+            r#"UPDATE app.figures SET status = $1 WHERE id = $2"#,
+            Status::Deleted as Status,
+            id.0
         )
-        .execute(executor)
+        .execute(&self.db_pool)
         .await?;
         Ok(())
     }

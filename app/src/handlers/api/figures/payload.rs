@@ -5,6 +5,7 @@ use domain::{
     figure_layer::{
         FigureLayerDatasourceInput, FigureLayerInputDTO, LayerNameInputDTO, LayerProperties,
     },
+    pg_table::PgTableInputDTO,
 };
 use qgis::layout::{PageOrientation, PageSize, Size};
 use serde::{Deserialize, Serialize};
@@ -58,7 +59,7 @@ impl FigureLayerPayload {
 
 #[derive(Deserialize, Serialize, Clone)]
 pub enum FigureLayerDatasourcePayload {
-    // PgTable(PgTablePayload),
+    PgTable(PgTablePayload),
     SiteBoundary(FeatureId),
     TurbineLayout(LayoutId),
 }
@@ -139,12 +140,12 @@ impl TryFrom<FigureLayerDatasourcePayload> for FigureLayerDatasourceInput {
 
     fn try_from(value: FigureLayerDatasourcePayload) -> Result<Self, Self::Error> {
         match value {
-            // FigureLayerDatasourcePayload::PgTable(pg_table_payload) => {
-            //     Ok(FigureLayerDatasourceInput::PgTable(PgTableInputDTO::parse(
-            //         pg_table_payload.table,
-            //         pg_table_payload.schema,
-            //     )?))
-            // }
+            FigureLayerDatasourcePayload::PgTable(pg_table_payload) => {
+                Ok(FigureLayerDatasourceInput::PgTable(PgTableInputDTO::parse(
+                    pg_table_payload.table,
+                    pg_table_payload.schema,
+                )?))
+            }
             FigureLayerDatasourcePayload::SiteBoundary(id) => {
                 Ok(FigureLayerDatasourceInput::SiteBoundary(id))
             }

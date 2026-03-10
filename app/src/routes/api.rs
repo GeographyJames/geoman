@@ -21,7 +21,7 @@ use crate::{
             duplicate::duplicate_project_feature, get::get_project_feature_download,
             patch::patch_project_feature, post::post_project_feature_shapefile,
         },
-        figures::post_figure,
+        figures::{delete_figure, get_figure, get_figures, patch_figure, post_figure},
         keys::{generate_api_key, get_api_keys, renew_api_key, revoke_api_key},
         project_collections::{get_collections, patch_collection, post_project_collection},
         projects::{patch_project, post_project},
@@ -189,5 +189,12 @@ pub fn data_provider_layers_routes(cfg: &mut web::ServiceConfig) {
 }
 
 pub fn figure_roots(cfg: &mut web::ServiceConfig) {
-    cfg.service(scope(&URLS.api.figures).service(post_figure));
+    cfg.service(
+        scope(&URLS.api.figures)
+            .service(get_figures)
+            .service(get_figure)
+            .service(post_figure)
+            .service(patch_figure)
+            .service(delete_figure),
+    );
 }

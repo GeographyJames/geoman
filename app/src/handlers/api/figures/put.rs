@@ -1,34 +1,26 @@
-use actix_web::{HttpResponse, web};
+use actix_web::{HttpResponse, patch, web};
+use domain::FigureId;
 
 use crate::{
-    app::{
-        configuration::Settings,
-        handlers::api::{ApiError, figures::FigurePayload},
-        session_state::{TypedSession, user_id},
-    },
-    domain::dtos::Id,
-    postgres::PostgresRepo,
+    AuthenticatedUser, config::QgisServerSettings, errors::ApiError,
+    handlers::api::figures::FigurePayload, postgres::PostgresRepo,
 };
 
-#[tracing::instrument(skip(repo, payload, figure_id, session, config))]
-pub async fn put_figure(
+#[patch("/{id}")]
+#[tracing::instrument(skip(repo, payload, user, qgis_server))]
+pub async fn patch_figure(
     repo: web::Data<PostgresRepo>,
+    user: web::ReqData<AuthenticatedUser>,
+    figure_id: web::Path<FigureId>,
     payload: web::Json<FigurePayload>,
-    figure_id: web::Path<Id>,
-    session: TypedSession,
-    config: web::Data<Settings>,
-) -> Result<HttpResponse, actix_web::Error> {
-    let user_id = user_id(&session)?;
-    let payload = payload.into_inner();
-
+    qgis_server: web::Data<QgisServerSettings>,
+) -> Result<HttpResponse, ApiError> {
+    let user_id = user.id;
     let input_dto = payload
-        .into_input_dto(user_id, Some(config.qgis_server.figure_config.clone()))
-        .map_err(ApiError::Validation)?;
-    repo.update(&input_dto, &figure_id)
-        .await
-        .map_err(|e| ApiError::Repository {
-            source: (e),
-            message: ("failed to update figure in database".into()),
-        })?;
-    Ok(HttpResponse::Ok().finish())
+        .into_inner()
+        .into_input_dto(user_id, Some(qgis_server.figure_config.clone()))
+        .map_err(ApiError::FigureValidation)?;
+    repo.update(&(&input_dto, figure_id.into_inner(), user_id))
+        .await?;
+    Ok(HttpResponse::NoContent().finish())
 }

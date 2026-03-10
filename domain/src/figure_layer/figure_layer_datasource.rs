@@ -14,7 +14,7 @@ pub enum FigureLayerDatasourceInput {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FigureLayerDatasourceOutput {
-    // ProjectLayer(ProjectLayer),
+    ProjectLayer(ProjectLayer),
     SiteBoundary(SiteAssetDatasourceOutputDTO),
     TurbineLayout(SiteAssetDatasourceOutputDTO),
 }

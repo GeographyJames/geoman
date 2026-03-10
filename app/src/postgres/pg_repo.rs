@@ -1,5 +1,9 @@
 /// Appplication repository
-use domain::{FeatureId, KeyId, ProjectCollectionId, ProjectId, UserId, enums::GeometryType};
+use domain::{
+    FeatureId, FigureId, KeyId, ProjectCollectionId, ProjectId, UserId,
+    enums::GeometryType,
+    figure::FigureOutputDTO,
+};
 use futures::Stream;
 use sqlx::PgPool;
 
@@ -221,6 +225,19 @@ impl PostgresRepo {
         .await?;
         Ok(geom)
     }
+    #[tracing::instrument(skip(self))]
+    pub async fn get_figures_for_project(
+        &self,
+        project_id: ProjectId,
+    ) -> Result<Vec<FigureOutputDTO>, RepositoryError> {
+        super::figure::select_figures_for_project(&self.db_pool, project_id).await
+    }
+
+    #[tracing::instrument(skip(self))]
+    pub async fn get_figure(&self, figure_id: FigureId) -> Result<FigureOutputDTO, RepositoryError> {
+        super::figure::select_figure(&self.db_pool, figure_id).await
+    }
+
     #[tracing::instrument(skip(self, id))]
     pub async fn get_project_srid(&self, id: ProjectId) -> Result<Option<i32>, RepositoryError> {
         let srid = sqlx::query_scalar!("SELECT crs_srid FROM app.projects WHERE id = $1", id.0)
