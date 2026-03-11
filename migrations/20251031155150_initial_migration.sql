@@ -1,5 +1,6 @@
 CREATE SCHEMA app;
 CREATE SCHEMA gis_data;
+CREATE SCHEMA project_data;
 CREATE TYPE app.status AS ENUM ('ACTIVE', 'ARCHIVED', 'DELETED');
 CREATE TYPE app.visibility AS ENUM ('PRIVATE', 'TEAM', 'PUBLIC');
 CREATE TYPE geometry_type AS ENUM (

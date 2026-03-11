@@ -60,10 +60,11 @@ CREATE TABLE app.data_provider_layers (
     -- WFS/OGCAPIFeatures: {"type_name": "inspire-nrw:NRW_SSSI"}
     -- MVT:              {"layer": "streets-v8"}
     -- XYZ:              {}
-    source jsonb NOT NULL DEFAULT '{}',
+    source jsonb,
     category app.layer_category NOT NULL DEFAULT 'overlay',
     description text,
-    enabled boolean NOT NULL DEFAULT true,
+    enabled_geoman boolean NOT NULL DEFAULT false,
+    enabled_figure_tool NOT NULL DEFAULT true,
     style_config jsonb NOT NULL DEFAULT '{}',    -- SLD XML string: {"sld": "<StyledLayerDescriptor>..."}
     display_options jsonb NOT NULL DEFAULT '{}', -- e.g. {"opacity": 0.8, "min_zoom": 10, "max_zoom": 18}
     country_code char(2),      -- overrides provider if set
@@ -90,3 +91,6 @@ CREATE INDEX idx_data_provider_layers_category ON app.data_provider_layers(categ
   CREATE UNIQUE INDEX idx_single_default_overview_map
       ON app.data_provider_layers (figure_default_overview_map_base_map)
       WHERE figure_default_overview_map_base_map = true;
+
+CREATE UNIQUE INDEX uniq_provider_service
+ON app.data_provider_services(provider_id, service_type);
