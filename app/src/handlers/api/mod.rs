@@ -10,5 +10,6 @@ pub mod keys;
 pub mod project_collections;
 pub mod projects;
 pub mod teams;
+pub mod qgis_projects;
 pub mod tiles;
 pub mod users;

@@ -197,6 +197,56 @@ Issues 7–10 were identified and added to the Known Issues section below.
 
 ---
 
+## Session 5
+
+### get_print test infrastructure and test stubs — Completed
+
+The test infrastructure needed for the `get_print` handler is now in place. Two new tests (`get_figure_pdf_works`, `get_figure_jpg_works`) compile and run; they fail as expected since the handler is not yet ported.
+
+#### What was done
+
+**URL config**
+
+| File | Change |
+| ---- | ------ |
+| `config/urls.yaml` | Added `qgis_projects: "/qgis-projects"` |
+| `app/src/urls.rs` | Added `pub qgis_projects: String` to `Api` struct |
+
+**Test helpers (`app/tests/common/helpers.rs`)**
+
+| Function | Purpose |
+| -------- | ------- |
+| `assert_response_is_pdf` | Checks `content-type: application/pdf` and `%PDF-` magic bytes |
+| `assert_response_is_jpg` | Checks `content-type: image/jpeg` and `\xff\xd8\xff` magic bytes |
+| `assert_is_qgis_project` | Checks `content-type: application/octet-stream` and `PK` zip magic bytes |
+
+**Test app (`app/tests/common/test_app.rs`)**
+
+Added `qgis_projects_service: HttpService` pointing at `/api/qgis-projects`.
+
+**Test files**
+
+| File | Change |
+| ---- | ------ |
+| `tests/handlers/api/figures/get_print/mod.rs` | New module |
+| `tests/handlers/api/figures/get_print/get.rs` | `get_figure_pdf_works`, `get_figure_jpg_works` |
+| `tests/handlers/api/figures/mod.rs` | Enabled `mod get_print` |
+
+#### Key adaptations from the prototype
+
+- `FigureFormat::pdf`/`::jpg` → hardcoded `"pdf"`/`"jpg"` strings — avoids importing the unported handler type
+- `figure.qgis_project_name(&PrintResolution::High)` → `figure.qgis_project_uuid.to_string()` — PDF project name is just the UUID
+- `figure.qgis_project_name(&PrintResolution::Low)` → `format!("{}_low-res", figure.qgis_project_uuid)` — derived from `QgisFigureSpec::qgis_project_name` logic
+- `VALID_TABLE_NAMES` defined locally — the `project_layers` test module is not yet wired into the test tree
+- `put_json` → `patch_json`
+
+#### Also fixed in this session
+
+- `BOUNDARY_CTE` SRID subquery — see Known Issue ~~6~~ (fixed)
+- `LAYOUT_CTE` SRID subquery — same fix, scoped to `WHERE layout_id = $1`
+
+---
+
 ## Known Issues / Technical Debt
 
 These were identified during the GET porting work and should be addressed before or during the `get_print` port:
@@ -228,6 +278,21 @@ Neither `patch_figure` nor `delete_figure` checks that the requesting user owns 
 ### 10. `overvier_map_base_map_id` typo in `FigureInputDTO`
 The field `overvier_map_base_map_id` (should be `overview_map_base_map_id`) is a typo carried from the prototype into `domain/src/figure/input.rs`, `payload.rs`, `insert.rs`, and `update.rs`. Harmless but should be corrected before the API stabilises.
 
+### 11. Potential route conflict: `GET /{id}` vs `GET /{id}/{format}`
+`get_figure` is registered as `GET /{id}` and `get_print` as `GET /{id}/{format}`. Actix-web should resolve the two-segment path as more specific, but this should be confirmed by the integration tests passing — if actix routes print requests to `get_figure` instead, the result would be a deserialisation error rather than the handler running.
+
+### 12. `get_print` tests require a running QGIS Server
+`GET /api/figures/{id}/pdf` and `GET /api/figures/{id}/jpg` both make a real outbound HTTP call to QGIS Server after generating and storing the QGIS project. In the test environment QGIS Server is not running, so the call will fail and the handler returns 500. The tests are most likely failing for this reason. Options: spin up a QGIS Server instance in the test environment, mock the `reqwest::Client`, or restructure the test to assert only that the project was saved (skipping the QGIS Server call). This is the most likely cause of the current 500 errors.
+
+### 13. `database_name` in QGIS project `map=` URI may be wrong in tests
+The QGIS project file embeds `postgresql://?dbname={database_name}&schema=public&project={name}`. In tests, `TestApp` creates a UUID-named database per test run; `DatabaseSettings.database_name` will contain that UUID name. QGIS Server would need to be able to connect to that specific database, which is not practical in an automated test. Closely related to issue 12 — both point to the need for a test strategy that does not require QGIS Server.
+
+### 14. `QgisBasemapSpec` import is unused until basemap support is added
+In `get_print.rs`, `QgisBasemapSpec` is imported but `basemap` and `overview_basemap` are always `None`. This will produce a compiler warning once the dead-code lint is surfaced. Remove the import or suppress it until basemap fetching is implemented.
+
+### 15. `overview_map_extent` collapses to a point when `legend_width_mm` is 0
+Both the width and height of the overview map extent are derived from `legend_width_mm`. If a figure has no legend (`legend_width_mm = 0`), the calculated extent has zero area, which QGIS Server would likely reject. Should guard against zero and fall back to a sensible default size.
+
 ### ~~6. SRID subqueries in `BOUNDARY_CTE` and `LAYOUT_CTE` are imprecise~~ — **Fixed**
 Both CTEs used unfiltered SRID subqueries that could return a value from the wrong row:
 - `BOUNDARY_CTE`: `(SELECT ST_SRID(geom) FROM app.project_features LIMIT 1)` — fixed by adding `WHERE id = $1`, reading the SRID from the specific feature being queried (important because `app.project_features` allows mixed CRS).
@@ -235,17 +300,88 @@ Both CTEs used unfiltered SRID subqueries that could return a value from the wro
 
 ---
 
+---
+
+## Session 6
+
+### get_print handler and qgis_projects — In Progress
+
+All code compiles cleanly. 5/7 figure tests pass. The 2 `get_print` tests (`get_figure_pdf_works`, `get_figure_jpg_works`) fail with 500 — root cause under investigation.
+
+#### Prototype behaviour discovered (important)
+
+The prototype's `Insert` for `QgisProject` wraps in a transaction that **always** deletes existing low-res projects for the same `figure_id` before inserting the new record — regardless of whether the new project is high or low resolution. This is the mechanism that makes the `get_figure_jpg_works` test pass:
+
+- PATCH creates a new `qgis_project_uuid`
+- The next JPG request generates `{new_uuid}_low-res`
+- The insert deletes all `low_res = true` rows for `figure_id` (including the old `{old_uuid}_low-res`)
+- The old name returns 404 ✓
+
+The same `check → generate if absent → insert` flow is used for both PDF and JPG (there is no separate "always regenerate" path for JPG).
+
+#### What was done
+
+**Postgres (`app/src/postgres/`)**
+
+| File | Change |
+| ---- | ------ |
+| `qgis_projects/mod.rs` | New module: `insert_qgis_project` (transaction: DELETE low-res + INSERT), `qgis_project_exists` (replaces prototype's `check_unique`), `get_qgis_project_content` |
+| `mod.rs` | Added `mod qgis_projects;` |
+| `pg_repo.rs` | Added `insert_qgis_project`, `qgis_project_exists`, `get_qgis_project_content` methods |
+
+**Handlers & Routes**
+
+| File | Change |
+| ---- | ------ |
+| `handlers/api/figures/get_print.rs` | Full rewrite — see detail below |
+| `handlers/api/figures/mod.rs` | Enabled `pub mod get_print`; re-exports `FigureFormat` |
+| `handlers/api/qgis_projects.rs` | New `GET /api/qgis-projects/{name}` handler — returns content bytes or 404 |
+| `handlers/api/mod.rs` | Added `pub mod qgis_projects;` |
+| `routes/api.rs` | Added `get_print` to `figure_roots`; added `qgis_projects_routes` |
+| `startup.rs` | Registered `DatabaseSettings` as `web::Data` so `get_print` can read the DB name |
+| `Cargo.toml` | Added `json`, `query`, `stream` features to `reqwest` main dependency |
+
+**`get_print.rs` — key items**
+
+| Item | Notes |
+| ---- | ----- |
+| `FigureFormat` | `pdf` / `jpg` enum with `Display` |
+| `GetPrintRequestBuilder` | Builds QGIS Server WMS GetPrint URL; schema hardcoded to `"public"` (was `"qgis"` in prototype) |
+| `get_print` handler | Fetches figure; checks if QGIS project exists; if not, builds `QgisFigureSpec` + calls `generate_project` + saves; then sends GetPrint request to QGIS Server and streams response |
+| `build_figure_spec` | Converts `FigureOutputDTO` → `QgisFigureSpec`; `basemap`/`overview_basemap` hardcoded to `None` (TODO) |
+| `target_coord` | Centre of target-layer bounding boxes in figure SRID; falls back to UK centre (324636, 673221 BNG) transformed to figure SRID if no target layers |
+| `target_layers_bounds` | Unions `bounding_box` of all layers with `include_as_target = true` |
+| `default_uk_centre` | Transforms BNG centre to the figure's SRID using GDAL `CoordTransform` |
+| `map_extent` | `extent_from_scale(scale, map_width_mm, map_height_mm, target)` — ported from prototype |
+| `overview_map_extent` | `extent_from_scale(overview_scale, legend_width_mm, legend_width_mm, target)` — default scale 1,000,000 |
+| `convert_layer` | `FigureLayerOutputDTO` → `QgisLayerSpec`; converts datasource variants and `WkbType`/`SupportedEpsg` via string round-trip |
+| `convert_properties` | `domain::FigureProperties` → `qgis::QgisFigureProperties`; maps `CopyrightText` and `ScalebarUnits` variants |
+| `to_qgis_figure_config` | `app::config::QgisFigureConfig` → `qgis::config::QgisFigureConfig`; computes `logo_aspect_ratio = height / width` |
+| `build_qgis_server_request` | Adds `map0:layers`, `map0:extent` (and optionally `map0:GRID_INTERVAL_X/Y`) to the GetPrint request |
+| `streaming_response` | Copies response status + headers (excluding `connection`) into an actix `HttpResponseBuilder` |
+
+#### Architectural decisions
+
+- **Extent calculation stays in `app`** — rather than adding `map_extent` etc. to `FigureOutputDTO` (Known Issue #5), the extent is computed on the fly in `get_print.rs` from the layer `bounding_box` values that are already present on `FigureLayerOutputDTO`. This avoids changing the domain DTO.
+- **`DatabaseSettings` as app data** — added to `startup.rs` so the handler can supply the DB name to the QGIS project file `map=` URI without carrying the full config.
+- **Basemap fetching deferred (TODO)** — `basemap` and `overview_basemap` in `QgisFigureSpec` are always `None` for now. The `DataProviderLayer.source` JSON format would need to be agreed and a fetch-and-convert function added to `build_figure_spec`. Tests don't use basemaps so this does not block the tests.
+
+---
+
 ## Remaining Work
 
-### app crate — get_print handler
+### get_print — debug 500 errors
 
-- Port `get_print.rs` (`GET /api/figures/{id}/pdf`, `GET /api/figures/{id}/jpg`, `GET /api/figures/{id}/qgz`)
-- Add `map_extent`, `target_coord`, `overview_map_extent`, `target_layer_extent` to `FigureOutputDTO` and reinstate extent/coord calculation in `figure/select.rs`
-- Implement `FigureOutputDTO` → `QgisFigureSpec` conversion (in `app`, no cross-crate dependency needed)
-- Add `qgis_projects` postgres module (insert + select by name)
+The two `get_print` integration tests return 500. Most likely cause: the handler makes a real outbound HTTP call to QGIS Server after saving the project, and QGIS Server is not running in the test environment (see Known Issues 12 and 13). Confirm with `TEST_LOG=1`, then decide on a test strategy (mock client, dedicated QGIS Server instance, or test only the project-save step).
+
+### Basemap support (TODO)
+
+- Define the JSON format for `DataProviderLayer.source` for basemap layers
+- Add a DB fetch + conversion from `DataProviderLayer` → `QgisBasemapSpec` in `build_figure_spec`
+- Add corresponding QGIS Server `map0:layers` slug in `build_qgis_server_request`
 
 ### Test infrastructure
 
-- Uncomment and update PDF/JPG/QGZ tests in `tests/handlers/api/figures/get.rs` once `get_print` is ported
-- Port `tests/handlers/api/qgis_project/` tests
-- Port `tests/handlers/api/project_layers/` tests
+- Port `tests/handlers/api/qgis_project/` tests (old code, not yet in new pattern)
+- Port `tests/handlers/api/project_layers/` tests (directory exists but not wired into test tree)
+- Add `get_figure_qgis_project_works` to `get_print/get.rs` once `get_print` tests pass

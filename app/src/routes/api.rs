@@ -21,7 +21,11 @@ use crate::{
             duplicate::duplicate_project_feature, get::get_project_feature_download,
             patch::patch_project_feature, post::post_project_feature_shapefile,
         },
-        figures::{delete_figure, get_figure, get_figures, patch_figure, post_figure},
+        figures::{
+            delete_figure, get_figure, get_figures, get_print::get_print, patch_figure,
+            post_figure,
+        },
+        qgis_projects::get_qgis_project,
         keys::{generate_api_key, get_api_keys, renew_api_key, revoke_api_key},
         project_collections::{get_collections, patch_collection, post_project_collection},
         projects::{patch_project, post_project},
@@ -67,7 +71,8 @@ pub fn api_routes(cfg: &mut web::ServiceConfig, _clerk: Clerk, run_environment: 
         .configure(data_providers_routes)
         .configure(data_provider_services_routes)
         .configure(data_provider_layers_routes)
-        .configure(figure_roots);
+        .configure(figure_roots)
+        .configure(qgis_projects_routes);
 
     match run_environment {
         GeoManEnvironment::Development => {
@@ -195,6 +200,11 @@ pub fn figure_roots(cfg: &mut web::ServiceConfig) {
             .service(get_figure)
             .service(post_figure)
             .service(patch_figure)
-            .service(delete_figure),
+            .service(delete_figure)
+            .service(get_print),
     );
+}
+
+pub fn qgis_projects_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(scope(&URLS.api.qgis_projects).service(get_qgis_project));
 }

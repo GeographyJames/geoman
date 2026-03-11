@@ -86,6 +86,54 @@ pub async fn handle_json_response<T: DeserializeOwned>(
     ))
 }
 
+pub async fn assert_response_is_pdf(response: reqwest::Response) {
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .and_then(|ct| ct.to_str().ok());
+    assert_eq!(content_type, Some("application/pdf"));
+    let body = response.bytes().await.expect("failed to get response body");
+    assert!(!body.is_empty(), "PDF response body should not be empty");
+    assert!(
+        body.starts_with(b"%PDF-"),
+        "Response should start with PDF magic bytes"
+    );
+}
+
+pub async fn assert_response_is_jpg(response: reqwest::Response) {
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .and_then(|ct| ct.to_str().ok());
+    assert_eq!(content_type, Some("image/jpeg"));
+    let body = response.bytes().await.expect("failed to get response body");
+    assert!(!body.is_empty(), "JPG response body should not be empty");
+    assert!(
+        body.starts_with(b"\xff\xd8\xff"),
+        "Response should start with JPG magic bytes"
+    );
+}
+
+pub async fn assert_is_qgis_project(response: reqwest::Response) {
+    assert_eq!(
+        response
+            .headers()
+            .get("content-type")
+            .expect("response has no content-type header"),
+        "application/octet-stream"
+    );
+    let body = response
+        .bytes()
+        .await
+        .expect("failed to get response body");
+    assert!(!body.is_empty(), "QGIS project response body should not be empty");
+    // .qgz files are zip archives; check for PK magic bytes
+    assert!(
+        body.starts_with(b"PK"),
+        "Response should start with zip/qgz magic bytes"
+    );
+}
+
 pub fn generate_random_bng_point_wkt() -> (f32, f32, String) {
     let mut rng = rand::rng();
     let easting: f32 = rng.random_range(0.0..700_000.);

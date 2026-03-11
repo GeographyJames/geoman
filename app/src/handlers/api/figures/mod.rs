@@ -6,10 +6,9 @@ pub use payload::{
 };
 mod get;
 pub use get::{get_figure, get_figures};
-mod put;
-pub use put::patch_figure;
+mod patch;
+pub use patch::patch_figure;
 mod delete;
 pub use delete::delete_figure;
-// mod get_print;
-// pub use get_print::GetPrintRequestBuilder;
-// pub use get_print::{FigureFormat, get_print};
+pub mod get_print;
+pub use get_print::FigureFormat;

@@ -50,7 +50,7 @@ geo = { path = "../geo" }
 gdal = { workspace = true }
 slug = "0.1.6"
 base64 = "0.22"
-reqwest = "0.13"
+reqwest = { version = "0.13", features = ["json", "query", "stream"] }
 qgis = { path = "../qgis" }
 
 [dev-dependencies]

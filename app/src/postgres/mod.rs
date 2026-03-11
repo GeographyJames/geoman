@@ -12,6 +12,7 @@ mod figure;
 mod figure_layer;
 mod gis_data_table;
 mod projcet_collections;
+mod qgis_projects;
 mod sql_fragments;
 mod teams;
 mod turbine_layouts;

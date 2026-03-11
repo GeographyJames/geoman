@@ -9,6 +9,7 @@ mod epsg_code;
 mod features;
 mod figures;
 mod project;
+mod project_layers;
 mod teams;
 mod turbine_layouts;
 mod users;

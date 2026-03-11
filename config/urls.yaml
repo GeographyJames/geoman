@@ -18,6 +18,7 @@ api:
   data_provider_services: "/data-provider-services"
   data_provider_layers: "/data-provider-layers"
   figures: "/figures"
+  qgis_projects: "/qgis-projects"
 
 docs:
   base: "/docs"

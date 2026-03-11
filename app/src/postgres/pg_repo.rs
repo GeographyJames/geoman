@@ -245,4 +245,25 @@ impl PostgresRepo {
             .await?;
         Ok(srid)
     }
+
+    #[tracing::instrument(skip(self, project))]
+    pub async fn insert_qgis_project(
+        &self,
+        project: &qgis::project::QgisProject,
+    ) -> Result<(), RepositoryError> {
+        super::qgis_projects::insert_qgis_project(&self.db_pool, project).await
+    }
+
+    #[tracing::instrument(skip(self))]
+    pub async fn qgis_project_exists(&self, name: &str) -> Result<bool, RepositoryError> {
+        super::qgis_projects::qgis_project_exists(&self.db_pool, name).await
+    }
+
+    #[tracing::instrument(skip(self))]
+    pub async fn get_qgis_project_content(
+        &self,
+        name: &str,
+    ) -> Result<Option<Vec<u8>>, RepositoryError> {
+        super::qgis_projects::get_qgis_project_content(&self.db_pool, name).await
+    }
 }
