@@ -22,15 +22,17 @@ impl Insert for (DataProviderLayerInputPayload, UserId) {
         let display_options = dto.display_options.clone().unwrap_or_else(|| json!({}));
         let enabled = dto.enabled.unwrap_or(true);
         let sort_order = dto.sort_order.unwrap_or(0);
+        let slug = slug::slugify(&dto.name);
         let res = sqlx::query!(
             "INSERT INTO app.data_provider_layers(
-                service_id, name, abbreviation, source, category, description,
+                service_id, name, slug, abbreviation, source, category, description,
                 enabled, style_config, display_options, country_code, subdivision,
                 sort_order, added_by, last_updated_by
-             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $13)
+             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $14)
              RETURNING id",
             dto.service_id.0,
             dto.name,
+            slug,
             dto.abbreviation,
             source as _,
             category as _,
