@@ -31,18 +31,6 @@ pub struct FeatureId(pub i32);
 
 #[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
 #[sqlx(transparent)]
-pub struct DataProviderId(pub i32);
-
-#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
-#[sqlx(transparent)]
-pub struct DataProviderServiceId(pub i32);
-
-#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
-#[sqlx(transparent)]
-pub struct DataProviderLayerId(pub i32);
-
-#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, sqlx::Type, PartialEq)]
-#[sqlx(transparent)]
 pub struct KeyId(pub i32);
 
 #[derive(Clone, Copy, Default, Debug, Deserialize, sqlx::Type, Serialize, PartialEq)]

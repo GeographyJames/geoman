@@ -22,6 +22,7 @@ mod streaming;
 mod types;
 pub use types::{AuthenticatedUser, ErrorResponse, Password, enums};
 mod errors;
+pub mod features;
 mod repo;
 #[cfg(test)]
 pub mod testing;

@@ -1,20 +1,15 @@
 use crate::{
     URLS,
     enums::GeoManEnvironment,
+    features::data_providers::handlers::{
+        delete_data_provider, delete_data_provider_layer, delete_data_provider_service,
+        get_data_provider_layers, get_data_provider_services, get_data_providers,
+        patch_data_provider, patch_data_provider_layer, patch_data_provider_service,
+        post_data_provider, post_data_provider_layer, post_data_provider_service,
+    },
     handlers::api::{
         business_units::{
             delete_business_unit, get_business_units, patch_business_unit, post_business_unit,
-        },
-        data_provider_layers::{
-            delete_data_provider_layer, get_data_provider_layers, patch_data_provider_layer,
-            post_data_provider_layer,
-        },
-        data_provider_services::{
-            delete_data_provider_service, get_data_provider_services, patch_data_provider_service,
-            post_data_provider_service,
-        },
-        data_providers::{
-            delete_data_provider, get_data_providers, patch_data_provider, post_data_provider,
         },
         epsg::{post_epsg, post_epsg_from_shz},
         features::{

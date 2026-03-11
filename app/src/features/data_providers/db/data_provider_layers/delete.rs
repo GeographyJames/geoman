@@ -1,0 +1,16 @@
+use crate::{
+    features::data_providers::types::DataProviderLayerId, postgres::PostgresRepo,
+    repo::RepositoryError,
+};
+
+impl PostgresRepo {
+    pub async fn delete_data_provider_layer(
+        &self,
+        id: DataProviderLayerId,
+    ) -> Result<(), RepositoryError> {
+        sqlx::query!("DELETE FROM app.data_provider_layers WHERE id = $1", id.0)
+            .execute(&self.db_pool)
+            .await?;
+        Ok(())
+    }
+}

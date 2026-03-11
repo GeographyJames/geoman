@@ -1,0 +1,33 @@
+use domain::UserId;
+
+use crate::{
+    features::data_providers::{
+        handlers::DataProviderServiceInputPayload, types::DataProviderServiceId,
+    },
+    repo::traits::Insert,
+};
+
+impl Insert for (DataProviderServiceInputPayload, UserId) {
+    type Id = DataProviderServiceId;
+
+    async fn insert<'a, A>(&self, executor: A) -> Result<Self::Id, crate::repo::RepositoryError>
+    where
+        Self: Sized,
+        A: sqlx::Acquire<'a, Database = sqlx::Postgres>,
+    {
+        let mut conn = executor.acquire().await?;
+        let (dto, user) = self;
+        let res = sqlx::query!(
+            "INSERT INTO app.data_provider_services(provider_id, name, service_type, base_url, added_by, last_updated_by)
+             VALUES ($1, $2, $3, $4, $5, $5) RETURNING id",
+            dto.provider_id.0,
+            dto.name,
+            dto.service_type as _,
+            dto.base_url,
+            user.0
+        )
+        .fetch_one(&mut *conn)
+        .await?;
+        Ok(DataProviderServiceId(res.id))
+    }
+}

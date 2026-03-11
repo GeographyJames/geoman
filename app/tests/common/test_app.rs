@@ -14,14 +14,18 @@ use app::{
     AppConfig, Application, AuthenticatedUser, DatabaseSettings, Password, URLS,
     constants::{GIS_DATA_SCHEMA, SITE_BOUNDARIES_COLLECTION_ID, TURBINE_LAYOUTS_COLLECTION_ID},
     enums::GeoManEnvironment,
+    features::data_providers::{
+        DataProviderId, DataProviderLayerId, DataProviderServiceId,
+        handlers::{
+            DataProviderInputPayload, DataProviderLayerInputPayload,
+            DataProviderServiceInputPayload,
+        },
+    },
     get_config,
     handlers::{
         self,
         api::{
-            business_units::BusinessUnitInputPayload,
-            data_provider_layers::DataProviderLayerInputPayload,
-            data_provider_services::DataProviderServiceInputPayload,
-            data_providers::DataProviderInputPayload, features::get::FeatureFormat,
+            business_units::BusinessUnitInputPayload, features::get::FeatureFormat,
             project_collections::CollectionReqPayload, projects::PostProjectPayload,
             teams::TeamInputPayload,
         },
@@ -29,8 +33,8 @@ use app::{
     telemetry::{get_subscriber, init_subscriber},
 };
 use domain::{
-    BusinessUnitId, DataProviderId, DataProviderLayerId, DataProviderServiceId, FeatureId,
-    LayoutId, ProjectCollectionId, ProjectFeatureId, ProjectId, TableName, TeamId, UserId,
+    BusinessUnitId, FeatureId, LayoutId, ProjectCollectionId, ProjectFeatureId, ProjectId,
+    TableName, TeamId, UserId,
     enums::{CollectionId, GeometryType},
 };
 use dotenvy::dotenv;

@@ -27,8 +27,6 @@ mod team;
 pub use team::Team;
 mod business_unit;
 pub use business_unit::BusinessUnit;
-mod data_provider;
-pub use data_provider::{DataProvider, DataProviderLayer, DataProviderService};
 pub mod name;
 pub mod turbine_layout;
 pub use turbine_layout::{Turbine, TurbineLayout};
