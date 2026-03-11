@@ -64,7 +64,7 @@ CREATE TABLE app.data_provider_layers (
     category app.layer_category NOT NULL DEFAULT 'overlay',
     description text,
     enabled_geoman boolean NOT NULL DEFAULT false,
-    enabled_figure_tool NOT NULL DEFAULT true,
+    enabled_figure_tool boolean NOT NULL DEFAULT true,
     style_config jsonb NOT NULL DEFAULT '{}',    -- SLD XML string: {"sld": "<StyledLayerDescriptor>..."}
     display_options jsonb NOT NULL DEFAULT '{}', -- e.g. {"opacity": 0.8, "min_zoom": 10, "max_zoom": 18}
     country_code char(2),      -- overrides provider if set
@@ -81,7 +81,8 @@ CREATE TABLE app.data_provider_layers (
 
 CREATE INDEX idx_data_provider_layers_service ON app.data_provider_layers(service_id);
 
-CREATE INDEX idx_data_provider_layers_enabled ON app.data_provider_layers(enabled) WHERE enabled = true;
+CREATE INDEX idx_data_provider_layers_enabled_geoman ON app.data_provider_layers(enabled_geoman) WHERE enabled_geoman = true;
+CREATE INDEX idx_data_provider_layers_enabled_figure_tool ON app.data_provider_layers(enabled_figure_tool) WHERE enabled_figure_tool = true;
 CREATE INDEX idx_data_provider_layers_category ON app.data_provider_layers(category);
   -- Create partial unique indexes to enforce single default constraint
   CREATE UNIQUE INDEX idx_single_default_main_map

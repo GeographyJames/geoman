@@ -10,7 +10,8 @@ interface PostDataProviderLayerRequest {
   source: unknown;
   category?: LayerCategory;
   description?: string | null;
-  enabled?: boolean;
+  enabled_geoman?: boolean;
+  enabled_figure_tool?: boolean;
   style_config?: unknown;
   display_options?: unknown;
   country_code?: string | null;

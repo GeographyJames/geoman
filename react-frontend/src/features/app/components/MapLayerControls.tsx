@@ -88,7 +88,9 @@ export function MapLayerControls() {
   );
   const mvtOverlays = allLayers.filter(
     (l) =>
-      l.enabled && l.category === "overlay" && mvtServiceIds.has(l.service_id),
+      l.enabled_geoman &&
+      l.category === "overlay" &&
+      mvtServiceIds.has(l.service_id),
   );
 
   const arcgisServiceIds = new Set(
@@ -96,7 +98,7 @@ export function MapLayerControls() {
   );
   const arcgisOverlays = allLayers.filter(
     (l) =>
-      l.enabled &&
+      l.enabled_geoman &&
       l.category === "overlay" &&
       arcgisServiceIds.has(l.service_id),
   );
@@ -129,7 +131,9 @@ export function MapLayerControls() {
             layer={layer}
             baseUrl={svc.base_url}
             visible={dynamicVisibility[layer.id] ?? false}
-            onLoadingChange={(loading) => handleLoadingChange(layer.id, loading)}
+            onLoadingChange={(loading) =>
+              handleLoadingChange(layer.id, loading)
+            }
           />
         );
       })}

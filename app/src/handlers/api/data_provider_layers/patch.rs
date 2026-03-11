@@ -15,7 +15,7 @@ pub struct DataProviderLayerUpdatePayload {
     pub category: Option<LayerCategory>,
     #[serde(default, deserialize_with = "crate::serde_helpers::double_option")]
     pub description: Option<Option<String>>,
-    pub enabled: Option<bool>,
+    pub enabled_geoman: Option<bool>,
     pub style_config: Option<Value>,
     pub display_options: Option<Value>,
     #[serde(default, deserialize_with = "crate::serde_helpers::double_option")]
@@ -23,6 +23,7 @@ pub struct DataProviderLayerUpdatePayload {
     #[serde(default, deserialize_with = "crate::serde_helpers::double_option")]
     pub subdivision: Option<Option<String>>,
     pub sort_order: Option<i32>,
+    pub enabled_figure_tool: Option<bool>,
 }
 
 #[patch("/{id}")]

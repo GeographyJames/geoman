@@ -25,14 +25,15 @@ impl Update for (DataProviderLayerUpdatePayload, DataProviderLayerId, UserId) {
                 source = COALESCE($5, source),
                 category = COALESCE($6, category),
                 description = CASE WHEN $7 THEN $8 ELSE description END,
-                enabled = COALESCE($9, enabled),
+                enabled_geoman = COALESCE($9, enabled_geoman),
                 style_config = COALESCE($10, style_config),
                 display_options = COALESCE($11, display_options),
                 country_code = CASE WHEN $12 THEN $13 ELSE country_code END,
                 subdivision = CASE WHEN $14 THEN $15 ELSE subdivision END,
                 sort_order = COALESCE($16, sort_order),
                 last_updated = NOW(),
-                last_updated_by = $18
+                last_updated_by = $18,
+                enabled_figure_tool = COALESCE($19, enabled_figure_tool)
             WHERE id = $17
             RETURNING id
             "#,
@@ -44,7 +45,7 @@ impl Update for (DataProviderLayerUpdatePayload, DataProviderLayerId, UserId) {
             payload.category as _,
             payload.description.is_some(),
             payload.description.clone().flatten(),
-            payload.enabled,
+            payload.enabled_geoman,
             payload.style_config as _,
             payload.display_options as _,
             payload.country_code.is_some(),
@@ -53,7 +54,8 @@ impl Update for (DataProviderLayerUpdatePayload, DataProviderLayerId, UserId) {
             payload.subdivision.clone().flatten(),
             payload.sort_order,
             id.0,
-            user_id.0
+            user_id.0,
+            payload.enabled_figure_tool
         )
         .fetch_one(&mut *executor)
         .await?;

@@ -92,7 +92,11 @@ function RegionBadge({
 function StyleSwatch({ styleConfig }: { styleConfig: unknown }) {
   if (!styleConfig || typeof styleConfig !== "object")
     return <span className="text-base-content/30">—</span>;
-  const cfg = styleConfig as { fillColor?: string; fillOpacity?: number; strokeColor?: string };
+  const cfg = styleConfig as {
+    fillColor?: string;
+    fillOpacity?: number;
+    strokeColor?: string;
+  };
   if (!cfg.fillColor && !cfg.strokeColor)
     return <span className="text-base-content/30">—</span>;
   const fillColor = cfg.fillColor ?? "#3388ff";
@@ -506,7 +510,8 @@ export default function DataProvidersSection() {
                     {!selectedProvider && <th>Provider</th>}
                     <th>Service</th>
                     {hasAnyStyle && <th>Style</th>}
-                    <th>Enabled</th>
+                    <th>Enabled (GeoMan)</th>
+                    <th>Enabled (Figure Tool)</th>
                     {isAdmin && <th />}
                   </tr>
                 </thead>
@@ -548,11 +553,28 @@ export default function DataProvidersSection() {
                         <input
                           type="checkbox"
                           className="toggle toggle-sm toggle-primary"
-                          checked={layer.enabled}
+                          disabled={!isAdmin}
+                          checked={layer.enabled_geoman}
                           onChange={() =>
                             patchLayer({
                               id: layer.id,
-                              patch: { enabled: !layer.enabled },
+                              patch: { enabled_geoman: !layer.enabled_geoman },
+                            })
+                          }
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="checkbox"
+                          disabled={!isAdmin}
+                          className="toggle toggle-sm toggle-primary"
+                          checked={layer.enabled_figure_tool}
+                          onChange={() =>
+                            patchLayer({
+                              id: layer.id,
+                              patch: {
+                                enabled_figure_tool: !layer.enabled_figure_tool,
+                              },
                             })
                           }
                         />

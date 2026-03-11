@@ -23,7 +23,7 @@ async fn patch_data_provider_layer_works() {
             Some(&auth),
             &DataProviderLayerUpdatePayload {
                 name: Some(uuid::Uuid::new_v4().to_string()),
-                enabled: Some(false),
+                enabled_geoman: Some(false),
                 ..Default::default()
             },
         )

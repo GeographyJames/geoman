@@ -70,7 +70,8 @@ const EditLayerInner = ({
               : (JSON.stringify(layer.source, null, 2) ?? "{}"),
           category: layer.category,
           description: layer.description ?? "",
-          enabled: layer.enabled,
+          enabled_geoman: layer.enabled_geoman,
+          enabled_figure_tool: layer.enabled_figure_tool,
           ...parseStyleConfig(layer.style_config),
           ...parseDisplayOptions(layer.display_options),
           country_code: layer.country_code ?? "",
@@ -92,7 +93,9 @@ const EditLayerInner = ({
       patch.abbreviation = data.abbreviation || null;
     if (dirtyFields.category) patch.category = data.category;
     if (dirtyFields.description) patch.description = data.description || null;
-    if (dirtyFields.enabled) patch.enabled = data.enabled;
+    if (dirtyFields.enabled_geoman) patch.enabled_geoman = data.enabled_geoman;
+    if (dirtyFields.enabled_figure_tool)
+      patch.enabled_figure_tool = data.enabled_figure_tool;
     if (dirtyFields.country_code)
       patch.country_code = data.country_code || null;
     if (dirtyFields.subdivision) patch.subdivision = data.subdivision || null;

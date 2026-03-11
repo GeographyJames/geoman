@@ -21,7 +21,8 @@ export interface LayerFormData {
   country_code: string;
   subdivision: string;
   sort_order: string;
-  enabled: boolean; // edit only — enabled toggle in EditLayerForm
+  enabled_geoman: boolean; // edit only — enabled toggle in EditLayerForm
+  enabled_figure_tool: boolean;
 }
 
 export const LAYER_FORM_DEFAULTS: LayerFormData = {
@@ -40,7 +41,8 @@ export const LAYER_FORM_DEFAULTS: LayerFormData = {
   country_code: "",
   subdivision: "",
   sort_order: "",
-  enabled: true,
+  enabled_geoman: true,
+  enabled_figure_tool: true,
 };
 
 /** Serialises a JSONB value for display in a textarea — returns empty string for null/empty objects. */
