@@ -1,7 +1,3 @@
-app_settings:
-  host: 127.0.0.1
-  port: 8000
-
 db_settings:
   require_ssl: false
   host: "localhost"
@@ -13,3 +9,8 @@ db_settings:
 geoserver:
   username: "geoman_local"
   url: "https://geoserver.geodata-manager.com/geoserver/"
+
+qgis_server:
+  url: "http://localhost:8001"
+  figure_config:
+    figure_assets_directory: "static/figure_assets"

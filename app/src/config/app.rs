@@ -9,6 +9,8 @@ use dotenvy::dotenv;
 use serde::Deserialize;
 use std::str::FromStr;
 
+use super::QgisServerSettings;
+
 /// Application configuration container
 #[derive(Deserialize, Clone)]
 pub struct AppConfig {
@@ -16,6 +18,7 @@ pub struct AppConfig {
     pub app_settings: AppSettings,
     pub db_settings: DatabaseSettings,
     pub geoserver: GeoserverSettings,
+    pub qgis_server: QgisServerSettings,
 }
 
 #[derive(Deserialize, Clone)]
@@ -49,6 +52,9 @@ pub fn get_config() -> Result<AppConfig, anyhow::Error> {
         .context("failed to add config environment to config builder")?
         .set_default("app_settings.environment.run", environment.run.to_string())
         .context("failed to add run environment to config builder")?
+        .add_source(config::File::from(
+            configuration_directory.join("base.yaml"),
+        ))
         .add_source(config::File::from(
             configuration_directory.join(environment_filename),
         ))

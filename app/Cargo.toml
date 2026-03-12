@@ -12,6 +12,7 @@ utils = { path = "../utils" }
 ogc = { path = "../ogc" }
 domain = { path = "../domain" }
 geo = { path = "../geo" }
+qgis = { path = "../qgis" }
 actix-web = { workspace = true }
 actix-multipart = { workspace = true }
 actix-files = { workspace = true }
