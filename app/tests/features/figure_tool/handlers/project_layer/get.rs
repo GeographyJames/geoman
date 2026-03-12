@@ -2,16 +2,6 @@ use geoman::app::features::figure_tool::{dtos::ProjectLayerOutputDTO, ids::Proje
 
 use crate::{app::TestApp, helpers::assert_ok};
 
-pub const VALID_TABLE_NAMES: [&str; 7] = [
-    "p0001_test_polygon",
-    "p0001_layer_with_multiple_underscores",
-    "p0001_multi_geom",
-    "p0001_table-with-hyphens",
-    "p0001_TABLE_WITH_CAPS",
-    "p0001_table with spaces",
-    "p0001 table_with_space_after_prefix",
-];
-
 #[tokio::test]
 async fn get_project_layers_works() {
     let mut expected_tables: Vec<&str> = VALID_TABLE_NAMES.to_vec();
