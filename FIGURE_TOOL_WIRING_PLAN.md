@@ -15,21 +15,23 @@ The `figure_tool` feature directory has been copied into `app/src/features/figur
 | `qgis` crate | ✅ compiles, tests pass |
 | `POST /figures` handler + test | ✅ working |
 | `GET /figures` and `GET /figures/{id}` handlers + tests | ✅ working |
+| `PATCH /figures/{id}` handler + test | ✅ working |
 | `FigureInputDTO`, `FigurePayload` | ✅ present |
+| `FigureUpdatePayload` | ✅ added to `handlers/figure/patch.rs` |
 | DB `figure/insert`, `figure_layer/insert` | ✅ working |
 | DB `figure/select`, `figure_layer/select`, `base_map/select` | ✅ working |
+| DB `figure/update` | ✅ working |
 | `SelectAll`, `SelectOne`, `SelectAllWithParams` traits | ✅ all use `Acquire` bound |
 | `domain::FeatureId`, `domain::LayoutId` | ✅ now derive `Eq + Hash` |
 | `dtos/base_map/` (`BaseMapOutputDTO`, `BaseMapDataSource`) | ✅ ported, imports fixed |
 | `dtos/figure/output.rs` (`FigureOutputDTO`) | ✅ uncommented, imports fixed |
 | `enums/mod.rs` | ✅ `FigureStatus` removed; `PrintResolution` added |
 | `ids.rs` | ✅ `BaseMapId` added |
-| PUT handler (`put.rs`) | ❌ prototype imports — needs full port |
 | DELETE handler (`delete.rs`) | ❌ prototype imports — needs full port |
-| `get_print.rs` / `get_qgis_project.rs` | ❌ commented out — deferred to Steps 6–7 |
-| DB `figure/update`, `figure/delete` | ❌ commented out |
+| `get_print.rs` / `get_qgis_project.rs` | ❌ commented out — deferred to Steps 5–6 |
+| DB `figure/delete` | ❌ commented out |
 | DB `layer_style`, `project_layer`, `qgis_project` | ❌ commented out |
-| `qgis_builder` module | ❌ still commented out — deferred to Step 6 |
+| `qgis_builder` module | ❌ still commented out — deferred to Step 5 |
 | URLs for `layer_styles`, `project_layers`, `qgis_projects` | ❌ not yet in `config/urls.yaml` |
 
 ---
@@ -37,12 +39,12 @@ The `figure_tool` feature directory has been copied into `app/src/features/figur
 ## Porting Approach
 
 ### Repository traits
-All repo traits (`SelectAll`, `SelectOne`, `SelectAllWithParams`, `Insert`, `Update`) now use the `A: Acquire<'a, Database = Postgres>` bound (owned executor), consistent across the board. This allows impls to call either `.acquire()` for a single connection or `.begin()` for a transaction. The pattern in every impl is:
+All repo traits (`SelectAll`, `SelectOne`, `SelectAllWithParams`, `Insert`, `Update`) now use the `A: Acquire<'a, Database = Postgres>` bound (owned executor), consistent across the board. This allows impls to call either `.acquire()` for a single connection or `.begin()` for a transaction. The pattern for simple impls:
 ```rust
 let mut conn = executor.acquire().await?;
 // use &mut *conn for all queries
 ```
-The `pg_repo.rs` dispatch methods pass `&self.db_pool` which implements `Acquire`, so call sites are unchanged.
+Update impls that need layer replacement use `conn.begin().await?` for a transaction. The `pg_repo.rs` dispatch methods pass `&self.db_pool` which implements `Acquire`, so call sites are unchanged.
 
 `SelectOneWithParams` and `SelectAllWithParamsStreaming` retain their existing signatures — no changes needed there.
 
@@ -52,6 +54,19 @@ The `pg_repo.rs` dispatch methods pass `&self.db_pool` which implements `Acquire
 `FigureSelection` is a private DB-internal struct: no `Serialize`/`Deserialize` derives needed.
 
 Both select queries filter `f.status != 'DELETED'` — list and by-id are consistent.
+
+### Figure update approach (PATCH)
+The prototype had a PUT that replaced the entire figure including re-inserting all layers. Geoman uses PATCH instead, matching the rest of the project's conventions.
+
+**`FigureUpdatePayload`** — new struct in `handlers/figure/patch.rs` (same pattern as `TeamUpdatePayload`):
+- Non-nullable DB columns (`scale`, `legend_width_mm`, `margin_mm`, `page_width_mm`, `page_height_mm`, `srid`, `status`, `properties`): `Option<T>` — `COALESCE($n, col)` in SQL
+- Nullable DB columns (`main_map_base_map_id`, `overview_map_base_map_id`): `Option<Option<DataProviderLayerId>>` with `#[serde(default, deserialize_with = "crate::serde_helpers::double_option")]` — `CASE WHEN $n THEN $v ELSE col END` in SQL
+- `layers: Option<Vec<FigureLayerPayload>>` — if `Some`, deletes existing layers and re-inserts; if `None`, leaves layers unchanged
+- No `project_id` field — not meaningful for an update
+
+The DB impl uses a transaction (`conn.begin()`), `RETURNING id` + `fetch_one` so a missing figure returns `RowNotFound` → 404.
+
+**Known limitation:** `properties` uses `COALESCE` which replaces the entire JSONB blob. If the client sends partial `FigureProperties` (e.g. only `title`), all other property fields are overwritten with their `Default` (null) values. A proper fix would use `properties || jsonb_strip_nulls($n::jsonb)` for merge semantics. Deferred — not blocking current tests since figures are freshly created before patching.
 
 ### Base map select
 Ported as a plain `impl BaseMapOutputDTO { pub async fn select(conn: &mut PgConnection, id: &BaseMapId) }` method, matching the call site in `from_figure_selection`. No trait machinery needed.
@@ -78,7 +93,8 @@ Ported as a plain `impl BaseMapOutputDTO { pub async fn select(conn: &mut PgConn
 | `app.site_boundaries` | `app.project_features` |
 | `fl.user_id` column | Column is `fl.added_by` in geoman — field renamed to `added_by` in `FigureLayerOutputDTO` |
 | Prototype `crate::app::` import prefix | `crate::features::`, `crate::config::`, `domain::` directly |
-| Handler return type `Result<HttpResponse, actix_web::Error>` | `Result<Json<T>, ApiError>` with `#[get("")]` / `#[get("/{id}")]` macros |
+| Handler return type `Result<HttpResponse, actix_web::Error>` | `Result<Json<T>, ApiError>` with `#[get("")]` / `#[get("/{id}")]` macros; PATCH/DELETE return `Result<HttpResponse, ApiError>` (204 No Content) |
+| PUT handler (replaces entire figure) | PATCH handler with `FigureUpdatePayload` — partial updates, layers only replaced if provided |
 
 ---
 
@@ -90,33 +106,26 @@ All passing. See porting approach above for decisions made.
 
 ---
 
-### Step 2 — PUT /figures/{id}
+### Step 2 — PATCH /figures/{id} ✅
 
-**DB layer**
-- Port `db/figure/update.rs` — fix prototype imports and any `Status` references
-
-**Handler** (`put.rs` has prototype-specific code that needs full replacement)
-- Remove `TypedSession` / `session_state` / `crate::app::` imports
-- Use `AuthenticatedUser` extractor from `crate::types`; get user id via `user.id`
-- Use `#[put("/{figure_id}")]` macro; return `Result<HttpResponse, ApiError>` (204 No Content on success)
-- Config: `web::Data<Settings>` — confirm `QgisServerSettings` / figure config path in geoman's `Settings`
-- `payload.into_input_dto(user_id, Some(config...))` — verify the config field path matches geoman's config struct
-
-**Tests**
-- `put_figure_works`
+All passing. See figure update approach above.
 
 ---
 
 ### Step 3 — DELETE /figures/{id}
 
 **DB layer**
-- Port `db/figure/delete.rs` — soft-delete: `UPDATE app.figures SET status = 'DELETED' WHERE id = $1`
+- Port `db/figure/delete.rs` — soft-delete: `UPDATE app.figures SET status = 'DELETED', last_updated = NOW(), last_updated_by = $2 WHERE id = $1 RETURNING id`
+- Use `fetch_one` so missing figure → `RowNotFound` → 404
+- Enable `mod delete` in `db/figure/mod.rs`
 
-**Handler** (`delete.rs` has prototype-specific code)
-- Use `AuthenticatedUser` extractor; `#[delete("/{figure_id}")]` macro; return `Result<HttpResponse, ApiError>`
+**Handler**
+- Create `handlers/figure/delete.rs` following the data providers delete pattern
+- `AuthenticatedUser` extractor; `#[delete("/{figure_id}")]` macro; return `Result<HttpResponse, ApiError>` (204)
+- Export from `handlers/figure/mod.rs`, register in `routes/api.rs`
 
 **Tests**
-- `delete_figure_works`
+- `delete_figure_works` — create a figure, delete it, assert GET returns 404
 
 ---
 

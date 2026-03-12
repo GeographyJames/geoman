@@ -5,13 +5,13 @@ use crate::{
     features::figure_tool::{
         db::figure_layer::insert_figure_layers,
         dtos::FigureLayerInputDTO,
-        handlers::figure::FigurePayload,
+        handlers::figure::{FigureLayerPayload, FigureUpdatePayload},
         ids::FigureId,
     },
     repo::{RepositoryError, traits::Update},
 };
 
-impl Update for (FigurePayload, FigureId, UserId) {
+impl Update for (FigureUpdatePayload, FigureId, UserId) {
     type Id = FigureId;
 
     async fn update<'a, A>(&self, conn: A) -> Result<Self::Id, RepositoryError>
@@ -33,22 +33,23 @@ impl Update for (FigurePayload, FigureId, UserId) {
                 )
             })?;
 
-        sqlx::query!(
+        let res = sqlx::query!(
             r#"
             UPDATE app.figures
-            SET scale              = COALESCE($1,  scale),
-                legend_width_mm    = COALESCE($2,  legend_width_mm),
-                margin_mm          = COALESCE($3,  margin_mm),
-                page_width_mm      = COALESCE($4,  page_width_mm),
-                page_height_mm     = COALESCE($5,  page_height_mm),
-                srid               = COALESCE($6,  srid),
-                properties         = COALESCE($7,  properties),
-                status             = COALESCE($8,  status),
-                main_map_base_map_id      = COALESCE($9,  main_map_base_map_id),
-                overview_map_base_map_id  = COALESCE($10, overview_map_base_map_id),
-                last_updated       = NOW(),
-                last_updated_by    = $11
-            WHERE id = $12
+            SET scale                    = COALESCE($1,  scale),
+                legend_width_mm          = COALESCE($2,  legend_width_mm),
+                margin_mm                = COALESCE($3,  margin_mm),
+                page_width_mm            = COALESCE($4,  page_width_mm),
+                page_height_mm           = COALESCE($5,  page_height_mm),
+                srid                     = COALESCE($6,  srid),
+                properties               = COALESCE($7,  properties),
+                status                   = COALESCE($8,  status),
+                main_map_base_map_id     = CASE WHEN $9  THEN $10 ELSE main_map_base_map_id END,
+                overview_map_base_map_id = CASE WHEN $11 THEN $12 ELSE overview_map_base_map_id END,
+                last_updated             = NOW(),
+                last_updated_by          = $13
+            WHERE id = $14
+            RETURNING id
             "#,
             payload.scale.map(|v| v as i32),
             payload.legend_width_mm.map(|v| v as i32),
@@ -58,12 +59,14 @@ impl Update for (FigurePayload, FigureId, UserId) {
             payload.srid.map(|v| v as i32),
             properties,
             payload.status as _,
-            payload.main_map_base_map_id.map(|id| id.0),
-            payload.overview_map_base_map_id.map(|id| id.0),
+            payload.main_map_base_map_id.is_some(),
+            payload.main_map_base_map_id.clone().flatten().map(|id| id.0),
+            payload.overview_map_base_map_id.is_some(),
+            payload.overview_map_base_map_id.clone().flatten().map(|id| id.0),
             user_id.0,
             id.0,
         )
-        .execute(&mut *tx)
+        .fetch_one(&mut *tx)
         .await?;
 
         if let Some(ref layers) = payload.layers {
@@ -77,16 +80,14 @@ impl Update for (FigurePayload, FigureId, UserId) {
             let layer_inputs: Vec<FigureLayerInputDTO> = layers
                 .iter()
                 .cloned()
-                .map(|l| l.try_into())
+                .map(|l: FigureLayerPayload| l.try_into())
                 .collect::<Result<_, String>>()
-                .map_err(|e| {
-                    RepositoryError::UnexpectedError(anyhow::anyhow!(e).into())
-                })?;
+                .map_err(|e| RepositoryError::UnexpectedError(anyhow::anyhow!(e).into()))?;
 
             insert_figure_layers(id, user_id, &layer_inputs, &mut *tx).await?;
         }
 
         tx.commit().await?;
-        Ok(*id)
+        Ok(FigureId(res.id))
     }
 }
