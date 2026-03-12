@@ -1,20 +1,20 @@
+use domain::{FeatureId, LayoutId, ProjectId, UserId, enums::Status};
+use qgis::layout::{PageOrientation, PageSize, Size};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    app::{
-        configuration::QgisFigureConfig,
-        features::figure_tool::{
+    config::QgisFigureConfig,
+    features::{
+        data_providers::DataProviderLayerId,
+        figure_tool::{
+            FigureLayerDatasourceInput,
             dtos::{
-                figure::{FigureInputDTO, FigureProperties},
-                figure_layer::{FigureLayerInputDTO, LayerNameInputDTO, LayerProperties},
-                pg_table::PgTableInputDTO,
+                FigureInputDTO, FigureLayerInputDTO, FigureProperties, LayerNameInputDTO,
+                LayerProperties, PgTableInputDTO,
             },
-            enums::{FigureLayerDatasourceInput, FigureStatus},
-            ids::{BaseMapId, LayerStyleId, ProjectId, SiteBoundaryId, TurbineLayoutId},
+            ids::LayerStyleId,
         },
     },
-    domain::dtos::UserId,
-    qgis::layout::{PageOrientation, PageSize, Size},
 };
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -26,11 +26,11 @@ pub struct FigurePayload {
     pub margin_mm: Option<u32>,
     pub page_width_mm: Option<u32>,
     pub page_height_mm: Option<u32>,
-    pub status: Option<FigureStatus>,
+    pub status: Option<Status>,
     pub layers: Option<Vec<FigureLayerPayload>>,
     pub srid: Option<u16>,
-    pub main_map_base_map_id: Option<BaseMapId>,
-    pub overview_map_base_map_id: Option<BaseMapId>,
+    pub main_map_base_map_id: Option<DataProviderLayerId>,
+    pub overview_map_base_map_id: Option<DataProviderLayerId>,
 }
 
 impl FigurePayload {
@@ -65,8 +65,8 @@ impl FigureLayerPayload {
 #[derive(Deserialize, Serialize, Clone)]
 pub enum FigureLayerDatasourcePayload {
     PgTable(PgTablePayload),
-    SiteBoundary(SiteBoundaryId),
-    TurbineLayout(TurbineLayoutId),
+    SiteBoundary(FeatureId),
+    TurbineLayout(LayoutId),
 }
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -100,7 +100,7 @@ impl FigurePayload {
             qgis_project_uuid: uuid::Uuid::new_v4(),
             properties: self.properties.unwrap_or_default(),
             user_id,
-            status: self.status.unwrap_or(FigureStatus::ACTIVE),
+            status: self.status.unwrap_or(Status::Active),
             page_height_mm: self
                 .page_height_mm
                 .unwrap_or(Size::from(PageSize::A3(PageOrientation::Landscape)).height_mm as u32),
@@ -151,10 +151,10 @@ impl TryFrom<FigureLayerPayload> for FigureLayerInputDTO {
                 pg_table_input_dto.get_table().to_string()
             }
             FigureLayerDatasourceInput::SiteBoundary(id) => {
-                format!("site-boundary-{}", id,)
+                format!("site-boundary-{}", id.0,)
             }
             FigureLayerDatasourceInput::TurbineLayout(id) => {
-                format!("turbine-layout-{}", id,)
+                format!("turbine-layout-{}", id.0,)
             }
         };
         name.push('-');

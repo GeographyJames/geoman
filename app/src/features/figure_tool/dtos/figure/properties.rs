@@ -1,6 +1,7 @@
+use qgis::enums::ScalebarUnits;
 use serde::{Deserialize, Serialize};
 
-use crate::{app::features::figure_tool::enums::CopyrightText, qgis::enums::ScalebarUnits};
+use crate::features::figure_tool::CopyrightText;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct FigureProperties {

@@ -1,14 +1,10 @@
 use std::str::FromStr;
 
+use domain::{FeatureId, LayoutId};
 use serde::{Deserialize, Deserializer, Serialize};
-use strum_macros::EnumString;
+use strum::EnumString;
 
-use crate::app::features::figure_tool::{
-    dtos::pg_table::{PgTableInputDTO, PgTableInvalidOutputDTO, PgTableOutputDTO},
-    ids::{SiteBoundaryId, TurbineLayoutId},
-};
-
-pub use crate::qgis::srs::SupportedEpsg;
+use super::dtos::{PgTableInputDTO, PgTableInvalidOutputDTO, PgTableOutputDTO};
 
 #[derive(Serialize, Debug, Default, Clone, EnumString)]
 #[strum(ascii_case_insensitive)]
@@ -52,18 +48,18 @@ impl<'de> Deserialize<'de> for FigureStatus {
 #[derive(Debug, Clone, Serialize)]
 pub enum FigureLayerDatasourceInput {
     PgTable(PgTableInputDTO),
-    SiteBoundary(SiteBoundaryId),
-    TurbineLayout(TurbineLayoutId),
+    SiteBoundary(FeatureId),
+    TurbineLayout(LayoutId),
 }
 
 impl FigureLayerDatasourceInput {
-    pub fn site_boundary_id(&self) -> Option<SiteBoundaryId> {
+    pub fn site_boundary_id(&self) -> Option<FeatureId> {
         match self {
             FigureLayerDatasourceInput::SiteBoundary(id) => Some(*id),
             _ => None,
         }
     }
-    pub fn turbine_layout_id(&self) -> Option<TurbineLayoutId> {
+    pub fn turbine_layout_id(&self) -> Option<LayoutId> {
         match self {
             FigureLayerDatasourceInput::TurbineLayout(id) => Some(*id),
             _ => None,
@@ -86,13 +82,13 @@ pub enum FigureLayerDatasourceOutput {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SiteBoundaryDatasourceOutputDTO {
-    pub id: SiteBoundaryId,
+    pub id: FeatureId,
     pub name: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TurbineLayoutDatasourceOutputDTO {
-    pub id: TurbineLayoutId,
+    pub id: LayoutId,
     pub name: Option<String>,
 }
 

@@ -1,4 +1,4 @@
-mod delete;
+// mod delete;
 mod insert;
-mod select;
-mod update;
+// mod select;
+// mod update;

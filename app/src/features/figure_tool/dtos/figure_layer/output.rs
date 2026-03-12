@@ -1,14 +1,12 @@
 use chrono::Utc;
+use domain::UserId;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 
-use crate::{
-    app::features::figure_tool::{
-        dtos::bounding_box::BoundingBox,
-        enums::FigureLayerDatasourceOutput,
-        ids::{FigureId, FigureLayerId, LayerStyleId},
-    },
-    domain::dtos::UserId,
+use crate::features::figure_tool::{
+    FigureLayerDatasourceOutput,
+    dtos::BoundingBox,
+    ids::{FigureId, FigureLayerId, LayerStyleId},
 };
 
 use super::LayerProperties;

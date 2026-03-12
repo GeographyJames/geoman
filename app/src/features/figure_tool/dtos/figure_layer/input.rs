@@ -1,7 +1,4 @@
-use crate::app::features::figure_tool::{
-    enums::FigureLayerDatasourceInput,
-    ids::LayerStyleId,
-};
+use crate::features::figure_tool::{FigureLayerDatasourceInput, ids::LayerStyleId};
 
 use super::LayerProperties;
 

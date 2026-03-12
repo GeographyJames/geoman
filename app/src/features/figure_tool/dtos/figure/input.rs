@@ -1,13 +1,8 @@
+use domain::{ProjectId, UserId, enums::Status};
+
 use crate::{
-    app::{
-        configuration::QgisFigureConfig,
-        features::figure_tool::{
-            dtos::figure_layer::FigureLayerInputDTO,
-            enums::FigureStatus,
-            ids::{BaseMapId, ProjectId},
-        },
-    },
-    domain::dtos::UserId,
+    config::QgisFigureConfig,
+    features::{data_providers::DataProviderLayerId, figure_tool::dtos::FigureLayerInputDTO},
 };
 
 use super::FigureProperties;
@@ -16,11 +11,11 @@ use super::FigureProperties;
 pub struct FigureInputDTO {
     pub project_id: ProjectId,
     pub properties: FigureProperties,
-    pub main_map_base_map_id: Option<BaseMapId>,
-    pub overvier_map_base_map_id: Option<BaseMapId>,
+    pub main_map_base_map_id: Option<DataProviderLayerId>,
+    pub overvier_map_base_map_id: Option<DataProviderLayerId>,
     pub qgis_project_uuid: uuid::Uuid,
     pub user_id: UserId,
-    pub status: FigureStatus,
+    pub status: Status,
     pub page_width_mm: u32,
     pub page_height_mm: u32,
     pub scale: u32,

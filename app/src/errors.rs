@@ -40,7 +40,7 @@ pub enum ApiError {
     GisDataTableNotFound(TableName),
     #[error("Collection not found")]
     CollectionNotFound,
-    #[error("Feature '{0}' not found")]
+    #[error("Feature not found")]
     FeatureNotFound(FeatureId),
     #[error(transparent)]
     ProjectValidation(#[from] ProjectValidationError),
@@ -78,6 +78,8 @@ pub enum ApiError {
     UnassignedUser,
     #[error("{0}")]
     Forbidden(String),
+    #[error("{0}")]
+    Validation(String),
 }
 
 impl From<RepositoryError> for ApiError {
@@ -105,6 +107,7 @@ impl From<RepositoryError> for ApiError {
                 _ => ApiError::DatabaseCheckConstraintViolation(check_key),
             },
             RepositoryError::UnknowConstraintViolation(_) => ApiError::UnexpectedDatabase(value),
+            RepositoryError::UnexpectedError(e) => ApiError::Unexpected(e),
         }
     }
 }
@@ -142,6 +145,7 @@ impl ResponseError for ApiError {
             ApiError::TurbineProximityViolation => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::UnassignedUser => StatusCode::UNAUTHORIZED,
             ApiError::Forbidden(_) => StatusCode::UNAUTHORIZED,
+            ApiError::Validation(_) => StatusCode::UNPROCESSABLE_ENTITY,
         }
     }
 

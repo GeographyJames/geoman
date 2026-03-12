@@ -1,2 +1,2 @@
 pub mod data_providers;
-// pub mod figure_tool;
+pub mod figure_tool;

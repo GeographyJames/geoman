@@ -42,7 +42,7 @@ async fn patch_project_feature_works() {
             &app.api_client,
             format!(
                 "{}/{}/{}",
-                project_id, feature_id.collection_id, feature_id.feature_id
+                project_id, feature_id.collection_id, feature_id.feature_id.0
             ),
             Some(&auth),
             &payload,
@@ -84,7 +84,7 @@ async fn only_project_team_can_patch_feature() {
             &app.api_client,
             format!(
                 "{}/{}/{}",
-                project_id, feature_id.collection_id, feature_id.feature_id
+                project_id, feature_id.collection_id, feature_id.feature_id.0
             ),
             Some(&outsider),
             &PatchProjectFeaturePayload::default(),

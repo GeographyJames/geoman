@@ -8,35 +8,23 @@ Tests will be deferred to a follow-up phase — this plan covers source code onl
 
 ---
 
-## Step 1: Infrastructure — dependencies, config, repo traits, error variants
-
-Add all scaffolding that figure_tool depends on, without uncommenting the module yet.
-
-### 1a. Add qgis dependency to app crate
-- **`app/Cargo.toml`** — add `qgis = { path = "../qgis" }`
-
-### 1b. Add QGIS server config types
-- **New file: `app/src/config/qgis_server.rs`** — `QgisServerSettings { url, figure_config }` and `QgisFigureConfig` (copy from geodata-manager's `src/app/configuration.rs` lines 20–53)
-- **`app/src/config/mod.rs`** — add `mod qgis_server; pub use qgis_server::*;`
-- **`app/src/config/app.rs`** — add `pub qgis_server: QgisServerSettings` to `AppConfig`
-- **`config/development.yaml`** — add `qgis_server:` section with url and figure_config fields
-
-### 1c. Register new app data in startup
-- **`app/src/startup.rs`** — register `web::Data::new(config.qgis_server.clone())` and `web::Data::new(config.db_settings.clone())` as app data so handlers can extract `web::Data<QgisServerSettings>` and `web::Data<DatabaseSettings>`
-
 ### 1d. Add RepositoryError::Unexpected variant
+
 - **`app/src/repo/error.rs`** — add `#[error("unexpected error: {0}")] Unexpected(anyhow::Error)` variant (figure_tool DB code uses this for JSON serialization and GDAL errors)
 
 ### 1e. Add ApiError variants for figure_tool
+
 - **`app/src/errors.rs`** — add `Validation(String)` variant (status 422), handle `RepositoryError::Unexpected` in `From<RepositoryError>` impl
 
 ### 1f. Add missing repo traits
+
 - **`app/src/repo/traits.rs`** — add:
   - `Delete<ID>` — `async fn delete(executor, id) -> Result<(), RepositoryError>`
   - `SelectAllForProject<ID>` — using `Acquire` (figure select needs transactions)
   - `CheckUnique` — with associated type `Key`
 
 ### 1g. Add PostgresRepo dispatch methods
+
 - **`app/src/postgres/pg_repo.rs`** — add `delete`, `select_all_for_project`, `check_unique` methods
 
 **Verify:** `cargo check` passes (figure_tool not yet compiled)
@@ -46,12 +34,14 @@ Add all scaffolding that figure_tool depends on, without uncommenting the module
 ## Step 2: Fix leaf modules — ids, enums, entities, DTOs
 
 Fix imports in all data-only modules. The universal change is:
+
 - `crate::app::features::figure_tool::` → `crate::features::figure_tool::`
 - `crate::app::configuration::QgisFigureConfig` → `crate::config::QgisFigureConfig`
 - `crate::domain::dtos::UserId` → `domain::UserId`
 - `crate::qgis::` → `qgis::`
 
 **Files** (only those with imports to fix):
+
 - `enums/mod.rs` — fix `crate::app::` and `crate::qgis::srs::SupportedEpsg`
 - `dtos/figure/properties.rs` — fix `crate::app::` and `crate::qgis::enums::`
 - `dtos/figure/input.rs` — fix `crate::app::`, `crate::domain::dtos::UserId`, config import
@@ -70,10 +60,12 @@ Fix imports in all data-only modules. The universal change is:
 ## Step 3: Fix qgis_builder module + remove authcfg
 
 ### 3a. Remove authcfg parameter chain (per FIGURE_TOOL_PORT.md)
+
 - `qgis_builder/mod.rs` — remove `authcfg: Option<String>` from `generate_project()` signature and forwarding call
 - `qgis_builder/pg_vector_layer.rs` — remove `authcfg: Option<String>` param, set `PgDataSource.authcfg` to `None`
 
 ### 3b. Fix imports in all qgis_builder files
+
 - `qgis_builder/mod.rs` — fix config, dtos, qgis imports
 - `qgis_builder/pg_vector_layer.rs` — fix `crate::app::`, `crate::qgis::`
 - `qgis_builder/figure_builder/mod.rs` — fix config, dtos, qgis imports
@@ -89,6 +81,7 @@ Fix imports in all data-only modules. The universal change is:
 ## Step 4: Adapt DB implementations to geoman's repo traits
 
 The most complex step. Key changes:
+
 - Old `Insert<&PgPool, FigureId>` → new `Insert { type Id = FigureId; }` with `Acquire` executor
 - Old `Update<&PgPool, FigureId>` takes separate id → new `Update for (FigureInputDTO, FigureId)`
 - Old `Select` returns `Result<Self, _>` → new `SelectOne` returns `Result<Option<Self>, _>`
@@ -97,22 +90,23 @@ The most complex step. Key changes:
 
 **Files:**
 
-| File | Old trait | New trait |
-|------|-----------|-----------|
-| `db/figure/insert.rs` | `Insert<&PgPool, FigureId>` | `Insert { type Id = FigureId }` |
-| `db/figure/update.rs` | `Update<&PgPool, FigureId>` | `Update for (FigureInputDTO, FigureId)` |
-| `db/figure/select.rs` | `SelectAllForProject<&PgPool, ProjectId>`, `Select<&mut PgConnection, FigureId>` | `SelectAllForProject<&ProjectId>`, `SelectOne<&FigureId>` |
-| `db/figure/delete.rs` | `Delete<REPO, ID>` | `Delete<&FigureId>` |
-| `db/base_map/select.rs` | `SelectAll<REPO>`, `Select<&mut PgConnection, BaseMapId>` | `SelectAll`, `SelectOne<&BaseMapId>` |
-| `db/layer_style/select.rs` | `SelectAll<&PgPool>` | `SelectAll` |
-| `db/project_layer/select.rs` | `SelectAllForProject<&PgPool, ProjectId>` | `SelectAllForProject<&ProjectId>` |
-| `db/qgis_project/insert.rs` | `Insert<&PgPool, String>` | `Insert { type Id = String }` |
-| `db/qgis_project/select.rs` | `Select<&mut PgConnection, QgisProjectName>` | `SelectOne<&QgisProjectName>` |
-| `db/qgis_project/check_unique.rs` | `CheckUnique<REPO, QgisProjectName>` | `CheckUnique { type Key = QgisProjectName }` |
-| `db/figure_layer/insert.rs` | helper fn (not trait) | import fixes only |
-| `db/figure_layer/select.rs` | helper fn (not trait) | import fixes only |
+| File                              | Old trait                                                                        | New trait                                                 |
+| --------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `db/figure/insert.rs`             | `Insert<&PgPool, FigureId>`                                                      | `Insert { type Id = FigureId }`                           |
+| `db/figure/update.rs`             | `Update<&PgPool, FigureId>`                                                      | `Update for (FigureInputDTO, FigureId)`                   |
+| `db/figure/select.rs`             | `SelectAllForProject<&PgPool, ProjectId>`, `Select<&mut PgConnection, FigureId>` | `SelectAllForProject<&ProjectId>`, `SelectOne<&FigureId>` |
+| `db/figure/delete.rs`             | `Delete<REPO, ID>`                                                               | `Delete<&FigureId>`                                       |
+| `db/base_map/select.rs`           | `SelectAll<REPO>`, `Select<&mut PgConnection, BaseMapId>`                        | `SelectAll`, `SelectOne<&BaseMapId>`                      |
+| `db/layer_style/select.rs`        | `SelectAll<&PgPool>`                                                             | `SelectAll`                                               |
+| `db/project_layer/select.rs`      | `SelectAllForProject<&PgPool, ProjectId>`                                        | `SelectAllForProject<&ProjectId>`                         |
+| `db/qgis_project/insert.rs`       | `Insert<&PgPool, String>`                                                        | `Insert { type Id = String }`                             |
+| `db/qgis_project/select.rs`       | `Select<&mut PgConnection, QgisProjectName>`                                     | `SelectOne<&QgisProjectName>`                             |
+| `db/qgis_project/check_unique.rs` | `CheckUnique<REPO, QgisProjectName>`                                             | `CheckUnique { type Key = QgisProjectName }`              |
+| `db/figure_layer/insert.rs`       | helper fn (not trait)                                                            | import fixes only                                         |
+| `db/figure_layer/select.rs`       | helper fn (not trait)                                                            | import fixes only                                         |
 
 **Key complication — `db/figure/select.rs`:** Both `SelectAllForProject` and `SelectOne` impls need transactions internally (sub-queries for layers, base maps). The `SelectAllForProject` trait uses `Acquire` which supports `begin()`. For `SelectOne`, since `PgExecutor` doesn't have `begin()`, either:
+
 - Use `Acquire` in the `SelectOne` trait for this type specifically, or
 - Put figure-specific select logic as a direct method on `PostgresRepo`
 
@@ -125,6 +119,7 @@ The most complex step. Key changes:
 ## Step 5: Adapt handlers
 
 Common changes across ALL handlers:
+
 - `TypedSession` + `user_id(&session)?` → `web::ReqData<AuthenticatedUser>` + `user.id`
 - `web::Data<Settings>` → `web::Data<QgisServerSettings>` + `web::Data<DatabaseSettings>` where needed
 - `ApiError::Repository { source, message }` → just `?` (auto-convert)
@@ -135,6 +130,7 @@ Common changes across ALL handlers:
 - `repo.update(&dto, &id)` → `repo.update(&(dto, id))`
 
 **Files:**
+
 - `handlers/figure/payload.rs` — import fixes
 - `handlers/figure/post.rs` — auth, config, error changes
 - `handlers/figure/get.rs` — auth, error, `select_one` changes, **remove `UserOutputDTO` + authcfg from `get_figure_qgis_project`**

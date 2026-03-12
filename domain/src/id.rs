@@ -48,18 +48,12 @@ impl Display for ProjectFeatureId {
         write!(
             f,
             "collection id: {}, feature id: {}",
-            self.collection_id, self.feature_id
+            self.collection_id, self.feature_id.0
         )
     }
 }
 
 impl Display for ProjectId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl Display for FeatureId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }

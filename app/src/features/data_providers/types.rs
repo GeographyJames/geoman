@@ -19,10 +19,10 @@ pub enum DataProviderServiceType {
     #[default]
     ImageWMS,
     TileWMS,
-    WMTS,
-    WFS,
+    Wmts,
+    Wfs,
     ArcGISRest,
-    MVT,
+    Mvt,
     OGCAPIFeatures,
     XYZ,
 }

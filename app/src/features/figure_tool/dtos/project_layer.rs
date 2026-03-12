@@ -1,12 +1,9 @@
 use std::str::FromStr;
 
+use domain::ProjectId;
+use qgis::layer::{Geometry, WkbType};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-
-use crate::{
-    app::features::figure_tool::ids::ProjectId,
-    qgis::layer::{Geometry, WkbType},
-};
 
 #[derive(Deserialize, Serialize)]
 pub struct ProjectLayerOutputDTO {

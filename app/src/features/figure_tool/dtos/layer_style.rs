@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::app::features::figure_tool::ids::LayerStyleId;
+use crate::features::figure_tool::ids::LayerStyleId;
 
 #[derive(Serialize, Deserialize)]
 pub struct LayerStyleOutputDTO {

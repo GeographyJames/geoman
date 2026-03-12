@@ -20,6 +20,8 @@ pub enum RepositoryError {
     CheckConstraintViolation(CheckKey),
     #[error("{0}")]
     UnknowConstraintViolation(sqlx::Error),
+    #[error(transparent)]
+    UnexpectedError(anyhow::Error),
 }
 
 impl From<sqlx::Error> for RepositoryError {

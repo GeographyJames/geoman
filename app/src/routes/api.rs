@@ -1,11 +1,14 @@
 use crate::{
     URLS,
     enums::GeoManEnvironment,
-    features::data_providers::handlers::{
-        delete_data_provider, delete_data_provider_layer, delete_data_provider_service,
-        get_data_provider_layers, get_data_provider_services, get_data_providers,
-        patch_data_provider, patch_data_provider_layer, patch_data_provider_service,
-        post_data_provider, post_data_provider_layer, post_data_provider_service,
+    features::{
+        data_providers::handlers::{
+            delete_data_provider, delete_data_provider_layer, delete_data_provider_service,
+            get_data_provider_layers, get_data_provider_services, get_data_providers,
+            patch_data_provider, patch_data_provider_layer, patch_data_provider_service,
+            post_data_provider, post_data_provider_layer, post_data_provider_service,
+        },
+        figure_tool::handlers::figure::post_figure,
     },
     handlers::api::{
         business_units::{
@@ -60,7 +63,8 @@ pub fn api_routes(cfg: &mut web::ServiceConfig, _clerk: Clerk, run_environment: 
         .configure(tile_routes)
         .configure(data_providers_routes)
         .configure(data_provider_services_routes)
-        .configure(data_provider_layers_routes);
+        .configure(data_provider_layers_routes)
+        .configure(figures_routes);
 
     match run_environment {
         GeoManEnvironment::Development => {
@@ -179,4 +183,8 @@ pub fn data_provider_layers_routes(cfg: &mut web::ServiceConfig) {
             .service(patch_data_provider_layer)
             .service(delete_data_provider_layer),
     );
+}
+
+pub fn figures_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(scope(&URLS.api.figures).service(post_figure));
 }

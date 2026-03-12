@@ -14,12 +14,15 @@ use app::{
     AppConfig, Application, AuthenticatedUser, DatabaseSettings, Password, URLS,
     constants::{GIS_DATA_SCHEMA, SITE_BOUNDARIES_COLLECTION_ID, TURBINE_LAYOUTS_COLLECTION_ID},
     enums::GeoManEnvironment,
-    features::data_providers::{
-        DataProviderId, DataProviderLayerId, DataProviderServiceId,
-        handlers::{
-            DataProviderInputPayload, DataProviderLayerInputPayload,
-            DataProviderServiceInputPayload,
+    features::{
+        data_providers::{
+            DataProviderId, DataProviderLayerId, DataProviderServiceId,
+            handlers::{
+                DataProviderInputPayload, DataProviderLayerInputPayload,
+                DataProviderServiceInputPayload,
+            },
         },
+        figure_tool::{handlers::figure::FigurePayload, ids::FigureId},
     },
     get_config,
     handlers::{
@@ -79,6 +82,7 @@ pub struct TestApp<T: AuthService> {
     pub data_providers_service: HttpService,
     pub data_provider_services_service: HttpService,
     pub data_provider_layers_service: HttpService,
+    pub figures_service: HttpService,
 }
 
 pub struct AppBuilder {
@@ -197,6 +201,9 @@ impl TestApp<ClerkAuthService> {
             },
             data_provider_layers_service: HttpService {
                 endpoint: format!("{}{}", URLS.api.base, URLS.api.data_provider_layers),
+            },
+            figures_service: HttpService {
+                endpoint: format!("{}{}", URLS.api.base, URLS.api.figures),
             },
         }
     }
@@ -705,5 +712,15 @@ first_name, last_name,
             serde_json::Value::String(slug) => slug,
             _ => panic!("project slug not a string"),
         }
+    }
+
+    pub async fn generate_figure_id(&self, auth: Option<&Auth>, project_id: ProjectId) -> FigureId {
+        let figure = FigurePayload::new(project_id);
+        self.figures_service
+            .post_json(&self.api_client, auth, &figure)
+            .await
+            .json()
+            .await
+            .expect("failed to deserialize json")
     }
 }

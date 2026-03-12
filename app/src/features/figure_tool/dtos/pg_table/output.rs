@@ -1,9 +1,8 @@
-use serde::{Deserialize, Serialize};
-
-use crate::{
-    app::features::figure_tool::enums::SupportedEpsg,
-    qgis::layer::{Geometry, WkbType},
+use qgis::{
+    layer::{Geometry, WkbType},
+    srs::SupportedEpsg,
 };
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Debug, Clone, Deserialize)]
 pub struct PgTableOutputDTO {
