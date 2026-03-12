@@ -1,21 +1,16 @@
 use std::{collections::HashSet, fmt::Display};
 
 use chrono::Utc;
+use qgis::{Extent, layout::Size};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    app::features::figure_tool::{
-        dtos::{
-            base_map::BaseMapOutputDTO,
-            bounding_box::Point,
-            figure_layer::FigureLayerOutputDTO,
-        },
-        enums::{FigureLayerDatasourceOutput, FigureStatus, ProjectLayer},
-        ids::{BaseMapId, FigureId, ProjectId, SiteBoundaryId, TurbineLayoutId},
-        qgis_builder::PrintResolution,
-    },
-    domain::dtos::UserId,
-    qgis::{Extent, layout::Size},
+use domain::{FeatureId, LayoutId, ProjectId, UserId, enums::Status};
+
+use crate::features::figure_tool::{
+    PrintResolution,
+    dtos::{base_map::BaseMapOutputDTO, bounding_box::Point, figure_layer::FigureLayerOutputDTO},
+    enums::{FigureLayerDatasourceOutput, ProjectLayer},
+    ids::{BaseMapId, FigureId},
 };
 
 use super::FigureProperties;
@@ -39,7 +34,7 @@ pub struct FigureOutputDTO {
     pub last_updated_by: UserId,
     pub last_updated_by_first_name: String,
     pub last_updated_by_last_name: String,
-    pub status: FigureStatus,
+    pub status: Status,
     pub added: chrono::DateTime<Utc>,
     pub last_updated: chrono::DateTime<Utc>,
     pub page_width_mm: i32,
@@ -148,7 +143,7 @@ impl FigureOutputDTO {
     }
 
     pub fn user_id_with_initials_and_last_updated(&self) -> String {
-        let mut user_id = format!("U{:04}", self.last_updated_by.as_ref());
+        let mut user_id = format!("U{:04}", self.last_updated_by.0);
         if let (Some(first_initial), Some(second_initial)) = (
             self.last_updated_by_first_name.chars().next(),
             self.last_updated_by_last_name.chars().next(),
@@ -163,7 +158,7 @@ impl FigureOutputDTO {
         ));
         user_id
     }
-    pub fn unique_boundary_ids_on_map(&self) -> HashSet<SiteBoundaryId> {
+    pub fn unique_boundary_ids_on_map(&self) -> HashSet<FeatureId> {
         if let Some(ref layers) = self.layers {
             layers
                 .iter()
@@ -181,7 +176,7 @@ impl FigureOutputDTO {
         }
     }
 
-    pub fn unique_layout_ids_on_map(&self) -> HashSet<TurbineLayoutId> {
+    pub fn unique_layout_ids_on_map(&self) -> HashSet<LayoutId> {
         if let Some(ref layers) = self.layers {
             layers
                 .iter()

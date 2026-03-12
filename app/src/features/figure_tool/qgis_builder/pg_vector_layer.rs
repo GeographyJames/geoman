@@ -1,10 +1,11 @@
 use crate::{
-    app::features::figure_tool::{
-        dtos::{figure_layer::FigureLayerOutputDTO, pg_table::PgTableOutputDTO},
-        enums::{FigureLayerDatasourceOutput, ProjectLayer, SupportedEpsg},
+    features::figure_tool::{
+        dtos::{FigureLayerOutputDTO, PgTableOutputDTO},
+        enums::{FigureLayerDatasourceOutput, ProjectLayer},
     },
-    qgis::layer::{
-        MapLayer, PgConfig, PgDataSource, PgSource, PgTable, QgisMapLayerBuilder, WkbType,
+    qgis::{
+        layer::{MapLayer, PgConfig, PgDataSource, PgSource, PgTable, QgisMapLayerBuilder, WkbType},
+        srs::SupportedEpsg,
     },
 };
 
@@ -33,7 +34,7 @@ pub fn generate_pg_vector_layer(
             match layer.properties.convert_boundary_to_singleparts {
                 false => Some((
                     PgSource::SQL(format!(
-                        "SELECT id, name, geom FROM app.site_boundaries WHERE id = {}",
+                        "SELECT id, name, geom FROM app.project_features WHERE id = {}",
                         ds.id
                     )),
                     WkbType::MultiPolygon,
@@ -45,7 +46,7 @@ pub fn generate_pg_vector_layer(
                         r"SELECT row_number() over (ORDER BY path) as id, {0} as boundary_id, name, geom
   FROM (
       SELECT sb.name, dump.path, dump.geom
-      FROM app.site_boundaries sb, ST_Dump(sb.geom) as dump
+      FROM app.project_features sb, ST_Dump(sb.geom) as dump
       WHERE sb.id = {0}
   ) parts",
                         ds.id

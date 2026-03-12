@@ -2,7 +2,7 @@ use chrono::Datelike;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Row, postgres::PgRow};
 
-use crate::app::features::figure_tool::ids::{BaseMapId, DataProviderId};
+use crate::features::figure_tool::ids::{BaseMapId, DataProviderId};
 
 use super::BaseMapDataSource;
 

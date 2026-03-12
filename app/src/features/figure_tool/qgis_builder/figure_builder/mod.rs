@@ -1,10 +1,8 @@
 use uuid::Uuid;
 
 use crate::{
-    app::{
-        configuration::QgisFigureConfig,
-        features::figure_tool::dtos::figure::FigureOutputDTO,
-    },
+    config::QgisFigureConfig,
+    features::figure_tool::dtos::FigureOutputDTO,
     qgis::{
         enums::EPSGID,
         layout::{

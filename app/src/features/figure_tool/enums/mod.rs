@@ -16,6 +16,12 @@ pub enum CopyrightText {
     None,
 }
 
+#[derive(Copy, Clone)]
+pub enum PrintResolution {
+    High = 300,
+    Low = 96,
+}
+
 impl<'de> Deserialize<'de> for CopyrightText {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -23,25 +29,6 @@ impl<'de> Deserialize<'de> for CopyrightText {
     {
         let s: String = Deserialize::deserialize(deserializer)?;
         CopyrightText::from_str(&s).map_err(serde::de::Error::custom)
-    }
-}
-
-#[derive(EnumString, Serialize, Clone, sqlx::Type, Debug, PartialEq)]
-#[strum(ascii_case_insensitive)]
-#[sqlx(type_name = "figure_status", rename_all = "lowercase")]
-pub enum FigureStatus {
-    ACTIVE,
-    DELETED,
-    ARCHIVED,
-}
-
-impl<'de> Deserialize<'de> for FigureStatus {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let s = String::deserialize(deserializer)?;
-        Self::from_str(&s).map_err(serde::de::Error::custom)
     }
 }
 

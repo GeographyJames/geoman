@@ -39,7 +39,7 @@ impl FigureBuilder<'_> {
         let mut asset_ids = String::new();
         let project_id = format!(
             "P{:05}{}",
-            self.fig.project_id.as_ref(),
+            self.fig.project_id.0,
             self.fig
                 .project_name
                 .chars()

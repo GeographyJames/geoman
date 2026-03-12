@@ -12,21 +12,21 @@ impl FigureBuilder<'_> {
     pub fn add_copyright_text(&mut self) {
         if let Some(ref copyright_text) = self.fig.properties.copyright_text {
             let text = match copyright_text {
-                crate::app::features::figure_tool::enums::CopyrightText::Default => {
+                crate::features::figure_tool::CopyrightText::Default => {
                     if let Some(ref main_map) = self.fig.main_map_base_map {
                         main_map.data_provider.copyright_text.clone()
                     } else {
                         None
                     }
                 }
-                crate::app::features::figure_tool::enums::CopyrightText::Custom => self
+                crate::features::figure_tool::CopyrightText::Custom => self
                     .fig
                     .properties
                     .custom_copyright_text
                     .as_ref()
                     .map(|s| s.to_owned()),
 
-                crate::app::features::figure_tool::enums::CopyrightText::None => None,
+                crate::features::figure_tool::CopyrightText::None => None,
             };
             if let Some(text) = text {
                 let mut copyright_text = LayoutItem::text(text, 10, None, Color::black());

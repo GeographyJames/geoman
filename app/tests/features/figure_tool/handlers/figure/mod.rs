@@ -1,4 +1,4 @@
 // mod delete;
-// mod get;
+mod get;
 mod post;
 // mod put;

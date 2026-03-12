@@ -4,12 +4,10 @@ mod figure_builder;
 mod pg_vector_layer;
 
 use crate::{
-    app::{
-        configuration::QgisFigureConfig,
-        features::figure_tool::dtos::{
-            base_map::BaseMapDataSource,
-            figure::FigureOutputDTO,
-        },
+    config::QgisFigureConfig,
+    features::figure_tool::{
+        PrintResolution,
+        dtos::{base_map::BaseMapDataSource, figure::FigureOutputDTO},
     },
     qgis::{
         enums::EPSGID,
@@ -21,12 +19,6 @@ use crate::{
 
 use figure_builder::FigureBuilder;
 use pg_vector_layer::generate_pg_vector_layer;
-
-#[derive(Copy, Clone)]
-pub enum PrintResolution {
-    High = 300,
-    Low = 96,
-}
 
 pub fn generate_project(
     fig: FigureOutputDTO,

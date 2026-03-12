@@ -1,7 +1,6 @@
-// pub mod base_map;
+pub mod base_map;
 mod bounding_box;
-pub use bounding_box::BoundingBox;
-// pub use bounding_box::{BoundingBox, Point};
+pub use bounding_box::{BoundingBox, Point};
 
 mod figure;
 pub use figure::*;

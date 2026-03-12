@@ -39,6 +39,7 @@ macro_rules! typed_id {
 
 typed_id!(FigureId);
 typed_id!(FigureLayerId);
+typed_id!(BaseMapId);
 
 typed_id!(DataProviderId);
 typed_id!(LayerStyleId);
