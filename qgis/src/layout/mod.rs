@@ -9,7 +9,7 @@ pub use page_size::{PageOrientation, PageSize};
 
 use serde::Serialize;
 
-use crate::qgis::{Symbol, layout::components::LayoutItem};
+use crate::{Symbol, layout::components::LayoutItem};
 
 pub struct QgisLayoutBuilder {
     pub page_size: Size,
@@ -177,7 +177,7 @@ impl Default for Atlas {
 #[cfg(test)]
 mod tests {
 
-    use crate::qgis::tests::test_helpers::xml_comparison;
+    use crate::tests::test_helpers::xml_comparison;
 
     use super::*;
 

@@ -1,4 +1,4 @@
-use crate::qgis::{
+use crate::{
     QgisUuid,
     data_defined_properties::DataDefinedProperties,
     enums::{LineJoinStyle, ReferencePoint},
@@ -15,7 +15,7 @@ impl LayoutItem {
             picture_rotation: Some(0.0),
             background: false,
             position: Position { x: 380.0, y: 242.0 },
-            reference_point: crate::qgis::enums::ReferencePoint::MiddleCenter,
+            reference_point: crate::enums::ReferencePoint::MiddleCenter,
             mode: Some(0), // SVG mode
             position_lock: false,
             blend_mode: 0,
@@ -38,7 +38,7 @@ impl LayoutItem {
             map_uuid: None,
             outline_width_m: Length {
                 distance: 0.3,
-                units: crate::qgis::enums::Units::Millimeter,
+                units: crate::enums::Units::Millimeter,
             },
             resize_mode: Some(0),
             id,
@@ -64,7 +64,7 @@ impl LayoutItem {
 
 #[cfg(test)]
 mod tests {
-    use crate::qgis::{
+    use crate::{
         layout::{
             Size,
             components::{LayoutItem, Position},

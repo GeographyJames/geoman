@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::qgis::{
+use crate::{
     QgisUuid,
     layout::components::{Color, LayoutObject},
     symbol::Symbol,

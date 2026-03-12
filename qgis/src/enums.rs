@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 
-use crate::qgis::{Extent, srs::SpatialRefSys};
+use crate::{Extent, srs::SpatialRefSys};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 #[repr(u8)]

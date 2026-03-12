@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::qgis::{layer::ResourceType, srs::Srs};
+use crate::{layer::ResourceType, srs::Srs};
 
 #[derive(Serialize, Default, Clone)]
 pub struct ResourceMetadata {

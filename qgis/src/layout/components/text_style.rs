@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::qgis::{
+use crate::{
     data_defined_properties::{DataDefinedProperties, PropertiesOption, PropertyOption},
     enums::NamedTextStyle,
     layout::components::Color,

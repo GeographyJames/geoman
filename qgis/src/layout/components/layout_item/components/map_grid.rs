@@ -1,4 +1,4 @@
-use crate::qgis::{
+use crate::{
     QgisUuid,
     data_defined_properties::DataDefinedProperties,
     enums::{LineCapStyle, LineJoinStyle},
@@ -215,7 +215,7 @@ impl ComposerMapGrid {
 }
 #[cfg(test)]
 mod tests {
-    use crate::qgis::{
+    use crate::{
         layout::components::layout_item::components::ComposerMapGrid,
         tests::test_helpers::{SkipNode, xml_comparison},
     };

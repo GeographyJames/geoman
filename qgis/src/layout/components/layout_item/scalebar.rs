@@ -1,4 +1,4 @@
-use crate::qgis::{
+use crate::{
     QgisUuid, Symbol,
     data_defined_properties::PropertyOption,
     enums::{LineCapStyle, LineJoinStyle, ReferencePoint, ScalebarUnits, Units},
@@ -121,7 +121,7 @@ impl LayoutItem {
 mod tests {
     use uuid::Uuid;
 
-    use crate::qgis::{
+    use crate::{
         enums::ScalebarUnits,
         layout::{
             Size,

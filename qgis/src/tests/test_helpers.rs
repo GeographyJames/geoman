@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::qgis::{
+use crate::{
     helpers::{XmlNode, parse_xml_to_tree},
     layer::{
         DataSource, MapLayer, PgConfig, PgDataSource, PgSource, PgTable, QgisMapLayerBuilder,

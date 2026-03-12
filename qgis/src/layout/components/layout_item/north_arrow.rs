@@ -1,4 +1,4 @@
-use crate::qgis::{
+use crate::{
     QgisUuid,
     enums::ReferencePoint,
     layout::{
@@ -25,7 +25,7 @@ impl LayoutItem {
 
 #[cfg(test)]
 mod tests {
-    use crate::qgis::{
+    use crate::{
         layout::{
             Size,
             components::{LayoutItem, Position},

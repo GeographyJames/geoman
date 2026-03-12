@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::qgis::Symbol;
+use crate::Symbol;
 mod composer_map_overview;
 mod map_grid;
 pub use composer_map_overview::ComposerMapOverview;

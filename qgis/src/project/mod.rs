@@ -14,8 +14,8 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use zip::{ZipWriter, result::ZipError, write::FileOptions};
 
-use crate::qgis::helpers::insert_renderer_v2_into_project;
-use crate::qgis::helpers::unzip_content;
+use crate::helpers::insert_renderer_v2_into_project;
+use crate::helpers::unzip_content;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QgisProjectMetadata {
     last_modified_time: chrono::DateTime<Utc>,
@@ -73,7 +73,7 @@ impl QgisProjectBuilder {
         self,
         layers: Option<Vec<QgisLayerStyle>>,
     ) -> Result<QgisProject, anyhow::Error> {
-        use crate::qgis::helpers::extract_all_style_elements;
+        use crate::helpers::extract_all_style_elements;
 
         let mut xml =
             quick_xml::se::to_string(&self.root).context("failed to serialize QgisRoot to xml")?;

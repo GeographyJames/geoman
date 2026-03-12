@@ -4,14 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-actix-web = { workspace = true }
 utils = { path = "../utils" }
 domain = { path = "../domain" }
-gdal = { workspace = true }
 actix-multipart = { workspace = true }
+actix-web = { workspace = true }
 anyhow = { workspace = true }
+gdal = { workspace = true }
 thiserror = { workspace = true }
 uuid = { workspace = true }
 
 [dev-dependencies]
-claims = "0.8"
+claims = { workspace = true }

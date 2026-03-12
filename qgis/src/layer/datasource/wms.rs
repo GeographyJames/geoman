@@ -81,7 +81,7 @@ impl Display for WMSDataSource {
 mod tests {
     use serde::Serialize;
 
-    use crate::qgis::layer::{DataSource, datasource::wms::WMSDataSource};
+    use crate::layer::{DataSource, datasource::wms::WMSDataSource};
 
     #[derive(Serialize)]
     struct Root {

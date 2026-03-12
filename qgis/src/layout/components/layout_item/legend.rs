@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::qgis::{
+use crate::{
     LayerTreeGroup, QgisUuid,
     enums::{NamedTextStyle, ReferencePoint, Units},
     layer::MapLayer,
@@ -240,7 +240,7 @@ impl LayoutItem {
 
 #[cfg(test)]
 mod tests {
-    use crate::qgis::{
+    use crate::{
         layer::{DataSource, PgSource, QgisMapLayerBuilder, WkbType},
         layout::{
             Size,

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use strum_macros::EnumString;
 
-use crate::qgis::layer::{PgDataSource, XYZDataSource, datasource::wms::WMSDataSource};
+use crate::layer::{PgDataSource, XYZDataSource, datasource::wms::WMSDataSource};
 
 #[derive(Serialize, Clone, Deserialize, Debug)]
 pub enum Geometry {

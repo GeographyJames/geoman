@@ -1,0 +1,16 @@
+[package]
+name = "qgis"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = { workspace = true }
+chrono = { workspace = true }
+quick-xml = { workspace = true }
+serde = { workspace = true }
+slug = { workspace = true }
+sqlx = { workspace = true }
+strum = { workspace = true }
+strum_macros = { workspace = true }
+uuid = { workspace = true }
+zip = { workspace = true }

@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::qgis::{
+use crate::{
     data_defined_properties::{PropertiesOption, PropertyOption},
     layer::{DataProvider, DataSource},
 };

@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::qgis::{
+use crate::{
     Extent,
     enums::{EPSGID, MapUnits},
     srs::Srs,

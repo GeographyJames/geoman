@@ -116,7 +116,7 @@ pub fn parse_xml_to_tree(xml_string: &str) -> Result<XmlNode, Box<dyn std::error
             }
 
             Event::Text(e) => {
-                let text = e.unescape()?.trim().to_string();
+                let text = e.decode()?.trim().to_string();
                 if !text.is_empty()
                     && let Some(current_node) = stack.last_mut()
                 {
@@ -198,7 +198,7 @@ pub fn extract_node_xml(
                 captured_xml.push_str("/>");
             }
             Event::Text(e) if capture => {
-                captured_xml.push_str(&e.unescape()?);
+                captured_xml.push_str(&e.decode()?);
             }
             Event::Eof => break,
             _ => {}
@@ -340,7 +340,7 @@ pub fn extract_all_style_elements(style_xml: &str) -> Result<String, Box<dyn std
                 }
             }
             Event::Text(e) if inside_qgis && !skip_element => {
-                style_content.push_str(&e.unescape()?);
+                style_content.push_str(&e.decode()?);
             }
             Event::Eof => break,
             _ => {}
@@ -404,7 +404,7 @@ pub fn insert_renderer_v2_into_project(
 
 #[cfg(test)]
 mod tests {
-    use crate::qgis::{helpers::extract_renderer_v2, tests::test_helpers::xml_comparison};
+    use crate::{helpers::extract_renderer_v2, tests::test_helpers::xml_comparison};
 
     #[test]
     fn extract_renderer_v2_works() {

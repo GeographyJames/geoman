@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::qgis::enums::Units;
+use crate::enums::Units;
 
 #[derive(Default)]
 pub struct Length {

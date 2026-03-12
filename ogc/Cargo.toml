@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-serde = { workspace = true }
-geojson = { workspace = true }
 chrono = { workspace = true }
+geojson = { workspace = true }
+ogcapi-types = { workspace = true }
+serde = { workspace = true }
 serde_json = { workspace = true }
+serde_with = { workspace = true }
 utoipa = { workspace = true }
 uuid = { workspace = true }
-ogcapi-types = { workspace = true }
-serde_with = "3.16"

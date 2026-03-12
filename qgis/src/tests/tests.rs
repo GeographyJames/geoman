@@ -1,15 +1,15 @@
-use crate::qgis::enums::EPSGID;
-use crate::qgis::helpers::unzip_content;
-use crate::qgis::layer::{
+use crate::enums::EPSGID;
+use crate::helpers::unzip_content;
+use crate::layer::{
     DataSource, PgSource, PgTable, QgisMapLayerBuilder, WkbType, XYZDataSource,
 };
 
-use crate::qgis::layout::components::{Color, LayoutItem, Position};
-use crate::qgis::layout::{PageOrientation, PageSize, QgisLayoutBuilder, QgisLayoutMapBuilder};
+use crate::layout::components::{Color, LayoutItem, Position};
+use crate::layout::{PageOrientation, PageSize, QgisLayoutBuilder, QgisLayoutMapBuilder};
 
-use crate::qgis::project::{MapCanvas, ProjectRoot, QgisProjectBuilder};
-use crate::qgis::srs::SpatialRefSys;
-use crate::qgis::tests::test_helpers::{
+use crate::project::{MapCanvas, ProjectRoot, QgisProjectBuilder};
+use crate::srs::SpatialRefSys;
+use crate::tests::test_helpers::{
     SkipNode, generate_pg_datasource, generate_pg_map_layer, layout_skip_config,
     map_layer_skip_config, minimal_project_skip_config, xml_comparison,
 };
@@ -465,7 +465,7 @@ fn project_with_bng_and_extent_set_with_osm_works() {
 //         legend_text: None,
 //         include_on_legend: true,
 //         datasource: DataSource::WMS(WMSDataSource {
-//             r#type: crate::qgis::layer::WMSDataSourceType::XYZ,
+//             r#type: crate::layer::WMSDataSourceType::XYZ,
 //             url: "https://tile.openstreetmap.org/%7Bz%7D/%7Bx%7D/%7By%7D.png&zmax=19&zmin=0".into(),
 //         }),
 //         srs: Some(SpatialRefSys::web_mercator()),

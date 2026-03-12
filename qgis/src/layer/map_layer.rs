@@ -1,4 +1,4 @@
-use crate::qgis::{
+use crate::{
     layer::{rendering::LayerRenderingPipeline, *},
     srs::{SpatialRefSys, Srs},
 };
@@ -252,7 +252,7 @@ mod tests {
 
     use serde::Serialize;
 
-    use crate::qgis::{
+    use crate::{
         helpers::{extract_renderer_v2, insert_renderer_v2_into_project},
         layer::{
             DataSource, MapLayer, QgisMapLayerBuilder, WkbType,

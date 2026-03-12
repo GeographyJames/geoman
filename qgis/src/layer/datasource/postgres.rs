@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::qgis::layer::WkbType;
+use crate::layer::WkbType;
 
 #[derive(Clone)]
 pub struct PgConfig {

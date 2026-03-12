@@ -1,10 +1,10 @@
-use crate::qgis::extent::LayoutMapExtent;
-use crate::qgis::layout::components::layout_item::Length;
-use crate::qgis::layout::components::layout_item::components::ComposerMapOverview;
+use crate::extent::LayoutMapExtent;
+use crate::layout::components::layout_item::Length;
+use crate::layout::components::layout_item::components::ComposerMapOverview;
 
-use crate::qgis::QgisUuid;
-use crate::qgis::layout::components::ComposerMapGrid;
-use crate::qgis::{
+use crate::QgisUuid;
+use crate::layout::components::ComposerMapGrid;
+use crate::{
     clipping_settings::ClippingSettings,
     enums::Units,
     layout::{
@@ -80,7 +80,7 @@ impl LayoutItem {
 
 #[cfg(test)]
 mod tests {
-    use crate::qgis::{
+    use crate::{
         extent::LayoutMapExtent,
         layout::{
             Size,

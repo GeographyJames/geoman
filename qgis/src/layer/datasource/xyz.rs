@@ -34,7 +34,7 @@ impl Display for XYZDataSource {
 mod tests {
     use serde::Serialize;
 
-    use crate::qgis::layer::{DataSource, datasource::xyz::XYZDataSource};
+    use crate::layer::{DataSource, datasource::xyz::XYZDataSource};
     #[derive(Serialize)]
     struct Root {
         datasource: DataSource,
