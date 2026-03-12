@@ -1,7 +1,6 @@
 use anyhow::Context;
 use chrono::Utc;
 use gdal::spatial_ref::{CoordTransform, SpatialRef};
-use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgConnection};
 
 use crate::{
@@ -21,7 +20,7 @@ use crate::{
 use domain::{ProjectId, UserId, enums::Status};
 use qgis::{Extent, layout::components::SizeInteger};
 
-#[derive(Serialize, Deserialize, Debug, FromRow, Clone)]
+#[derive(Debug, FromRow, Clone)]
 struct FigureSelection {
     id: FigureId,
     project_id: ProjectId,
@@ -113,7 +112,7 @@ impl SelectOne<FigureId> for FigureOutputDTO {
     {
         let mut conn = executor.acquire().await?;
         let res: Option<FigureSelection> =
-            sqlx::query_as(&format!("{} WHERE f.id = $1", BASE_QUERY))
+            sqlx::query_as(&format!("{} WHERE f.id = $1 AND f.status != 'DELETED'", BASE_QUERY))
                 .bind(id.as_ref())
                 .fetch_optional(&mut *conn)
                 .await?;

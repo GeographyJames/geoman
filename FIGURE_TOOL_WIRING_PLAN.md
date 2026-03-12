@@ -6,8 +6,6 @@ The `figure_tool` feature is being ported from the prototype project (`geodata-m
 
 The `figure_tool` feature directory has been copied into `app/src/features/figure_tool/`. Most files exist but have their modules commented out pending wiring. The `post_figure` handler is the first to be fully wired: handler, DB insert, routes, and integration test all pass.
 
-The plan below works through the remaining handlers one at a time, in dependency order.
-
 ---
 
 ## Current State
@@ -16,100 +14,106 @@ The plan below works through the remaining handlers one at a time, in dependency
 |---|---|
 | `qgis` crate | ✅ compiles, tests pass |
 | `POST /figures` handler + test | ✅ working |
+| `GET /figures` and `GET /figures/{id}` handlers + tests | ✅ working |
 | `FigureInputDTO`, `FigurePayload` | ✅ present |
 | DB `figure/insert`, `figure_layer/insert` | ✅ working |
+| DB `figure/select`, `figure_layer/select`, `base_map/select` | ✅ working |
+| `SelectAll`, `SelectOne`, `SelectAllWithParams` traits | ✅ all use `Acquire` bound |
 | `domain::FeatureId`, `domain::LayoutId` | ✅ now derive `Eq + Hash` |
 | `dtos/base_map/` (`BaseMapOutputDTO`, `BaseMapDataSource`) | ✅ ported, imports fixed |
 | `dtos/figure/output.rs` (`FigureOutputDTO`) | ✅ uncommented, imports fixed |
 | `enums/mod.rs` | ✅ `FigureStatus` removed; `PrintResolution` added |
 | `ids.rs` | ✅ `BaseMapId` added |
-| All other handlers (`get`, `put`, `delete`, `get_print`) | ❌ commented out |
-| DB `figure/select`, `update`, `delete` | ❌ commented out |
-| DB `figure_layer/select` | ❌ commented out |
-| DB `base_map`, `layer_style`, `project_layer`, `qgis_project` | ❌ commented out |
+| PUT handler (`put.rs`) | ❌ prototype imports — needs full port |
+| DELETE handler (`delete.rs`) | ❌ prototype imports — needs full port |
+| `get_print.rs` / `get_qgis_project.rs` | ❌ commented out — deferred to Steps 6–7 |
+| DB `figure/update`, `figure/delete` | ❌ commented out |
+| DB `layer_style`, `project_layer`, `qgis_project` | ❌ commented out |
 | `qgis_builder` module | ❌ still commented out — deferred to Step 6 |
 | URLs for `layer_styles`, `project_layers`, `qgis_projects` | ❌ not yet in `config/urls.yaml` |
 
 ---
 
-## Key Adaptations from Prototype
+## Porting Approach
 
-The geoman project differs from the prototype in a few places that affect the port:
+### Repository traits
+All repo traits (`SelectAll`, `SelectOne`, `SelectAllWithParams`, `Insert`, `Update`) now use the `A: Acquire<'a, Database = Postgres>` bound (owned executor), consistent across the board. This allows impls to call either `.acquire()` for a single connection or `.begin()` for a transaction. The pattern in every impl is:
+```rust
+let mut conn = executor.acquire().await?;
+// use &mut *conn for all queries
+```
+The `pg_repo.rs` dispatch methods pass `&self.db_pool` which implements `Acquire`, so call sites are unchanged.
+
+`SelectOneWithParams` and `SelectAllWithParamsStreaming` retain their existing signatures — no changes needed there.
+
+### Figure select approach
+`FigureOutputDTO` implements `SelectOne<FigureId>` and `SelectAllWithParams` (with `Params<'a> = ProjectId`) via the standard trait dispatch through `PostgresRepo`. Both acquire a single connection and pass `&mut *conn` through to `from_figure_selection` and then into `select_all_layers_for_figure` and `BaseMapOutputDTO::select`. No transaction is used — sequential queries on one connection.
+
+`FigureSelection` is a private DB-internal struct: no `Serialize`/`Deserialize` derives needed.
+
+Both select queries filter `f.status != 'DELETED'` — list and by-id are consistent.
+
+### Base map select
+Ported as a plain `impl BaseMapOutputDTO { pub async fn select(conn: &mut PgConnection, id: &BaseMapId) }` method, matching the call site in `from_figure_selection`. No trait machinery needed.
+
+### Test helpers
+`HttpService::get_with_params<P: Serialize>` added alongside `get` — passes params to reqwest's `.query()`. Used for `get_figures` which requires a `?project=<id>` query param (field name is `project`, not `project_id`).
+
+---
+
+## Key Adaptations from Prototype
 
 | Prototype | Geoman |
 |---|---|
 | `SiteBoundaryId(id.0)` | `FeatureId` from `domain` — now derives `Eq + Hash` for use in `HashSet` |
 | `TurbineLayoutId(id.0)` | `LayoutId` from `domain` — now derives `Eq + Hash` |
-| `BaseMapOutputDTO` (separate `app.base_maps` table) | Ported as-is into `dtos/base_map/`; `BaseMapId` added to `ids.rs`; base map loading from DB deferred to Step 6 (for GET, `main_map_base_map` / `overview_map_base_map` are set to `None`) |
-| `FigureStatus` (prototype-specific enum) | Removed; `domain::enums::Status` used throughout; DB column uses `app.status` |
+| `BaseMapOutputDTO` (separate `app.base_maps` table) | Ported as-is into `dtos/base_map/`; `BaseMapId` added to `ids.rs`; base maps loaded via `BaseMapOutputDTO::select` in `from_figure_selection` |
+| `FigureStatus` (prototype-specific enum) | Removed; `domain::enums::Status` used throughout; DB column uses `app.status` (uppercase values: `'ACTIVE'`, `'DELETED'`, etc.) |
 | `PrintResolution` (was in `qgis_builder/mod.rs`) | Moved to `enums/mod.rs` so it can be used without enabling `qgis_builder` |
 | `app.generate_figure_id(project_id)` | `app.generate_figure_id(auth, project_id)` |
 | `app.generate_primary_boundary_id(&project_id)` | `app.generate_primary_boundary_id(project_id, auth)` |
-| Session-based auth (`TypedSession`) | `AuthenticatedUser` extractor |
-| `Select` / `SelectAllForProject` traits (prototype repo) | Geoman uses different trait signatures — figure selects are standalone `pub async fn`s |
+| Session-based auth (`TypedSession`) | `AuthenticatedUser` extractor from `crate::types` |
+| `Select` / `SelectAllForProject` prototype traits | `SelectOne<FigureId>` and `SelectAllWithParams` (Params = ProjectId) from geoman's trait system |
 | `ProjectId`, `UserId` in figure_tool ids | Come from `domain` — no `AsRef<i32>`, use `.0` directly |
-| `app.site_boundaries` | `app.project_features` — site boundaries are stored as project features |
-| `fl.user_id` column in `app.figure_layers` | Column is `added_by` in geoman — alias as `added_by as user_id` in SELECT |
-| Prototype `crate::app::` import prefix | Geoman uses `crate::features::`, `crate::config::`, `domain::` directly |
+| `app.site_boundaries` | `app.project_features` |
+| `fl.user_id` column | Column is `fl.added_by` in geoman — field renamed to `added_by` in `FigureLayerOutputDTO` |
+| Prototype `crate::app::` import prefix | `crate::features::`, `crate::config::`, `domain::` directly |
+| Handler return type `Result<HttpResponse, actix_web::Error>` | `Result<Json<T>, ApiError>` with `#[get("")]` / `#[get("/{id}")]` macros |
 
 ---
 
 ## Step-by-Step Plan
 
-### Step 1 — GET /figures and GET /figures/{id}
+### Step 1 — GET /figures and GET /figures/{id} ✅
 
-**DTOs** ✅
-- `dtos/figure/output.rs` uncommented; imports fixed; `FigureStatus` → `Status`; `SiteBoundaryId`/`TurbineLayoutId` → `FeatureId`/`LayoutId`
-- `dtos/base_map/` ported; `BaseMapOutputDTO` retained with `#[serde(skip_serializing)]` fields on `FigureOutputDTO` — populated only when needed for qgz/pdf (set to `None` in GET selects)
-- `dtos/mod.rs` exports `Point` and `base_map`
-
-**DB layer** ← *next up*
-- Port `db/figure/select.rs`:
-  - Replace prototype `Select` / `SelectAllForProject` trait impls with two standalone `pub async fn`s: `select_figure(pool, id)` and `select_figures_for_project(pool, project_id)`
-  - Set `main_map_base_map = None` and `overview_map_base_map = None` (populated at qgz/pdf time)
-  - `project_id.as_ref()` → `project_id.0`
-- Port `db/figure_layer/select.rs`:
-  - Fix import paths; `SupportedEpsg` from `qgis::srs`; `SiteBoundaryId` → `FeatureId`; `TurbineLayoutId` → `LayoutId`
-  - SQL: `fl.user_id` → `fl.added_by as user_id`; JOIN on `fl.added_by`
-  - SQL: `app.site_boundaries` → `app.project_features`; update `BOUNDARY_CTE`
-- Uncomment both modules in their respective `mod.rs` files
-
-**Handler**
-- Add `get_figures` (query param `?project_id=`) and `get_figure` (path `/{id}`) to `handlers/figure/get.rs`
-- Uncomment handler exports in `handlers/figure/mod.rs`
-- Register routes in `routes/api.rs`
-
-**Tests**
-- `get_figures_works`
-- `get_figure_works` — adapt boundary layer: `FigureLayerDatasourcePayload::SiteBoundary(boundary.feature_id)`
-- `get_figures_works_with_missing_project_layer`
+All passing. See porting approach above for decisions made.
 
 ---
 
 ### Step 2 — PUT /figures/{id}
 
 **DB layer**
-- Port `db/figure/update.rs`
+- Port `db/figure/update.rs` — fix prototype imports and any `Status` references
 
-**Handler**
-- Port `put_figure` to `handlers/figure/put.rs` (reuses existing `FigurePayload` + `FigureInputDTO`)
-- Uncomment export in `handlers/figure/mod.rs`, register route
+**Handler** (`put.rs` has prototype-specific code that needs full replacement)
+- Remove `TypedSession` / `session_state` / `crate::app::` imports
+- Use `AuthenticatedUser` extractor from `crate::types`; get user id via `user.id`
+- Use `#[put("/{figure_id}")]` macro; return `Result<HttpResponse, ApiError>` (204 No Content on success)
+- Config: `web::Data<Settings>` — confirm `QgisServerSettings` / figure config path in geoman's `Settings`
+- `payload.into_input_dto(user_id, Some(config...))` — verify the config field path matches geoman's config struct
 
 **Tests**
 - `put_figure_works`
-  - Note: prototype sends `FigureOutputDTO` as the PUT body; geoman may prefer `FigurePayload` — confirm which the handler accepts
 
 ---
 
 ### Step 3 — DELETE /figures/{id}
 
 **DB layer**
-- Port `db/figure/delete.rs` — soft-delete sets `status = 'DELETED'`
-- `FigureStatus` has been removed; `domain::Status` maps to `app.status` enum with `rename_all = "UPPERCASE"` ✅
+- Port `db/figure/delete.rs` — soft-delete: `UPDATE app.figures SET status = 'DELETED' WHERE id = $1`
 
-**Handler**
-- Port `delete_figure` to `handlers/figure/delete.rs`
-- Register route
+**Handler** (`delete.rs` has prototype-specific code)
+- Use `AuthenticatedUser` extractor; `#[delete("/{figure_id}")]` macro; return `Result<HttpResponse, ApiError>`
 
 **Tests**
 - `delete_figure_works`
@@ -122,7 +126,7 @@ The geoman project differs from the prototype in a few places that affect the po
 - Add `layer_styles: "/layer-styles"` to `config/urls.yaml` and the `Api` struct in `app/src/urls.rs`
 
 **DB layer**
-- Uncomment `db/layer_style/` and port `select_all`
+- Uncomment `db/layer_style/` and port `select_all` — fix imports, use `Acquire` bound
 
 **DTOs**
 - Uncomment `dtos/layer_style.rs` → `LayerStyleOutputDTO`
@@ -145,30 +149,31 @@ The geoman project differs from the prototype in a few places that affect the po
 - Add `project_layers: "/project-layers"` to `config/urls.yaml` and `urls.rs`
 
 **DB layer**
-- Uncomment `db/project_layer/` and port `select_all_for_project`
+- Uncomment `db/project_layer/` and port — likely uses `SelectAllWithParams` with a `ProjectId` param (same pattern as figures list)
 
 **DTOs**
 - Uncomment `dtos/project_layer.rs` → `ProjectLayerOutputDTO`
 
 **Handler**
-- Port `handlers/project_layer/get.rs` → `get_project_layers`
+- Port `handlers/project_layer/get.rs` → `get_project_layers`; query param `?project=<id>`
 - Register route
 
 **TestApp**
 - Add `project_layers_service: HttpService` field
 
 **Tests**
-- `get_project_layers_works` — uses a numeric `ProjectId` directly
+- `get_project_layers_works`
 
 ---
 
 ### Step 6 — GET /figures/{id}/qgz
 
 **Handler**
-- Add `get_figure_qgis_project` to `handlers/figure/get.rs`
+- Add `get_figure_qgis_project` to `handlers/figure/get.rs` (or `get_qgis_project.rs`)
+- Enable `qgis_builder` module; port `qgis_builder/` imports to geoman paths
 - Calls `generate_project(figure, config, &PrintResolution::High, false, PgConfig {...}, None)` — runs fully in-process, no QGIS Server required
 - Returns `.qgz` bytes as `application/octet-stream`
-- Register the `/qgz` sub-route under `figures_routes` in `routes/api.rs`
+- Register the `/qgz` sub-route under `figures_routes`
 
 **Tests**
 - `get_figure_qgis_project_works` — asserts response is a valid `.qgz` (zip containing `qgis.qgs`)
@@ -196,4 +201,4 @@ The geoman project differs from the prototype in a few places that affect the po
 
 **Tests**
 - `get_figure_pdf_works`, `get_figure_jpg_works`
-- Mark `#[ignore]` if QGIS Server is not available in the test environment; otherwise run as integration tests against the live server
+- Mark `#[ignore]` if QGIS Server is not available in the test environment

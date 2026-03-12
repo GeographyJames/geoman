@@ -1,6 +1,6 @@
 use domain::{GisDataTable, TableName, enums::GeometryType};
 use ogcapi_types::common::{Bbox, Crs, SpatialExtent};
-use sqlx::{FromRow, PgConnection, PgExecutor};
+use sqlx::{FromRow, PgConnection};
 
 use crate::repo::{
     RepositoryError,
