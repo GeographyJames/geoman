@@ -199,7 +199,9 @@ All passing. The `layer_styles` table (`public.layer_styles`) is a QGIS-managed 
 - Add `project_layers: "/project-layers"` to `config/urls.yaml` and `urls.rs`
 
 **DB layer**
-- Uncomment `db/project_layer/` and port — likely uses `SelectAllWithParams` with a `ProjectId` param (same pattern as figures list)
+- Uncomment `db/project_layer/` and port to `SelectAllWithParams` with `domain::ProjectId`
+- The prototype query filters `pg_tables`/`geometry_columns` for a `project_data` schema with table names matching `^p[0-9]{4}[ _]...`. Verify geoman uses the same schema and naming convention before porting — this may need rethinking.
+- Prototype used a custom `SelectAllForProject` trait; port to geoman's `SelectAllWithParams` (Params = `&ProjectId`, MetaData = `()`)
 
 **DTOs**
 - Uncomment `dtos/project_layer.rs` → `ProjectLayerOutputDTO`
@@ -218,15 +220,29 @@ All passing. The `layer_styles` table (`public.layer_styles`) is a QGIS-managed 
 
 ### Step 6 — GET /figures/{id}/qgz
 
+**Enable `qgis_builder` module**
+- Uncomment `mod qgis_builder` in `features/figure_tool/mod.rs`
+- The key adaptation is `TryFrom<(String, BaseMapDataSource)> for QgisMapLayerBuilder` — `BaseMapDataSource` no longer exists; replace with `TryFrom<(String, LayerSource)>`:
+
+| `LayerSource` variant | `DataSource` mapping |
+|---|---|
+| `Xyz { url, .. }` | `DataSource::XYZ(XYZDataSource { url })` |
+| `Wmts { url, layers, tile_matrix_set, epsg_id, authcfg_id, .. }` | `DataSource::WMS(WMSDataSource::new_wmts(authcfg_id, url, layers, epsg_id, tile_matrix_set))` |
+| `ImageWms { url, layers, epsg_id, authcfg_id, .. }` | `DataSource::WMS(WMSDataSource::new_wms(authcfg_id, url, layers, epsg_id))` |
+| `TileWms { url, layers, epsg_id, authcfg_id, .. }` | same as `ImageWms` |
+| MVT / ArcGISRest / WFS / OgcApiFeatures | `Err(anyhow!("unsupported source type for base map: ..."))` |
+
+- `epsg_id()` on `LayerSource` already exists for the CRS/SRS selection logic (27700/4326/3857 → BNG/WGS84/web_mercator)
+- `datasource.0` in `generate_project` is now `LayerSource` (was `BaseMapDataSource`) — just update the `TryFrom` target type
+
 **Handler**
-- Add `get_figure_qgis_project` to `handlers/figure/get.rs` (or `get_qgis_project.rs`)
-- Enable `qgis_builder` module; port `qgis_builder/` imports to geoman paths
-- Calls `generate_project(figure, config, &PrintResolution::High, false, PgConfig {...}, None)` — runs fully in-process, no QGIS Server required
-- Returns `.qgz` bytes as `application/octet-stream`
-- Register the `/qgz` sub-route under `figures_routes`
+- Add `get_figure_qgz` handler (or port from `get_qgis_project.rs` which serves stored `.qgz` — keep that for Step 7; this is a new inline-generate endpoint)
+- Calls `generate_project(figure, Some(&config.qgis_server.figure_config), &PrintResolution::High, false, PgConfig { db_name: config.db_settings.database_name, port: config.db_settings.port, host: config.db_settings.host, sslmode: SslMode::from(config.db_settings.require_ssl) }, None)`
+- Returns `.qgz` bytes directly as `application/octet-stream` — no DB storage needed for the `/qgz` route
+- Register sub-route `/{id}/qgz` under `figures_routes`
 
 **Tests**
-- `get_figure_qgis_project_works` — asserts response is a valid `.qgz` (zip containing `qgis.qgs`)
+- `get_figure_qgis_project_works` — asserts 200 and `content-type: application/octet-stream`; optionally inspect zip bytes
 
 ---
 
@@ -234,21 +250,46 @@ All passing. The `layer_styles` table (`public.layer_styles`) is a QGIS-managed 
 
 *Requires QGIS Server to be running.*
 
-**DB layer**
-- Uncomment `db/qgis_project/` and port `insert`, `select`, `check_unique`
+#### DB layer — `db/qgis_project/`
 
-**URLs**
+All three ops need porting. The DB schema is **`public.qgis_projects`** (not `qgis.qgis_projects` as in the prototype):
+
+- **`insert.rs`** — port from old `Insert<&'a PgPool, String>` to geoman's `Insert` trait (`Acquire` bound). Update schema: `public.qgis_projects`. The delete-before-insert for `low_res = true` rows stays.
+- **`select.rs`** — port from old `Select<&mut PgConnection, QgisProjectName>` to a direct `impl QgisProject { pub async fn select(...) }` method (same pattern as `BaseMapOutputDTO::select`). Update schema.
+- **`check_unique.rs`** — uses a prototype `CheckUnique` trait not present in geoman. Port as a standalone async fn (e.g. `check_qgis_project_unique(pool, name) -> Result<Option<QgisProjectName>, RepositoryError>`) called directly from the handler or via a direct method on `PostgresRepo`. Update schema.
+
+#### Handler — `get_print.rs`
+
+Key adaptations from prototype:
+
+| Prototype | Geoman |
+|---|---|
+| `repo.select(&figure_id)` (prototype `Select` trait) | `repo.select_one::<FigureOutputDTO, _>(figure_id).await?.ok_or(ApiError::ResourceNotFound)` |
+| `repo.select(&base_map_id)` | `BaseMapOutputDTO::select(&mut conn, &base_map_id).await` (kept from earlier work) |
+| `repo.check_unique(project_name)` | direct call to standalone fn or `PostgresRepo` method |
+| `repo.insert(&qgis_project)` | `repo.insert(&qgis_project).await` (same — `Insert` trait dispatch) |
+| `config.database.database_name/port/host/require_ssl` | `config.db_settings.database_name/port/host/require_ssl` |
+| `config.qgis_server.figure_config` | `config.qgis_server.figure_config` (same) |
+| `helpers::streaming_response(&response)` | does not exist in geoman — implement inline or add to `errors/` module |
+| `Result<HttpResponse, actix_web::Error>` return | keep as-is for streaming response (can't use `Json<T>`) |
+
+`FigureOutputDTO` methods (`filename_with_id`, `qgis_project_name`, `layout_name`, `map_layer_names`, `map_extent`, `overview_map_extent`, `properties.*`) — all already implemented in `dtos/figure/output.rs`. No porting needed.
+
+`FigureFormat` enum uses `#[allow(non_camel_case_types)]` for `pdf`/`jpg` variants — keep as-is.
+
+#### Handler — `get_qgis_project.rs`
+
+Serves a stored `.qgz` by `QgisProjectName`. Relatively straightforward once `select` is ported — just fix import paths (`crate::features::figure_tool::dtos::figure::QgisProjectName`, `crate::errors::ApiError`).
+
+#### URLs
 - Add `qgis_projects: "/qgis-projects"` to `config/urls.yaml` and `urls.rs`
 
-**Handler**
-- Port `handlers/figure/get_print.rs` → `get_print(FigureId, FigureFormat)`
-  - Adaptation: prototype fetches `BaseMapOutputDTO` by ID for the WMS slug; geoman uses `DataProviderLayerId` — needs lookup via `data_provider_layers` to get the layer name/slug for the WMS request
-- Port `handlers/qgis_project/get.rs` → `get_qgis_project`
-- Register both routes
+#### Routes
+- Register `/{id}/pdf` and `/{id}/jpg` under `figures_routes` (same scope, path param captures format)
+- Register `/{name}` under `qgis_projects_routes`
 
-**TestApp**
+#### TestApp
 - Add `qgis_projects_service: HttpService` field
 
-**Tests**
-- `get_figure_pdf_works`, `get_figure_jpg_works`
-- Mark `#[ignore]` if QGIS Server is not available in the test environment
+#### Tests
+- `get_figure_pdf_works`, `get_figure_jpg_works` — mark `#[ignore]` if QGIS Server not available
