@@ -1,0 +1,17 @@
+
+      <LayoutItem anchorPoint="0" svgFillColor="255,255,255,255" northOffset="0" pictureRotation="0" background="false" position="380,242,mm" referencePoint="4" mode="0" positionLock="false" blendMode="0" opacity="1" excludeFromExports="0" northMode="0" positionOnPage="380,242,mm" svgBorderWidth="0.2" type="65640" file="../Downloads/logo_edf_power_solutions_RGB.svg" groupUuid="" frame="false" zValue="3" uuid="{e5687628-ba1b-43ed-924a-04664d827e91}" size="65,65,mm" itemRotation="0" templateUuid="{e5687628-ba1b-43ed-924a-04664d827e91}" visibility="1" svgBorderColor="0,0,0,255" frameJoinStyle="miter" mapUuid="" outlineWidthM="0.3,mm" resizeMode="0" id="" pictureWidth="65" pictureHeight="28.3776">
+        <FrameColor alpha="255" red="0" blue="0" green="0"/>
+        <BackgroundColor alpha="255" red="255" blue="255" green="255"/>
+        <LayoutObject>
+          <dataDefinedProperties>
+            <Option type="Map">
+              <Option name="name" value="" type="QString"/>
+              <Option name="properties"/>
+              <Option name="type" value="collection" type="QString"/>
+            </Option>
+          </dataDefinedProperties>
+          <customproperties>
+            <Option/>
+          </customproperties>
+        </LayoutObject>
+      </LayoutItem>

@@ -1,0 +1,18 @@
+
+      <LayoutItem anchorPoint="0" svgFillColor="255,255,255,255" northOffset="0" pictureRotation="0" background="false" position="32.969,58.438,mm" referencePoint="0" mode="2" positionLock="false" blendMode="0" opacity="1" excludeFromExports="0" northMode="0" positionOnPage="32.969,58.438,mm" svgBorderWidth="0.2" type="65640" file=":/images/north_arrows/layout_default_north_arrow.svg" groupUuid="" frame="false" zValue="21" uuid="{4d41b10c-b481-4499-8475-1ec4fac8d231}" size="54.485,130.87,mm" itemRotation="0" templateUuid="{4d41b10c-b481-4499-8475-1ec4fac8d231}" visibility="1" svgBorderColor="0,0,0,255" frameJoinStyle="miter" mapUuid="{1b6d4e4f-8c7a-4bcc-80eb-7c45e176d6cd}" outlineWidthM="0.3,mm" resizeMode="0" id="North Arrow" pictureWidth="54.485" pictureHeight="68.7761">
+        <FrameColor alpha="255" red="0" blue="0" green="0"/>
+        <BackgroundColor alpha="255" red="255" blue="255" green="255"/>
+        <LayoutObject>
+          <dataDefinedProperties>
+            <Option type="Map">
+              <Option name="name" value="" type="QString"/>
+              <Option name="properties"/>
+              <Option name="type" value="collection" type="QString"/>
+            </Option>
+          </dataDefinedProperties>
+          <customproperties>
+            <Option/>
+          </customproperties>
+        </LayoutObject>
+      </LayoutItem>
+     
