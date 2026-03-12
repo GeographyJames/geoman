@@ -23,16 +23,20 @@ The `figure_tool` feature directory has been copied into `app/src/features/figur
 | DB `figure/update` | ✅ working |
 | `SelectAll`, `SelectOne`, `SelectAllWithParams` traits | ✅ all use `Acquire` bound |
 | `domain::FeatureId`, `domain::LayoutId` | ✅ now derive `Eq + Hash` |
-| `dtos/base_map/` (`BaseMapOutputDTO`, `BaseMapDataSource`) | ✅ ported, imports fixed |
+| `dtos/base_map/` (`BaseMapOutputDTO`, `LayerSource`) | ✅ ported; `BaseMapDataSource` replaced by unified `LayerSource` |
 | `dtos/figure/output.rs` (`FigureOutputDTO`) | ✅ uncommented, imports fixed |
 | `enums/mod.rs` | ✅ `FigureStatus` removed; `PrintResolution` added |
 | `ids.rs` | ✅ `BaseMapId` added |
-| DELETE handler (`delete.rs`) | ❌ prototype imports — needs full port |
+| DELETE handler (`delete.rs`) | ✅ removed — soft delete via PATCH `status: DELETED` |
 | `get_print.rs` / `get_qgis_project.rs` | ❌ commented out — deferred to Steps 5–6 |
 | DB `figure/delete` | ❌ commented out |
-| DB `layer_style`, `project_layer`, `qgis_project` | ❌ commented out |
+| `GET /layer-styles` handler + test | ✅ working |
+| DB `layer_style` | ✅ uncommented, ported to `Acquire` bound |
+| `LayerStyleOutputDTO` | ✅ uncommented |
+| `layer_styles` URL | ✅ in `config/urls.yaml` and `urls.rs` |
+| DB `project_layer`, `qgis_project` | ❌ commented out |
 | `qgis_builder` module | ❌ still commented out — deferred to Step 5 |
-| URLs for `layer_styles`, `project_layers`, `qgis_projects` | ❌ not yet in `config/urls.yaml` |
+| URLs for `project_layers`, `qgis_projects` | ❌ not yet in `config/urls.yaml` |
 
 ---
 
@@ -71,6 +75,63 @@ The DB impl uses a transaction (`conn.begin()`), `RETURNING id` + `fetch_one` so
 ### Base map select
 Ported as a plain `impl BaseMapOutputDTO { pub async fn select(conn: &mut PgConnection, id: &BaseMapId) }` method, matching the call site in `from_figure_selection`. No trait machinery needed.
 
+### Base map schema migration
+The prototype had a dedicated `app.base_maps` / `app.base_map_data_providers` schema. Geoman has no such tables — base maps are `app.data_provider_layers` rows with `category = 'basemap'`, joined through `app.data_provider_services` to `app.data_providers`.
+
+`BaseMapOutputDTO::select` queries `data_provider_layers` directly with aliases to preserve field names:
+- `dpl.figure_default_main_map_base_map AS default_main_map_base_map`
+- `dpl.figure_default_overview_map_base_map AS default_overview_map_base_map`
+- `dpl.source AS datasource`
+
+A `GET /base-maps` handler was briefly added then removed — the existing `GET /data-provider-layers` endpoint already returns all layers and can be filtered by the frontend. `BaseMapOutputDTO` and `BaseMapOutputDTO::select` are kept for use in figure rendering (Steps 6–7).
+
+### LayerSource unification
+The prototype's `BaseMapDataSource` (3 variants: WMS, WMTS, XYZ) and the post handler's `LayerSource` (3 different variants: MVT, ArcGISRest, WFS) have been merged into a single canonical `LayerSource` enum in `data_providers/types.rs`.
+
+All 8 variants, tagged with `#[serde(tag = "type", rename_all = "snake_case")]`:
+
+| Variant | Key fields |
+|---|---|
+| `ImageWms` | `url`, `layers`, `epsg_id`, `alt_project_download_url`, `authcfg_id` |
+| `TileWms` | same as `ImageWms` |
+| `Wmts` | `url`, `layers`, `tile_matrix_set`, `epsg_id`, `alt_project_download_url`, `authcfg_id` |
+| `Xyz` | `url`, `epsg_id`, `authcfg_id` |
+| `Mvt` | `url` |
+| `ArcGisRest` | `service_name`, `layer_id`, `name_field` |
+| `Wfs` | `url`, `layer_name`, `name_field` |
+| `OgcApiFeatures` | `url`, `collection_name` |
+
+`epsg_id()` and `set_url_to_alt_url()` methods are implemented on `LayerSource` for use by the qgis builder.
+
+`datasource.rs` in `figure_tool/dtos/base_map/` has been deleted. `BaseMapOutputDTO.datasource` is now `Option<sqlx::types::Json<LayerSource>>`.
+
+**Frontend note:** `EditLayerForm.tsx` duck-types the source variant using field presence. With the tagged enum it will need updating to use `source.type === "mvt"` etc. — deferred.
+
+### DataProviderServiceType sqlx renames
+The PostgreSQL enum `app.data_provider_service_type` uses uppercase values (`WMTS`, `WFS`, `MVT`) but the Rust enum uses idiomatic casing (`Wmts`, `Wfs`, `Mvt`). sqlx uses the variant name as-is with no `rename_all`, so three variants need explicit attributes:
+```rust
+#[sqlx(rename = "WMTS")] Wmts,
+#[sqlx(rename = "WFS")]  Wfs,
+#[sqlx(rename = "MVT")]  Mvt,
+```
+The remaining variants (`ImageWMS`, `TileWMS`, `ArcGISRest`, `OGCAPIFeatures`, `XYZ`) match the DB values exactly.
+
+### geoman_migrate base_maps script
+`geoman_migrate/src/tables/base_maps.rs` reads `BaseMapDataSource` in the old untagged format from `app.base_maps` and converts to `LayerSource` (tagged) before inserting into `app.data_provider_layers.source`. A local `LayerSource` enum (WMS/WMTS/XYZ variants only) with `#[serde(tag = "type", rename_all = "snake_case")]` is defined in the migration crate — it must stay in sync with the canonical definition in `geoman/app/src/features/data_providers/types.rs`.
+
+### FigureOutputDTO base map fields (deferred)
+`FigureOutputDTO` currently has:
+```rust
+pub main_map_base_map: Option<BaseMapOutputDTO>,
+pub overview_map_base_map: Option<BaseMapOutputDTO>,
+```
+`BaseMapOutputDTO` is a figure-tool-specific projection of `app.data_provider_layers`. Long-term these fields should use `DataProviderLayer` from `data_providers/types.rs` directly, which is the canonical representation of that table. This would also make `BaseMapOutputDTO` and `BaseMapId` redundant and allow them to be removed. Deferred until the qgis_builder is wired up and the full rendering path is tested, since `BaseMapOutputDTO` methods (`set_url_to_alt_url`, `overview_map_slug`) are consumed by `qgis_builder/mod.rs`.
+
+### Base map handling in qgis_builder (deferred — Step 6)
+`qgis_builder/mod.rs` contains a `TryFrom<(String, BaseMapDataSource)> for QgisMapLayerBuilder` conversion that maps WMS/WMTS/XYZ datasource fields to the qgis crate's `WMSDataSource`/`XYZDataSource`. This will need porting to use `LayerSource` variants instead when the module is enabled.
+
+Additionally, `BaseMapId` in `figure_tool/ids.rs` is now redundant — it wraps `i32` for the same `app.data_provider_layers.id` column already covered by `DataProviderLayerId`. Similarly `DataProviderId` in `figure_tool/ids.rs` duplicates `data_providers::types::DataProviderId`. These should be consolidated when the qgis_builder is wired up and the full figure rendering path is tested end-to-end.
+
 ### Test helpers
 `HttpService::get_with_params<P: Serialize>` added alongside `get` — passes params to reqwest's `.query()`. Used for `get_figures` which requires a `?project=<id>` query param (field name is `project`, not `project_id`).
 
@@ -82,7 +143,8 @@ Ported as a plain `impl BaseMapOutputDTO { pub async fn select(conn: &mut PgConn
 |---|---|
 | `SiteBoundaryId(id.0)` | `FeatureId` from `domain` — now derives `Eq + Hash` for use in `HashSet` |
 | `TurbineLayoutId(id.0)` | `LayoutId` from `domain` — now derives `Eq + Hash` |
-| `BaseMapOutputDTO` (separate `app.base_maps` table) | Ported as-is into `dtos/base_map/`; `BaseMapId` added to `ids.rs`; base maps loaded via `BaseMapOutputDTO::select` in `from_figure_selection` |
+| `BaseMapOutputDTO` (separate `app.base_maps` table) | Base maps are `app.data_provider_layers` rows with `category = 'basemap'`; `BaseMapOutputDTO::select` queries that table with aliases; `BaseMapDataSource` replaced by unified `LayerSource` from `data_providers/types.rs` |
+| `DataProviderServiceType` sqlx renames | ✅ `Wmts`, `Wfs`, `Mvt` variants need explicit `#[sqlx(rename)]` to match uppercase DB enum values |
 | `FigureStatus` (prototype-specific enum) | Removed; `domain::enums::Status` used throughout; DB column uses `app.status` (uppercase values: `'ACTIVE'`, `'DELETED'`, etc.) |
 | `PrintResolution` (was in `qgis_builder/mod.rs`) | Moved to `enums/mod.rs` so it can be used without enabling `qgis_builder` |
 | `app.generate_figure_id(project_id)` | `app.generate_figure_id(auth, project_id)` |
@@ -112,43 +174,22 @@ All passing. See figure update approach above.
 
 ---
 
-### Step 3 — DELETE /figures/{id}
+### Step 3 — DELETE /figures/{id} ✅
 
-**DB layer**
-- Port `db/figure/delete.rs` — soft-delete: `UPDATE app.figures SET status = 'DELETED', last_updated = NOW(), last_updated_by = $2 WHERE id = $1 RETURNING id`
-- Use `fetch_one` so missing figure → `RowNotFound` → 404
-- Enable `mod delete` in `db/figure/mod.rs`
+No separate DELETE handler needed. Soft delete is covered entirely by the existing PATCH endpoint: patch `status: DELETED`, figure is excluded from all queries (both `SelectOne` and `SelectAllWithParams` filter `f.status != 'DELETED'`).
 
-**Handler**
-- Create `handlers/figure/delete.rs` following the data providers delete pattern
-- `AuthenticatedUser` extractor; `#[delete("/{figure_id}")]` macro; return `Result<HttpResponse, ApiError>` (204)
-- Export from `handlers/figure/mod.rs`, register in `routes/api.rs`
+`delete_figure_works` test lives in `tests/features/figure_tool/handlers/figure/patch.rs`:
+- Patches `status: Status::Deleted` → asserts 204
+- GET by ID → asserts 404
+- GET list (`?project=<id>`) → asserts empty vec
 
-**Tests**
-- `delete_figure_works` — create a figure, delete it, assert GET returns 404
+The prototype `handlers/figure/delete.rs` and `tests/handlers/figure/delete.rs` have been removed.
 
 ---
 
-### Step 4 — GET /layer-styles
+### Step 4 — GET /layer-styles ✅
 
-**URLs**
-- Add `layer_styles: "/layer-styles"` to `config/urls.yaml` and the `Api` struct in `app/src/urls.rs`
-
-**DB layer**
-- Uncomment `db/layer_style/` and port `select_all` — fix imports, use `Acquire` bound
-
-**DTOs**
-- Uncomment `dtos/layer_style.rs` → `LayerStyleOutputDTO`
-
-**Handler**
-- Port `handlers/layer_style/get.rs` → `get_layer_styles`
-- Uncomment entry in `handlers/mod.rs`, register route
-
-**TestApp**
-- Add `layer_styles_service: HttpService` field, initialise with `URLS.api.layer_styles`
-
-**Tests**
-- `get_layer_styles_works`
+All passing. The `layer_styles` table (`public.layer_styles`) is a QGIS-managed table seeded via QGIS Desktop; the test DB starts empty so the test asserts an empty vec rather than checking for content. A POST handler will be added later and can be used to seed test data when needed.
 
 ---
 

@@ -8,7 +8,9 @@ use serde_json::Value;
 use crate::{
     AuthenticatedUser,
     errors::ApiError,
-    features::data_providers::types::{DataProviderLayerId, DataProviderServiceId, LayerCategory},
+    features::data_providers::types::{
+        DataProviderLayerId, DataProviderServiceId, LayerCategory, LayerSource,
+    },
     postgres::PostgresRepo,
 };
 
@@ -26,30 +28,6 @@ pub struct DataProviderLayerInputPayload {
     pub country_code: Option<String>,
     pub subdivision: Option<String>,
     pub sort_order: Option<i32>,
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(untagged)]
-pub enum LayerSource {
-    MVT {
-        url: String,
-    },
-    ArcGISRest {
-        service_name: String,
-        layer_id: i64,
-        name_field: Option<String>,
-    },
-    WFS {
-        layer_name: String,
-        name_field: Option<String>,
-        url: String,
-    },
-}
-
-impl Default for LayerSource {
-    fn default() -> Self {
-        Self::MVT { url: String::new() }
-    }
 }
 
 #[post("")]

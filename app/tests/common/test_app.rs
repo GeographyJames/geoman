@@ -83,6 +83,7 @@ pub struct TestApp<T: AuthService> {
     pub data_provider_services_service: HttpService,
     pub data_provider_layers_service: HttpService,
     pub figures_service: HttpService,
+    pub layer_styles_service: HttpService,
 }
 
 pub struct AppBuilder {
@@ -204,6 +205,9 @@ impl TestApp<ClerkAuthService> {
             },
             figures_service: HttpService {
                 endpoint: format!("{}{}", URLS.api.base, URLS.api.figures),
+            },
+            layer_styles_service: HttpService {
+                endpoint: format!("{}{}", URLS.api.base, URLS.api.layer_styles),
             },
         }
     }

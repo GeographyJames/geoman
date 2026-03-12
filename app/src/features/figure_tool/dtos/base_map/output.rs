@@ -2,9 +2,10 @@ use chrono::Datelike;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Row, postgres::PgRow};
 
-use crate::features::figure_tool::ids::{BaseMapId, DataProviderId};
-
-use super::BaseMapDataSource;
+use crate::features::{
+    data_providers::LayerSource,
+    figure_tool::ids::{BaseMapId, DataProviderId},
+};
 
 #[derive(Deserialize, Serialize, Debug, Clone, FromRow)]
 pub struct BaseMapOutputDTO {
@@ -15,7 +16,7 @@ pub struct BaseMapOutputDTO {
     pub slug: String,
     pub default_main_map_base_map: bool,
     pub default_overview_map_base_map: bool,
-    pub datasource: Option<sqlx::types::Json<BaseMapDataSource>>,
+    pub datasource: Option<sqlx::types::Json<LayerSource>>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -42,6 +43,7 @@ impl BaseMapOutputDTO {
     pub fn overview_map_slug(&self) -> String {
         format!("{}-overview", self.slug)
     }
+
     pub fn set_url_to_alt_url(&mut self) {
         if let Some(ref mut ds) = self.datasource {
             ds.0.set_url_to_alt_url();

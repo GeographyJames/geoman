@@ -1,5 +1,5 @@
 use crate::features::data_providers::types::{
-    DataProviderLayer, DataProviderLayerId, DataProviderServiceId, LayerCategory,
+    DataProviderLayer, DataProviderLayerId, DataProviderServiceId, LayerCategory, LayerSource,
 };
 
 use crate::repo::traits::SelectAll;
@@ -18,7 +18,7 @@ impl SelectAll for DataProviderLayer {
                    service_id as "service_id: DataProviderServiceId",
                    name,
                    abbreviation,
-                   source as "source: serde_json::Value",
+                   source as "source: sqlx::types::Json<LayerSource>",
                    category as "category: LayerCategory",
                    description,
                    enabled_geoman,

@@ -5,7 +5,7 @@ use serde_json::Value;
 use crate::{
     AuthenticatedUser,
     errors::ApiError,
-    features::data_providers::types::{DataProviderLayerId, LayerCategory},
+    features::data_providers::types::{DataProviderLayerId, LayerCategory, LayerSource},
     postgres::PostgresRepo,
 };
 
@@ -14,7 +14,7 @@ pub struct DataProviderLayerUpdatePayload {
     pub name: Option<String>,
     #[serde(default, deserialize_with = "crate::serde_helpers::double_option")]
     pub abbreviation: Option<Option<String>>,
-    pub source: Option<Value>,
+    pub source: Option<LayerSource>,
     pub category: Option<LayerCategory>,
     #[serde(default, deserialize_with = "crate::serde_helpers::double_option")]
     pub description: Option<Option<String>>,

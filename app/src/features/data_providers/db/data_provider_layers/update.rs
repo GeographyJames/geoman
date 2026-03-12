@@ -19,6 +19,16 @@ impl Update for (DataProviderLayerUpdatePayload, DataProviderLayerId, UserId) {
         let mut executor = conn.acquire().await?;
         let (payload, id, user_id) = self;
         let slug = payload.name.as_deref().map(slug::slugify);
+        let source = payload
+            .source
+            .as_ref()
+            .map(serde_json::to_value)
+            .transpose()
+            .map_err(|e| {
+                crate::repo::RepositoryError::UnexpectedError(
+                    anyhow::anyhow!("failed to serialize layer source: {}", e).into(),
+                )
+            })?;
         let res = sqlx::query!(
             r#"
             UPDATE app.data_provider_layers
@@ -44,7 +54,7 @@ impl Update for (DataProviderLayerUpdatePayload, DataProviderLayerId, UserId) {
             slug,
             payload.abbreviation.is_some(),
             payload.abbreviation.clone().flatten(),
-            payload.source as _,
+            source as _,
             payload.category as _,
             payload.description.is_some(),
             payload.description.clone().flatten(),

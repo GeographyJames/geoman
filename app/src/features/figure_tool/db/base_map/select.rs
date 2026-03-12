@@ -5,22 +5,23 @@ use crate::{
     repo::RepositoryError,
 };
 
-const BASE_QUERY: &str = r#"SELECT bm.id,
-           bm.name,
-           slug,
-           default_main_map_base_map,
-           default_overview_map_base_map,
+const BASE_QUERY: &str = r#"SELECT dpl.id,
+           dpl.name,
+           dpl.slug,
+           dpl.figure_default_main_map_base_map AS default_main_map_base_map,
+           dpl.figure_default_overview_map_base_map AS default_overview_map_base_map,
            dp.id AS "dp_id",
            dp.name AS "dp_name",
            dp.copyright_text,
-           datasource
-
-    FROM app.base_maps bm
-     JOIN app.base_map_data_providers dp ON bm.data_provider_id = dp.id"#;
+           dpl.source AS datasource
+    FROM app.data_provider_layers dpl
+    JOIN app.data_provider_services dps ON dpl.service_id = dps.id
+    JOIN app.data_providers dp ON dps.provider_id = dp.id
+    WHERE dpl.category = 'basemap'"#;
 
 impl BaseMapOutputDTO {
     pub async fn select(conn: &mut PgConnection, id: &BaseMapId) -> Result<Self, RepositoryError> {
-        let res = sqlx::query_as(&format!("{BASE_QUERY} WHERE bm.id = $1"))
+        let res = sqlx::query_as(&format!("{BASE_QUERY} AND dpl.id = $1"))
             .bind(id.as_ref())
             .fetch_one(conn)
             .await?;
