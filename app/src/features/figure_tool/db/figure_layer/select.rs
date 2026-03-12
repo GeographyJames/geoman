@@ -5,26 +5,26 @@ use chrono::Utc;
 use serde::Deserialize;
 use sqlx::{FromRow, PgConnection};
 
+use domain::{FeatureId, LayoutId, UserId};
+use qgis::{layer::WkbType, srs::SupportedEpsg};
+
 use crate::{
-    app::features::figure_tool::{
+    features::figure_tool::{
         dtos::{
-            bounding_box::BoundingBox,
-            figure_layer::{FigureLayerOutputDTO, LayerProperties},
-            pg_table::{PgTableInvalidOutputDTO, PgTableOutputDTO},
+            BoundingBox, {FigureLayerOutputDTO, LayerProperties},
+            {PgTableInvalidOutputDTO, PgTableOutputDTO},
         },
         enums::{
             FigureLayerDatasourceOutput, ProjectLayer, SiteBoundaryDatasourceOutputDTO,
-            SupportedEpsg, TurbineLayoutDatasourceOutputDTO,
+            TurbineLayoutDatasourceOutputDTO,
         },
-        ids::{FigureId, FigureLayerId, LayerStyleId, SiteBoundaryId, TurbineLayoutId},
+        ids::{FigureId, FigureLayerId, LayerStyleId},
     },
-    domain::dtos::UserId,
-    qgis::layer::WkbType,
     repo::RepositoryError,
 };
 
 #[derive(FromRow, Deserialize)]
-struct FigureSelection {
+struct FigureLayerSelection {
     id: FigureLayerId,
     style_id: Option<LayerStyleId>,
     figure_id: FigureId,
@@ -32,12 +32,12 @@ struct FigureSelection {
     properties: sqlx::types::Json<LayerProperties>,
 
     project_layer_source: Option<sqlx::types::Json<PgTableSelection>>,
-    turbine_layout_id: Option<TurbineLayoutId>,
-    site_boundary_id: Option<SiteBoundaryId>,
+    turbine_layout_id: Option<LayoutId>,
+    site_boundary_id: Option<FeatureId>,
     layout_name: Option<String>,
     site_boundary_name: Option<String>,
 
-    user_id: UserId,
+    added_by: UserId,
     added_by_first_name: String,
     added_by_last_name: String,
     added: chrono::DateTime<Utc>,
@@ -112,32 +112,32 @@ pub async fn select_all_layers_for_figure(
     figure_id: &FigureId,
 ) -> Result<Vec<FigureLayerOutputDTO>, RepositoryError> {
     let mut layers = Vec::new();
-    let res: Vec<FigureSelection> = sqlx::query_as(
+    let res: Vec<FigureLayerSelection> = sqlx::query_as(
         r#"
 SELECT fl.id,
-       style_id,
-       figure_id,
+       fl.style_id,
+       fl.figure_id,
        fl.added,
-       fl.user_id,
+       fl.added_by,
        u.first_name as added_by_first_name,
        u.last_name as added_by_last_name,
-       properties,
-       project_layer_source,
-       turbine_layout_id,
-       site_boundary_id,
+       fl.properties,
+       fl.project_layer_source,
+       fl.turbine_layout_id,
+       fl.site_boundary_id,
        l.name as layout_name,
        b.name as site_boundary_name,
        fl.name,
        ls.styleqml::text
-        FROM app.figure_layers fl
-        JOIN app.users u ON u.id = fl.user_id
-        LEFT JOIN public.layer_styles ls ON fl.style_id = ls.id
-        LEFT JOIN app.site_boundaries b ON b.id = fl.site_boundary_id
-        LEFT JOIN app.turbine_layouts l ON l.id = fl.turbine_layout_id
-        WHERE figure_id = $1
-        ORDER BY layer_order"#,
+FROM app.figure_layers fl
+JOIN app.users u ON u.id = fl.added_by
+LEFT JOIN public.layer_styles ls ON fl.style_id = ls.id
+LEFT JOIN app.project_features b ON b.id = fl.site_boundary_id
+LEFT JOIN app.turbine_layouts l ON l.id = fl.turbine_layout_id
+WHERE fl.figure_id = $1
+ORDER BY fl.layer_order"#,
     )
-    .bind(figure_id.as_ref())
+    .bind(figure_id.0)
     .fetch_all(&mut *conn)
     .await?;
     for row in res {
@@ -169,7 +169,7 @@ SELECT fl.id,
             properties: row.properties.0,
             source: ds,
             bounding_box,
-            user_id: row.user_id,
+            added_by: row.added_by,
             added_by_first_name: row.added_by_first_name,
             added_by_last_name: row.added_by_last_name,
             added: row.added,
@@ -190,8 +190,8 @@ const EXTENT_QUERY: &str = "SELECT ST_XMin(extent) as min_x,
 const BOUNDARY_CTE: &str = "WITH cte AS (
          SELECT
       ST_Extent(geom) as extent,
-      (SELECT ST_SRID(geom) FROM app.site_boundaries LIMIT 1) as srid
-  FROM app.site_boundaries
+      (SELECT ST_SRID(geom) FROM app.project_features LIMIT 1) as srid
+  FROM app.project_features
                 WHERE id = $1)";
 
 const LAYOUT_CTE: &str = "WITH cte AS (SELECT ST_Extent(geom) as extent, (SELECT ST_SRID(geom) FROM app.turbines LIMIT 1) as srid FROM app.turbines WHERE layout_id = $1)";
@@ -217,7 +217,10 @@ async fn bounding_box(
             );
             Some(sqlx::query(&query_sql))
         }
-        FigureLayerDatasourceOutput::SiteBoundary(SiteBoundaryDatasourceOutputDTO { id, name: _ }) => {
+        FigureLayerDatasourceOutput::SiteBoundary(SiteBoundaryDatasourceOutputDTO {
+            id,
+            name: _,
+        }) => {
             query_sql = format!("{} {}", BOUNDARY_CTE, EXTENT_QUERY);
             Some(sqlx::query(&query_sql).bind(id))
         }

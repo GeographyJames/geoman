@@ -10,11 +10,12 @@ use crate::{
 };
 
 impl SelectAll for User {
-    async fn select_all<'a, E>(executor: &'a E) -> Result<Vec<Self>, RepositoryError>
+    async fn select_all<'a, A>(executor: A) -> Result<Vec<Self>, RepositoryError>
     where
         Self: Sized,
-        &'a E: sqlx::PgExecutor<'a>,
+        A: sqlx::Acquire<'a, Database = sqlx::Postgres>,
     {
+        let mut conn = executor.acquire().await?;
         sqlx::query_as!(
             User,
             r#"SELECT u.id AS "id: UserId",
@@ -26,18 +27,19 @@ impl SelectAll for User {
                     (ROW(t.id, t.name, t.business_unit_id)::app.team) as "team!: Team"
                 FROM app.users u JOIN app.teams t ON t.id = u.team_id "#,
         )
-        .fetch_all(executor)
+        .fetch_all(&mut *conn)
         .await
         .map_err(Into::into)
     }
 }
 
 impl SelectOne<UserId> for User {
-    async fn select_one<'a, E>(executor: &'a E, id: UserId) -> Result<Option<Self>, RepositoryError>
+    async fn select_one<'a, A>(executor: A, id: UserId) -> Result<Option<Self>, RepositoryError>
     where
         Self: Sized,
-        &'a E: sqlx::PgExecutor<'a>,
+        A: sqlx::Acquire<'a, Database = sqlx::Postgres>,
     {
+        let mut conn = executor.acquire().await?;
         sqlx::query_as!(
             User,
             r#"SELECT u.id AS "id: UserId",
@@ -51,7 +53,7 @@ impl SelectOne<UserId> for User {
                 WHERE u.id = $1 "#,
             id.0
         )
-        .fetch_optional(executor)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(Into::into)
     }
@@ -96,19 +98,21 @@ impl SelectOneWithParams<&KeyHash> for AuthenticatedUser {
 }
 
 impl SelectOne<&str> for AuthenticatedUser {
-    async fn select_one<'a, E>(
-        executor: &'a E,
+    async fn select_one<'a, A>(
+        executor: A,
         token: &str,
     ) -> Result<Option<Self>, crate::repo::RepositoryError>
     where
-        &'a E: sqlx::PgExecutor<'a>,
+        Self: Sized,
+        A: sqlx::Acquire<'a, Database = sqlx::Postgres>,
     {
+        let mut conn = executor.acquire().await?;
         sqlx::query_as!(
             AuthenticatedUser,
             r#"SELECT id as "id: UserId", team_id as "team_id: TeamId", admin, username, first_name, last_name FROM app.users WHERE clerk_id = $1"#,
             token
         )
-        .fetch_optional(executor)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(RepositoryError::from)
     }

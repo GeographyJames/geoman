@@ -2,24 +2,24 @@ use anyhow::Context;
 use chrono::Utc;
 use gdal::spatial_ref::{CoordTransform, SpatialRef};
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, PgConnection, PgPool};
+use sqlx::{FromRow, PgConnection};
 
 use crate::{
-    app::features::figure_tool::{
+    features::figure_tool::{
         db::figure_layer::select_all_layers_for_figure,
         dtos::{
-            base_map::BaseMapOutputDTO,
-            bounding_box::{BoundingBox, Point},
-            figure::{FigureOutputDTO, FigureProperties, OVERVIEW_MAP_SCALE},
-            figure_layer::FigureLayerOutputDTO,
+            BaseMapOutputDTO, BoundingBox, FigureLayerOutputDTO, FigureOutputDTO, FigureProperties,
+            OVERVIEW_MAP_SCALE, Point,
         },
-        enums::FigureStatus,
-        ids::{BaseMapId, FigureId, ProjectId},
+        ids::{BaseMapId, FigureId},
     },
-    domain::dtos::UserId,
-    qgis::{Extent, layout::components::SizeInteger},
-    repo::{RepositoryError, Select, SelectAllForProject},
+    repo::{
+        RepositoryError,
+        traits::{SelectAllWithParams, SelectOne},
+    },
 };
+use domain::{ProjectId, UserId, enums::Status};
+use qgis::{Extent, layout::components::SizeInteger};
 
 #[derive(Serialize, Deserialize, Debug, FromRow, Clone)]
 struct FigureSelection {
@@ -35,7 +35,7 @@ struct FigureSelection {
     last_updated_by: UserId,
     last_updated_by_first_name: String,
     last_updated_by_last_name: String,
-    status: FigureStatus,
+    status: Status,
     added: chrono::DateTime<Utc>,
     last_updated: chrono::DateTime<Utc>,
     page_width_mm: i32,
@@ -76,37 +76,51 @@ JOIN    app.users u2 ON u2.id = f.last_updated_by
 JOIN    app.projects p ON p.id = f.project_id
 "#;
 
-impl<'a> SelectAllForProject<&'a PgPool, ProjectId> for FigureOutputDTO {
-    async fn select_all_for_project(
-        executor: &'a PgPool,
-        project_id: &ProjectId,
-    ) -> Result<Vec<Self>, crate::repo::RepositoryError> {
+impl SelectAllWithParams for FigureOutputDTO {
+    type Params<'a> = ProjectId;
+
+    type MetaData<'a> = ();
+
+    async fn select_all_with_params<'a, A>(
+        executor: A,
+        project_id: ProjectId,
+    ) -> Result<(Vec<Self>, Self::MetaData<'a>), RepositoryError>
+    where
+        Self: Sized,
+        A: sqlx::Acquire<'a, Database = sqlx::Postgres>,
+    {
+        let mut conn = executor.acquire().await?;
         let mut figures = Vec::new();
-        let mut tx = executor.begin().await?;
         let res: Vec<FigureSelection> = sqlx::query_as(&format!(
-            "{} WHERE f.project_id = $1 AND f.status != 'deleted'",
+            "{} WHERE f.project_id = $1 AND f.status != 'DELETED'",
             BASE_QUERY
         ))
-        .bind(project_id.as_ref())
-        .fetch_all(&mut *tx)
+        .bind(project_id.0)
+        .fetch_all(&mut *conn)
         .await?;
         for row in res {
-            figures.push(FigureOutputDTO::from_figure_selection(row, &mut tx).await?)
+            figures.push(FigureOutputDTO::from_figure_selection(row, &mut *conn).await?)
         }
-        Ok(figures)
+        Ok((figures, ()))
     }
 }
 
-impl Select<&mut PgConnection, FigureId> for FigureOutputDTO {
-    async fn select(
-        conn: &mut PgConnection,
-        id: &FigureId,
-    ) -> Result<Self, crate::repo::RepositoryError> {
-        let res: FigureSelection = sqlx::query_as(&format!("{} WHERE f.id = $1", BASE_QUERY))
-            .bind(id.as_ref())
-            .fetch_one(&mut *conn)
-            .await?;
-        let figure = FigureOutputDTO::from_figure_selection(res, &mut *conn).await?;
+impl SelectOne<FigureId> for FigureOutputDTO {
+    async fn select_one<'a, A>(executor: A, id: FigureId) -> Result<Option<Self>, RepositoryError>
+    where
+        Self: Sized,
+        A: sqlx::Acquire<'a, Database = sqlx::Postgres>,
+    {
+        let mut conn = executor.acquire().await?;
+        let res: Option<FigureSelection> =
+            sqlx::query_as(&format!("{} WHERE f.id = $1", BASE_QUERY))
+                .bind(id.as_ref())
+                .fetch_optional(&mut *conn)
+                .await?;
+        let figure = match res {
+            Some(f) => Some(FigureOutputDTO::from_figure_selection(f, &mut *conn).await?),
+            None => None,
+        };
 
         Ok(figure)
     }

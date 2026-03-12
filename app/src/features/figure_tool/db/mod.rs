@@ -1,4 +1,4 @@
-// mod base_map;
+mod base_map;
 mod figure;
 mod figure_layer;
 // mod layer_style;

@@ -86,13 +86,14 @@ fn project_query() -> String {
 impl SelectAllWithParams for Project {
     type Params<'a> = SelectAllParams<'a>;
     type MetaData<'a> = ();
-    async fn select_all_with_params<'a, E>(
-        executor: &'a E,
+    async fn select_all_with_params<'a, A>(
+        executor: A,
         params: Self::Params<'a>,
     ) -> Result<(Vec<Self>, Self::MetaData<'a>), RepositoryError>
     where
-        &'a E: sqlx::PgExecutor<'a>,
+        A: sqlx::Acquire<'a, Database = sqlx::Postgres>,
     {
+        let mut conn = executor.acquire().await?;
         let SelectAllParams {
             limit,
             crs,
@@ -109,7 +110,7 @@ impl SelectAllWithParams for Project {
         .bind(crs.as_srid())
         .bind(status.unwrap_or(vec![Status::Active]))
         .bind(limit.map(|l| l as i32))
-        .fetch_all(executor)
+        .fetch_all(&mut *conn)
         .await?;
 
         let items = rows
@@ -121,16 +122,15 @@ impl SelectAllWithParams for Project {
 }
 
 impl SelectOne<ProjectId> for ProjectName {
-    async fn select_one<'a, E>(
-        executor: &'a E,
-        id: ProjectId,
-    ) -> Result<Option<Self>, RepositoryError>
+    async fn select_one<'a, A>(executor: A, id: ProjectId) -> Result<Option<Self>, RepositoryError>
     where
-        &'a E: sqlx::PgExecutor<'a>,
+        Self: Sized,
+        A: sqlx::Acquire<'a, Database = sqlx::Postgres>,
     {
+        let mut conn = executor.acquire().await?;
         let project_row =
             sqlx::query_scalar!(r#"SELECT name FROM app.projects WHERE id = $1"#, id.0)
-                .fetch_optional(executor)
+                .fetch_optional(&mut *conn)
                 .await?;
 
         Ok(project_row.map(ProjectName))

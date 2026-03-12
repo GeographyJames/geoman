@@ -1,5 +1,4 @@
 use app::{
-    URLS,
     features::figure_tool::{
         dtos::FigureOutputDTO,
         handlers::figure::{
@@ -10,26 +9,17 @@ use app::{
     },
 };
 
-use crate::common::{
-    TestApp,
-    helpers::{assert_ok, auth_request},
-};
+use crate::common::{TestApp, helpers::assert_ok};
 use crate::features::figure_tool::handlers::project_layer::VALID_TABLE_NAMES;
 
 #[tokio::test]
 async fn get_figures_works() {
     let (app, user, project_id) = TestApp::with_project().await;
     let _figure_id = app.generate_figure_id(Some(&user), project_id).await;
-    let response = auth_request(
-        app.api_client.get(&format!(
-            "{}{}?project_id={}",
-            URLS.api.base, URLS.api.figures, project_id.0
-        )),
-        Some(&user),
-    )
-    .send()
-    .await
-    .expect("failed to execute request");
+    let response = app
+        .figures_service
+        .get_with_params(&app.api_client, Some(&user), &[("project", project_id.0)])
+        .await;
     assert_ok(&response);
     let _figures: Vec<FigureOutputDTO> = response.json().await.expect("failed to deserialize json");
 }
@@ -54,16 +44,10 @@ async fn get_figures_works_with_missing_project_layer() {
         .json()
         .await
         .expect("failed to deserialize json");
-    let response = auth_request(
-        app.api_client.get(&format!(
-            "{}{}?project_id={}",
-            URLS.api.base, URLS.api.figures, project_id.0
-        )),
-        Some(&user),
-    )
-    .send()
-    .await
-    .expect("failed to execute request");
+    let response = app
+        .figures_service
+        .get_with_params(&app.api_client, Some(&user), &[("project", project_id.0)])
+        .await;
     assert_ok(&response);
     let mut figures: Vec<FigureOutputDTO> =
         response.json().await.expect("failed to deserialize json");

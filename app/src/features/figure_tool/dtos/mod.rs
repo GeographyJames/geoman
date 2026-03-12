@@ -1,7 +1,7 @@
 pub mod base_map;
+pub use base_map::*;
 mod bounding_box;
 pub use bounding_box::{BoundingBox, Point};
-
 mod figure;
 pub use figure::*;
 mod figure_layer;

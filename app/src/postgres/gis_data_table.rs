@@ -1,6 +1,6 @@
 use domain::{GisDataTable, TableName, enums::GeometryType};
 use ogcapi_types::common::{Bbox, Crs, SpatialExtent};
-use sqlx::{FromRow, PgExecutor};
+use sqlx::{FromRow, PgConnection, PgExecutor};
 
 use crate::repo::{
     RepositoryError,
@@ -69,14 +69,11 @@ impl GisDataTableRow {
     }
 }
 
-async fn get_extent<'e, E: ?Sized>(
-    executor: &'e E,
+async fn get_extent(
+    executor: &mut PgConnection,
     table_name: &TableName,
     extent_crs: &Crs,
-) -> Option<SpatialExtent>
-where
-    &'e E: PgExecutor<'e>,
-{
+) -> Option<SpatialExtent> {
     let extent: Option<Vec<f64>> = sqlx::query_scalar(&extent_query(table_name))
         .bind(extent_crs.as_srid())
         .fetch_one(executor)
@@ -93,19 +90,21 @@ where
 }
 
 impl SelectAll for GisDataTable {
-    async fn select_all<'e, E>(executor: &'e E) -> Result<Vec<Self>, crate::repo::RepositoryError>
+    async fn select_all<'a, A>(executor: A) -> Result<Vec<Self>, crate::repo::RepositoryError>
     where
-        &'e E: PgExecutor<'e>,
+        Self: Sized,
+        A: sqlx::Acquire<'a, Database = sqlx::Postgres>,
     {
+        let mut conn = executor.acquire().await?;
         let extent_crs = Crs::default();
         let mut result = Vec::new();
         let table_rows =
             sqlx::query_as::<_, GisDataTableRow>(&format!("{QUERY} WHERE schemaname = 'gis_data'"))
-                .fetch_all(executor)
+                .fetch_all(&mut *conn)
                 .await?;
         for row in table_rows.into_iter() {
             if let Ok(table_name) = TableName::parse(row.table_name.to_string()) {
-                let extent = get_extent::<E>(executor, &table_name, &extent_crs).await;
+                let extent = get_extent(&mut *conn, &table_name, &extent_crs).await;
                 result.push(row.into_data_table(table_name, extent))
             }
         }
@@ -114,26 +113,27 @@ impl SelectAll for GisDataTable {
 }
 
 impl SelectOne<TableName> for GisDataTable {
-    async fn select_one<'a, E>(
-        executor: &'a E,
+    async fn select_one<'a, A>(
+        executor: A,
         table_name: TableName,
     ) -> Result<Option<Self>, RepositoryError>
     where
         Self: Sized,
-        &'a E: sqlx::PgExecutor<'a>,
+        A: sqlx::Acquire<'a, Database = sqlx::Postgres>,
     {
         let extent_crs = Crs::default();
+        let mut conn = executor.acquire().await?;
 
         let row =
             match sqlx::query_as::<_, GisDataTableRow>(&format!("{QUERY} WHERE tablename = $1"))
                 .bind(table_name.as_ref())
-                .fetch_optional(executor)
+                .fetch_optional(&mut *conn)
                 .await?
             {
                 Some(row) => row,
                 None => return Ok(None),
             };
-        let extent = get_extent::<E>(executor, &table_name, &extent_crs).await;
+        let extent = get_extent(&mut *conn, &table_name, &extent_crs).await;
         Ok(Some(row.into_data_table(table_name, extent)))
     }
 }

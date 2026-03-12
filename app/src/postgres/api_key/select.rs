@@ -8,14 +8,15 @@ impl SelectAllWithParams for ApiKey {
 
     type MetaData<'a> = ();
 
-    async fn select_all_with_params<'a, E>(
-        executor: &'a E,
+    async fn select_all_with_params<'a, A>(
+        executor: A,
         params: Self::Params<'a>,
     ) -> Result<(Vec<Self>, Self::MetaData<'a>), crate::repo::RepositoryError>
     where
         Self: Sized,
-        &'a E: sqlx::PgExecutor<'a>,
+        A: sqlx::Acquire<'a, Database = sqlx::Postgres>,
     {
+        let mut conn = executor.acquire().await?;
         let keys = sqlx::query_as!(
             ApiKey,
             r#"
@@ -34,7 +35,7 @@ impl SelectAllWithParams for ApiKey {
            "#,
             params.user_id.0
         )
-        .fetch_all(executor)
+        .fetch_all(&mut *conn)
         .await?;
         Ok((keys, ()))
     }

@@ -15,6 +15,17 @@ impl HttpService {
             .await
             .expect(REQUEST_FAILED)
     }
+    pub async fn get_with_params<P: Serialize>(
+        &self,
+        client: &HttpClient,
+        auth: Option<&Auth>,
+        params: &P,
+    ) -> Response {
+        auth_request(client.get(&self.endpoint).query(params), auth)
+            .send()
+            .await
+            .expect(REQUEST_FAILED)
+    }
     pub async fn post_json<B: Serialize>(
         &self,
         client: &HttpClient,

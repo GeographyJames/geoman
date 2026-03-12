@@ -4,8 +4,8 @@ use crate::{app::TestApp, helpers::assert_ok};
 
 #[tokio::test]
 async fn put_figure_works() {
-    let app = TestApp::spawn_and_login().await;
-    let project_id = app.generate_project_id().await;
+    let (app, user, project_id) = TestApp::with_project().await;
+
     let figure_id = app.generate_figure_id(project_id).await;
     let mut figure: FigureOutputDTO = app
         .figures_service
@@ -14,7 +14,7 @@ async fn put_figure_works() {
         .json()
         .await
         .expect("failed to deserialize json");
-    // let mut updated_figure_payload = FigurePayload::from(figure);
+
     let new_title = uuid::Uuid::new_v4().to_string();
     figure.properties.title = Some(new_title.clone());
     let response = app

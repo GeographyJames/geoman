@@ -186,13 +186,14 @@ impl SelectOneWithParams<ProjectCollectionId> for ProjectCollection {
 impl SelectAllWithParams for ProjectCollection {
     type Params<'a> = &'a SelectAllParams;
     type MetaData<'a> = ();
-    async fn select_all_with_params<'a, E>(
-        executor: &'a E,
+    async fn select_all_with_params<'a, A>(
+        executor: A,
         params: Self::Params<'a>,
     ) -> Result<(Vec<Self>, ()), RepositoryError>
     where
-        &'a E: sqlx::PgExecutor<'a>,
+        A: sqlx::Acquire<'a, Database = sqlx::Postgres>,
     {
+        let mut conn = executor.acquire().await?;
         let extent_crs = Crs::default();
 
         let rows = sqlx::query_as!(
@@ -247,7 +248,7 @@ impl SelectAllWithParams for ProjectCollection {
             extent_crs.as_srid() as i32,
             params.status.clone().unwrap_or(vec![Status::Active]) as Vec<Status>
         )
-        .fetch_all(executor)
+        .fetch_all(&mut *conn)
         .await?;
 
         let turbine_layout_row = sqlx::query_as!(
@@ -297,7 +298,7 @@ impl SelectAllWithParams for ProjectCollection {
             extent_crs.as_srid() as i32,
             params.status.clone().unwrap_or(vec![Status::Active]) as Vec<Status>,
         )
-        .fetch_optional(executor)
+        .fetch_optional(&mut *conn)
         .await?;
 
         let mut items: Vec<ProjectCollection> = rows
@@ -314,11 +315,12 @@ impl SelectAllWithParams for ProjectCollection {
 }
 
 impl SelectAll for CollectionListItem {
-    async fn select_all<'a, E>(executor: &'a E) -> Result<Vec<Self>, RepositoryError>
+    async fn select_all<'a, A>(executor: A) -> Result<Vec<Self>, RepositoryError>
     where
         Self: Sized,
-        &'a E: sqlx::PgExecutor<'a>,
+        A: sqlx::Acquire<'a, Database = sqlx::Postgres>,
     {
+        let mut conn = executor.acquire().await?;
         sqlx::query_as!(
             CollectionListItem,
             r#"SELECT c.id AS "id: ProjectCollectionId",
@@ -338,7 +340,7 @@ impl SelectAll for CollectionListItem {
                GROUP BY c.id, ab.id, t.id
                ORDER BY c.id"#
         )
-        .fetch_all(executor)
+        .fetch_all(&mut *conn)
         .await
         .map_err(Into::into)
     }

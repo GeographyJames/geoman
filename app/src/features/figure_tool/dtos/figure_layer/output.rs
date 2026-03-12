@@ -21,7 +21,7 @@ pub struct FigureLayerOutputDTO {
     pub source: FigureLayerDatasourceOutput,
 
     pub bounding_box: Option<BoundingBox>,
-    pub user_id: UserId,
+    pub added_by: UserId,
     pub added_by_first_name: String,
     pub added_by_last_name: String,
     pub added: chrono::DateTime<Utc>,

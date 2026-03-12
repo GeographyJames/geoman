@@ -8,7 +8,7 @@ use crate::{
             patch_data_provider, patch_data_provider_layer, patch_data_provider_service,
             post_data_provider, post_data_provider_layer, post_data_provider_service,
         },
-        figure_tool::handlers::figure::post_figure,
+        figure_tool::handlers::figure::{get_figure, get_figures, post_figure},
     },
     handlers::api::{
         business_units::{
@@ -186,5 +186,10 @@ pub fn data_provider_layers_routes(cfg: &mut web::ServiceConfig) {
 }
 
 pub fn figures_routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(scope(&URLS.api.figures).service(post_figure));
+    cfg.service(
+        scope(&URLS.api.figures)
+            .service(get_figures)
+            .service(get_figure)
+            .service(post_figure),
+    );
 }

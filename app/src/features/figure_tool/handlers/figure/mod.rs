@@ -4,8 +4,8 @@ mod payload;
 pub use payload::{
     FigureLayerDatasourcePayload, FigureLayerPayload, FigurePayload, PgTablePayload,
 };
-// mod get;
-// pub use get::{get_figure, get_figure_qgis_project, get_figures};
+mod get;
+pub use get::{get_figure, get_figures};
 // mod put;
 // pub use put::put_figure;
 // mod get_print;

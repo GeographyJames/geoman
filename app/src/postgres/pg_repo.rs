@@ -45,7 +45,7 @@ impl PostgresRepo {
     #[tracing::instrument(skip(self, id))]
     pub async fn select_one<T, ID>(&self, id: ID) -> Result<Option<T>, RepositoryError>
     where
-        T: SelectOne<ID>,
+        for<'a> T: SelectOne<ID>,
     {
         T::select_one(&self.db_pool, id).await
     }

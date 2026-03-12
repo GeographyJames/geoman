@@ -4,11 +4,12 @@ use crate::{
 };
 
 impl SelectAll for DataProvider {
-    async fn select_all<'a, E>(executor: &'a E) -> Result<Vec<Self>, crate::repo::RepositoryError>
+    async fn select_all<'a, A>(executor: A) -> Result<Vec<Self>, crate::repo::RepositoryError>
     where
         Self: Sized,
-        &'a E: sqlx::PgExecutor<'a>,
+        A: sqlx::Acquire<'a, Database = sqlx::Postgres>,
     {
+        let mut conn = executor.acquire().await?;
         let res = sqlx::query_as!(
             DataProvider,
             r#"
@@ -20,7 +21,7 @@ impl SelectAll for DataProvider {
             ORDER BY name ASC
             "#
         )
-        .fetch_all(executor)
+        .fetch_all(&mut *conn)
         .await?;
         Ok(res)
     }
