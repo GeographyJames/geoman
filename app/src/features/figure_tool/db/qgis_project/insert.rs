@@ -19,7 +19,7 @@ impl Insert for QgisProject {
         .await?;
 
         sqlx::query!(
-            "INSERT INTO public.qgis_projects (name, metadata, content, figure_id, low_res) VALUES ($1, $2, $3, $4, $5)",
+            "INSERT INTO public.qgis_projects (name, metadata, content, figure_id, low_res) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (name) DO NOTHING",
             self.name,
             serde_json::to_value(&self.metadata).map_err(|e| RepositoryError::UnexpectedError(
                 anyhow::anyhow!("failed to serialize qgis project metadata: {}", e).into()

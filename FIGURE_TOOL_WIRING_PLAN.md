@@ -277,7 +277,7 @@ The following points were flagged after wiring was complete. Work through these 
 
 - [x] **1. High-res project cleanup asymmetry** — intentional. The PDF test explicitly asserts the old high-res project persists after a PATCH (caching behaviour). Low-res (jpg) projects are always regenerated because `qgis_project_uuid` rotates on every PATCH, causing `check_unique` to miss and triggering the delete-and-reinsert.
 
-- [ ] **2. `check_unique` / `insert` race condition** — no `ON CONFLICT` clause on the INSERT. Concurrent requests for the same figure could both pass `check_unique` and both attempt INSERT, producing a unique-key violation (500). Confirm whether a unique constraint exists on `public.qgis_projects.name`, and if so consider adding `ON CONFLICT (name) DO NOTHING` or a mutex.
+- [x] **2. `check_unique` / `insert` race condition** — `name` is the primary key on `public.qgis_projects`. Added `ON CONFLICT (name) DO NOTHING` to the INSERT in `db/qgis_project/insert.rs`. `check_unique` is kept as a performance optimisation (skips expensive `generate_project` in the common case); `ON CONFLICT` is the safety net for the rare concurrent-request edge case.
 
 - [ ] **3. `GetPrintRequest::default()` hardcoded local db name** — the `map` field default is `"postgresql://?dbname=geodata_local&schema=qgis&project=test-project"`. This is always overridden by `GetPrintRequestBuilder.build()` so it never reaches production, but it's a trap if `Default` is ever called directly. Consider making the default a panic or removing it.
 
