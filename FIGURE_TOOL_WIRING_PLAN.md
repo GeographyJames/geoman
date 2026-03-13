@@ -30,6 +30,7 @@ The `figure_tool` feature directory has been copied into `app/src/features/figur
 | DELETE handler (`delete.rs`) | ✅ removed — soft delete via PATCH `status: DELETED` |
 | `get_print.rs` (renamed to `print.rs`) | ✅ wired up — `GET /figures/{id}/{format}` |
 | `get_qgis_project.rs` | ✅ wired up — `GET /qgis-projects/{name}` |
+| `handlers/figure/get_qgis_project.rs` | ✅ wired up — `GET /figures/{id}/qgz` |
 | DB `figure/delete` | ❌ commented out |
 | `GET /layer-styles` handler + test | ✅ working |
 | DB `layer_style` | ✅ uncommented, ported to `Acquire` bound |
@@ -214,31 +215,14 @@ All passing.
 
 ---
 
-### Step 6 — GET /figures/{id}/qgz (merged into Step 7)
+### Step 6 — GET /figures/{id}/qgz ✅
 
-**Enable `qgis_builder` module**
-- Uncomment `mod qgis_builder` in `features/figure_tool/mod.rs`
-- The key adaptation is `TryFrom<(String, BaseMapDataSource)> for QgisMapLayerBuilder` — `BaseMapDataSource` no longer exists; replace with `TryFrom<(String, LayerSource)>`:
+All passing.
 
-| `LayerSource` variant | `DataSource` mapping |
-|---|---|
-| `Xyz { url, .. }` | `DataSource::XYZ(XYZDataSource { url })` |
-| `Wmts { url, layers, tile_matrix_set, epsg_id, authcfg_id, .. }` | `DataSource::WMS(WMSDataSource::new_wmts(authcfg_id, url, layers, epsg_id, tile_matrix_set))` |
-| `ImageWms { url, layers, epsg_id, authcfg_id, .. }` | `DataSource::WMS(WMSDataSource::new_wms(authcfg_id, url, layers, epsg_id))` |
-| `TileWms { url, layers, epsg_id, authcfg_id, .. }` | same as `ImageWms` |
-| MVT / ArcGISRest / WFS / OgcApiFeatures | `Err(anyhow!("unsupported source type for base map: ..."))` |
-
-- `epsg_id()` on `LayerSource` already exists for the CRS/SRS selection logic (27700/4326/3857 → BNG/WGS84/web_mercator)
-- `datasource.0` in `generate_project` is now `LayerSource` (was `BaseMapDataSource`) — just update the `TryFrom` target type
-
-**Handler**
-- Add `get_figure_qgz` handler (or port from `get_qgis_project.rs` which serves stored `.qgz` — keep that for Step 7; this is a new inline-generate endpoint)
-- Calls `generate_project(figure, Some(&config.qgis_server.figure_config), &PrintResolution::High, false, PgConfig { db_name: config.db_settings.database_name, port: config.db_settings.port, host: config.db_settings.host, sslmode: SslMode::from(config.db_settings.require_ssl) }, None)`
-- Returns `.qgz` bytes directly as `application/octet-stream` — no DB storage needed for the `/qgz` route
-- Register sub-route `/{id}/qgz` under `figures_routes`
-
-**Tests**
-- `get_figure_qgis_project_works` — asserts 200 and `content-type: application/octet-stream`; optionally inspect zip bytes
+- `handlers/figure/get_qgis_project.rs` ported to geoman pattern — `#[get("/{figure_id}/qgz")]`, uses `QgisServerSettings` and `DatabaseSettings` from app data; calls `generate_project` with `include_figure_id = false` and `authcfg = None`; returns `.qgz` bytes as `application/octet-stream` with `Content-Disposition` header; no DB storage
+- `figure.set_basemap_urls_to_alt_urls()` called before project generation (uses alt download URLs if configured)
+- Route registered as `get_figure_qgz` under `figures_routes`
+- `get_figure_qgis_project_works` test updated to new pattern (`TestApp::with_project`, `auth_request`, `assert_is_qgis_project`)
 
 ---
 
