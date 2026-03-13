@@ -72,6 +72,8 @@ The prototype had a PUT that replaced the entire figure including re-inserting a
 - `layers: Option<Vec<FigureLayerPayload>>` — if `Some`, deletes existing layers and re-inserts; if `None`, leaves layers unchanged
 - No `project_id` field — not meaningful for an update
 
+**`qgis_project_uuid` must be regenerated on every PATCH** — the prototype's PUT went through `FigurePayload::into_input_dto()` which always called `uuid::Uuid::new_v4()`. When we ported to `FigureUpdatePayload` + direct SQL, this was initially omitted. The UUID rotation is load-bearing: `qgis_project_name` is derived from it, so a stale UUID means `check_unique` hits the old project and skips the delete-and-reinsert, leaving the low-res project pointing at outdated data. Fixed by adding `qgis_project_uuid = $13` (a fresh `Uuid::new_v4()`) to the UPDATE statement in `db/figure/update.rs`. **If any future PATCH-like operation on figures is added, ensure it also rotates this UUID.**
+
 The DB impl uses a transaction (`conn.begin()`), `RETURNING id` + `fetch_one` so a missing figure returns `RowNotFound` → 404.
 
 **Known limitation:** `properties` uses `COALESCE` which replaces the entire JSONB blob. If the client sends partial `FigureProperties` (e.g. only `title`), all other property fields are overwritten with their `Default` (null) values. A proper fix would use `properties || jsonb_strip_nulls($n::jsonb)` for merge semantics. Deferred — not blocking current tests since figures are freshly created before patching.
@@ -273,22 +275,22 @@ The following points were flagged after wiring was complete. Work through these 
 
 ### ✅ / ❌ Checklist
 
-- [ ] **1. High-res project cleanup asymmetry** — `insert.rs` DELETE only applies to `low_res = true`. High-res (PDF) projects accumulate in the table. If intentional (the PDF test asserts the old project persists), document it explicitly; if not, add a DELETE for `low_res = false` too.
+- [x] **1. High-res project cleanup asymmetry** — intentional. The PDF test explicitly asserts the old high-res project persists after a PATCH (caching behaviour). Low-res (jpg) projects are always regenerated because `qgis_project_uuid` rotates on every PATCH, causing `check_unique` to miss and triggering the delete-and-reinsert.
 
 - [ ] **2. `check_unique` / `insert` race condition** — no `ON CONFLICT` clause on the INSERT. Concurrent requests for the same figure could both pass `check_unique` and both attempt INSERT, producing a unique-key violation (500). Confirm whether a unique constraint exists on `public.qgis_projects.name`, and if so consider adding `ON CONFLICT (name) DO NOTHING` or a mutex.
 
 - [ ] **3. `GetPrintRequest::default()` hardcoded local db name** — the `map` field default is `"postgresql://?dbname=geodata_local&schema=qgis&project=test-project"`. This is always overridden by `GetPrintRequestBuilder.build()` so it never reaches production, but it's a trap if `Default` is ever called directly. Consider making the default a panic or removing it.
 
-- [x] **4. `pg_schema` hardcoded to `"qgis"` in `build_request`** — fixed to `"public"` to match `public.qgis_projects` — QGIS server uses this schema name to look up the project in PostgreSQL via the `map=postgresql://...` connection string. The actual table is `public.qgis_projects`. Confirm that the QGIS server is configured to look in the `qgis` schema, or change this to `"public"`. A mismatch will silently produce empty responses.
+- [x] **4. `pg_schema` hardcoded to `"qgis"` in `build_request`** — fixed to `QGIS_PROJECTS_SCHEMA` constant (`"public"`) in `constants.rs`. Tests pass.
 
 - [ ] **5. `overview_map_extent` / `map_number` logic** — the `map_number` increment is gated on `overview_map_slug.is_some() && legend_width_mm > 0`. Confirm this matches QGIS server's expected map item numbering for layouts that have/don't have an overview map.
 
 - [ ] **6. `SupportedEpsg::WGS84` for site boundaries and turbine layouts** — `pg_vector_layer.rs` uses WGS84 for both `SiteBoundary` and `TurbineLayout` SQL sources. Confirm the underlying data in `app.project_features` and `app.turbines` is stored in WGS84 (EPSG:4326) and not BNG (27700). If BNG, QGIS will project the layer incorrectly.
 
-- [ ] **7. `project.content` encoding** — `get_qgis_project` returns `project.content` (a `Vec<u8>`) directly as `application/octet-stream` with a `.qgz` extension. Confirm that `QgisProjectBuilder::build_with_layer_styles` stores the bytes as a raw `.qgz` (ZIP-compressed) blob, not base64-encoded or as plain XML.
+- [x] **7. `project.content` encoding** — confirmed via `assert_is_qgis_project` test helper which checks for ZIP magic bytes (`PK\x03\x04`). Content is stored as a raw `.qgz` ZIP blob.
 
-- [ ] **8. `get_figure_jpg_works` test gap** — the second print request (after PATCH) is stored as `_response` but never asserted to be successful. If the regeneration fails, the test still passes. Consider adding `assert_ok(&_response)` or consuming `_response` in `assert_response_is_jpg`.
+- [x] **8. `get_figure_jpg_works` test gap** — root cause was the missing `qgis_project_uuid` rotation on PATCH (see figure update approach above). Both `get_figure_jpg_works` and `get_figure_pdf_works` now pass. The `qgis_project_uuid` is now rotated on every PATCH via `db/figure/update.rs` (`qgis_project_uuid = uuid::Uuid::new_v4()`). **Any future PATCH-like operation on figures must also rotate this UUID.**
 
-- [ ] **9. `FigureFormat` must implement `serde::Serialize`** — `GetPrintRequest` derives `Serialize` and holds a `FigureFormat`. Confirm `FigureFormat` in `enums/mod.rs` also derives `serde::Serialize`, otherwise the reqwest `.query()` call will fail.
+- [x] **9. `FigureFormat` implements `serde::Serialize`** — confirmed: derives `Serialize` and `Deserialize` in `enums/mod.rs`. Tests pass.
 
-- [ ] **10. `config.qgis_server.url` trailing slash / path** — the URL is used as-is in `client.get(config.qgis_server.url.clone())`. Confirm it includes the full WMS/OWS path (e.g. `.../wms` or `.../ows`) and has no double-slash issue from concatenation.
+- [ ] **10. `config.qgis_server.url` trailing slash / path** — the URL is used as-is in `client.get(qgis_server.url.clone())`. Confirm it includes the full WMS/OWS path (e.g. `.../wms` or `.../ows`) and has no double-slash issue from concatenation.
