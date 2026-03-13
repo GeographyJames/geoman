@@ -34,6 +34,7 @@ pub struct Api {
     pub data_provider_layers: String,
     pub figures: String,
     pub layer_styles: String,
+    pub qgis_projects: String,
 }
 
 #[derive(Deserialize)]

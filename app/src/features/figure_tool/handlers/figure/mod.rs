@@ -7,7 +7,7 @@ pub use payload::{
 mod get;
 pub use get::{get_figure, get_figures};
 mod patch;
-pub use patch::{patch_figure, FigureUpdatePayload};
+pub use patch::{FigureUpdatePayload, patch_figure};
 // mod get_print;
 // pub use get_print::GetPrintRequestBuilder;
 // pub use get_print::{FigureFormat, get_print};

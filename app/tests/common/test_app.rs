@@ -84,6 +84,7 @@ pub struct TestApp<T: AuthService> {
     pub data_provider_layers_service: HttpService,
     pub figures_service: HttpService,
     pub layer_styles_service: HttpService,
+    pub qgis_projects_service: HttpService,
 }
 
 pub struct AppBuilder {
@@ -208,6 +209,9 @@ impl TestApp<ClerkAuthService> {
             },
             layer_styles_service: HttpService {
                 endpoint: format!("{}{}", URLS.api.base, URLS.api.layer_styles),
+            },
+            qgis_projects_service: HttpService {
+                endpoint: format!("{}{}", URLS.api.base, URLS.api.qgis_projects),
             },
         }
     }

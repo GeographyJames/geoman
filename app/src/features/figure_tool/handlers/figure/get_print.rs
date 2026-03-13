@@ -8,7 +8,10 @@ use crate::{
     app::{
         configuration::Settings,
         features::figure_tool::{
-            dtos::{base_map::BaseMapOutputDTO, figure::{FigureOutputDTO, QgisProjectName}},
+            dtos::{
+                base_map::BaseMapOutputDTO,
+                figure::{FigureOutputDTO, QgisProjectName},
+            },
             ids::FigureId,
             qgis_builder::{PrintResolution, generate_project},
         },
@@ -17,22 +20,6 @@ use crate::{
     postgres::PostgresRepo,
     qgis::layer::{PgConfig, SslMode},
 };
-
-#[derive(Serialize, Deserialize, Clone)]
-#[allow(non_camel_case_types)]
-pub enum FigureFormat {
-    pdf,
-    jpg,
-}
-
-impl Display for FigureFormat {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            FigureFormat::jpg => write!(f, "jpg"),
-            FigureFormat::pdf => write!(f, "pdf"),
-        }
-    }
-}
 
 #[derive(Serialize)]
 pub struct GetPrintRequest {

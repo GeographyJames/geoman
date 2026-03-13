@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 use domain::{FeatureId, LayoutId};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -83,4 +83,20 @@ pub struct TurbineLayoutDatasourceOutputDTO {
 pub enum ProjectLayer {
     Valid(PgTableOutputDTO),
     Invalid(PgTableInvalidOutputDTO),
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[allow(non_camel_case_types)]
+pub enum FigureFormat {
+    pdf,
+    jpg,
+}
+
+impl Display for FigureFormat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FigureFormat::jpg => write!(f, "jpg"),
+            FigureFormat::pdf => write!(f, "pdf"),
+        }
+    }
 }

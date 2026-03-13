@@ -19,6 +19,7 @@ api:
   data_provider_layers: "/data-provider-layers"
   figures: "/figures"
   layer_styles: "/layer-styles"
+  qgis_projects: "/qgis-projects"
 
 docs:
   base: "/docs"
