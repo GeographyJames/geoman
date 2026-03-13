@@ -35,16 +35,16 @@ pub fn generate_pg_vector_layer(
             match layer.properties.convert_boundary_to_singleparts {
                 false => Some((
                     PgSource::SQL(format!(
-                        "SELECT id, name, geom FROM app.project_features WHERE id = {}",
+                        "SELECT id, name, ST_Transform(geom, 27700) as geom FROM app.project_features WHERE id = {}",
                         ds.id.0
                     )),
                     WkbType::MultiPolygon,
-                    SupportedEpsg::WGS84,
+                    SupportedEpsg::BNG,
                 )),
 
                 true => Some((
                     PgSource::SQL(format!(
-                        r"SELECT row_number() over (ORDER BY path) as id, {0} as boundary_id, name, geom
+                        r"SELECT row_number() over (ORDER BY path) as id, {0} as boundary_id, name, ST_Transform(geom, 27700) as geom
   FROM (
       SELECT sb.name, dump.path, dump.geom
       FROM app.project_features sb, ST_Dump(sb.geom) as dump
@@ -53,7 +53,7 @@ pub fn generate_pg_vector_layer(
                         ds.id.0
                     )),
                     WkbType::Polygon,
-                    SupportedEpsg::WGS84,
+                    SupportedEpsg::BNG,
                 )),
             }
         }
@@ -65,14 +65,14 @@ pub fn generate_pg_vector_layer(
         turbine_number,
         hub_height_mm,
         rotor_diameter_mm,
-        geom
+        ST_Transform(t.geom, 27700) as geom
    FROM app.turbines t
    JOIN app.turbine_layouts l ON l.id = t.layout_id
   WHERE t.layout_id = {0}",
                 ds.id.0
             )),
             WkbType::Point,
-            SupportedEpsg::WGS84,
+            SupportedEpsg::BNG,
         )),
         FigureLayerDatasourceOutput::ProjectLayer(ProjectLayer::Invalid(_)) => None,
     } {

@@ -285,7 +285,7 @@ The following points were flagged after wiring was complete. Work through these 
 
 - [ ] **5. `overview_map_extent` / `map_number` logic** — the `map_number` increment is gated on `overview_map_slug.is_some() && legend_width_mm > 0`. Confirm this matches QGIS server's expected map item numbering for layouts that have/don't have an overview map.
 
-- [ ] **6. `SupportedEpsg::WGS84` for site boundaries and turbine layouts** — `pg_vector_layer.rs` uses WGS84 for both `SiteBoundary` and `TurbineLayout` SQL sources. Confirm the underlying data in `app.project_features` and `app.turbines` is stored in WGS84 (EPSG:4326) and not BNG (27700). If BNG, QGIS will project the layer incorrectly.
+- [x] **6. CRS for site boundaries and turbine layouts** — since the QGIS project CRS is hardcoded to BNG (27700), all site boundary and turbine layout geometries are now transformed to 27700 in the SQL query via `ST_Transform(geom, 27700)` and the layer CRS declared as `SupportedEpsg::BNG`. This handles source data in any CRS without relying on `SupportedEpsg`'s limited variant set.
 
 - [x] **7. `project.content` encoding** — confirmed via `assert_is_qgis_project` test helper which checks for ZIP magic bytes (`PK\x03\x04`). Content is stored as a raw `.qgz` ZIP blob.
 
