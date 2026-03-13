@@ -283,7 +283,7 @@ The following points were flagged after wiring was complete. Work through these 
 
 - [x] **4. `pg_schema` hardcoded to `"qgis"` in `build_request`** — fixed to `QGIS_PROJECTS_SCHEMA` constant (`"public"`) in `constants.rs`. Tests pass.
 
-- [ ] **5. `overview_map_extent` / `map_number` logic** — the `map_number` increment is gated on `overview_map_slug.is_some() && legend_width_mm > 0`. Confirm this matches QGIS server's expected map item numbering for layouts that have/don't have an overview map.
+- [x] **5. `overview_map_extent` / `map_number` logic** — confirmed correct. `map0` = overview map (when present and `legend_width_mm > 0`), `map1` = main map (or `map0` when no overview). Matches the QGIS layout template's map item numbering.
 
 - [x] **6. CRS for site boundaries and turbine layouts** — since the QGIS project CRS is hardcoded to BNG (27700), all site boundary and turbine layout geometries are now transformed to 27700 in the SQL query via `ST_Transform(geom, 27700)` and the layer CRS declared as `SupportedEpsg::BNG`. This handles source data in any CRS without relying on `SupportedEpsg`'s limited variant set.
 
@@ -293,4 +293,4 @@ The following points were flagged after wiring was complete. Work through these 
 
 - [x] **9. `FigureFormat` implements `serde::Serialize`** — confirmed: derives `Serialize` and `Deserialize` in `enums/mod.rs`. Tests pass.
 
-- [ ] **10. `config.qgis_server.url` trailing slash / path** — the URL is used as-is in `client.get(qgis_server.url.clone())`. Confirm it includes the full WMS/OWS path (e.g. `.../wms` or `.../ows`) and has no double-slash issue from concatenation.
+- [x] **10. `config.qgis_server.url` trailing slash / path** — no code change needed. `client.get(url).query(&request)` appends query params correctly regardless of trailing slash (no path concatenation). Dev URL is `http://localhost:8001` (root); tests pass. Staging URL is set via `GEOMAN_QGIS_SERVER__URL` env var — operator must provide the full endpoint including any required path.
