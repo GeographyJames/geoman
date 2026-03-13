@@ -731,4 +731,13 @@ first_name, last_name,
             .await
             .expect("failed to deserialize json")
     }
+
+    pub async fn execute_sql_file(&self, path: &str) {
+        let sql = std::fs::read_to_string(path)
+            .unwrap_or_else(|e| panic!("failed to read SQL file {path}: {e}"));
+        sqlx::raw_sql(&sql)
+            .execute(&self.db_pool)
+            .await
+            .unwrap_or_else(|e| panic!("failed to execute SQL file {path}: {e}"));
+    }
 }
