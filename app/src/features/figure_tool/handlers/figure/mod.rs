@@ -10,3 +10,5 @@ mod patch;
 pub use patch::{FigureUpdatePayload, patch_figure};
 mod print;
 pub use print::{GetPrintRequestBuilder, get_print};
+mod get_qgis_project;
+pub use get_qgis_project::get_figure_qgz;

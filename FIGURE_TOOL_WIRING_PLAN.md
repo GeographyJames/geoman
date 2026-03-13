@@ -265,7 +265,7 @@ The following points were flagged after wiring was complete. Work through these 
 
 ### ✅ / ❌ Checklist
 
-- [x] **1. High-res project cleanup asymmetry** — intentional. The PDF test explicitly asserts the old high-res project persists after a PATCH (caching behaviour). Low-res (jpg) projects are always regenerated because `qgis_project_uuid` rotates on every PATCH, causing `check_unique` to miss and triggering the delete-and-reinsert.
+- [x] **1. High-res project cleanup asymmetry** — intentional by design. High-res (`low_res = false`) QGIS projects accumulate in `public.qgis_projects` over time — one new row per PDF request after each PATCH. This is deliberate: any previously-generated `.qgz` project file should remain retrievable via `GET /qgis-projects/{name}`. Low-res (jpg) projects are always replaced because `qgis_project_uuid` rotates on every PATCH, causing `check_unique` to miss and triggering the delete-and-reinsert.
 
 - [x] **2. `check_unique` / `insert` race condition** — `name` is the primary key on `public.qgis_projects`. Added `ON CONFLICT (name) DO NOTHING` to the INSERT in `db/qgis_project/insert.rs`. `check_unique` is kept as a performance optimisation (skips expensive `generate_project` in the common case); `ON CONFLICT` is the safety net for the rare concurrent-request edge case.
 

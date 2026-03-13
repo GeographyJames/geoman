@@ -1,57 +1,53 @@
-#[tracing::instrument(skip(repo, config, session))]
-pub async fn get_figure_qgis_project(
-    repo: web::Data<PostgresRepo>,
-    figure_id: web::Path<FigureId>,
-    config: web::Data<Settings>,
-    session: TypedSession,
-) -> Result<HttpResponse, actix_web::Error> {
-    let user_id = user_id(&session)?;
-    let user: UserOutputDTO = repo
-        .select(&user_id)
-        .await
-        .map_err(|e| ApiError::Repository {
-            source: e,
-            message: "failed to retrieve user from database".into(),
-        })?;
-    let mut figure: FigureOutputDTO =
-        repo.select(&figure_id.into_inner())
-            .await
-            .map_err(|e| ApiError::Repository {
-                source: e,
-                message: "failed to retrieve figure from database".into(),
-            })?;
+use actix_web::{HttpResponse, get, web};
 
-    // Switch base map urls for download urls if they exist
+use crate::{
+    config::{DatabaseSettings, QgisServerSettings},
+    errors::ApiError,
+    features::figure_tool::{
+        PrintResolution,
+        dtos::FigureOutputDTO,
+        ids::FigureId,
+        qgis_builder::generate_project,
+    },
+    postgres::PostgresRepo,
+};
+use qgis::layer::{PgConfig, SslMode};
+
+#[get("/{figure_id}/qgz")]
+#[tracing::instrument(skip(repo, qgis_server, db_settings))]
+pub async fn get_figure_qgz(
+    repo: web::Data<PostgresRepo>,
+    path: web::Path<FigureId>,
+    qgis_server: web::Data<QgisServerSettings>,
+    db_settings: web::Data<DatabaseSettings>,
+) -> Result<HttpResponse, ApiError> {
+    let figure_id = path.into_inner();
+    let mut figure: FigureOutputDTO = repo
+        .select_one::<FigureOutputDTO, _>(figure_id)
+        .await?
+        .ok_or(ApiError::NotFound)?;
+
     figure.set_basemap_urls_to_alt_urls();
 
     let filename = figure.filename_without_id("qgz");
     let qgis_project = generate_project(
         figure,
-        Some(&config.qgis_server.figure_config),
+        Some(&qgis_server.figure_config),
         &PrintResolution::High,
         false,
         PgConfig {
-            db_name: config
-                .database
-                .connection_pool_name
-                .clone()
-                .unwrap_or(config.database.database_name.clone()),
-            port: config
-                .database
-                .connection_pool_port
-                .unwrap_or(config.database.port),
-            host: config.database.host.clone(),
-            sslmode: SslMode::from(config.database.require_ssl),
+            db_name: db_settings.database_name.clone(),
+            port: db_settings.port,
+            host: db_settings.host.clone(),
+            sslmode: SslMode::from(db_settings.require_ssl),
         },
-        user.qgis_pg_authcfg_id.clone(),
+        None,
     )
-    .map_err(|e| {
-        ApiError::Unexpected(anyhow::anyhow!("failed to create qgis project file: {}", e))
-    })?;
+    .map_err(|e| ApiError::Unexpected(e.context("failed to create qgis project")))?;
 
     Ok(HttpResponse::Ok()
         .content_type("application/octet-stream")
-        .append_header((
+        .insert_header((
             "Content-Disposition",
             format!("attachment; filename=\"{}\"", filename),
         ))

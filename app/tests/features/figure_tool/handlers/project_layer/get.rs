@@ -12,18 +12,19 @@ struct ProjectLayerParams {
 
 #[tokio::test]
 async fn get_project_layers_works() {
-    let (app, user, project_id) = TestApp::with_project().await;
+    let (app, user, _) = TestApp::with_project().await;
 
     // Seed project_data tables. The SQL file uses p0001_* prefix, so project_id must be 1
     // (guaranteed in a fresh test DB where this is the first project created).
-    app.execute_sql_file("../seed_data/project_data_tables.sql").await;
+    app.execute_sql_file("../seed_data/project_data_tables.sql")
+        .await;
 
     let response = app
         .project_layers_service
         .get_with_params(
             &app.api_client,
             Some(&user),
-            &ProjectLayerParams { project: project_id.0 },
+            &ProjectLayerParams { project: 1 },
         )
         .await;
     assert_ok(&response);

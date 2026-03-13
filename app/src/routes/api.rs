@@ -9,7 +9,9 @@ use crate::{
             post_data_provider, post_data_provider_layer, post_data_provider_service,
         },
         figure_tool::handlers::{
-            figure::{get_figure, get_figures, get_print, patch_figure, post_figure},
+            figure::{
+                get_figure, get_figure_qgz, get_figures, get_print, patch_figure, post_figure,
+            },
             layer_style::get_layer_styles,
             project_layer::get_project_layers,
             qgis_project::get_qgis_project,
@@ -204,6 +206,7 @@ pub fn figures_routes(cfg: &mut web::ServiceConfig) {
             .service(get_figure)
             .service(post_figure)
             .service(patch_figure)
+            .service(get_figure_qgz)
             .service(get_print),
     );
 }
