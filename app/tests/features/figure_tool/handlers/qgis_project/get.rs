@@ -1,43 +1,50 @@
-use geoman::{
-    app::{URLS, features::figure_tool::handlers::figure::FigureFormat},
-    app::features::figure_tool::dtos::figure::FigureOutputDTO,
+use app::{
+    URLS,
+    features::figure_tool::{FigureFormat, PrintResolution, dtos::FigureOutputDTO},
 };
 
-use crate::{
-    app::TestApp,
-    helpers::{assert_is_qgis_project, assert_ok},
+use crate::common::{
+    TestApp,
+    helpers::{assert_ok, auth_request},
 };
+use crate::features::figure_tool::handlers::figure::get_print::assert_is_qgis_project;
 
 #[tokio::test]
 async fn get_qgis_project_works() {
-    let app = TestApp::spawn_and_login().await;
-    let project_id = app.generate_project_id().await;
-    let figure_id = app.generate_figure_id(project_id).await;
-    let figure: FigureOutputDTO = app
-        .figures_service
-        .get_by_id(&app.api_client, &figure_id)
-        .await
-        .json()
-        .await
-        .expect("failed to deserialize json");
-    let response = app
-        .api_client
-        .get(format!(
+    let (app, user, project_id) = TestApp::with_project().await;
+    let figure_id = app.generate_figure_id(Some(&user), project_id).await;
+
+    // generate the qgis project via the print endpoint
+    let response = auth_request(
+        app.api_client.get(format!(
             "{}{}/{}/{}",
             URLS.api.base,
             URLS.api.figures,
             figure_id,
             FigureFormat::pdf
-        ))
-        .send()
-        .await
-        .expect("failed to execute request");
+        )),
+        Some(&user),
+    )
+    .send()
+    .await
+    .expect("failed to execute request");
     assert_ok(&response);
+
+    let figure: FigureOutputDTO = app
+        .figures_service
+        .get_one(&app.api_client, Some(&user), figure_id)
+        .await
+        .json()
+        .await
+        .expect("failed to deserialize figure");
+
     let response = app
         .qgis_projects_service
-        .get_by_string_id(&app.api_client, figure.qgis_project_uuid.to_string())
+        .get_one(
+            &app.api_client,
+            Some(&user),
+            figure.qgis_project_name(&PrintResolution::High).0,
+        )
         .await;
-    assert_ok(&response);
-    // Check content type
     assert_is_qgis_project(response).await;
 }
