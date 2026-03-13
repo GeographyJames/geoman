@@ -268,3 +268,7 @@ The following points were flagged after wiring was complete. Work through these 
 - [x] **9. `FigureFormat` implements `serde::Serialize`** — confirmed: derives `Serialize` and `Deserialize` in `enums/mod.rs`. Tests pass.
 
 - [x] **10. `config.qgis_server.url` trailing slash / path** — no code change needed. `client.get(url).query(&request)` appends query params correctly regardless of trailing slash (no path concatenation). Dev URL is `http://localhost:8001` (root); tests pass. Staging URL is set via `GEOMAN_QGIS_SERVER__URL` env var — operator must provide the full endpoint including any required path.
+
+- [x] **11. `bounding_box` error semantics in `figure_layer/select.rs`** — confirmed correct. Uses `fetch_one` + `map_err(UnexpectedError)` (500), not bare `?`. `ST_Extent` on an empty table returns one row with NULL values, so `fetch_one` always succeeds and `BoundingBox::from_row(&res).ok()` silently returns `None` — the intended behaviour.
+
+- [x] **12. `todo!()` panic in `figure_layer/select.rs` line 159** — replaced with `RepositoryError::UnexpectedError(anyhow::anyhow!("figure layer {} has no datasource", row.id).into())`. This branch is hit only if a `figure_layers` row has all three source columns NULL, which indicates corrupt data. Now returns a 500 instead of panicking.

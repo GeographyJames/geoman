@@ -91,10 +91,11 @@ impl SelectAllWithParams for FigureOutputDTO {
         let mut conn = executor.acquire().await?;
         let mut figures = Vec::new();
         let res: Vec<FigureSelection> = sqlx::query_as(&format!(
-            "{} WHERE f.project_id = $1 AND f.status != 'DELETED'",
+            "{} WHERE f.project_id = $1 AND f.status != $2",
             BASE_QUERY
         ))
         .bind(project_id.0)
+        .bind(Status::Deleted)
         .fetch_all(&mut *conn)
         .await?;
         for row in res {
@@ -112,8 +113,9 @@ impl SelectOne<FigureId> for FigureOutputDTO {
     {
         let mut conn = executor.acquire().await?;
         let res: Option<FigureSelection> =
-            sqlx::query_as(&format!("{} WHERE f.id = $1 AND f.status != 'DELETED'", BASE_QUERY))
+            sqlx::query_as(&format!("{} WHERE f.id = $1 AND f.status != $2", BASE_QUERY))
                 .bind(id.as_ref())
+                .bind(Status::Deleted)
                 .fetch_optional(&mut *conn)
                 .await?;
         let figure = match res {

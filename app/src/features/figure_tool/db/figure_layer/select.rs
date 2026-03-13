@@ -156,7 +156,9 @@ ORDER BY fl.layer_order"#,
                 select_project_layer_datasource(pg_table, &mut *conn).await?,
             )
         } else {
-            todo!()
+            return Err(RepositoryError::UnexpectedError(
+                anyhow::anyhow!("figure layer {} has no datasource", row.id).into(),
+            ));
         };
 
         let bounding_box = bounding_box(&ds, &mut *conn).await?;
