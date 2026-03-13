@@ -1,15 +1,25 @@
-use crate::{
-    qgis::{
-        enums::{HorizontalAlignment, NamedTextStyle, ReferencePoint, VerticalAlignment},
-        layout::{
-            PageSize, Size,
-            components::{Color, LayoutItem, LegendTextStyles, Position, SizeInteger},
-        },
+use qgis::{
+    enums::{HorizontalAlignment, NamedTextStyle, ReferencePoint, VerticalAlignment},
+    layout::{
+        PageSize, Size,
+        components::{Color, LayoutItem, LegendTextStyles, Position, SizeInteger},
     },
-    utils,
 };
-
 use super::{FIG_SUBTITLE_HEIGHT, FIG_TITLE_HEIGHT, FigureBuilder, TEXT_BOX_HEIGHT};
+
+pub fn format_with_commas(n: u32) -> String {
+    let s = n.to_string();
+    let chars: Vec<char> = s.chars().collect();
+    let mut result = String::new();
+
+    for (i, c) in chars.iter().enumerate() {
+        if i > 0 && (chars.len() - i) % 3 == 0 {
+            result.push(',');
+        }
+        result.push(*c);
+    }
+    result
+}
 
 impl FigureBuilder<'_> {
     pub fn add_legend(&mut self) {
@@ -152,7 +162,7 @@ impl FigureBuilder<'_> {
                     self.fig.page_width_mm, self.fig.page_height_mm
                 ))
             ),
-            format!("1:{}", utils::format_with_commas(self.fig.scale as u32)),
+            format!("1:{}", format_with_commas(self.fig.scale as u32)),
         );
 
         if let Some(ref fig_no) = self.fig.properties.figure_number {

@@ -1,27 +1,23 @@
-use actix_web::{HttpResponse, web};
+use actix_web::{HttpResponse, get, web};
 
 use crate::{
-    app::{
-        features::figure_tool::dtos::figure::QgisProjectName,
-        handlers::api::ApiError,
-    },
+    errors::ApiError,
+    features::figure_tool::dtos::QgisProjectName,
     postgres::PostgresRepo,
-    qgis::project::QgisProject,
 };
+use crate::features::figure_tool::db::qgis_project::select_qgis_project;
 
+#[get("/{name}")]
 #[tracing::instrument(skip(repo))]
 pub async fn get_qgis_project(
     repo: web::Data<PostgresRepo>,
-    id: web::Path<String>,
-) -> Result<HttpResponse, actix_web::Error> {
-    let project_name = QgisProjectName(id.into_inner());
-    let project: QgisProject =
-        repo.select(&project_name)
-            .await
-            .map_err(|e| ApiError::Repository {
-                source: e,
-                message: "failed to retrieve qgis project from database".into(),
-            })?;
+    name: web::Path<String>,
+) -> Result<HttpResponse, ApiError> {
+    let project_name = QgisProjectName(name.into_inner());
+    let mut conn = repo.db_pool.acquire().await.map_err(|e| {
+        ApiError::Unexpected(anyhow::anyhow!("failed to acquire db connection: {}", e))
+    })?;
+    let project = select_qgis_project(&mut conn, &project_name).await?;
     Ok(HttpResponse::Ok()
         .content_type("application/octet-stream")
         .append_header((

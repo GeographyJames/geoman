@@ -143,7 +143,11 @@ async fn get_figure_jpg_works() {
         .await;
 
     // assert old qgis project does not exist
-    assert_eq!(qgis_project.status().as_u16(), 404)
+    assert_eq!(
+        qgis_project.status().as_u16(),
+        404,
+        "qgis project not deleted"
+    )
 }
 
 #[tokio::test]

@@ -28,15 +28,19 @@ The `figure_tool` feature directory has been copied into `app/src/features/figur
 | `enums/mod.rs` | ✅ `FigureStatus` removed; `PrintResolution` added |
 | `ids.rs` | ✅ `BaseMapId` added |
 | DELETE handler (`delete.rs`) | ✅ removed — soft delete via PATCH `status: DELETED` |
-| `get_print.rs` / `get_qgis_project.rs` | ❌ commented out — deferred to Steps 5–6 |
+| `get_print.rs` (renamed to `print.rs`) | ✅ wired up — `GET /figures/{id}/{format}` |
+| `get_qgis_project.rs` | ✅ wired up — `GET /qgis-projects/{name}` |
 | DB `figure/delete` | ❌ commented out |
 | `GET /layer-styles` handler + test | ✅ working |
 | DB `layer_style` | ✅ uncommented, ported to `Acquire` bound |
 | `LayerStyleOutputDTO` | ✅ uncommented |
 | `layer_styles` URL | ✅ in `config/urls.yaml` and `urls.rs` |
-| DB `project_layer`, `qgis_project` | ❌ commented out |
-| `qgis_builder` module | ❌ still commented out — deferred to Step 5 |
-| URLs for `project_layers`, `qgis_projects` | ❌ not yet in `config/urls.yaml` |
+| DB `project_layer` | ❌ commented out |
+| DB `qgis_project` | ✅ ported — `Insert`, `check_unique`, `select_qgis_project` |
+| `qgis_builder` module | ✅ enabled — `BaseMapDataSource` replaced by `LayerSource`, orphan `TryFrom` replaced by `build_base_map_layer` free fn |
+| URL `qgis_projects` | ✅ in `config/urls.yaml` and `urls.rs` |
+| URL `project_layers` | ❌ not yet in `config/urls.yaml` |
+| `reqwest` features in `app/Cargo.toml` | ✅ `json`, `stream`, `query` |
 
 ---
 
@@ -218,7 +222,7 @@ All passing. The `layer_styles` table (`public.layer_styles`) is a QGIS-managed 
 
 ---
 
-### Step 6 — GET /figures/{id}/qgz
+### Step 6 — GET /figures/{id}/qgz (merged into Step 7)
 
 **Enable `qgis_builder` module**
 - Uncomment `mod qgis_builder` in `features/figure_tool/mod.rs`
@@ -246,50 +250,45 @@ All passing. The `layer_styles` table (`public.layer_styles`) is a QGIS-managed 
 
 ---
 
-### Step 7 — GET /figures/{id}/pdf and GET /figures/{id}/jpg
+### Step 7 — GET /figures/{id}/pdf and GET /figures/{id}/jpg ✅ (code complete, tests require QGIS Server)
 
-*Requires QGIS Server to be running.*
+*Handler, DB layer, and routes are all wired up. Tests require a running QGIS Server.*
 
-#### DB layer — `db/qgis_project/`
+#### What was done
+- `db/qgis_project/insert.rs` — `Insert` trait, `Acquire` bound, transaction with delete-before-insert for `low_res = true` rows only; `public.qgis_projects` schema
+- `db/qgis_project/check_unique.rs` — method on `QgisProjectName`, `PgExecutor` bound
+- `db/qgis_project/select.rs` — free function `select_qgis_project(conn, name)`
+- `handlers/figure/print.rs` — handler renamed from `get_print.rs` to avoid module/function name clash; route `#[get("/{figure_id}/{format}")]`; return type `Result<HttpResponse, ApiError>` for `?` operator compatibility
+- `handlers/qgis_project/get.rs` — ported and wired to `GET /qgis-projects/{name}`
+- `qgis_builder/mod.rs` — `BaseMapDataSource` replaced by `LayerSource`; orphan `TryFrom` replaced by `build_base_map_layer` free fn; `crate::qgis::` → `use qgis::` throughout all sub-modules
+- Route: `GET /figures/{figure_id}/{format}` (format = `pdf` or `jpg`)
+- Route: `GET /qgis-projects/{name}`
+- `app/Cargo.toml` reqwest features: `json`, `stream`, `query`
 
-All three ops need porting. The DB schema is **`public.qgis_projects`** (not `qgis.qgis_projects` as in the prototype):
+---
 
-- **`insert.rs`** — port from old `Insert<&'a PgPool, String>` to geoman's `Insert` trait (`Acquire` bound). Update schema: `public.qgis_projects`. The delete-before-insert for `low_res = true` rows stays.
-- **`select.rs`** — port from old `Select<&mut PgConnection, QgisProjectName>` to a direct `impl QgisProject { pub async fn select(...) }` method (same pattern as `BaseMapOutputDTO::select`). Update schema.
-- **`check_unique.rs`** — uses a prototype `CheckUnique` trait not present in geoman. Port as a standalone async fn (e.g. `check_qgis_project_unique(pool, name) -> Result<Option<QgisProjectName>, RepositoryError>`) called directly from the handler or via a direct method on `PostgresRepo`. Update schema.
+## Post-wiring Review: Issues to Investigate
 
-#### Handler — `get_print.rs`
+The following points were flagged after wiring was complete. Work through these before running integration tests.
 
-Key adaptations from prototype:
+### ✅ / ❌ Checklist
 
-| Prototype | Geoman |
-|---|---|
-| `repo.select(&figure_id)` (prototype `Select` trait) | `repo.select_one::<FigureOutputDTO, _>(figure_id).await?.ok_or(ApiError::ResourceNotFound)` |
-| `repo.select(&base_map_id)` | `BaseMapOutputDTO::select(&mut conn, &base_map_id).await` (kept from earlier work) |
-| `repo.check_unique(project_name)` | direct call to standalone fn or `PostgresRepo` method |
-| `repo.insert(&qgis_project)` | `repo.insert(&qgis_project).await` (same — `Insert` trait dispatch) |
-| `config.database.database_name/port/host/require_ssl` | `config.db_settings.database_name/port/host/require_ssl` |
-| `config.qgis_server.figure_config` | `config.qgis_server.figure_config` (same) |
-| `helpers::streaming_response(&response)` | does not exist in geoman — implement inline or add to `errors/` module |
-| `Result<HttpResponse, actix_web::Error>` return | keep as-is for streaming response (can't use `Json<T>`) |
+- [ ] **1. High-res project cleanup asymmetry** — `insert.rs` DELETE only applies to `low_res = true`. High-res (PDF) projects accumulate in the table. If intentional (the PDF test asserts the old project persists), document it explicitly; if not, add a DELETE for `low_res = false` too.
 
-`FigureOutputDTO` methods (`filename_with_id`, `qgis_project_name`, `layout_name`, `map_layer_names`, `map_extent`, `overview_map_extent`, `properties.*`) — all already implemented in `dtos/figure/output.rs`. No porting needed.
+- [ ] **2. `check_unique` / `insert` race condition** — no `ON CONFLICT` clause on the INSERT. Concurrent requests for the same figure could both pass `check_unique` and both attempt INSERT, producing a unique-key violation (500). Confirm whether a unique constraint exists on `public.qgis_projects.name`, and if so consider adding `ON CONFLICT (name) DO NOTHING` or a mutex.
 
-`FigureFormat` enum uses `#[allow(non_camel_case_types)]` for `pdf`/`jpg` variants — keep as-is.
+- [ ] **3. `GetPrintRequest::default()` hardcoded local db name** — the `map` field default is `"postgresql://?dbname=geodata_local&schema=qgis&project=test-project"`. This is always overridden by `GetPrintRequestBuilder.build()` so it never reaches production, but it's a trap if `Default` is ever called directly. Consider making the default a panic or removing it.
 
-#### Handler — `get_qgis_project.rs`
+- [x] **4. `pg_schema` hardcoded to `"qgis"` in `build_request`** — fixed to `"public"` to match `public.qgis_projects` — QGIS server uses this schema name to look up the project in PostgreSQL via the `map=postgresql://...` connection string. The actual table is `public.qgis_projects`. Confirm that the QGIS server is configured to look in the `qgis` schema, or change this to `"public"`. A mismatch will silently produce empty responses.
 
-Serves a stored `.qgz` by `QgisProjectName`. Relatively straightforward once `select` is ported — just fix import paths (`crate::features::figure_tool::dtos::figure::QgisProjectName`, `crate::errors::ApiError`).
+- [ ] **5. `overview_map_extent` / `map_number` logic** — the `map_number` increment is gated on `overview_map_slug.is_some() && legend_width_mm > 0`. Confirm this matches QGIS server's expected map item numbering for layouts that have/don't have an overview map.
 
-#### URLs
-- Add `qgis_projects: "/qgis-projects"` to `config/urls.yaml` and `urls.rs`
+- [ ] **6. `SupportedEpsg::WGS84` for site boundaries and turbine layouts** — `pg_vector_layer.rs` uses WGS84 for both `SiteBoundary` and `TurbineLayout` SQL sources. Confirm the underlying data in `app.project_features` and `app.turbines` is stored in WGS84 (EPSG:4326) and not BNG (27700). If BNG, QGIS will project the layer incorrectly.
 
-#### Routes
-- Register `/{id}/pdf` and `/{id}/jpg` under `figures_routes` (same scope, path param captures format)
-- Register `/{name}` under `qgis_projects_routes`
+- [ ] **7. `project.content` encoding** — `get_qgis_project` returns `project.content` (a `Vec<u8>`) directly as `application/octet-stream` with a `.qgz` extension. Confirm that `QgisProjectBuilder::build_with_layer_styles` stores the bytes as a raw `.qgz` (ZIP-compressed) blob, not base64-encoded or as plain XML.
 
-#### TestApp
-- Add `qgis_projects_service: HttpService` field
+- [ ] **8. `get_figure_jpg_works` test gap** — the second print request (after PATCH) is stored as `_response` but never asserted to be successful. If the regeneration fails, the test still passes. Consider adding `assert_ok(&_response)` or consuming `_response` in `assert_response_is_jpg`.
 
-#### Tests
-- `get_figure_pdf_works`, `get_figure_jpg_works` — mark `#[ignore]` if QGIS Server not available
+- [ ] **9. `FigureFormat` must implement `serde::Serialize`** — `GetPrintRequest` derives `Serialize` and holds a `FigureFormat`. Confirm `FigureFormat` in `enums/mod.rs` also derives `serde::Serialize`, otherwise the reqwest `.query()` call will fail.
+
+- [ ] **10. `config.qgis_server.url` trailing slash / path** — the URL is used as-is in `client.get(config.qgis_server.url.clone())`. Confirm it includes the full WMS/OWS path (e.g. `.../wms` or `.../ows`) and has no double-slash issue from concatenation.

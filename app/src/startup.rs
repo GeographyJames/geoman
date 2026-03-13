@@ -70,6 +70,7 @@ pub async fn run(
     let http_client = web::Data::new(reqwest::Client::new());
     let geoserver = web::Data::new(config.geoserver.clone());
     let qgis_server = web::Data::new(config.qgis_server.clone());
+    let db_settings = web::Data::new(config.db_settings.clone());
     let clerk_authoriser = web::Data::new(ClerkAuthorizer::new(
         MemoryCacheJwksProvider::new(clerk.clone()),
         true,
@@ -83,6 +84,7 @@ pub async fn run(
             .app_data(http_client.clone())
             .app_data(geoserver.clone())
             .app_data(qgis_server.clone())
+            .app_data(db_settings.clone())
             .wrap(TracingLogger::default())
             .route(
                 &format!("{}{}", URLS.webhooks.base, URLS.webhooks.clerk),

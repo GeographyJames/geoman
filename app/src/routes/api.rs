@@ -9,8 +9,9 @@ use crate::{
             post_data_provider, post_data_provider_layer, post_data_provider_service,
         },
         figure_tool::handlers::{
-            figure::{get_figure, get_figures, patch_figure, post_figure},
+            figure::{get_figure, get_figures, get_print, patch_figure, post_figure},
             layer_style::get_layer_styles,
+            qgis_project::get_qgis_project,
         },
     },
     handlers::api::{
@@ -68,7 +69,8 @@ pub fn api_routes(cfg: &mut web::ServiceConfig, _clerk: Clerk, run_environment: 
         .configure(data_provider_services_routes)
         .configure(data_provider_layers_routes)
         .configure(figures_routes)
-        .configure(layer_styles_routes);
+        .configure(layer_styles_routes)
+        .configure(qgis_projects_routes);
 
     match run_environment {
         GeoManEnvironment::Development => {
@@ -199,6 +201,11 @@ pub fn figures_routes(cfg: &mut web::ServiceConfig) {
             .service(get_figures)
             .service(get_figure)
             .service(post_figure)
-            .service(patch_figure),
+            .service(patch_figure)
+            .service(get_print),
     );
+}
+
+pub fn qgis_projects_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(scope(&URLS.api.qgis_projects).service(get_qgis_project));
 }

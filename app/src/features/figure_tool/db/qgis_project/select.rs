@@ -1,23 +1,18 @@
-use sqlx::PgConnection;
-use sqlx::types::Json;
+use sqlx::{PgConnection, types::Json};
 
-use crate::{
-    app::features::figure_tool::dtos::figure::QgisProjectName,
-    qgis::project::{QgisProject, QgisProjectMetadata},
-    repo::Select,
-};
+use crate::{features::figure_tool::dtos::QgisProjectName, repo::RepositoryError};
+use qgis::project::{QgisProject, QgisProjectMetadata};
 
-impl Select<&mut PgConnection, QgisProjectName> for QgisProject {
-    async fn select(
-        executor: &mut PgConnection,
-        name: &QgisProjectName,
-    ) -> Result<Self, crate::repo::RepositoryError> {
-        let res = sqlx::query_as!(
-            QgisProject,
-            r#"SELECT name, metadata as "metadata: Json<QgisProjectMetadata>", content, figure_id, low_res FROM qgis.qgis_projects WHERE name = $1"#,
-            name.0
-        ).fetch_one(executor).await?;
-
-        Ok(res)
-    }
+pub async fn select_qgis_project(
+    conn: &mut PgConnection,
+    name: &QgisProjectName,
+) -> Result<QgisProject, RepositoryError> {
+    let res = sqlx::query_as!(
+        QgisProject,
+        r#"SELECT name, metadata as "metadata: Json<QgisProjectMetadata>", content, figure_id, low_res FROM public.qgis_projects WHERE name = $1"#,
+        name.0
+    )
+    .fetch_one(conn)
+    .await?;
+    Ok(res)
 }

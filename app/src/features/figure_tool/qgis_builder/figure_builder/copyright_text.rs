@@ -1,4 +1,4 @@
-use crate::qgis::{
+use qgis::{
     enums::{HorizontalAlignment, ReferencePoint, VerticalAlignment},
     layout::{
         Size,

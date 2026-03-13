@@ -1,27 +1,21 @@
-use std::fmt::Display;
-
-use actix_web::{HttpResponse, web};
-use reqwest::{RequestBuilder, Response};
-use serde::{Deserialize, Serialize};
+use actix_web::{HttpResponse, get, web};
+use reqwest::RequestBuilder;
 
 use crate::{
-    app::{
-        configuration::Settings,
-        features::figure_tool::{
-            dtos::{
-                base_map::BaseMapOutputDTO,
-                figure::{FigureOutputDTO, QgisProjectName},
-            },
-            ids::FigureId,
-            qgis_builder::{PrintResolution, generate_project},
-        },
-        handlers::api::{ApiError, helpers::streaming_response},
+    config::{DatabaseSettings, QgisServerSettings},
+    constants::QGIS_PROJECTS_SCHEMA,
+    errors::ApiError,
+    features::figure_tool::{
+        FigureFormat, PrintResolution,
+        dtos::{BaseMapOutputDTO, FigureOutputDTO, QgisProjectName},
+        ids::FigureId,
+        qgis_builder::generate_project,
     },
     postgres::PostgresRepo,
-    qgis::layer::{PgConfig, SslMode},
 };
+use qgis::layer::{PgConfig, SslMode};
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 pub struct GetPrintRequest {
     pub service: String,
     pub version: String,
@@ -66,54 +60,48 @@ impl GetPrintRequestBuilder {
     }
 }
 
-#[tracing::instrument(skip(repo, path, config))]
+#[get("/{figure_id}/{format}")]
+#[tracing::instrument(skip(repo, path, qgis_server, db_settings))]
 pub async fn get_print(
     repo: web::Data<PostgresRepo>,
     path: web::Path<(FigureId, FigureFormat)>,
-    config: web::Data<Settings>,
+    qgis_server: web::Data<QgisServerSettings>,
+    db_settings: web::Data<DatabaseSettings>,
     client: web::Data<reqwest::Client>,
-) -> Result<HttpResponse, actix_web::Error> {
+) -> Result<HttpResponse, ApiError> {
     let (figure_id, format) = path.into_inner();
     let resolution = match format {
         FigureFormat::jpg => PrintResolution::Low,
         FigureFormat::pdf => PrintResolution::High,
     };
-    let figure: FigureOutputDTO =
-        repo.select(&figure_id)
-            .await
-            .map_err(|e| ApiError::Repository {
-                source: e,
-                message: "failed to retrieve figure from database".into(),
-            })?;
+    let figure: FigureOutputDTO = repo
+        .select_one::<FigureOutputDTO, _>(figure_id)
+        .await?
+        .ok_or(ApiError::NotFound)?;
     let filename = figure.filename_with_id(&format.clone().to_string());
     let project_name = figure.qgis_project_name(&resolution);
 
     // Check if a project already exists with this name
-    let qgis_project = check_for_project(&repo, &project_name).await?;
+    let qgis_project = project_name.check_unique(&repo.db_pool).await?;
     // If the project does not exist, create it
     if qgis_project.is_none() {
         let qgis_project = generate_project(
             figure.clone(),
-            Some(&config.qgis_server.figure_config),
+            Some(&qgis_server.figure_config),
             &resolution,
             true,
             PgConfig {
-                db_name: config.database.database_name.clone(),
-                port: config.database.port,
-                host: config.database.host.clone(),
-                sslmode: SslMode::from(config.database.require_ssl),
+                db_name: db_settings.database_name.clone(),
+                port: db_settings.port,
+                host: db_settings.host.clone(),
+                sslmode: SslMode::from(db_settings.require_ssl),
             },
             None,
         )
         .map_err(|e| ApiError::Unexpected(e.context("failed to create qgis project")))?;
-        repo.insert(&qgis_project)
-            .await
-            .map_err(|e| ApiError::Repository {
-                source: e,
-                message: "failed to add qgis project to database".into(),
-            })?;
+        repo.insert(&qgis_project).await?;
     }
-    let request = build_request(project_name, figure, &repo, &config, &client, format).await?;
+    let request = build_request(project_name, figure, &repo, &qgis_server, &db_settings, &client, format).await?;
     let response = request.send().await.map_err(|e| {
         ApiError::Unexpected(anyhow::anyhow!(
             "failed to execute request for PDF to QGIS server: {:?}",
@@ -128,35 +116,33 @@ async fn build_request(
     project_name: QgisProjectName,
     figure: FigureOutputDTO,
     repo: &PostgresRepo,
-    config: &Settings,
+    qgis_server: &QgisServerSettings,
+    db_settings: &DatabaseSettings,
     client: &reqwest::Client,
     format: FigureFormat,
 ) -> Result<RequestBuilder, ApiError> {
     let mut request = GetPrintRequestBuilder {
         project_name: project_name.0,
-        pg_schema: "qgis".into(),
+        pg_schema: QGIS_PROJECTS_SCHEMA.into(),
         template: figure.layout_name(),
-        db_name: config.database.database_name.clone(),
+        db_name: db_settings.database_name.clone(),
     }
     .build();
     request.format = format;
     request.crs = "EPSG:27700".into();
 
     let extent = figure.map_extent;
+    let mut layers: Vec<String> = figure.map_layer_names();
 
-    let mut layers = figure.map_layer_names();
+    let mut conn = repo.db_pool.acquire().await.map_err(|e| {
+        ApiError::Unexpected(anyhow::anyhow!("failed to acquire db connection: {}", e))
+    })?;
 
     let base_map_slug = if let Some(BaseMapOutputDTO {
         id: base_map_id, ..
     }) = figure.main_map_base_map
     {
-        let base_map: BaseMapOutputDTO =
-            repo.select(&base_map_id)
-                .await
-                .map_err(|e| ApiError::Repository {
-                    source: e,
-                    message: "failed to retrieve base map from database".into(),
-                })?;
+        let base_map = BaseMapOutputDTO::select(&mut conn, &base_map_id).await?;
         if base_map.datasource.is_some() {
             Some(base_map.slug)
         } else {
@@ -170,13 +156,7 @@ async fn build_request(
         ..
     }) = figure.overview_map_base_map
     {
-        let overview_map: BaseMapOutputDTO =
-            repo.select(&overview_map_id)
-                .await
-                .map_err(|e| ApiError::Repository {
-                    source: e,
-                    message: "failed to retrieve overview map from database".into(),
-                })?;
+        let overview_map = BaseMapOutputDTO::select(&mut conn, &overview_map_id).await?;
         if overview_map.datasource.is_some() {
             Some(overview_map.overview_map_slug())
         } else {
@@ -185,13 +165,13 @@ async fn build_request(
     } else {
         None
     };
+
     if let Some(ref slug) = base_map_slug {
         layers.push(slug.clone());
     }
-
     layers.reverse();
 
-    let mut request_builder = client.get(config.qgis_server.url.clone()).query(&request);
+    let mut request_builder = client.get(qgis_server.url.clone()).query(&request);
 
     let mut map_number = 0;
 
@@ -224,24 +204,11 @@ async fn build_request(
     Ok(request_builder)
 }
 
-async fn check_for_project(
-    repo: &PostgresRepo,
-    project_name: &QgisProjectName,
-) -> Result<Option<QgisProjectName>, ApiError> {
-    repo.check_unique(project_name)
-        .await
-        .map_err(|e| ApiError::Repository {
-            source: e,
-            message: "failed to check database for qgis project".into(),
-        })
-}
-
 async fn process_qgis_server_response(
-    response: Response,
+    response: reqwest::Response,
     filename: &str,
-) -> Result<HttpResponse, actix_web::Error> {
+) -> Result<HttpResponse, ApiError> {
     if !response.status().is_success() {
-        // Try to read the error response body for logging
         let status = response.status();
         let url = response.url().clone();
 
@@ -257,8 +224,7 @@ async fn process_qgis_server_response(
                     "QGIS server error ({}): {}",
                     status,
                     error_body
-                ))
-                .into());
+                )));
             }
             Err(e) => {
                 tracing::error!(
@@ -269,16 +235,22 @@ async fn process_qgis_server_response(
                 return Err(ApiError::Unexpected(anyhow::anyhow!(
                     "QGIS server error ({}): Failed to read error response",
                     status
-                ))
-                .into());
+                )));
             }
         }
     }
 
-    // Set filename based on format
+    let content_type = response
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|ct| ct.to_str().ok())
+        .unwrap_or("application/octet-stream")
+        .to_owned();
+
     let content_disposition = format!("attachment; filename=\"{}\"", filename);
 
-    let mut response_builder = streaming_response(&response);
-    response_builder.insert_header(("Content-Disposition", content_disposition));
-    Ok(response_builder.streaming(response.bytes_stream()))
+    Ok(HttpResponse::Ok()
+        .content_type(content_type)
+        .insert_header(("Content-Disposition", content_disposition))
+        .streaming(response.bytes_stream()))
 }

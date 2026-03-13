@@ -8,6 +8,8 @@ pub const SITE_BOUNDARIES_COLLECTION_ID: i32 = 0;
 pub const TURBINE_LAYOUTS_COLLECTION_ID: i32 = -1;
 pub const UNASSIGNED_USERS_TEAM_ID: i32 = -1;
 
+pub const QGIS_PROJECTS_SCHEMA: &str = "public";
+
 pub mod db_constraints {
     pub const PROJECT_NAME_UNIQUE: &str = "projects_name_key";
     pub const PROJECT_SLUG_UNIQUE: &str = "projects_slug_key";

@@ -1,12 +1,13 @@
-use crate::{
-    features::figure_tool::{
-        dtos::{FigureLayerOutputDTO, PgTableOutputDTO},
-        enums::{FigureLayerDatasourceOutput, ProjectLayer},
+use crate::features::figure_tool::{
+    dtos::{FigureLayerOutputDTO, PgTableOutputDTO},
+    enums::{FigureLayerDatasourceOutput, ProjectLayer},
+};
+use qgis::{
+    layer::{
+        DataSource, MapLayer, PgConfig, PgDataSource, PgSource, PgTable, QgisMapLayerBuilder,
+        WkbType,
     },
-    qgis::{
-        layer::{MapLayer, PgConfig, PgDataSource, PgSource, PgTable, QgisMapLayerBuilder, WkbType},
-        srs::SupportedEpsg,
-    },
+    srs::SupportedEpsg,
 };
 
 pub fn generate_pg_vector_layer(
@@ -35,7 +36,7 @@ pub fn generate_pg_vector_layer(
                 false => Some((
                     PgSource::SQL(format!(
                         "SELECT id, name, geom FROM app.project_features WHERE id = {}",
-                        ds.id
+                        ds.id.0
                     )),
                     WkbType::MultiPolygon,
                     SupportedEpsg::WGS84,
@@ -49,7 +50,7 @@ pub fn generate_pg_vector_layer(
       FROM app.project_features sb, ST_Dump(sb.geom) as dump
       WHERE sb.id = {0}
   ) parts",
-                        ds.id
+                        ds.id.0
                     )),
                     WkbType::Polygon,
                     SupportedEpsg::WGS84,
@@ -63,12 +64,12 @@ pub fn generate_pg_vector_layer(
         {0} as layout_id,
         turbine_number,
         hub_height_mm,
-        blade_length_mm,
+        rotor_diameter_mm,
         geom
    FROM app.turbines t
    JOIN app.turbine_layouts l ON l.id = t.layout_id
   WHERE t.layout_id = {0}",
-                ds.id
+                ds.id.0
             )),
             WkbType::Point,
             SupportedEpsg::WGS84,
@@ -91,7 +92,7 @@ pub fn generate_pg_vector_layer(
                 layer_name: layer.name.clone(),
                 legend_text: layer.properties.legend_text.clone(),
                 include_on_legend: layer.properties.include_on_legend,
-                datasource: crate::qgis::layer::DataSource::Postgres(ds),
+                datasource: DataSource::Postgres(ds),
                 srs: Some(epsg_id.into()),
             }
             .build_vector(wkb_type),

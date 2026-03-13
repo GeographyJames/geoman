@@ -46,9 +46,10 @@ impl Update for (FigureUpdatePayload, FigureId, UserId) {
                 status                   = COALESCE($8,  status),
                 main_map_base_map_id     = CASE WHEN $9  THEN $10 ELSE main_map_base_map_id END,
                 overview_map_base_map_id = CASE WHEN $11 THEN $12 ELSE overview_map_base_map_id END,
+                qgis_project_uuid        = $13,
                 last_updated             = NOW(),
-                last_updated_by          = $13
-            WHERE id = $14
+                last_updated_by          = $14
+            WHERE id = $15
             RETURNING id
             "#,
             payload.scale.map(|v| v as i32),
@@ -63,6 +64,7 @@ impl Update for (FigureUpdatePayload, FigureId, UserId) {
             payload.main_map_base_map_id.clone().flatten().map(|id| id.0),
             payload.overview_map_base_map_id.is_some(),
             payload.overview_map_base_map_id.clone().flatten().map(|id| id.0),
+            uuid::Uuid::new_v4(),
             user_id.0,
             id.0,
         )

@@ -3,4 +3,4 @@ mod figure;
 mod figure_layer;
 mod layer_style;
 // mod project_layer;
-// mod qgis_project;
+pub mod qgis_project;

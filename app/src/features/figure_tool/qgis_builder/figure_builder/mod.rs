@@ -1,16 +1,13 @@
 use uuid::Uuid;
 
-use crate::{
-    config::QgisFigureConfig,
-    features::figure_tool::dtos::FigureOutputDTO,
-    qgis::{
-        enums::EPSGID,
-        layout::{
-            QgisLayoutBuilder, QgisLayoutMapBuilder, Size,
-            components::{ComposerMapGrid, LayoutItem, Position},
-        },
-        layer::MapLayer,
+use crate::{config::QgisFigureConfig, features::figure_tool::dtos::FigureOutputDTO};
+use qgis::{
+    enums::EPSGID,
+    layout::{
+        QgisLayoutBuilder, QgisLayoutMapBuilder, Size,
+        components::{ComposerMapGrid, LayoutItem, Position},
     },
+    layer::MapLayer,
 };
 
 use super::PrintResolution;

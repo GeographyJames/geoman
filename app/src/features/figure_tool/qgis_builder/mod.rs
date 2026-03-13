@@ -5,16 +5,16 @@ mod pg_vector_layer;
 
 use crate::{
     config::QgisFigureConfig,
-    features::figure_tool::{
-        PrintResolution,
-        dtos::{base_map::BaseMapDataSource, figure::FigureOutputDTO},
+    features::{
+        data_providers::LayerSource,
+        figure_tool::{PrintResolution, dtos::FigureOutputDTO},
     },
-    qgis::{
-        enums::EPSGID,
-        layer::{DataSource, PgConfig, QgisMapLayerBuilder, WMSDataSource, XYZDataSource},
-        project::{ProjectRoot, QgisLayerStyle, QgisProject, QgisProjectBuilder},
-        srs::SpatialRefSys,
-    },
+};
+use qgis::{
+    enums::EPSGID,
+    layer::{DataSource, PgConfig, QgisMapLayerBuilder, WMSDataSource, XYZDataSource},
+    project::{ProjectRoot, QgisLayerStyle, QgisProject, QgisProjectBuilder},
+    srs::SpatialRefSys,
 };
 
 use figure_builder::FigureBuilder;
@@ -53,7 +53,7 @@ pub fn generate_project(
     if let Some(map) = fig.main_map_base_map
         && let Some(datasource) = map.datasource
     {
-        let layer = QgisMapLayerBuilder::try_from((map.slug, datasource.0))?
+        let layer = build_base_map_layer(map.slug, datasource.0)?
             .build_raster(fig.properties.greyscale_background_map.unwrap_or(false))?;
         qgis_layers.push(layer)
     }
@@ -61,7 +61,7 @@ pub fn generate_project(
     if let Some(map) = fig.overview_map_base_map {
         let layer_name = map.overview_map_slug();
         if let Some(datasource) = map.datasource {
-            let mut builder = QgisMapLayerBuilder::try_from((layer_name.clone(), datasource.0))?;
+            let mut builder = build_base_map_layer(layer_name.clone(), datasource.0)?;
             builder.layer_name = layer_name;
             let layer = builder
                 .build_raster(false)
@@ -99,44 +99,64 @@ pub fn generate_project(
     Ok(qgis_project)
 }
 
-impl TryFrom<(String, BaseMapDataSource)> for QgisMapLayerBuilder {
-    type Error = anyhow::Error;
-
-    fn try_from((layer_slug, src): (String, BaseMapDataSource)) -> Result<Self, Self::Error> {
-        let epsg_id = src.epsg_id();
-        let srs = match epsg_id {
-            27700 => SpatialRefSys::bng(),
-            4326 => SpatialRefSys::wgs84(),
-            3857 => SpatialRefSys::web_mercator(),
-            _ => {
-                return Err(anyhow::anyhow!(
-                    "unsupported coordinate reference system for base map: {}. Currently supported CRS are epsg 27700, 4326 and 3857",
-                    epsg_id
-                ));
-            }
-        };
-        let ds = match src {
-            BaseMapDataSource::XYZ(ds) => DataSource::XYZ(XYZDataSource { url: ds.url }),
-            BaseMapDataSource::WMTS(ds) => DataSource::WMS(WMSDataSource::new_wmts(
-                ds.authcfg_id,
-                ds.url,
-                ds.layers,
-                ds.epsg_id,
-                ds.tile_matrix_set,
-            )),
-            BaseMapDataSource::WMS(ds) => DataSource::WMS(WMSDataSource::new_wms(
-                ds.authcfg_id,
-                ds.url,
-                ds.layers,
-                ds.epsg_id,
-            )),
-        };
-        Ok(QgisMapLayerBuilder {
-            layer_name: layer_slug,
-            legend_text: None,
-            include_on_legend: false,
-            datasource: ds,
-            srs: Some(srs),
-        })
-    }
+fn build_base_map_layer(
+    layer_slug: String,
+    src: LayerSource,
+) -> Result<QgisMapLayerBuilder, anyhow::Error> {
+    let epsg_id = src.epsg_id().unwrap_or(27700);
+    let srs = match epsg_id {
+        27700 => SpatialRefSys::bng(),
+        4326 => SpatialRefSys::wgs84(),
+        3857 => SpatialRefSys::web_mercator(),
+        _ => {
+            return Err(anyhow::anyhow!(
+                "unsupported coordinate reference system for base map: {}. Currently supported CRS are epsg 27700, 4326 and 3857",
+                epsg_id
+            ));
+        }
+    };
+    let ds = match src {
+        LayerSource::Xyz { url, .. } => DataSource::XYZ(XYZDataSource { url }),
+        LayerSource::Wmts {
+            url,
+            layers,
+            tile_matrix_set,
+            epsg_id,
+            authcfg_id,
+            ..
+        } => DataSource::WMS(WMSDataSource::new_wmts(
+            authcfg_id,
+            url,
+            layers,
+            epsg_id,
+            tile_matrix_set,
+        )),
+        LayerSource::ImageWms {
+            url,
+            layers,
+            epsg_id,
+            authcfg_id,
+            ..
+        }
+        | LayerSource::TileWms {
+            url,
+            layers,
+            epsg_id,
+            authcfg_id,
+            ..
+        } => DataSource::WMS(WMSDataSource::new_wms(authcfg_id, url, layers, epsg_id)),
+        other => {
+            return Err(anyhow::anyhow!(
+                "unsupported source type for base map: {:?}",
+                other
+            ));
+        }
+    };
+    Ok(QgisMapLayerBuilder {
+        layer_name: layer_slug,
+        legend_text: None,
+        include_on_legend: false,
+        datasource: ds,
+        srs: Some(srs),
+    })
 }

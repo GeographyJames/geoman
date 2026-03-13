@@ -1,20 +1,14 @@
 use sqlx::PgExecutor;
 
-use crate::{
-    app::features::figure_tool::dtos::figure::QgisProjectName,
-    repo::CheckUnique,
-};
+use crate::{features::figure_tool::dtos::QgisProjectName, repo::RepositoryError};
 
-impl<REPO> CheckUnique<REPO, QgisProjectName> for QgisProjectName
-where
-    for<'a> REPO: PgExecutor<'a>,
-{
-    async fn check_unique(
+impl QgisProjectName {
+    pub async fn check_unique<'a, E: PgExecutor<'a>>(
         &self,
-        executor: REPO,
-    ) -> Result<Option<QgisProjectName>, crate::repo::RepositoryError> {
+        executor: E,
+    ) -> Result<Option<QgisProjectName>, RepositoryError> {
         let res = sqlx::query!(
-            "SELECT name FROM qgis.qgis_projects WHERE name = $1",
+            "SELECT name FROM public.qgis_projects WHERE name = $1",
             self.0
         )
         .fetch_optional(executor)
