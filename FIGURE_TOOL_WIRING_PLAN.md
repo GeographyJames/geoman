@@ -35,11 +35,11 @@ The `figure_tool` feature directory has been copied into `app/src/features/figur
 | DB `layer_style` | ✅ uncommented, ported to `Acquire` bound |
 | `LayerStyleOutputDTO` | ✅ uncommented |
 | `layer_styles` URL | ✅ in `config/urls.yaml` and `urls.rs` |
-| DB `project_layer` | ❌ commented out |
+| DB `project_layer` | ✅ ported to `SelectAllWithParams` |
 | DB `qgis_project` | ✅ ported — `Insert`, `check_unique`, `select_qgis_project` |
 | `qgis_builder` module | ✅ enabled — `BaseMapDataSource` replaced by `LayerSource`, orphan `TryFrom` replaced by `build_base_map_layer` free fn |
 | URL `qgis_projects` | ✅ in `config/urls.yaml` and `urls.rs` |
-| URL `project_layers` | ❌ not yet in `config/urls.yaml` |
+| URL `project_layers` | ✅ in `config/urls.yaml` and `urls.rs` |
 | `reqwest` features in `app/Cargo.toml` | ✅ `json`, `stream`, `query` |
 
 ---
@@ -199,28 +199,18 @@ All passing. The `layer_styles` table (`public.layer_styles`) is a QGIS-managed 
 
 ---
 
-### Step 5 — GET /project-layers
+### Step 5 — GET /project-layers ✅
 
-**URLs**
-- Add `project_layers: "/project-layers"` to `config/urls.yaml` and `urls.rs`
+All passing.
 
-**DB layer**
-- Uncomment `db/project_layer/` and port to `SelectAllWithParams` with `domain::ProjectId`
-- The prototype query filters `pg_tables`/`geometry_columns` for a `project_data` schema with table names matching `^p[0-9]{4}[ _]...`. Verify geoman uses the same schema and naming convention before porting — this may need rethinking.
-- Prototype used a custom `SelectAllForProject` trait; port to geoman's `SelectAllWithParams` (Params = `&ProjectId`, MetaData = `()`)
-
-**DTOs**
-- Uncomment `dtos/project_layer.rs` → `ProjectLayerOutputDTO`
-
-**Handler**
-- Port `handlers/project_layer/get.rs` → `get_project_layers`; query param `?project=<id>`
-- Register route
-
-**TestApp**
-- Add `project_layers_service: HttpService` field
-
-**Tests**
-- `get_project_layers_works`
+- URL `project_layers: "/project-layers"` added to `config/urls.yaml` and `urls.rs`
+- `db/project_layer/select.rs` ported to `SelectAllWithParams` (`Params = ProjectId`, `MetaData = ()`) — queries `pg_tables` + `geometry_columns` for `project_data` schema, filters by naming regex `^p[0-9]{4}[ _][a-zA-Z0-9_ -]+$`, geometry column `geom`, SRID in `(27700, 4326)`; project filtering done in Rust
+- `dtos/project_layer.rs` uncommented — `ProjectLayerOutputDTO` with custom `FromRow` that parses `project_id` and `layer_name` from the table name prefix
+- `handlers/project_layer/get.rs` ported — `#[get("")]`, query param `?project=<id>`, returns `Json<Vec<ProjectLayerOutputDTO>>`
+- Route registered in `api_routes` via `project_layers_routes`
+- `project_layers_service: HttpService` added to `TestApp`
+- `execute_sql_file` helper added to `TestApp` — reads and executes a SQL file against the test DB pool using `sqlx::raw_sql`
+- Test seeds `seed_data/project_data_tables.sql` (creates `project_data.*` tables including valid and intentionally-invalid variants), asserts 7 valid tables for project 1 and 1 table for project 24
 
 ---
 

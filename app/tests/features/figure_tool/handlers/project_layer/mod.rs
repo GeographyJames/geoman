@@ -1,4 +1,4 @@
-// mod get;
+mod get;
 
 pub const VALID_TABLE_NAMES: [&str; 7] = [
     "p0001_test_polygon",

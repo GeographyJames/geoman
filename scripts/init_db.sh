@@ -161,6 +161,7 @@ then
         "teams.sql"
         "users.sql"
         "turbine_layouts.sql"
+        "project_data_tables.sql"
 
     )
 

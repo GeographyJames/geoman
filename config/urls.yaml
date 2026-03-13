@@ -20,6 +20,7 @@ api:
   figures: "/figures"
   layer_styles: "/layer-styles"
   qgis_projects: "/qgis-projects"
+  project_layers: "/project-layers"
 
 docs:
   base: "/docs"

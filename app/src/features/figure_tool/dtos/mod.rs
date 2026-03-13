@@ -10,5 +10,5 @@ pub mod layer_style;
 pub use layer_style::LayerStyleOutputDTO;
 mod pg_table;
 pub use pg_table::*;
-// pub mod project_layer;
-// pub use project_layer::ProjectLayerOutputDTO;
+pub mod project_layer;
+pub use project_layer::ProjectLayerOutputDTO;

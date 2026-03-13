@@ -11,6 +11,7 @@ use crate::{
         figure_tool::handlers::{
             figure::{get_figure, get_figures, get_print, patch_figure, post_figure},
             layer_style::get_layer_styles,
+            project_layer::get_project_layers,
             qgis_project::get_qgis_project,
         },
     },
@@ -70,7 +71,8 @@ pub fn api_routes(cfg: &mut web::ServiceConfig, _clerk: Clerk, run_environment: 
         .configure(data_provider_layers_routes)
         .configure(figures_routes)
         .configure(layer_styles_routes)
-        .configure(qgis_projects_routes);
+        .configure(qgis_projects_routes)
+        .configure(project_layers_routes);
 
     match run_environment {
         GeoManEnvironment::Development => {
@@ -208,4 +210,8 @@ pub fn figures_routes(cfg: &mut web::ServiceConfig) {
 
 pub fn qgis_projects_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(scope(&URLS.api.qgis_projects).service(get_qgis_project));
+}
+
+pub fn project_layers_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(scope(&URLS.api.project_layers).service(get_project_layers));
 }
