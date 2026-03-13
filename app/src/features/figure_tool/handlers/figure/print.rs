@@ -26,20 +26,6 @@ pub struct GetPrintRequest {
     pub map: String,
 }
 
-impl Default for GetPrintRequest {
-    fn default() -> Self {
-        Self {
-            service: "WMS".into(),
-            version: "1.3.0".into(),
-            request: "GetPrint".into(),
-            template: "default-layout".into(),
-            format: FigureFormat::pdf,
-            crs: "EPSG:27700".into(),
-            map: "postgresql://?dbname=geodata_local&schema=qgis&project=test-project".into(),
-        }
-    }
-}
-
 pub struct GetPrintRequestBuilder {
     pub project_name: String,
     pub pg_schema: String,
@@ -50,12 +36,16 @@ pub struct GetPrintRequestBuilder {
 impl GetPrintRequestBuilder {
     pub fn build(self) -> GetPrintRequest {
         GetPrintRequest {
+            service: "WMS".into(),
+            version: "1.3.0".into(),
+            request: "GetPrint".into(),
+            crs: "EPSG:27700".into(),
+            format: FigureFormat::pdf,
+            template: self.template,
             map: format!(
                 "postgresql://?dbname={}&schema={}&project={}",
                 self.db_name, self.pg_schema, self.project_name
             ),
-            template: self.template,
-            ..Default::default()
         }
     }
 }

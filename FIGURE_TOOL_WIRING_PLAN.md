@@ -279,7 +279,7 @@ The following points were flagged after wiring was complete. Work through these 
 
 - [x] **2. `check_unique` / `insert` race condition** — `name` is the primary key on `public.qgis_projects`. Added `ON CONFLICT (name) DO NOTHING` to the INSERT in `db/qgis_project/insert.rs`. `check_unique` is kept as a performance optimisation (skips expensive `generate_project` in the common case); `ON CONFLICT` is the safety net for the rare concurrent-request edge case.
 
-- [ ] **3. `GetPrintRequest::default()` hardcoded local db name** — the `map` field default is `"postgresql://?dbname=geodata_local&schema=qgis&project=test-project"`. This is always overridden by `GetPrintRequestBuilder.build()` so it never reaches production, but it's a trap if `Default` is ever called directly. Consider making the default a panic or removing it.
+- [x] **3. `GetPrintRequest::default()` hardcoded local db name** — removed the `Default` impl entirely. `GetPrintRequestBuilder::build()` now constructs all fields explicitly, including the previously-constant ones (`service`, `version`, `request`, `crs`, `format`).
 
 - [x] **4. `pg_schema` hardcoded to `"qgis"` in `build_request`** — fixed to `QGIS_PROJECTS_SCHEMA` constant (`"public"`) in `constants.rs`. Tests pass.
 
